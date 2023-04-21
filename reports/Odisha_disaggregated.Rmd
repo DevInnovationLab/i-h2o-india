@@ -1,0 +1,66 @@
+---
+title: "Spatially Disaggregated Analysis Odisha "
+author: Alex Lehner, April2023
+#bibliography: alex_india.bib
+#output: html_notebook
+output:
+  pdf_document: default
+  dev: cairo_pdf
+---
+
+```{r setup, include=FALSE}
+# the raw data is first extracted and transformed in the dataclean file
+# the code for the analysis was first tested in the nigeria_DHS_extraction_analysis.R script
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, include = FALSE, warning = FALSE, message = FALSE)
+
+library(sf)
+library(rnaturalearth)
+library(tmap)
+library(stars)
+library(dplyr)
+
+# GET POLYGON OF NIGERIA IN HERE, countryborder
+nga.lvl0 <- st_as_sf(ne_countries(country = "nigeria", scale = 10))
+neighbours.lvl0 <- st_as_sf(ne_countries(country = c("benin", "niger", "cameroon", "chad"), scale = 10))
+st_crs(nga.lvl0)
+
+# # waterways
+# nga.water <- st_read("../data/geography/national-waterway.zip_national-waterway/waterway.geojson")
+lakes10 <- ne_download(scale = 10, type = "lakes", category = "physical") |> st_as_sf()
+#lakes10 <- st_intersection(lakes10, nga.lvl0)
+lakes10 <- st_make_valid(lakes10)
+
+
+NGA_u5mr <- read_stars("../data/mortality/GBD/IHME_LMICS_U5M_2000_2017_Q_UNDER5_MEAN_Y2019M10D16.tif")
+#tm_shape(NGA_u5mr) + tm_raster(n = 10, style = "equal", palette = "-magma")
+
+
+
+st_nga <- st_crop(NGA_u5mr, nga.lvl0) # takes a bit
+
+st_nga |> str()
+st_nga2020 <- st_nga[,,,18]
+names(st_nga2020) <- "U5MR 2017 (est.)"
+
+
+# ZONAL STATS FOR lvl1 and 2
+
+library(terra)
+
+nga.lvl1 <- st_read("../data/population/NGA_population_v2_0_admin/NGA_population_v2_0_admin_level1_boundaries.shp")
+nga.lvl2 <- st_read("../data/population/NGA_population_v2_0_admin/NGA_population_v2_0_admin_level2_boundaries.shp")
+nga.lvl1 <- st_make_valid(nga.lvl1)
+nga.lvl2 <- st_make_valid(nga.lvl2)
+# NGA_u5mr <- raster("data/mortality/GBD/IHME_LMICS_U5M_2000_2017_Q_UNDER5_MEAN_Y2019M10D16.tif")
+# st_nga <- crop(NGA_u5mr, nga.lvl0) # takes a bit
+# plot(st_nga)
+# st_nga[18]
+nga.terra2020 <- rast(st_nga)
+# layernames different 
+library(exactextractr)
+
+nga.lvl1$U5MR_2017 <- exact_extract(nga.terra2020[[18]], nga.lvl1, 'mean')
+nga.lvl2$U5MR_2017 <- exact_extract(nga.terra2020[[18]], nga.lvl2, 'mean')
+
+```
+
