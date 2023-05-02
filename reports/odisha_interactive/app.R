@@ -30,6 +30,9 @@ library(sf)
 library(tmap)
 library(leaflet) # for the interactive map
 library(ggplot2)
+library(stars)
+
+u5mr <- stars::read_stars("india_under5_mean_2017.tif")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -51,7 +54,8 @@ ui <- fluidPage(
             #             choices = water.dists),
             selectInput("histselect", "Histogram variable (default: population)",
                         choices = namesselect),
-            checkboxInput("allvaluestmap", "Show all values for each village?", value = FALSE)
+            checkboxInput("allvaluestmap", "Show all values for each village?", value = FALSE),
+            checkboxInput("u5raster", "Display U5MR raster?", value = TRUE)
         ),
 
         # Show a plot of the generated map
@@ -75,9 +79,13 @@ server <- function(input, output) {
     output$mapplot_leaflet <- renderTmap({
       odisha2011 <- odisha2011 |> dplyr::filter(dist_name == input$district)
       if (input$allvaluestmap == FALSE){
-        tm_shape(odisha2011) + tm_dots(input$histselect, style = "quantile")
+        if (input$u5raster == TRUE) {tm_shape(odisha2011) + tm_dots(input$histselect, style = "quantile") + tm_shape(u5mr) + tm_raster(n = 10, style = "equal", palette = "-magma", alpha = .5)} else {
+          tm_shape(odisha2011) + tm_dots(input$histselect, style = "quantile")
+        }
       } else {
-        tm_shape(odisha2011) + tm_dots()
+        if (input$u5raster == TRUE) {tm_shape(odisha2011) + tm_dots() + tm_shape(u5mr) + tm_raster(n = 10, style = "equal", palette = "-magma", alpha = .5)} else {
+          tm_shape(odisha2011) + tm_dots()
+        }
       }
     })
     
