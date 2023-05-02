@@ -53,6 +53,9 @@
 !renv.lock
 !/**/*.sh
 
+# GIS
+!/**/*.tif
+
 # LaTeX
 !/**/*.tex
 !/**/*.bib
