@@ -130,7 +130,7 @@ server <- function(input, output) {
       sd_input   <- odisha2011 |> sf::st_drop_geometry() |> dplyr::filter(dist_name == input$district) |> dplyr::summarise(sd(.data[[input$histselect]], na.rm = T)) |> round()
       # also total pop
       sum_input <- odisha2011 |> sf::st_drop_geometry() |> dplyr::filter(dist_name == input$district) |> dplyr::summarise(sum(.data[[input$histselect]], na.rm = T)) |> round()
-      n_input   <- odisha2011 |> sf::st_drop_geometry() |> dplyr::filter(dist_name == input$district) |> dplyr::summarise(n())
+      n_input   <- odisha2011 |> sf::st_drop_geometry() |> dplyr::filter(dist_name == input$district) |> dplyr::summarise(dplyr::n())
       
       ggplot(data = odisha2011 |> dplyr::filter(dist_name == input$district)) + geom_histogram(aes_string(x = input$histselect)) + 
         theme_minimal() + ggtitle(paste("Distribution of ", input$histselect, " in ", input$district, ". Number of villages:", n_input," | mean:", mean_input, " | CV:", round(sd_input/mean_input, 2), " | total:", sum_input))
