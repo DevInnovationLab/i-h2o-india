@@ -76,6 +76,7 @@ library(tmap)
 library(leaflet) # for the interactive map
 library(ggplot2)
 library(stars)
+library(tidyverse)
 
 u5mr <- stars::read_stars("india_under5_mean_2017.tif")
 
