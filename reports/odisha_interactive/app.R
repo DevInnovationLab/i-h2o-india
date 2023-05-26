@@ -55,6 +55,7 @@ dhs19 <- dhs19[1:(nrow(dhs19)-3), ]
 selected_distr <- c("Rayagada", "Kandhamal", "Nabarangapur", "Kalahandi") |> str_to_lower()
 dhs19 <- dhs19[dhs19$District %in% selected_distr, ]
 dhs19 <- dhs19 |> select(District, `Percentage of preg women in district`)
+names(dhs19)[2] <- "perc_preg"
 
 odishasum <- odisha2011 |> st_drop_geometry() |> group_by(dist_name) |> 
   summarise(avg_hh_per_vil = mean(pc11_pca_no_hh),
@@ -64,10 +65,10 @@ odishasum <- odisha2011 |> st_drop_geometry() |> group_by(dist_name) |>
 
 odishasum <- odishasum[str_to_lower(odishasum$dist_name) %in% selected_distr, ]
 
-odishasum$dist_name <- str_to_lower(odishasum$dist_name)
-odishasum <- left_join(odishasum, dhs19, by = c("dist_name" = "District"))
-odishasum$avg_preg_per_vil <- round(odishasum$avg_hh_per_vil * (odishasum$`Percentage of preg women in district`/100), 2)
-
+odishasum$dist_name             <- str_to_lower(odishasum$dist_name)
+odishasum                       <- left_join(odishasum, dhs19, by = c("dist_name" = "District"))
+odishasum$avg_preg_per_vil      <- round(odishasum$avg_hh_per_vil * (odishasum$perc_preg/100), 2)
+odishasum$ss_if_all_vil_visited <- odishasum$avg_preg_per_vil * odishasum$num_vil
 
 library(shiny)
 library(sf)
