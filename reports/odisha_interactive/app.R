@@ -26,6 +26,13 @@ back_out_MDE_reduction_2proptest_cluster <- function(n_cluster, n_per_cluster, M
   (1 - power.out[[1]] / MR) * 1e2
 }
 
+library(shiny)
+library(sf)
+library(tmap)
+library(leaflet) # for the interactive map
+library(ggplot2)
+library(stars)
+library(tidyverse)
 
 
 # POWER end --------------------------------------
@@ -70,13 +77,7 @@ odishasum                       <- left_join(odishasum, dhs19, by = c("dist_name
 odishasum$avg_preg_per_vil      <- round(odishasum$avg_hh_per_vil * (odishasum$perc_preg/100), 2)
 odishasum$ss_if_all_vil_visited <- odishasum$avg_preg_per_vil * odishasum$num_vil
 
-library(shiny)
-library(sf)
-library(tmap)
-library(leaflet) # for the interactive map
-library(ggplot2)
-library(stars)
-library(tidyverse)
+
 
 u5mr <- stars::read_stars("india_under5_mean_2017.tif")
 

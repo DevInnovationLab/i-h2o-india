@@ -1,0 +1,108 @@
+---
+title: "Power Considerations for Village RCT Odisha"
+author: Alex Lehner, May2023
+#bibliography: alex_india.bib
+#output: html_notebook
+output:
+  pdf_document: default
+  dev: cairo_pdf
+---
+
+Questions unresolved:
+- which villages have this SVS scheme?
+- district mortality from latest DHS
+- U2MR goes from 120 to 90 in Kano (from U5), so 
+
+```{r setup, include=FALSE}
+# the raw data is first extracted and transformed in the dataclean file
+# the code for the analysis was first tested in the nigeria_DHS_extraction_analysis.R script
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, include = FALSE, warning = FALSE, message = FALSE)
+
+library(sf)
+library(rnaturalearth)
+library(tmap)
+library(stars)
+library(tidyverse)
+
+# from meta_helpers.R file:
+back_out_MDE_reduction_2proptest_cluster <- function(n_cluster, n_per_cluster, MR, power_choice = .8, ICC_choice = .01, ...) {
+  # i wanna get out the MDE, like in the individual case
+  # first i compute the proportion that I can detect, given parameters
+  # https://rdrr.io/cran/clusterPower/man/cpa.binary.html
+  # we could also build in a CV for clustersize if wanted
+  # BUG IN EARLY VERSIONS IN NOVEMBER: ncluster is PER condition, so it has to be divided 2
+  power.out <- clusterPower::cpa.binary(nclusters = n_cluster/2, nsubjects = n_per_cluster, ICC = ICC_choice, p1 = MR, p1inc = TRUE, power = .8,
+                                        tol = .Machine$double.eps^.5, ...)
+  # just back out the MDE now
+  (1 - power.out[[1]] / MR) * 1e2
+}
+
+
+odisha2011 <- readRDS("odisha_interactive/Odisha2011_points.rds")
+odisha2011 <- odisha2011 |> dplyr::select(-(1:3))
+odisha.dists <- unique(odisha2011$dist_name) |> sort()
+namesselect <- names(odisha2011)[6:12]
+odisha2011$dist_name <- str_to_lower(odisha2011$dist_name)
+
+dhs19 <- read_csv("odisha_interactive/astha_dhs2019.csv")
+dhs19 <- dhs19[1:(nrow(dhs19)-3), ]
+
+selected_distr <- c("Rayagada", "Kandhamal", "nabarangapur", "Kalahandi") |> str_to_lower()
+dhs19 <- dhs19[dhs19$District %in% selected_distr, ]
+dhs19 <- dhs19 |> select(District, `Percentage of preg women in district`)
+names(dhs19)[2] <- "perc_preg"
+
+odishasum <- odisha2011 |> st_drop_geometry() |> group_by(dist_name) |> 
+  summarise(avg_hh_per_vil = mean(pc11_pca_no_hh),
+            num_hh = sum(pc11_pca_no_hh),
+            tot_pop = sum(pc11_pca_tot_p),
+            num_vil = n())
+
+odishasum <- odishasum[odishasum$dist_name %in% selected_distr, ]
+
+odishasum <- left_join(odishasum, dhs19, by = c("dist_name" = "District"))
+odishasum$avg_preg_per_vil <- round(odishasum$avg_hh_per_vil * (odishasum$perc_preg/100), 2)
+odishasum$ss_if_all_vil_visited <- odishasum$avg_preg_per_vil * odishasum$num_vil
+
+# add U2 U5MR, perc water cover and perc SVS
+# ... first, reorder to the order in one of the GDocs (https://docs.google.com/spreadsheets/d/1876Ut6NbNp-tCwECXbtC4v6JQ0V_GG1F/edit#gid=1567497203)
+# ... so that I can 
+odishasum <- odishasum[order(match(odishasum$dist_name, c("rayagada", "kandhamal", "nabarangapur", "kalahandi"))), ]
+
+odishasum$U5MR_23        <- c(83.67, 59.68, 55.16, 48.86)
+odishasum$perc_tapwater  <- c(47.31, 41.36, 62.94, 49.89)
+odishasum$perc_SVS_solar <- c(22.8, 58.7, 54, 74.8)
+odishasum$perc_SVS       <- c(11.4, 35.4, 54, 60.6)
+
+odishasum$U2MR_23 <- odishasum$U5MR_23 * 0.914 # rough approximation to get at U2MR from Akito
+
+# reorder alphabetically
+odishasum <- odishasum[order(odishasum$dist_name), ]
+
+
+# calculate APPROXIMATE number of households that would qualify
+odishasum$num_hh_SVS <- odishasum$num_hh * (odishasum$perc_SVS_solar / 100)
+odishasum$num_vil_SVS <- odishasum$num_vil * (odishasum$perc_SVS_solar / 100)
+
+# want to plug in the number of mothers per  [[1]]
+
+# this is an approximate first shot, what would be the MDE, if the whole district would be visitied
+odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_hh_SVS, num_vil_SVS, avg_preg_per_vil, U2MR_23)
+odishasum_SVSsubs$MDE_fulldistr <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_fulldistr[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = odishasum_SVSsubs$num_vil_SVS[[i]], 
+    n_per_cluster = odishasum_SVSsubs$avg_preg_per_vil[[i]] * 2,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
+    MR = odishasum_SVSsubs$U2MR_23[[i]]/1e3, 
+    ICC = 0.01)
+}
+
+
+```
+
+
+
+- eyeball U2MR as 65 now
+
+- based on this I recommended 1 to 3k villages needed for randomization
