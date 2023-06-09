@@ -97,11 +97,13 @@ odishasum$num_vil_SVS <- odishasum$num_vil * (odishasum$perc_SVS_solar / 100)
 # this is an approximate first shot, what would be the MDE, if the whole district would be visitied
 odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_vil_SVS, avg_preg_per_vil, U2MR_23)
 odishasum_SVSsubs$MDE_fulldistr <- NA
+# this should be either 2 or 5:
+studylength <- 2 # in years
 for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_fulldistr[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = odishasum_SVSsubs$num_vil_SVS[[i]], 
-    n_per_cluster = odishasum_SVSsubs$avg_preg_per_vil[[i]] * 2,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
+    n_per_cluster = odishasum_SVSsubs$avg_preg_per_vil[[i]] * studylength,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
     MR = odishasum_SVSsubs$U2MR_23[[i]]/1e3, 
     ICC = 0.01) |> round(2)
 }
@@ -114,7 +116,7 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_800vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = 800, 
-    n_per_cluster = odishasum_SVSsubs$avg_preg_per_vil[[i]] * 2,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
+    n_per_cluster = odishasum_SVSsubs$avg_preg_per_vil[[i]] * studylength,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
     MR = odishasum_SVSsubs$U2MR_23[[i]]/1e3, 
     ICC = 0.01) |> round(2)
 }
@@ -139,6 +141,21 @@ odishasum_SVSsubs$num_vil_weighted <- odishasum_SVSsubs$U2MR_23 * (odishasum_SVS
 
 # do a 2 year and a 5 year, take into account the older kids at initial?
 
+# now we take kalahandi and nabarangpur
+
+odishasum_SVSsubs_2dist <- odishasum_SVSsubs[odishasum_SVSsubs$dist_name %in% c("kalahandi", "nabarangapur"), ]
+
+vil_agg <- sum(odishasum_SVSsubs_2dist$num_vil_SVS)
+n_preg_weighted <- weighted.mean(odishasum_SVSsubs_2dist$avg_preg_per_vil, odishasum_SVSsubs_2dist$num_vil_SVS)
+U2MR_weighted <- weighted.mean(odishasum_SVSsubs_2dist$U2MR_23, odishasum_SVSsubs_2dist$num_vil_SVS)
+
+
+# then do the calc
+ back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = vil_agg, 
+    n_per_cluster = n_preg_weighted * studylength,  # MULTIPLY BY TWO FOR A TWO YEAR STUDY (very approx!!)
+    MR = U2MR_weighted/1e3, 
+    ICC = 0.01) |> round(2)
 
 ```
 
