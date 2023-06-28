@@ -36,7 +36,8 @@ back_out_MDE_reduction_2proptest_cluster <- function(n_cluster, n_per_cluster, M
   # https://rdrr.io/cran/clusterPower/man/cpa.binary.html
   # we could also build in a CV for clustersize if wanted
   # BUG IN EARLY VERSIONS IN NOVEMBER: ncluster is PER condition, so it has to be divided 2
-  power.out <- clusterPower::cpa.binary(nclusters = n_cluster/2, nsubjects = n_per_cluster, ICC = ICC_choice, p1 = MR, p1inc = TRUE, power = .8,
+  # Jun2023: passed over the power_choice correctly into the cpa.binary (never wanted to do anything else than 80% before)
+  power.out <- clusterPower::cpa.binary(nclusters = n_cluster/2, nsubjects = n_per_cluster, ICC = ICC_choice, p1 = MR, p1inc = TRUE, power = power_choice,
                                         tol = .Machine$double.eps^.5, ...)
   # just back out the MDE now
   (1 - power.out[[1]] / MR) * 1e2
@@ -159,5 +160,224 @@ U2MR_weighted <- weighted.mean(odishasum_SVSsubs_2dist$U2MR_23, odishasum_SVSsub
 
 ```
 
+
+# Diarrhea Powercalculations for Odisha Pilot
+
+We have district level diarrhea incidence from an NFHS survey. Not for the geolocalised DHS clusters yet (h11 variable), this would allow us to do simulations and see how much variation we can partial out with a block fixed effect.
+
+```{r}
+# CONVERSATION ON SLACK on Jun 27th (evening) + Jun 28th (morning)
+
+# @Alex Lehner
+#  Michael would like to see power calculations for India for Phase 1 RCT. Can you re-run those as powered for diarrhea at 90% power? My understanding is that in the past you use UP data, but we are now working on Odisha. This is quite urgent just to have a sense whether what we proposed (150 villages, 75 T, 75 C) will be enough. CC-ing 
+# @Akito
+#  
+# @Akanksha Saletore
+#  
+# @Michelle Cherian
+#  FYI
+# 
+# Alex Lehner
+# :airplane:  21 hours ago
+# Hi 
+# @Elisa Maffioli
+# , I never did power calculations on diarrhea, only mortality. I found district wise diarrhea rates in this sheet, they are roughly 5% - which seems very low. Probably this is because the question asked is “did your child have diarrhea in the last two weeks” or something. So which baseline diarrhea rate to pick depends now on how often you plan to survey or how far back to include diarrhea incidence. Do you have a sense for that? Also, do you know details about randomization, e.g. stratification by block etc? (cc 
+# @Witold Więcek
+# ) Edit: I did have a conversation with Michael on that a while back and we concluded that the best would be to go just above the level of where we can implement ILC (the village?) and then stratify at that level (i.e. having a block of 2 or more villages and randomize within that. The question is whether these villages can be adjacent to each other (spillovers, IRB concerns, etc?) or there have been any other updates on that due to field visits etc? (edited) 
+#                                                                                                                                                                                                                      
+# Hi 
+# @Alex Lehner
+#  thanks! Can you do power calcs on 3 separate districts (Rayagada, Khandamal, and Kalahandi and then a mean between those) - even tough basically is either 4 or 5% all the time? Level of randomization is village level. Lets assume no stratification for now. We usually ask diarrhea in 2 weeks prior (or even 1 week) but whatever we have the data for is OK right now. Right now we are planning to follow-up 3 times? 
+# @Akanksha Saletore
+#  can you confirm this is correct and consistent with JPAL assumptions? 
+# @Michelle Cherian
+#  
+# @Akanksha Saletore
+#  
+# @Astha Vohra
+#  do you remember how we come up with 150 villages (I remember originally was 80, then 100 and then to be saved 150 for IRB) but I do not remember how we started at 80 if no one has run power calcs. Thanks a lot! (edited) 
+# 
+# 
+# Elisa Maffioli
+#   19 hours ago
+# Can someone look in Amy's paper on Bangladesh and share what is the reduction she found? We can assume that as MDE. 
+# @Michelle Cherian
+#  
+# @Akanksha Saletore
+# 
+# 
+# Michelle Cherian
+#   17 hours ago
+# Hi 
+# @Alex Lehner
+#  
+# @Elisa Maffioli
+#  yes the diarrhea estimates from NFHS are prevalence rates 2 weeks before the survey. We unfortunately don't have annual estimates. The Odisha state govt does have such data but we're waiting for approvals to come through so that we can have access to that data. I just checked Amy Pickering's paper from Bangladesh and the reduction in diarrhea among children who get chlorinated water is 2.5 pp (7.5% treatment vs 10.0% in control). The paper is linked here
+# 
+# 
+# Michelle Cherian
+#   17 hours ago
+# I can confirm that we are planning to follow-up 3 times during the Phase 1 RCT (i.e once every 4 months over a period of 12 months)
+# :pray:
+# 1
+# 
+# 
+# 
+# Michelle Cherian
+#   17 hours ago
+# @Akanksha Saletore
+#  might have a better idea as to how we went from 80 to 100 to 150 villages. I think it was mostly because we were looking at either UP data or Bihar's data from the Ananya dataset. 
+# @Alex Lehner
+#  not sure if you remember but can you confirm if you do? (edited) 
+# 
+# 
+# Alex Lehner
+# :airplane:  17 hours ago
+# Their paper has “all children younger than 5 years residing in households accessing enrolled water points were measured every 2–3 months during a 14-month follow-up period (children could migrate into or out of the cluster). The primary outcome was caregiver-reported child diarrhoea (≥3 loose or watery stools in a 24-h period [WHO criteria]) with a 1-week recall, including all available childhood observations in the analyses.” Do we have a sense for what the NFHS estimate for diarrhea in these areas of Bangladesh are? I am asking because if it turns out that they are similarly somewhere around 5% but Amy finds 10% in control with more frequent surveying, then it seems save to assume a similar scaling up for this rate also for Odisha - which will greatly help with power.
+# Also, I checked in the India DHS data for diarrhea but I somehow could not find it, these are the “h11_” columns (in the Nigeria DHS that I checked they are there). If we had that in combination with the geolocalized DHS data, I could check roughly how much residual variation we could partial out with a stratum fixed-effect at some higher geographic level. (edited) 
+# 
+# 
+# Michelle Cherian
+#   17 hours ago
+# @Alex Lehner
+#  We don't have NFHS data for Bangladesh but I checked the DHS 2017-18 data for Bangladesh. The h11 column is available there. But I think Amy surveyed a part of Dhaka and a place called Tongi. Data in DHS is available at the district level so we won't have data for the communities she surveyed.
+# Let me check the India DHS data and get back to you
+# 
+# 
+# Michelle Cherian
+#   17 hours ago
+# @Alex Lehner
+#  I have saved the data for child diarrhea for India here- https://drive.google.com/open?id=1emdNi8rt9AMi1uN94_0ncgYg5ihR1n_E&usp=drive_fs
+# The h11 variable should now be available. The geocoded data from DHS is also added there
+# :raised_hands:
+# 1
+# 
+# 
+# 
+# Alex Lehner
+# :airplane:  16 hours ago
+# Thanks a lot Michelle. Will have a look in a bit when I am back on my computer
+# 
+# 
+# Akanksha Saletore
+#   10 hours ago
+# Hi all,
+# Confirming that we will do one baseline and then 3 follow-up surveys in the RCT
+# Amy mentioned that in her previous project they ask about diarrhea incidence in the last one week. In previous projects I have worked on, we have asked for the last two weeks. So it will be approximately the same as NFHS
+# @Elisa Maffioli
+#  the number was initially 80 when we were considering UP. It increased to 100 when we moved to Odisha. In the IRB, I had written this number as 150 to allow for som buffer in case our plans change. But this was purely to give us some slack -- I think we should be considering 100 as the number unless Michael, Amy, and you have discussed otherwise
+# 
+# 
+# 
+# 
+# 
+# Alex Lehner
+# :airplane:  10 hours ago
+# @Michelle Cherian
+# , I saw that it is the raw data which still needs some merging and transformation. I don’t have the capacity right now to do that myself. If you could help create a file that contains the observations for Odisha with the diarrhea outcome + lon & lat coordinates and cluster descriptives, that would be great. If not, no problem. For now, I do the simple randomization only, as Elisa suggested.
+# 
+# 
+# 
+# 
+# 
+# Elisa Maffioli
+#   3 hours ago
+# @Alex Lehner
+#  thanks all. If you could just run a simple randomization at village level that would be great. If you can just send me one paragraph on assumptions/scenarios and results, that would be very helpful to inform our decisions forward on budget. Then, yes, we will have to do some adjustments and I am sure MK will have opinions :slightly_smiling_face: thanks a lot!
+# 
+# 
+# 
+# 
+# 
+# Elisa Maffioli
+#   2 hours ago
+# @Alex Lehner
+#  MK just asked in the call if you can run simple Stata power calcs (No simulations yet), so if you can send us some numbers today, that would be super helpful! Thank you so much!
+# 
+# 
+# 
+# 
+# 
+# Elisa Maffioli
+#   2 hours ago
+# Just also a note that you will receive a request to join Berkely-Slack so we can have this conversation on the India channel with our collaborators at Berkely. Amy should be part of this conversation so she can advice on assumptions :slightly_smiling_face:                                                                                                                                                                                                     
+```
+
+
+Based on the above we assume a diarrhea rate of 5% with a potential effectsize of 25%.
+Number of villages will be 100 (doing also 150) [some average over districts]
+
+```{r}
+
+odishasum_SVSsubs$avg_u5_per_vil <- odishasum_SVSsubs$avg_preg_per_vil * 5
+odishasum_SVSsubs$diarrhea_incidence <- c(0.04, 0.05, 0.04, 0.05) # districts alphabetically kalahandi, kandhamal, nabarang, rayagad
+# diarrhea comes from this sheet https://docs.google.com/spreadsheets/d/1876Ut6NbNp-tCwECXbtC4v6JQ0V_GG1F/edit#gid=1567497203
+num_vil_2_visit <- 100 # acc to Akanksha, 150 from IRB was just to have some slack
+odishasum_SVSsubs$MDE_diarrhea_100vil <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_100vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u5_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]], 
+    ICC = 0.01) |> round(2)
+}
+
+odishasum_SVSsubs$MDE_diarrhea_100vil_90pc <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_100vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u5_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]], 
+    ICC = 0.01,
+    power_choice = .9) |> round(2)
+}
+
+# ALSO DO FOR 150 villages
+
+odishasum_SVSsubs$avg_u5_per_vil <- odishasum_SVSsubs$avg_preg_per_vil * 5
+odishasum_SVSsubs$diarrhea_incidence <- .05 # can expand to have district wise variation later
+num_vil_2_visit <- 150 # acc to Akanksha, 150 from IRB was just to have some slack
+odishasum_SVSsubs$MDE_diarrhea_150vil <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_150vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u5_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]], 
+    ICC = 0.01) |> round(2)
+}
+
+odishasum_SVSsubs$MDE_diarrhea_150vil_90pc <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_150vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u5_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]], 
+    ICC = 0.01,
+    power_choice = .9) |> round(2)
+}
+
+
+odishasum_SVSsubs
+
+
+
+
+```
+
+
+Text to be shared with Elisa et. al. and Amy's team:
+For the four target districts I computed separate, independent MDEs. They all assume that 100 villages are being visited (and the last two columns 150). If you wanted to split across districts, the MDE would then roughly be a weighted average. The variation in MDE comes mostly from the variation in the village sizes across the different districts (have a look at this small app that I wrote to explore some of the village characteristics in more detail).
+The assumption on the number of U5 children per village comes from an estimate that we have for the average number of pregnant women per village (out of an NFHS survey). I had no access to an estimate for the number of U5 children, I therefore took the estimate for pregnant women and multiplied it by 5. Please not that this introduces quite a bit of noise in the MDE computations. The MDE here refers to a percent reduction. For example, an MDE of 50 means that we are powered to detect a diarrhea reduction from 5 to 2.5 percent.
+The calculations just use standard cluster randomization formulas for simple randomization (clusterPower::cpa.binary() in R). With block-randomization, stratum fixed effects would of course reduce the residual variation and therefore increase power.
+
+
+```{r}
+final_table_print <- odishasum_SVSsubs |> select(dist_name, num_vil_SVS, avg_preg_per_vil, avg_u5_per_vil, diarrhea_incidence, MDE_diarrhea_100vil, MDE_diarrhea_100vil_90pc, MDE_diarrhea_150vil, MDE_diarrhea_150vil_90pc)
+final_table_print
+```
 
 
