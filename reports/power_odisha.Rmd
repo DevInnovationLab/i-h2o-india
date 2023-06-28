@@ -370,6 +370,7 @@ odishasum_SVSsubs
 
 
 Text to be shared with Elisa et. al. and Amy's team:
+Hi All, here are the powercalculations on diarrhea I was asked to do. I am out of office and in transit but try to be responsive on slack if there are any questions. The R code is lying 
 For the four target districts I computed separate, independent MDEs. They all assume that 100 villages are being visited (and the last two columns 150). If you wanted to split across districts, the MDE would then roughly be a weighted average. The variation in MDE comes mostly from the variation in the village sizes across the different districts (have a look at this small app that I wrote to explore some of the village characteristics in more detail).
 The assumption on the number of U5 children per village comes from an estimate that we have for the average number of pregnant women per village (out of an NFHS survey). I had no access to an estimate for the number of U5 children, I therefore took the estimate for pregnant women and multiplied it by 5. Please not that this introduces quite a bit of noise in the MDE computations. The MDE here refers to a percent reduction. For example, an MDE of 50 means that we are powered to detect a diarrhea reduction from 5 to 2.5 percent.
 The calculations just use standard cluster randomization formulas for simple randomization (clusterPower::cpa.binary() in R). With block-randomization, stratum fixed effects would of course reduce the residual variation and therefore increase power.
