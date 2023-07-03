@@ -41,6 +41,7 @@ odisha2011 <- odisha2011 |> dplyr::select(-(1:3))
 odisha.dists <- unique(odisha2011$dist_name) |> sort()
 namesselect <- names(odisha2011)[6:12]
 #odisha2011 <- odisha2011 |> dplyr::filter(dist_name %in% c("Bargarh", "Jharsuguda", "Sambalpur"))
+namesselect <- c(namesselect, "P_06")
 
 # water
 
@@ -99,7 +100,7 @@ ui <- fluidPage(
                         choices = odisha.dists),
             # selectInput("district.water", "Choose district (water)",
             #             choices = water.dists),
-            selectInput("histselect", "Histogram variable (default: population)",
+            selectInput("histselect", "Histogram variable (default: population, P_06 is #u6 children)",
                         choices = namesselect),
             checkboxInput("allvaluestmap", "Show all values for each village?", value = FALSE),
             checkboxInput("u5raster", "Display U5MR raster?", value = TRUE),
