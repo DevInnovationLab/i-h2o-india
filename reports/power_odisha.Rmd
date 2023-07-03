@@ -22,7 +22,7 @@ Based on early back-of-the-envelope I recommended 1 to 3k villages needed for ra
 # the raw data is first extracted and transformed in the dataclean file
 # the code for the analysis was first tested in the nigeria_DHS_extraction_analysis.R script
 knitr::opts_chunk$set(echo = FALSE, eval = TRUE, include = FALSE, warning = FALSE, message = FALSE)
-
+rm(list = ls())
 library(sf)
 library(rnaturalearth)
 library(tmap)
@@ -61,6 +61,8 @@ names(dhs19)[2] <- "perc_preg"
 # compute aggregates
 odishasum <- odisha2011 |> st_drop_geometry() |> group_by(dist_name) |> 
   summarise(avg_hh_per_vil = mean(pc11_pca_no_hh),
+            avg_u6_per_vil = mean(P_06), # July 3rd, add U6 from village census abstract
+            CV_u6_per_vil  = sd(P_06) / mean(P_06),
             num_hh = sum(pc11_pca_no_hh),
             tot_pop = sum(pc11_pca_tot_p),
             num_vil = n())
@@ -96,7 +98,7 @@ odishasum$num_vil_SVS <- odishasum$num_vil * (odishasum$perc_SVS_solar / 100)
 # want to plug in the number of mothers per  [[1]]
 
 # this is an approximate first shot, what would be the MDE, if the whole district would be visitied
-odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_vil_SVS, avg_preg_per_vil, U2MR_23)
+odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_vil_SVS, avg_preg_per_vil, U2MR_23, avg_u6_per_vil, CV_u6_per_vil)
 odishasum_SVSsubs$MDE_fulldistr <- NA
 # this should be either 2 or 5:
 studylength <- 2 # in years
@@ -311,7 +313,7 @@ Number of villages will be 100 (doing also 150) [some average over districts]
 
 odishasum_SVSsubs$avg_u5_per_vil <- odishasum_SVSsubs$avg_preg_per_vil * 5
 # load estimates from Michelle
-u5distr <- readstata13::read.dta13("under5_districtwise_odisha.dta")
+#u5distr <- readstata13::read.dta13("under5_districtwise_odisha.dta")
 odishasum_SVSsubs$diarrhea_incidence <- c(0.04, 0.05, 0.04, 0.05) # districts alphabetically kalahandi, kandhamal, nabarang, rayagad
 # diarrhea comes from this sheet https://docs.google.com/spreadsheets/d/1876Ut6NbNp-tCwECXbtC4v6JQ0V_GG1F/edit#gid=1567497203
 num_vil_2_visit <- 100 # acc to Akanksha, 150 from IRB was just to have some slack
@@ -383,3 +385,94 @@ final_table_print
 ```
 
 
+### NEXT ITERATION: ADD THE TRUE U5 population from the census
+
+We had a population growth in Odisha of roughly 10% since the last census. So without augmenting, we have a conservative estimate. The distribution of U5 children should be roughly the same in 2023 as in 2021.
+
+
+Above we took the average expected pregnant women and multiplied that by 5. Now I have the actual U5 from the census. People - especially on Amy's team - were worried that this is not a good approximation.
+
+
+
+```{r}
+# keeping all the rest from above
+# now using the actual distribution across villages and using the CV to account for the dispersion (before we just had means)
+# so we do the u6 here with pop from 2011 but do not account for population growth. this should kind of give an ok approximation then
+
+num_vil_2_visit <- 100 # acc to Akanksha, 150 from IRB was just to have some slack
+odishasum_SVSsubs$MDE_diarrhea_100vil <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_100vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
+    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    ICC = 0.01) |> round(2)
+}
+
+odishasum_SVSsubs$MDE_diarrhea_100vil_90pc <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_100vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
+    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    ICC = 0.01,
+    power_choice = .9) |> round(2)
+}
+
+# ALSO DO FOR 150 villages
+
+odishasum_SVSsubs$avg_u5_per_vil <- odishasum_SVSsubs$avg_preg_per_vil * 5
+num_vil_2_visit <- 150 # acc to Akanksha, 150 from IRB was just to have some slack
+odishasum_SVSsubs$MDE_diarrhea_150vil <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_150vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
+    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    ICC = 0.01) |> round(2)
+}
+
+odishasum_SVSsubs$MDE_diarrhea_150vil_90pc <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  print(i)
+  odishasum_SVSsubs$MDE_diarrhea_150vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
+    n_cluster = num_vil_2_visit,
+    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
+    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    ICC = 0.01,
+    power_choice = .9) |> round(2)
+}
+
+# HOW MANY VILLAGES TO BE POWERED FOR 25% reduction?
+odishasum_SVSsubs$nvil_for_MDE25 <- NA
+for (i in 1:nrow(odishasum_SVSsubs)) {
+  nclus.out <- clusterPower::cpa.binary(nsubjects = odishasum_SVSsubs$avg_u6_per_vil[[i]], 
+                                        CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+                                        ICC = 0.01, 
+                                        p1 = odishasum_SVSsubs$diarrhea_incidence[[i]], 
+                                        p2 = odishasum_SVSsubs$diarrhea_incidence[[i]] * .75, 
+                                        power = 0.8,
+                                          tol = .Machine$double.eps^.5)
+
+  # this is per condition, so we need to double
+  odishasum_SVSsubs$nvil_for_MDE25[[i]] <- round(nclus.out) * 2
+}
+
+odishasum_SVSsubs
+
+```
+
+
+Now we print a final table here as well (like above)
+
+```{r}
+final_table_print <- odishasum_SVSsubs |> select(dist_name, num_vil_SVS, avg_u6_per_vil, CV_u6_per_vil, diarrhea_incidence, MDE_diarrhea_100vil, MDE_diarrhea_100vil_90pc, MDE_diarrhea_150vil, MDE_diarrhea_150vil_90pc, nvil_for_MDE25pc)
+final_table_print
+```
