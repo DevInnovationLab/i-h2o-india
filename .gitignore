@@ -48,10 +48,14 @@
 # R
 !/**/*.R
 !/**/*.Rmd
+!/**/*.md
 !/**/*.Rproj
 !/**/renv/settings.dcf
 !renv.lock
 !/**/*.sh
+
+# in this case we want the data
+!/**/*.xslx
 
 # GIS
 !/**/*.tif
