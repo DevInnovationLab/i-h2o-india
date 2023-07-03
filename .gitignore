@@ -55,7 +55,9 @@
 !/**/*.sh
 
 # in this case we want the data
-!/**/*.xslx
+!/**/*.xlsx
+!/**/*.xls
+!/**/*.rds
 
 # GIS
 !/**/*.tif
