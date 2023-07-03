@@ -58,11 +58,14 @@ dhs19 <- dhs19[dhs19$District %in% selected_distr, ]
 dhs19 <- dhs19 |> select(District, `Percentage of preg women in district`)
 names(dhs19)[2] <- "perc_preg"
 
+# do the adjustment for pop growth and u6 -> u5
+odisha2011$P_05_approx <- odisha2011$P_06 * (5/6) * 1.1
+
 # compute aggregates
 odishasum <- odisha2011 |> st_drop_geometry() |> group_by(dist_name) |> 
   summarise(avg_hh_per_vil = mean(pc11_pca_no_hh),
-            avg_u6_per_vil = mean(P_06), # July 3rd, add U6 from village census abstract
-            CV_u6_per_vil  = sd(P_06) / mean(P_06),
+            avg_u5_approx = mean(P_05_approx), # July 3rd, add U6 from village census abstract
+            CV_u5_approx  = sd(P_05_approx) / mean(P_05_approx),
             num_hh = sum(pc11_pca_no_hh),
             tot_pop = sum(pc11_pca_tot_p),
             num_vil = n())
@@ -98,7 +101,7 @@ odishasum$num_vil_SVS <- odishasum$num_vil * (odishasum$perc_SVS_solar / 100)
 # want to plug in the number of mothers per  [[1]]
 
 # this is an approximate first shot, what would be the MDE, if the whole district would be visitied
-odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_vil_SVS, avg_preg_per_vil, U2MR_23, avg_u6_per_vil, CV_u6_per_vil)
+odishasum_SVSsubs <- odishasum |> dplyr::select(dist_name, num_vil_SVS, avg_preg_per_vil, U2MR_23, avg_u5_approx, CV_u5_approx)
 odishasum_SVSsubs$MDE_fulldistr <- NA
 # this should be either 2 or 5:
 studylength <- 2 # in years
@@ -405,9 +408,9 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_diarrhea_100vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = num_vil_2_visit,
-    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    n_per_cluster = odishasum_SVSsubs$avg_u5_approx[[i]],
     MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
-    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    CV = odishasum_SVSsubs$CV_u5_approx[[i]],
     ICC = 0.01) |> round(2)
 }
 
@@ -416,9 +419,9 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_diarrhea_100vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = num_vil_2_visit,
-    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    n_per_cluster = odishasum_SVSsubs$avg_u5_approx[[i]],
     MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
-    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    CV = odishasum_SVSsubs$CV_u5_approx[[i]],
     ICC = 0.01,
     power_choice = .9) |> round(2)
 }
@@ -432,9 +435,9 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_diarrhea_150vil[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = num_vil_2_visit,
-    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    n_per_cluster = odishasum_SVSsubs$avg_u5_approx[[i]],
     MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
-    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    CV = odishasum_SVSsubs$CV_u5_approx[[i]],
     ICC = 0.01) |> round(2)
 }
 
@@ -443,9 +446,9 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
   print(i)
   odishasum_SVSsubs$MDE_diarrhea_150vil_90pc[[i]] <- back_out_MDE_reduction_2proptest_cluster(
     n_cluster = num_vil_2_visit,
-    n_per_cluster = odishasum_SVSsubs$avg_u6_per_vil[[i]],
+    n_per_cluster = odishasum_SVSsubs$avg_u5_approx[[i]],
     MR = odishasum_SVSsubs$diarrhea_incidence[[i]],
-    CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+    CV = odishasum_SVSsubs$CV_u5_approx[[i]],
     ICC = 0.01,
     power_choice = .9) |> round(2)
 }
@@ -453,8 +456,8 @@ for (i in 1:nrow(odishasum_SVSsubs)) {
 # HOW MANY VILLAGES TO BE POWERED FOR 25% reduction?
 odishasum_SVSsubs$nvil_for_MDE25 <- NA
 for (i in 1:nrow(odishasum_SVSsubs)) {
-  nclus.out <- clusterPower::cpa.binary(nsubjects = odishasum_SVSsubs$avg_u6_per_vil[[i]], 
-                                        CV = odishasum_SVSsubs$CV_u6_per_vil[[i]],
+  nclus.out <- clusterPower::cpa.binary(nsubjects = odishasum_SVSsubs$avg_u5_approx[[i]], 
+                                        CV = odishasum_SVSsubs$CV_u5_approx[[i]],
                                         ICC = 0.01, 
                                         p1 = odishasum_SVSsubs$diarrhea_incidence[[i]], 
                                         p2 = odishasum_SVSsubs$diarrhea_incidence[[i]] * .75, 
@@ -472,7 +475,13 @@ odishasum_SVSsubs
 
 Now we print a final table here as well (like above)
 
+Hi All, here are the updated diarrhea power calculations. Instead of the approximation via the number of pregnant women from the NFHS data, I used the number of under 6 children from the Indian census from 2011. This allowed me to incorporate the distribution of villages for every district (using the CV for every district in the formula). The share of children in each village should not have changed much in the last c. 10 years. To account for the fact that population grew by roughly 10% since then and we are interested in U5 and not U6, I transformed the "P_06" variable of every village by multiplying by `(5/6) * 1.1`. Again, this is simple randomization and a more sophisticated randomization strategy (such as block-randomization) will further improve power. To visually inspect the distribution of villages, please have a look at this app (the U6 population is available for the target districts only): https://lehner.shinyapps.io/odisha_interactive/. See the screenshot below and the DIL h20-india repository for the R code.
+
+
+
 ```{r}
-final_table_print <- odishasum_SVSsubs |> select(dist_name, num_vil_SVS, avg_u6_per_vil, CV_u6_per_vil, diarrhea_incidence, MDE_diarrhea_100vil, MDE_diarrhea_100vil_90pc, MDE_diarrhea_150vil, MDE_diarrhea_150vil_90pc, nvil_for_MDE25pc)
+final_table_print <- odishasum_SVSsubs |> select(dist_name, num_vil_SVS, avg_u5_approx, CV_u5_approx, diarrhea_incidence, MDE_diarrhea_100vil, MDE_diarrhea_100vil_90pc, MDE_diarrhea_150vil, MDE_diarrhea_150vil_90pc, nvil_for_MDE25)
 final_table_print
 ```
+
+
