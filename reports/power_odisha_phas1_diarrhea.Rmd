@@ -1,0 +1,438 @@
+---
+title: "Power Considerations for Village RCT Odisha - Phase 1 - Diarrhea outcome"
+author: Alex Lehner, July2023
+date: "2023-07-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+#' Logit
+#' @param x numeric
+#' @return
+#' @export
+logit <- function(x) log(x/(1-x))
+
+#' Inverse logit
+#' @param x numeric
+#' @return
+#' @export
+inv_logit <- function(x) {exp(x)/(1+exp(x))}
+# THIS IS JUST plogis()
+
+```
+
+
+# Repeat measurments across units (children)
+
+
+### NEXT ITERATION: multiple rounds / autocorrelation
+
+There is also a dataset for a project that Akanksha worked on [linked here](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VAFYV1&widget=dataverse@harvard).
+
+Here we use the data from Amy's 2019 Lancet paper.
+
+
+```{r}
+# find real world data from Amy's Bangladesh study in the Lancet
+amy_lancet <- readstata13::read.dta13("../data/amypickering_lancet_BGD/chlorine_diarrhea_public.dta")
+amy_lancet <- amy_lancet[!is.na(amy_lancet$uniqueid_entered), ]
+# in paper we have 3142 and 3063 child-observations
+(3142 + 3063) # number matches
+table(amy_lancet$tr) # is the treatment variable
+
+# POWER WORDING
+# We	powered	the	study	to	detect	a	25%	reduction	in	the	WHO	case	definition	of	diarrhea;	our	sample	size	calculations	assumed,	based	on	prior	work,	that	diarrhea	prevalence	would	be	10%	among	children	<5	years	of	age	in	the	study	area.	We	conducted	the	power	calculations	using	a	cluster-level	means	approach	(comparing	the	mean	diarrhea	prevalence	by	cluster-time-point	between	groups)	because	we	did	not	have	a	good	estimate	for	the	intracluster	correlation	coefficient	for	diarrhea	by	water	point.	This	approach	treats	repeated	measures	at	one	point	in	time	the	same	as	repeated	measures	over	time.	Using	this	approach,	we	calculated	that	we	would	have	96%	power	with	the	study	design	(50	clusters	per	arm,	10	children	per	cluster)
+
+table(amy_lancet$child_diarrhea)
+amy_lancet$child_diarrhea1 <- ifelse(amy_lancet$child_diarrhea == "Yes", 1, 0) # make 01
+table(amy_lancet$child_diarrhea1) # check
+amy_lancet |> group_by(tr) |> summarise(meandia = mean(child_diarrhea1, na.rm = T))
+
+# counts
+amy_lancet |> count(round, tr, child_diarrhea1)
+
+# ICC
+fixest::feols(child_diarrhea1 ~ 0 | Block, data = amy_lancet)
+fixest::feols(child_diarrhea1 ~ 0 | pumpid, data = amy_lancet) # 0.021 as compared to 0.025 in paper
+
+
+logitamy <- glm(child_diarrhea1 ~ tr + round + Block, data = amy_lancet, family = "binomial")
+summary(logitamy)
+
+
+olsamy <- fixest::feols(child_diarrhea1 ~ tr | Block + round, data = amy_lancet)
+summary(olsamy)
+meanctrl <- mean(amy_lancet$child_diarrhea1[amy_lancet$tr != "trchlorine"]) 
+(meanctrl + olsamy$coefficients) / meanctrl
+
+
+# AUTOCORRELATION
+# check how the lag works
+data.frame(id = c(1,1,1,2,2,2), val = rep(1:3, 2)) |> group_by(id) |> 
+  mutate(lagged = lag(val, n = 1, default = NA, order_by = id))
+
+# sort by id and round first (is sorted by default? no but the order_By does the job):
+amy_lancet <- amy_lancet %>%                           
+  group_by(childidfull) %>%
+  dplyr::mutate(laggedval = lag(child_diarrhea1, n = 1, default = NA, order_by = round))
+View(amy_lancet |> select(round, child_diarrhea1, laggedval, diarrhea_count))
+
+amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
+
+lm(child_diarrhea1 ~ laggedval + childidfull, data = amy_lancet) |> summary()
+
+
+
+
+# wanna see ICC + block effect
+# wanna do the calc with how many unique 1's in the diarrhea case
+# run the regression with indiv FE and error
+olsamy <- fixest::feols(child_diarrhea1 ~ tr | round + Block, data = amy_lancet)
+summary(olsamy)
+summary(olsamy, vcov = ~ Block)
+summary(olsamy, vcov = ~ pumpid)
+summary(olsamy, vcov = ~ childidfull)
+summary(olsamy, vcov = ~ Block + childidfull)
+
+# get the means per round
+amy_lancet |> group_by(round) |> summarise(meandiarrhea = mean(child_diarrhea1))
+
+roundreg <- amy_lancet |> group_by(round) |> summarise(ols = fixest::feols(child_diarrhea1 ~ tr | Block, data = cur_data())$coefficients,
+                                           tstats = summary(fixest::feols(child_diarrhea1 ~ tr | Block, data = cur_data()))$coeftable[1,3],
+                                           nobs = fixest::feols(child_diarrhea1 ~ tr | Block, data = cur_data())$nobs)
+
+roundreg$ols |> weighted.mean(w = roundreg$nobs)
+
+test <- fixest::feols(child_diarrhea1 ~ tr | round, data = amy_lancet)
+fixest::fixef(test) # |> plot()
+```
+
+
+
+```{r}
+
+
+# checking diarrhea frequency
+
+amy_lancet <- amy_lancet |> group_by(childidfull) |> mutate(diarrhea_count = sum(child_diarrhea1))
+
+table(amy_lancet$diarrhea_count)
+table(amy_lancet$diarrhea_count[amy_lancet$tr == "chlorine"])
+table(amy_lancet$diarrhea_count[amy_lancet$tr != "chlorine"])
+
+
+# UNIQUE CHILDREN
+amy_lancet$diarrhea_ever <- ifelse(amy_lancet$diarrhea_count > 0, 1, 0) # assign a 1 if a child ever had diarrhea at some point
+amy_lancet_unique <- amy_lancet[!duplicated(amy_lancet$childidfull), ]
+table(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"])
+table(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"])
+mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+# effect on unique
+mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"]) / mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+
+logitever <- glm(diarrhea_ever ~ tr, data = amy_lancet_unique, family = "binomial")
+summary(logitever)
+exp(logitever$coefficients[2])
+# effsize
+olsever<- fixest::feols(diarrhea_ever ~ tr, data = amy_lancet_unique)
+summary(olsever)
+meanctrl <- mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+(meanctrl + olsever$coefficients[2]) / meanctrl
+
+# effect is lower
+
+# now we do a final thing and see how many new, independent cases get added with each round
+amy_lancet$diarrhea_first <- 0
+
+amy_lancet <- amy_lancet %>%
+  #select(childidfull, round, child_diarrhea1, diarrhea_count) |> 
+  group_by(childidfull) %>%
+  arrange(round) |> # need to arrange by round here, otherwise the first assignment would not work - it rests on the thing being orderd
+  mutate(first_1 = child_diarrhea1 == 1 & !duplicated(child_diarrhea1 == 1))  %>%
+  arrange(childidfull)
+
+
+amy_lancet$diarrhea_first <- ifelse(amy_lancet$first_1 == TRUE, 1, 0)
+
+
+# get the percentage point add per round
+roundsummary <- amy_lancet |> group_by(round) |> summarise(diarrheanew = mean(diarrhea_first)) 
+roundsummary$diarrheanew |> sum()
+amy_lancet |> group_by(round) |> summarise(diarrheanew = mean(diarrhea_first)) 
+
+mean(amy_lancet$child_diarrhea1)
+mean(amy_lancet$diarrhea_first)
+mean(amy_lancet_unique$diarrhea_ever)
+# THIS DOES NOT WORK BECAUSE NOT EVERY CHILD HAS SAME NUMBER OF ROUNDS
+
+```
+
+
+```{r}
+# 100 villages with roughly 50
+# broken down also by trt now
+amy_lancet |> group_by(round, tr) |> summarise(diarrheanew = mean(diarrhea_first)) 
+amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
+amy_lancet |> group_by(round, tr) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
+# ICC
+fixest::feols(child_diarrhea1 ~ 0 | Block, data = amy_lancet)
+fixest::feols(child_diarrhea1 ~ 0 | pumpid, data = amy_lancet) |> fixest::r2()# 0.021 as compared to 0.025 in paper
+ICC::ICCest(pumpid, child_diarrhea1, data = amy_lancet)$ICC
+22#ICCbin::iccbin(pumpid, child_diarrhea1, data = amy_lancet, method = "aov")
+
+# period ICCs a bit more severe
+amy_lancet |> group_by(round) |> summarise(ICC = ICC::ICCest(pumpid, child_diarrhea1, data = cur_data())$ICC)
+
+
+# ICC for the block randomization
+amy_lancet$residual4ICC <- lm(child_diarrhea1 ~ Block, data = amy_lancet)$resid
+
+ICC::ICCest(pumpid, residual4ICC, data = amy_lancet)$ICC
+
+
+```
+
+
+### Checking counts per cluster (suggested by WW)
+
+
+```{r}
+
+amy_counts <- amy_lancet |> group_by(pumpid) |> summarise(n_people = n(),
+                                                          diarrh_n = sum(child_diarrhea1),
+                                                          tr = tr[1])
+
+# diarrhea counts per pump
+pois_lamb <- mean(amy_counts$diarrh_n)
+sd(amy_counts$diarrh_n) # not too bad, looks like pois (obviously since it is counts)
+library(ggh4x); library(fitdistrplus) # had troubles to fit the dpoits without these
+ggplot(data = amy_counts, aes(diarrh_n)) + geom_histogram(aes(y = stat(density))) + geom_density()
+#ggplot(data = amy_counts, aes(diarrh_n)) + geom_histogram(aes(y = stat(density))) +  geom_density(aes(dpois(1:25, lambda = pois_lamb)))
+ggplot(data = amy_counts, aes(diarrh_n)) + geom_histogram(aes(y = stat(density))) + geom_density() + stat_theodensity(distri = "pois", col = "red")
+
+
+ggplot(data = amy_counts) + geom_histogram(aes(diarrh_n)) + facet_grid(~ tr)
+
+
+plot(dpois(1:25, lambda = pois_lamb))
+```
+
+
+
+## SIMULATE MULTIPLE ROUNDS
+
+
+```{r}
+
+
+set.seed(123)  # Set seed for reproducibility
+nV <- 550 # number of villages
+nJ <- 50 # cluster size - COULD bake in variation in cluster size to match a CV
+p_diar <- .05
+vil <- rep(1:nV, each = nJ) # creating cluster variable
+vil_frame <- data.frame(childid = 1:(nV*nJ), vilid = vil)
+MDEdia <- .20
+nrounds <- 5
+ICCval <- .015
+
+# do a regular powercalc
+clusterPower::cpa.binary(nsubjects = nJ, 
+                         nclusters = nV,
+                                        CV = 1,
+                                        ICC = ICCval, 
+                                        p1 = p_diar, 
+                                        p2 = p_diar * (1-MDEdia), 
+                                          tol = .Machine$double.eps^.5)
+# with one round in the simulation, you should get roughly this power number
+# test <- ICCbin::rcbin(prop = p_diar, prvar = 0, noc = nV, csize = nJ, csvar = 0, rho = .01)
+# mean(test$y)
+# ICC::ICCest(cid, y, data = test)$ICC
+# ICCbin dominates fabricatr?
+
+nsim <- 500
+runframe <- data.frame(runid = 1:nsim, pointest = NA, tstat = NA, cor12 = NA, cor23 = NA,
+                       meantr = NA, meanctrl = NA,
+                       ICC = NA) # container to hold the simulation runs
+
+for (i in 1:nrow(runframe)) {
+  # assign treated
+  vil_frame_sim <- vil_frame # copy over because we grow the frame in every iteration
+  treated <- sample(1:nV, nV/2)
+  vil_frame_sim$tr <- ifelse(vil_frame_sim$vilid %in% treated, 1, 0)
+  # Original binary vector, split for treated / untreated
+  vil_frame_sim$round <- NA
+  # replicate frame to match number of rounds
+  vil_frame_sim <- bind_rows(replicate(nrounds, vil_frame_sim, simplify = FALSE))
+  vil_frame_sim$round <- rep(1:nrounds, each = nV*nJ)
+  # MDE reduction
+  p_diartr <- p_diar * (1 - MDEdia)
+  vil_frame_sim$diarrhea <- NA
+  
+  # ----------------------------------------------------------------------------
+  # INDIVIDUAL LEVEL probabilities
+  clust_e    <- rnorm(nV, 0, 0) # cluster level error
+  clust_beta <- rnorm(nV, 0, .4) # random effect (.5 gave an ICC of .15-.02)
+  b1 <- 1 # keep it 1 if you dont want to scale up
+  # add a random effect / cluster component + an error term (can switch off by setting the rnorm 0,0)
+  pr_ctr <- inv_logit(logit(p_diar)   + b1*clust_beta[vil_frame_sim$vilid[vil_frame_sim$tr == 0]] + clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 0]])
+  pr_tr  <- inv_logit(logit(p_diartr) + b1*clust_beta[vil_frame_sim$vilid[vil_frame_sim$tr == 1]] + clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 1]])
+  vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, pr_ctr)
+  vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, pr_tr)
+  
+  # ----------------------------------------------------------------------------
+  # POPULATION LEVEL with ICCbinary
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & 
+  #                          vil_frame_sim$round == 1] <- fabricatr::draw_binary_icc(p_diar, clusters = vil_frame_sim$vilid[vil_frame_sim$tr == 0], ICC = ICCval)
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & 
+  #                          vil_frame_sim$round == 1] <- fabricatr::draw_binary_icc(p_diartr, clusters = vil_frame_sim$vilid[vil_frame_sim$tr == 1], ICC = ICCval)
+  
+  # ICCBIN APPROACH:
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+  #                          vil_frame_sim$round == 1] <- ICCbin::rcbin(prop = p_diar, prvar = 0, noc = nV, csize = nJ, csvar = 0, rho = ICCval)$y
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+  #                          vil_frame_sim$round == 1] <- ICCbin::rcbin(prop = p_diartr, prvar = 0, noc = nV, csize = nJ, csvar = 0, rho = ICCval)$y
+  
+  # ----------------------------------------------------------------------------
+  # assign diarrhea cases - "population level", i.e. just 0,1 draws according to the probabilities
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & 
+  #                          vil_frame_sim$round == 1] <- sample(c(0, 1), prob = c(1-p_diar, p_diar), (nV*nJ)/2, replace = TRUE)
+  # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & 
+  #                          vil_frame_sim$round == 1] <- sample(c(0, 1), prob = c(1-p_diartr, p_diartr), (nV*nJ)/2, replace = TRUE)
+  if(nrounds > 1) { # this allows me to build on top of the round with an AR process
+    for (t in 2:nrounds) {
+      # ----------------------------------------------------------------------------
+      # POPULATION PLAIN VANILLA
+      # vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+      #                      vil_frame_sim$round == t] <- sample(c(0, 1), prob = c(1-p_diar, p_diar), (nV*nJ)/2, replace = TRUE)
+      # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+      #                          vil_frame_sim$round == t] <- sample(c(0, 1), prob = c(1-p_diartr, p_diartr), (nV*nJ)/2, replace = TRUE)
+      # ----------------------------------------------------------------------------
+      # POPULATION WITH ICC
+      # vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & 
+      #                      vil_frame_sim$round == t] <- fabricatr::draw_binary_icc(p_diar, clusters = vil_frame_sim$vilid[vil_frame_sim$tr == 0], ICC = ICCval)
+      # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & 
+      #                      vil_frame_sim$round == t] <- fabricatr::draw_binary_icc(p_diartr, clusters = vil_frame_sim$vilid[vil_frame_sim$tr == 1], ICC = ICCval)
+      # ----------------------------------------------------------------------------
+      # INDIVIDUAL ADDONS
+      vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, pr_ctr)
+      vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, pr_tr)
+    }
+  }
+  
+  # run the regression, cluster at treatment assignment level to get SEs right
+  # ... no block randomization (don't know how much variation we would explain with a block FE as of now)
+  regobj <- summary(fixest::feols(diarrhea ~ tr | round, data = vil_frame_sim), vcov = ~ vilid)
+  runframe$pointest[i] <- regobj$coeftable[1,1] # point estimate
+  runframe$tstat[i]    <- regobj$coeftable[1,3] # tstat
+  #cat("done with run ", i)
+  # some other info
+  runframe$cor12[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 1], vil_frame_sim$diarrhea[vil_frame_sim$round == 2])
+  runframe$cor23[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 2], vil_frame_sim$diarrhea[vil_frame_sim$round == 3])
+  runframe$meantr[i]   <- vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & vil_frame_sim$round == 1] |> mean()
+  runframe$meanctrl[i] <- vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & vil_frame_sim$round == 1] |> mean()
+  
+  runframe$ICC[i] <- ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
+}
+
+mean(abs(runframe$tstat) > 1.96)
+mean(runframe$ICC)
+
+ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
+ICC::ICCest(vilid, diarrhea, data = vil_frame_sim[vil_frame_sim$tr == 0, ])$ICC
+
+vil_frame_sim <- vil_frame_sim |> group_by(childid) |> mutate(diarrhea_count = sum(diarrhea))
+table(vil_frame_sim$diarrhea_count)
+
+
+# analysis / checking
+vil_frame_sim <- vil_frame_sim %>%                           
+  group_by(childid) %>%
+  dplyr::mutate(laggedval = lag(diarrhea, n = 1, default = NA, order_by = round))
+vil_frame_sim |> group_by(round, tr) |> summarise(diarrhea = mean(diarrhea)) 
+cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 1], vil_frame_sim$diarrhea[vil_frame_sim$round == 2])
+vil_frame_sim |> filter(round > 1) |> group_by(round) |> summarise(corr = cor(diarrhea, laggedval, use = "complete.obs"))
+
+
+# checking how the correlation compounds over time (if there is some snowballing going on)
+round1 <- sample(c(0, 1), prob = c(1-p_diar, p_diar), (nV*nJ), replace = TRUE)
+round1 <- c(round1, round1tr)
+# Compute the correlation
+round2 <- add_round(round1)
+cor(round1, round2)
+mean(round1)
+mean(round2[1:2500])
+mean(round2[2500:5000])
+round3 <- add_round(round2)
+cor(round3, round2)
+mean(round3)
+round4 <- add_round(round3)
+cor(round3, round4)
+mean(round4)
+mean(round4[1:2500])
+mean(round4[2500:5000])
+
+
+```
+
+
+
+# Next Round - Michael responds to e-mail
+
+```{r}
+# then on July12th there was a response by MK
+
+# Hi, 
+# 
+# Thanks so much for your email. Sone quick reactions
+# 
+# I think we need to pick up smaller than 25% reductions in diarrhea. 
+# 
+# I don't think we can afford three rounds of data collection within our current budget. Can we get cost estimates? These calculations suggest the ratio of cost of mortality to diarrhea power is high for ILC India relative to individually randomizable treatments.
+# 
+# what ICC is being used?
+# 
+# I think it's critical to take into account intra-cluster correlation. 
+# 
+#  Can you share all the parameters that are assumed? 
+# 
+# Does this involve any baseline data collection? 
+# 
+# IIt would be great if you could share the code that you're using as well. 
+# 
+# I'm a little confused because I thought there was supposed to be 150 villages rather than 100. 
+# 
+# Best Wishes,
+# Michael
+
+# ------------------------
+ # Akankhsa then said in Person on July 13th at Booth during DIL teamweek that they only put 150 to have buffer (befoer it was 80 and they put 100 to have buffer). She also said that new village numbers will be based on outcome of power calculations
+
+
+# ------------------------
+# later the same day, Elisa wrote on the pickering slack
+# Hi 
+# @Alex Lehner
+#  can you calculate how many villages we need if we want to do 1 data collection for U2 mortality with ICC NOT zero (we considered 0.01 in the past right?). What MK wants to know is the trade-off to do 1 data collection with 3 times the sample or 3 rounds of data collection with less sample. We are going to ask for additional funds to GiveWell so we would like to budget for both scenarios after we know the required sample size for a MDE < 25% (maybe 20%? or maybe 15%, but with 95% power, NO less). Then we can put together the budget and think about the trade-offs 0 Thanks a lot!
+
+
+
+# -----------
+# Not included in response to Elisa: Just as a quick back of the envelope to anticipate: for just having one round, given 50 U5children per village, a 95% powered MDE of 20% would require 550 villages
+
+
+
+```
+
+
+
