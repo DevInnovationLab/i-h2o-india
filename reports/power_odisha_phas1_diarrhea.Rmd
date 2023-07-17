@@ -6,7 +6,8 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, include = FALSE, warning = FALSE, message = FALSE)
+
 ```
 
 
@@ -26,6 +27,9 @@ inv_logit <- function(x) {exp(x)/(1+exp(x))}
 # THIS IS JUST plogis()
 
 ```
+
+This document uses Pickering et al (2019) data to inform power simulations for a cluster RCT in Odisha. The outcome variable is diarrhea incidence and we want to collect multiple rounds of data.
+Autocorrelation and especially Intra-cluster Correlation are going to be crucial as they will decrease statistical power.
 
 
 # Repeat measurments across units (children)
@@ -185,7 +189,7 @@ amy_lancet |> group_by(round, tr) |> summarise(corr = cor(child_diarrhea1, lagge
 fixest::feols(child_diarrhea1 ~ 0 | Block, data = amy_lancet)
 fixest::feols(child_diarrhea1 ~ 0 | pumpid, data = amy_lancet) |> fixest::r2()# 0.021 as compared to 0.025 in paper
 ICC::ICCest(pumpid, child_diarrhea1, data = amy_lancet)$ICC
-22#ICCbin::iccbin(pumpid, child_diarrhea1, data = amy_lancet, method = "aov")
+ICCbin::iccbin(pumpid, child_diarrhea1, data = amy_lancet, method = "aov")
 
 # period ICCs a bit more severe
 amy_lancet |> group_by(round) |> summarise(ICC = ICC::ICCest(pumpid, child_diarrhea1, data = cur_data())$ICC)
@@ -228,21 +232,31 @@ plot(dpois(1:25, lambda = pois_lamb))
 
 ## SIMULATE MULTIPLE ROUNDS
 
+```{r}
+# experiment with AR1
+```
+
+
 
 ```{r}
 
 
 set.seed(123)  # Set seed for reproducibility
-nV <- 550 # number of villages
+nV <- 100 # number of villages
 nJ <- 50 # cluster size - COULD bake in variation in cluster size to match a CV
 p_diar <- .05
 vil <- rep(1:nV, each = nJ) # creating cluster variable
-vil_frame <- data.frame(childid = 1:(nV*nJ), vilid = vil)
-MDEdia <- .20
-nrounds <- 5
+vil_frame <- data.frame(childid = 1:(nV*nJ), vilid = as.factor(vil))
+MDEdia <- .25
+nrounds <- 3 # how many rounds to you want to collect
 ICCval <- .015
+indiv_sd <- .005 # the standard deviation is mean inflating (pushes up the baseline PR, has to do with the inverse logit)
+indiv_ar <- .9
 
-# do a regular powercalc
+# LOG: without AR1, we had an indiv sd of 0.005 and a 0,.5 draw for cluster - this gave ICC of 0.015 on avg
+
+# do a regular powercalc and try to get this right in a benchmark simulation with only one round
+# a simulation with one round should give roughly a power to this number, otherwise something is off
 clusterPower::cpa.binary(nsubjects = nJ, 
                          nclusters = nV,
                                         CV = 1,
@@ -256,11 +270,16 @@ clusterPower::cpa.binary(nsubjects = nJ,
 # ICC::ICCest(cid, y, data = test)$ICC
 # ICCbin dominates fabricatr?
 
-nsim <- 500
+nsim <- 100
 runframe <- data.frame(runid = 1:nsim, pointest = NA, tstat = NA, cor12 = NA, cor23 = NA,
                        meantr = NA, meanctrl = NA,
                        ICC = NA) # container to hold the simulation runs
 
+# started off with a loop in the initial iterative process
+# ... idea is to bring it into a function that then can be vectorized to improve the speed (later, IF NEEDED ONLY)
+
+# make sure to check the resulting means in T and C after you changed the ar, sd parameters etc - they push up the baseline rate too high if the values are too high
+# if you adjust ICC, you most probably also have to adjust the AR1 process - and vice versa
 for (i in 1:nrow(runframe)) {
   # assign treated
   vil_frame_sim <- vil_frame # copy over because we grow the frame in every iteration
@@ -277,16 +296,34 @@ for (i in 1:nrow(runframe)) {
   
   # ----------------------------------------------------------------------------
   # INDIVIDUAL LEVEL probabilities
-  clust_e    <- rnorm(nV, 0, 0) # cluster level error
-  clust_beta <- rnorm(nV, 0, .4) # random effect (.5 gave an ICC of .15-.02)
-  b1 <- 1 # keep it 1 if you dont want to scale up
+  # 1st way would be to model the full dataframe rightaway rep(frame, n-period), this would allow model the AR1 process directly in one go ... c(sapply(1:n_obs, function(x) {arima.sim(list(order=c(1,0,0), ar=gamma), n=n_periods
+  # 2nd way chosen here: 
+  # ... expand data period by period (this allowed to explore different ICC sampling strategies in the beginning)
+  # ... 
+  # n_ctr <- nV*nJ/2 # dump later
+  # n_tr  <- nV*nJ/2 # dump later
+  ## INDIVIDUAL LEVEL EFFECT
+  if (nrounds == 1) { # if only one round, we just draw from normal one time
+    #indiv_e <- data.frame(err = rnorm(nV*nJ, 0, indiv_sd), round = 1) # individual level error - has to be somewhat small
+    vil_frame_sim$err <- rnorm(nV*nJ, 0, indiv_sd) # having the error in the vilframe makes it easier to subset by round below
+  } else { # model the AR1 process, replicate the AR1 process over nrounds nobs (i.e. nV*nJ) times
+    vil_frame_sim$err <- c(sapply(1:(nV*nJ), function(x) {arima.sim(list(order=c(1,0,0), ar=indiv_ar), n = nrounds, sd = indiv_sd)}))
+  }
+  ## CLUSTER LEVEL EFFECT (to model ICC)
+  clust_e <- rnorm(nV, 0, .5) # random effect (.5 gave an ICC of .015-.02)
+  b1      <- 1 # keep it 1 if you dont want to scale up
   # add a random effect / cluster component + an error term (can switch off by setting the rnorm 0,0)
-  pr_ctr <- inv_logit(logit(p_diar)   + b1*clust_beta[vil_frame_sim$vilid[vil_frame_sim$tr == 0]] + clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 0]])
-  pr_tr  <- inv_logit(logit(p_diartr) + b1*clust_beta[vil_frame_sim$vilid[vil_frame_sim$tr == 1]] + clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 1]])
+  # rewrote to have a logit here and the pr (from the plogis/inv_logit transformation) inside the rbinom
+  # ... so that I can introduce an AR1 process easier
+  logit_ctr   <- logit(p_diar) + b1*clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 0]]
+  logit_ctr_1 <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == 1 & vil_frame_sim$tr == 0]
+  # treatment probabilities
+  logit_tr    <- logit(p_diartr) + b1*clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 1]]
+  logit_tr_1  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == 1 & vil_frame_sim$tr == 1]
   vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
-                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, pr_ctr)
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_ctr_1))
   vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
-                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, pr_tr)
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_tr_1))
   
   # ----------------------------------------------------------------------------
   # POPULATION LEVEL with ICCbinary
@@ -322,31 +359,42 @@ for (i in 1:nrow(runframe)) {
       # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & 
       #                      vil_frame_sim$round == t] <- fabricatr::draw_binary_icc(p_diartr, clusters = vil_frame_sim$vilid[vil_frame_sim$tr == 1], ICC = ICCval)
       # ----------------------------------------------------------------------------
-      # INDIVIDUAL ADDONS
+      # INDIVIDUAL ADDONS (with AR1 now)
+      logit_ctr_n <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == t & vil_frame_sim$tr == 0]
+      logit_tr_n  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == t & vil_frame_sim$tr == 1]
       vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
-                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, pr_ctr)
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_ctr_n))
       vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
-                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, pr_tr)
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_tr_n))
     }
   }
   
   # run the regression, cluster at treatment assignment level to get SEs right
   # ... no block randomization (don't know how much variation we would explain with a block FE as of now)
-  regobj <- summary(fixest::feols(diarrhea ~ tr | round, data = vil_frame_sim), vcov = ~ vilid)
+  regobj <- summary(fixest::feols(diarrhea ~ tr | round, data = vil_frame_sim), vcov = ~ vilid + childid)
   runframe$pointest[i] <- regobj$coeftable[1,1] # point estimate
   runframe$tstat[i]    <- regobj$coeftable[1,3] # tstat
   #cat("done with run ", i)
   # some other info
-  runframe$cor12[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 1], vil_frame_sim$diarrhea[vil_frame_sim$round == 2])
-  runframe$cor23[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 2], vil_frame_sim$diarrhea[vil_frame_sim$round == 3])
+  if (nrounds > 1) {
+      runframe$cor12[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 1], vil_frame_sim$diarrhea[vil_frame_sim$round == 2])
+      runframe$cor23[i] <- cor(vil_frame_sim$diarrhea[vil_frame_sim$round == 2], vil_frame_sim$diarrhea[vil_frame_sim$round == 3])
+  }
+
   runframe$meantr[i]   <- vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 & vil_frame_sim$round == 1] |> mean()
   runframe$meanctrl[i] <- vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & vil_frame_sim$round == 1] |> mean()
   
+  # take care of the warning
   runframe$ICC[i] <- ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
 }
 
+# 
+mean(runframe$meanctrl)
 mean(abs(runframe$tstat) > 1.96)
 mean(runframe$ICC)
+# AR Was between .03 and .15
+mean(runframe$cor12)
+mean(runframe$cor23)
 
 ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
 ICC::ICCest(vilid, diarrhea, data = vil_frame_sim[vil_frame_sim$tr == 0, ])$ICC
@@ -381,6 +429,15 @@ cor(round3, round4)
 mean(round4)
 mean(round4[1:2500])
 mean(round4[2500:5000])
+
+
+```
+
+
+## Baseline - how much variation can we explain?
+
+```{r}
+
 
 
 ```
@@ -429,6 +486,7 @@ mean(round4[2500:5000])
 
 # -----------
 # Not included in response to Elisa: Just as a quick back of the envelope to anticipate: for just having one round, given 50 U5children per village, a 95% powered MDE of 20% would require 550 villages
+
 
 
 
