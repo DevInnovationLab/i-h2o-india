@@ -378,7 +378,7 @@ power_cpa.binary <- function(nclustotal, clusize_avg = nJ, ICC_choice = ICCval,
                              pr_incidence = p_diar, MDE = MDEdia) {
   power.out <- clusterPower::cpa.binary(nsubjects = clusize_avg, 
                                         nclusters = nclustotal/2,
-                                        CV = 1,
+                                        CV = 0, # default is no variation in size, CV = 0
                                         ICC = ICC_choice, 
                                         p1 = pr_incidence, 
                                         p2 = pr_incidence * (1-MDE), 
