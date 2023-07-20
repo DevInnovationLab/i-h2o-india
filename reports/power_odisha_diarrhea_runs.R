@@ -12,7 +12,8 @@
 # No block randomization (which I think it is the assumption now?)
 # Even if you can do those quickly in stata and share the code that is helpful so we can modify things ourselves. Thansks a lot!
 
-
+rm(list = ls()) # just to make sure we start from scratch and didn't carry over stored values from the notebooks
+library(tidyverse); library(future.apply)#; library(parallel)
 # some functions to start
 
 #' Logit
@@ -49,29 +50,33 @@ nJ <- 50 # cluster size - COULD bake in variation in cluster size to match a CV
 p_diar <- .05
 
 MDEdia <- .25
-nrounds <- 3 # how many rounds to you want to collect
+nrounds <- 1 # how many rounds to you want to collect
 ICCval <- .0135 # just for the plugin formula
-indiv_sd <- .5 # the standard deviation is mean inflating (pushes up the baseline PR, has to do with the inverse logit) - that's why I decided to rescale
+indiv_sd <- .1 # the standard deviation is mean inflating (pushes up the baseline PR, has to do with the inverse logit) - that's why I decided to rescale
 # SD of .5 gives same power as formula for both ICC = 0 and ICC = 0.02
 indiv_ar <- .5
 
-clus_sd <- 0.4 # with 1 round: .5 was the value that i initially had to get roughly an ICC of .014, .7 gave .03 but with inflated base rate | .6 gave 0.022 - slightly inflate base rate | .55 gave 0.018 | .575 gave .0208
+clus_sd <- 0.425 # with 1 round: .5 was the value that i initially had to get roughly an ICC of .014, .7 gave .03 but with inflated base rate | .6 gave 0.022 - slightly inflate base rate | .55 gave 0.018 | .575 gave .0208
 # .4 gave ICC of 0.01
 # SCENARIO ICC 0: clussd: 0 indivsd: .5 ... POWER 59, indivsd: 1, POWER 58
-# SCENARIO ICC 0.02 clussd: .575 indivsd: .5
-# SCENARIO ICC 0.01 clussd: .4 individsd: .5 ... POWER 40 (instead of 32 acc to formula)
+# SCENARIO ICC 0.02 clussd: .575 (to get ICC 0.0202) indivsd: .5 - better go to .1
+# SCENARIO ICC 0.01 clussd: .4 individsd: .5 ... POWER 40 (instead of 42 acc to formula) - better go to .425 and indiv sd .1 as above
+# VERDICT: AL suggests we settle with .425 and .575 (both indiv sd .1)
+# ... for the ICC 0.01 case we overshoot by maybe 0.5 percentage points (i.e. 0.05 in the power output number)
+# ... for the ICC 0.02 we undershoot power by c. 3 percentage points
 
 # zero ICC benchmark case has to fit this power:
 clusterPower::cpa.binary(nsubjects = nJ,
                          nclusters = nV/2,
-                         CV = 1,
-                         ICC = 0,
+                         CV = 0,
+                         ICC = 0.01,
                          p1 = p_diar,
                          p2 = p_diar * (1-MDEdia),
                          tol = .Machine$double.eps^.5)
 
-
-gen_binary_rounds <- function(run_n, nV, nJ, p_diar, MDEdia, nrounds, indiv_sd, indiv_ar, clus_sd) {
+# run_n gets eliminated here, nV to first (the clustersize)
+gen_binary_rounds <- function(nV, MDEdia, nJ, clus_sd, p_diar, nrounds, indiv_sd, indiv_ar) {
+  # moved MDE and avg clustersize on 2nd position to have it right for the nested lapply default
   vil <- rep(1:nV, each = nJ) # creating cluster variable
   vil_frame_sim <- data.frame(childid = 1:(nV*nJ), vilid = as.factor(vil))
   # assign treated
@@ -139,7 +144,34 @@ gen_binary_rounds <- function(run_n, nV, nJ, p_diar, MDEdia, nrounds, indiv_sd, 
   #                          vil_frame_sim$round == 1] <- sample(c(0, 1), prob = c(1-p_diar, p_diar), (nV*nJ)/2, replace = TRUE)
   # vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
   #                          vil_frame_sim$round == 1] <- sample(c(0, 1), prob = c(1-p_diartr, p_diartr), (nV*nJ)/2, replace = TRUE)
-  if(nrounds > 1) { # this allows me to build on top of the round with an AR process
+  
+  # CHANGE JULY20th: break out of the loop structure for our current default case of nrounds == 3. This will save a lot of time without having to spend a lot of time rethinking the code
+  if(nrounds == 3) {
+    # HARDCODED FOR 2 EXTRA ROUNDS:
+    # INDIVIDUAL ADDONS (with AR1 now)
+    # ROUND 2
+    logit_ctr_n <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == 2 & vil_frame_sim$tr == 0]
+    logit_tr_n  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == 2 & vil_frame_sim$tr == 1]
+    # same rescaling as above\
+    resc_p_ctr_n <- rescale_pr(inv_logit(logit_ctr_n), p_diar)
+    resc_p_tr_n <- rescale_pr(inv_logit(logit_tr_n), p_diartr)
+    
+    vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+                             vil_frame_sim$round == 2] <- rbinom((nV*nJ)/2, 1, resc_p_ctr_n) #inv_logit(logit_ctr_n))
+    vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+                             vil_frame_sim$round == 2] <- rbinom((nV*nJ)/2, 1, resc_p_tr_n) #inv_logit(logit_tr_n))
+    # ROUND 3 ... just overwriting the _n from above - no need to keep vector stored
+    logit_ctr_n <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == 3 & vil_frame_sim$tr == 0]
+    logit_tr_n  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == 3 & vil_frame_sim$tr == 1]
+    # same rescaling as above\
+    resc_p_ctr_n <- rescale_pr(inv_logit(logit_ctr_n), p_diar)
+    resc_p_tr_n <- rescale_pr(inv_logit(logit_tr_n), p_diartr)
+    
+    vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
+                             vil_frame_sim$round == 3] <- rbinom((nV*nJ)/2, 1, resc_p_ctr_n) #inv_logit(logit_ctr_n))
+    vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
+                             vil_frame_sim$round == 3] <- rbinom((nV*nJ)/2, 1, resc_p_tr_n) #inv_logit(logit_tr_n))
+  } else if (nrounds > 1) { # this allows me to build on top of the round with an AR process
     for (t in 2:nrounds) {
       # ----------------------------------------------------------------------------
       # POPULATION PLAIN VANILLA
@@ -168,7 +200,7 @@ gen_binary_rounds <- function(run_n, nV, nJ, p_diar, MDEdia, nrounds, indiv_sd, 
     }
   }
   # create the container to store results ... tibble so we can bind_rows afterwards
-  runframe <- tibble(runid = 1,
+  runframe <- tibble(runid = 1, MDE = MDEdia, nclusters = nV, clusize = nJ,
                          pointest = NA, tstat = NA,
                          pointest1 = NA, tstat1 = NA,
                          cor12 = NA, cor23 = NA,
@@ -201,15 +233,83 @@ gen_binary_rounds <- function(run_n, nV, nJ, p_diar, MDEdia, nrounds, indiv_sd, 
   # store the vector of counts so we can check if they are poisson (they are from what I saw)
   diarrh_counts <- vil_frame_sim |> group_by(vilid) |> summarise(diarrh_n = sum(diarrhea))
   runframe$count_vec[i] <- list(diarrh_counts$diarrh_n)
+  
   return(runframe)
 }
 
-
-
-store <- bind_rows(lapply(1:100, function(x)
-  gen_binary_rounds(x, nV = nV, nJ = nJ, p_diar = p_diar, MDEdia = MDEdia, nrounds = 3, indiv_sd = .5, indiv_ar = .1, clus_sd = clus_sd)))
+# replicate the same village size nruns times to check speed and if we are on spot powerwise
+nruns <- 1000
+store <- bind_rows(
+  lapply(rep(100, nruns), function(nvil)
+    gen_binary_rounds(nvil, nJ = nJ, p_diar = p_diar, MDEdia = MDEdia, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar, clus_sd = clus_sd))
+  )
 # checks
+#store <- replicate(50, gen_binary_rounds(nV = nV, nJ = nJ, p_diar = p_diar, MDEdia = MDEdia, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar, clus_sd = clus_sd)) #|> bind_rows()
 store$meanctrl |> mean()
+store$meantr |> mean()
 store$ICC |> mean()
 mean(abs(store$tstat) > 1.96) # power
+
+# ---------------------------------------------------------------------------------
+# NOW START THE MULTILAYERED runs
+# ... we do it in two instances for the ICC (specifying the clus_sd) because the actual ICC value never comes out as 0.01, so it is hard to categorize (without doing something within the lapplies - which is something I want to avoid)
+clus_sds <- c(.425, .575)
+vilsizes <- c(30, 50)
+MDEs <- c(.2, .1)
+vilsizevec <- seq(50, 1000, by = 100)
+nruns <- 1000 # how many iterations per villagesize?
+store <- future_lapply(rep(vilsizevec, each = nruns), function(nvil) {
+           lapply(MDEs, function(MDE) {
+             lapply(vilsizes, function(vilsize) {
+                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[1]], p_diar = p_diar, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
+             }) # close innter lapply (vilsizes)
+           }) # close middle lapply
+         }, future.seed = TRUE) # close outer lapply - FOR PARALLEL FUTURE function we need future.seed = T
+# SECOND ICC VALUE
+stor1 <- future_lapply(rep(vilsizevec, each = nruns), function(nvil) {
+           lapply(MDEs, function(MDE) {
+             lapply(vilsizes, function(vilsize) {
+                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[2]], p_diar = p_diar, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
+             }) # close innter lapply (vilsizes)
+           }) # close middle lapply
+         }, future.seed = TRUE) # close outer lapply - FOR PARALLEL FUTURE function we need future.seed = T
+
+
+store_flat <- purrr::flatten(store) # now with the THIRD layer of applies, we need to flatten out one level because we have lists of list of lists now and we want lists of lists
+store <- bind_rows(store_flat)
+store$MDE <- as.factor(store$MDE)
+# finally, compute power for every run (mutate instead of summarize and then merge with the storeframe)
+storesummary <- store |> group_by(nclusters, MDE, clusize) |> summarise(power = mean(abs(tstat) > 1.96))
+storesummary$ICC <- 0.01 |> as.factor() # override ICC to have categorical
+# DO THAT ALSO SEPARATELY FOR THE SECOND ONE - bit ugly, I know
+store_fla1 <- purrr::flatten(stor1) # now with the THIRD layer of applies, we need to flatten out one level because we have lists of list of lists now and we want lists of lists
+stor1 <- bind_rows(store_fla1)
+stor1$MDE <- as.factor(stor1$MDE)
+# finally, compute power for every run (mutate instead of summarize and then merge with the storeframe)
+storesummar1 <- stor1 |> group_by(nclusters, MDE, clusize) |> summarise(power = mean(abs(tstat) > 1.96))
+storesummar1$ICC <- 0.02 |> as.factor() # override ICC to have categorical
+
+storesummary <- bind_rows(storesummary, storesummar1)
+
+write_rds(storesummary, file = "reports/powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
+
+
+
+ggplot(storesummary, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+)) + 
+  geom_point() + geom_line() + facet_wrap(~ clusize, nrow = 2) +
+  ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() #+
+  #guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  #labs(colour="MDE", shape="ICC") +# scale_color_DIL() +
+  #scale_x_continuous(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  #scale_y_continuous(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.1)) # shrink default expansion (0.6 for discrete) 
+
+p
 
