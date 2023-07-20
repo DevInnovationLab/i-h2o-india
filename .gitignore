@@ -85,6 +85,9 @@
 !/**/*.js
 !/**/*.html
 
+# data
+!/**/data/**/*.dta
+
 #######################
 # Include some additional file formats in any output folder. You might have
 # to change the name of the output folder to whatever it is called in your
