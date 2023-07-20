@@ -26,6 +26,23 @@ logit <- function(x) log(x/(1-x))
 inv_logit <- function(x) {exp(x)/(1+exp(x))}
 # THIS IS JUST plogis()
 
+
+# takes in vector, calculates mean, rescales by the difference in means (only works for + at this stage because that's the direction the plogis transformation pushes the normal with mean 0)
+rescale_pr <- function(x, pr) {
+  if(length(pr) > 1) stop("probability to rescale on has to be of length 1")
+  rescale_diff <- mean(x) - pr
+  #if (rescale_diff < 0) stop("rescale difference has to be greater than 0")
+  if (rescale_diff < 0) rescale_diff <- 0 # nothing happens if the rescale is negative bc it was inflated
+  new_x <- x - rescale_diff # return new vector of probabilities
+  #if (min(new_x) < 0) stop("probabilities cannot be negative")
+  # just don't return them in case some probabilities are negative - not the cleanest fix but will not matter on agg
+  #if (min(new_x) < 0) {return(x)} else {return(new_x)}
+  # yet another iteration: make the VERY few negative probabilities to 0!
+  new_x[new_x < 0] <- 0
+  return(new_x)
+ 
+}
+
 ```
 
 This document uses Pickering et al (2019) data to inform power simulations for a cluster RCT in Odisha. The outcome variable is diarrhea incidence and we want to collect multiple rounds of data.
@@ -249,29 +266,43 @@ vil <- rep(1:nV, each = nJ) # creating cluster variable
 vil_frame <- data.frame(childid = 1:(nV*nJ), vilid = as.factor(vil))
 MDEdia <- .25
 nrounds <- 3 # how many rounds to you want to collect
-ICCval <- .015
-indiv_sd <- .005 # the standard deviation is mean inflating (pushes up the baseline PR, has to do with the inverse logit)
-indiv_ar <- .9
+ICCval <- .0135
+indiv_sd <- .5 # the standard deviation is mean inflating (pushes up the baseline PR, has to do with the inverse logit) - that's why I decided to rescale
+# SD of .5 gives same power as formula for both ICC = 0 and ICC = 0.02
+indiv_ar <- .5
+
+clus_sd <- 0.4 # with 1 round: .5 was the value that i initially had to get roughly .014, .7 gave .03 but with inflated base rate | .6 gave 0.022 - slightly inflate base rate | .55 gave 0.018 | .575 gave .0208
+# .4 gave ICC of 0.01  
+# SCENARIO ICC 0: clussd: 0 indivsd: .5 ... POWER 59, indivsd: 1, POWER 58
+# SCENARIO ICC 0.02 clussd: .575 indivsd: .5
+# SCENARIO ICC 0.01 clussd: .4 individsd: .5 ... POWER 40 (instead of 32 acc to formula)
 
 # LOG: without AR1, we had an indiv sd of 0.005 and a 0,.5 draw for cluster - this gave ICC of 0.015 on avg
 
 # do a regular powercalc and try to get this right in a benchmark simulation with only one round
 # a simulation with one round should give roughly a power to this number, otherwise something is off
+# ... attention PER CONDITION, so divide by 2
 clusterPower::cpa.binary(nsubjects = nJ, 
-                         nclusters = nV,
+                         nclusters = nV/2,
                                         CV = 1,
-                                        ICC = ICCval, 
+                                        ICC = 0.01, 
                                         p1 = p_diar, 
                                         p2 = p_diar * (1-MDEdia), 
                                           tol = .Machine$double.eps^.5)
+# without ICC, nested in the above for ICC = 0
+power.prop.test(p1 = p_diar, p2 = p_diar * (1-MDEdia), n = nJ*(nV/2))
 # with one round in the simulation, you should get roughly this power number
+# if power is too high in the simulations, probably your error is not dispersed enough
 # test <- ICCbin::rcbin(prop = p_diar, prvar = 0, noc = nV, csize = nJ, csvar = 0, rho = .01)
 # mean(test$y)
 # ICC::ICCest(cid, y, data = test)$ICC
 # ICCbin dominates fabricatr?
 
-nsim <- 100
-runframe <- data.frame(runid = 1:nsim, pointest = NA, tstat = NA, cor12 = NA, cor23 = NA,
+nsim <- 500
+runframe <- data.frame(runid = 1:nsim, 
+                       pointest = NA, tstat = NA, 
+                       pointest1 = NA, tstat1 = NA, 
+                       cor12 = NA, cor23 = NA,
                        meantr = NA, meanctrl = NA,
                        ICC = NA) # container to hold the simulation runs
 
@@ -310,20 +341,23 @@ for (i in 1:nrow(runframe)) {
     vil_frame_sim$err <- c(sapply(1:(nV*nJ), function(x) {arima.sim(list(order=c(1,0,0), ar=indiv_ar), n = nrounds, sd = indiv_sd)}))
   }
   ## CLUSTER LEVEL EFFECT (to model ICC)
-  clust_e <- rnorm(nV, 0, .5) # random effect (.5 gave an ICC of .015-.02)
+  clust_e <- rnorm(nV, 0, clus_sd) # random effect (.5 gave an ICC of .015-.02)
   b1      <- 1 # keep it 1 if you dont want to scale up
   # add a random effect / cluster component + an error term (can switch off by setting the rnorm 0,0)
   # rewrote to have a logit here and the pr (from the plogis/inv_logit transformation) inside the rbinom
   # ... so that I can introduce an AR1 process easier
   logit_ctr   <- logit(p_diar) + b1*clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 0]]
   logit_ctr_1 <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == 1 & vil_frame_sim$tr == 0]
+  resc_p_ctr_1 <- rescale_pr(inv_logit(logit_ctr_1), p_diar) # rescale s.t. the mean prob is the correct diar prob, see in the appendix why and how inv_logit inflates the mean of the cluster error
   # treatment probabilities
   logit_tr    <- logit(p_diartr) + b1*clust_e[vil_frame_sim$vilid[vil_frame_sim$tr == 1]]
   logit_tr_1  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == 1 & vil_frame_sim$tr == 1]
+  resc_p_tr_1 <- rescale_pr(inv_logit(logit_tr_1), p_diartr) # rescale s.t. the mean prob is the correct diar prob, see in the appendix why and how inv_logit inflates the mean of the cluster error
+  
   vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
-                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_ctr_1))
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, resc_p_ctr_1)# inv_logit(logit_ctr_1))
   vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
-                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_tr_1))
+                           vil_frame_sim$round == 1] <- rbinom((nV*nJ)/2, 1, resc_p_tr_1)# inv_logit(logit_tr_1))
   
   # ----------------------------------------------------------------------------
   # POPULATION LEVEL with ICCbinary
@@ -362,18 +396,25 @@ for (i in 1:nrow(runframe)) {
       # INDIVIDUAL ADDONS (with AR1 now)
       logit_ctr_n <- logit_ctr + vil_frame_sim$err[vil_frame_sim$round == t & vil_frame_sim$tr == 0]
       logit_tr_n  <- logit_tr + vil_frame_sim$err[vil_frame_sim$round == t & vil_frame_sim$tr == 1]
+            # same rescaling as above\
+      resc_p_ctr_n <- rescale_pr(inv_logit(logit_ctr_n), p_diar)
+      resc_p_tr_n <- rescale_pr(inv_logit(logit_tr_n), p_diartr)
+      
       vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 &
-                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_ctr_n))
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, resc_p_ctr_n) #inv_logit(logit_ctr_n))
       vil_frame_sim$diarrhea[vil_frame_sim$tr == 1 &
-                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, inv_logit(logit_tr_n))
+                           vil_frame_sim$round == t] <- rbinom((nV*nJ)/2, 1, resc_p_tr_n) #inv_logit(logit_tr_n))
     }
   }
   
   # run the regression, cluster at treatment assignment level to get SEs right
-  # ... no block randomization (don't know how much variation we would explain with a block FE as of now)
+  # ... no block randomization (don't know how much variation we would explain with a block FE as of now anyways)
   regobj <- summary(fixest::feols(diarrhea ~ tr | round, data = vil_frame_sim), vcov = ~ vilid + childid)
   runframe$pointest[i] <- regobj$coeftable[1,1] # point estimate
   runframe$tstat[i]    <- regobj$coeftable[1,3] # tstat
+  regobj <- summary(fixest::feols(diarrhea ~ tr | round, data = vil_frame_sim))
+  runframe$pointest1[i] <- regobj$coeftable[1,1] # point estimate
+  runframe$tstat1[i]    <- regobj$coeftable[1,3] # tstat
   #cat("done with run ", i)
   # some other info
   if (nrounds > 1) {
@@ -385,12 +426,16 @@ for (i in 1:nrow(runframe)) {
   runframe$meanctrl[i] <- vil_frame_sim$diarrhea[vil_frame_sim$tr == 0 & vil_frame_sim$round == 1] |> mean()
   
   # take care of the warning
-  runframe$ICC[i] <- ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
+  #runframe$ICC[i] <- ICC::ICCest(vilid, diarrhea, data = vil_frame_sim)$ICC
+  runframe$ICC[i] <- fixest::r2(fixest::feols(diarrhea ~ 0 | vilid, data = vil_frame_sim), "ar2")
+
 }
 
-# 
+# if the mean is off of the p_diar then the rescaling did not go through bc there was one negative probability
 mean(runframe$meanctrl)
+mean(runframe$meantr)
 mean(abs(runframe$tstat) > 1.96)
+mean(abs(runframe$tstat1) > 1.96)
 mean(runframe$ICC)
 # AR Was between .03 and .15
 mean(runframe$cor12)
@@ -402,7 +447,11 @@ ICC::ICCest(vilid, diarrhea, data = vil_frame_sim[vil_frame_sim$tr == 0, ])$ICC
 vil_frame_sim <- vil_frame_sim |> group_by(childid) |> mutate(diarrhea_count = sum(diarrhea))
 table(vil_frame_sim$diarrhea_count)
 
+```
 
+
+
+```{r}
 # analysis / checking
 vil_frame_sim <- vil_frame_sim %>%                           
   group_by(childid) %>%
@@ -491,6 +540,5 @@ mean(round4[2500:5000])
 
 
 ```
-
 
 
