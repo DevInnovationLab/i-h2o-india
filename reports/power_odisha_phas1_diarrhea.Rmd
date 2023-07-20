@@ -11,6 +11,73 @@ urlcolor: blue
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
+
+DIL_colors <- c(
+  `red`        = "#8B0021",
+  `yellow`     = "#FAA61A",
+  `orange`     = "#E2821B",
+  `black`      = "#303540",
+  `light grey` = "#939698",
+  `dark grey`  = "#8c8c8c")
+
+DIL_cols <- function(...) {
+  cols <- c(...)
+
+  if (is.null(cols))
+    return (DIL_colors)
+
+  DIL_colors[cols]
+}
+
+DIL_palettes <- list(
+  `main`  = DIL_cols("red", "light grey", "yellow", "black", "orange")
+  #`main`  = DIL_cols("red", "yellow", "orange", "black", "light grey"),
+)
+
+DIL_pal <- function(palette = "main", reverse = FALSE, ...) {
+  pal <- DIL_palettes[[palette]]
+
+  if (reverse) pal <- rev(pal)
+
+  colorRampPalette(pal, ...)
+}
+
+
+#' Color scale constructor for drsimonj colors
+#'
+#' @param palette Character name of palette in drsimonj_palettes
+#' @param discrete Boolean indicating whether color aesthetic is discrete or not
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments passed to discrete_scale() or
+#'            scale_color_gradientn(), used respectively when discrete is TRUE or FALSE
+#'
+scale_color_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+  pal <- DIL_pal(palette = palette, reverse = reverse)
+
+  if (discrete) {
+    discrete_scale("colour", paste0("DIL_", palette), palette = pal, ...)
+  } else {
+    scale_color_gradientn(colours = pal(256), ...)
+  }
+}
+
+#' Fill scale constructor for drsimonj colors
+#'
+#' @param palette Character name of palette in drsimonj_palettes
+#' @param discrete Boolean indicating whether color aesthetic is discrete or not
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments passed to discrete_scale() or
+#'            scale_fill_gradientn(), used respectively when discrete is TRUE or FALSE
+#'
+scale_fill_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+  pal <- DIL_pal(palette = palette, reverse = reverse)
+
+  if (discrete) {
+    discrete_scale("fill", paste0("DIL_", palette), palette = pal, ...)
+  } else {
+    scale_fill_gradientn(colours = pal(256), ...)
+  }
+}
 ```
 
 
@@ -263,7 +330,7 @@ We calculate the raw ICC to be `r round(ICC::ICCest(pumpid, child_diarrhea1, dat
 ### Checking counts per cluster
 
 
-```{r, eval = T, include = T, fig.width = 4, fig.height = 3, fig.cap = "Diarrhea counts per cluster - approximately Poisson."}
+```{r, eval = T, include = T, fig.width = 4, fig.height = 3, fig.cap = "Diarrhea counts per cluster (pump), summed over all 7 rounds - approximately Poisson."}
 
 amy_counts <- amy_lancet |> group_by(pumpid) |> summarise(n_people = n(),
                                                           diarrh_n = sum(child_diarrhea1),
@@ -285,6 +352,130 @@ ggplot(data = amy_counts) + geom_histogram(aes(diarrh_n)) + facet_grid(~ tr) + t
 ```
 
 # 2) Benchmark calculations (plug-in formulas)
+
+The following two plots show power as a function of the number of villages for two different average villages sizes: 30 and 50. The plots are grouped by ICC (`0.01` and `0.02`) and MDE (`10%` and `20%`). As noted in the introduction, the assumed diarrhea incidence is 5% across all specifications.
+
+On the backend, the code uses the function `clusterPower::cpa.binary()` many times to compute each point in the plots.
+
+```{r}
+# INSTRUCTIONS
+# JULY 20th on Pickering slack:
+# Hi Alex, I know your were coordinating with Akanksha to responding to MK, but I think we can play around with the power calcs and add that to the response. I discussed with him and it would like to see the tradeoffs between relying on frequent data collection vs X times the sample size. Would you be able to tell us which is the required NUMBER of villages for the following scenarios (an excel table with all combination would be helpful as a reference)
+# 1 data collection at 24 months vs 3 data collections at 12-18-24
+# ICC 0.02 and 0.01 (I agree on trying a couple)
+# MDE 10% or 20% (MK wants less than 25%, lets give some scenarios to understand what is feasible)
+# U5 children per village 30 or 50
+# No block randomization (which I think it is the assumption now?)
+# Even if you can do those quickly in stata and share the code that is helpful so we can modify things ourselves. Thansks a lot!
+
+
+```
+
+
+```{r, eval = T}
+# first we define the function that we are going to iterate over
+power_cpa.binary <- function(nclustotal, clusize_avg = nJ, ICC_choice = ICCval, 
+                             pr_incidence = p_diar, MDE = MDEdia) {
+  power.out <- clusterPower::cpa.binary(nsubjects = clusize_avg, 
+                                        nclusters = nclustotal/2,
+                                        CV = 1,
+                                        ICC = ICC_choice, 
+                                        p1 = pr_incidence, 
+                                        p2 = pr_incidence * (1-MDE), 
+                                          tol = .Machine$double.eps^.5)
+  # return output in dataframe
+  tibble(clusize_avg = clusize_avg, p_diar = pr_incidence, MDE = MDE, ICC = ICC_choice, 
+         nclusters = nclustotal, power = power.out)
+}
+p_diar <- .05
+#power_cpa.binary(10, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)
+clusternumbers <- seq(50, 900, by = 25) # define the 
+
+# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+
+store$ICC <- as.factor(store$ICC)
+store$MDE <- as.factor(store$MDE)
+
+
+
+```
+
+
+```{r plotpoweravgsize50, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
+
+
+#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
+p <- ggplot(store, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  ggtitle("Power for total number of villages, avg size: 50") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.05)) # shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+```{r, eval = T}
+# copy the exact same thing FOR VILLAGESIZE 30- ugly I know - quick fix
+# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
+rm(store)
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+
+store$ICC <- as.factor(store$ICC)
+store$MDE <- as.factor(store$MDE)
+
+
+
+```
+
+
+```{r plotpoweravgsize30, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
+
+
+#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
+p <- ggplot(store, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.1)) # shrink default expansion (0.6 for discrete) 
+
+p
+
+```
 
 
 
