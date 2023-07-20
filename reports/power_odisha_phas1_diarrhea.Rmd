@@ -40,7 +40,6 @@ rescale_pr <- function(x, pr) {
   # yet another iteration: make the VERY few negative probabilities to 0!
   new_x[new_x < 0] <- 0
   return(new_x)
- 
 }
 
 ```
