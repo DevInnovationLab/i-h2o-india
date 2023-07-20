@@ -74,6 +74,7 @@
 
 # Markdown
 !/**/*.md
+!/reports/*.pdf 
 
 # Quarto
 !/**/*.qmd
