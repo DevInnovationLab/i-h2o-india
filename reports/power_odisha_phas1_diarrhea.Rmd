@@ -153,7 +153,7 @@ The document is structured as follows:
 ```
 
 
-# 1) Descriptives - diarrhea counts
+# 1) Descriptives from Pickering et. al. (2019, The Lancet)
 
 Pickering et. al. (2019): 100 shared water points (clusters) in two low-income urban communities in Bangladesh were randomly assigned (1:1) to have their drinking water automatically chlorinated at the point of collection by a solid tablet chlorine doser (intervention group) or to be treated by a visually identical doser that supplied vitamin C (active control group). The trial followed an open cohort design; all children younger than 5 years residing in households accessing enrolled water points were measured every 2–3 months during a 14-month follow-up period (children could migrate into or out of the cluster). The primary outcome was caregiver-reported child diarrhoea (more than 2 loose or watery stools in a 24-h period [WHO criteria]) with a 1-week recall, including all available childhood observations in the analyses. Children in the treatment group had less WHO-defined diarrhoea than did children in the control group (control 216 [10.0%] of 2154; treatment 156 [7.5%] of 2073; prevalence ratio 0.77, 95% CI 0.65–0.91).
 
@@ -361,11 +361,15 @@ ggplot(data = amy_counts) + geom_histogram(aes(diarrh_n)) + facet_grid(~ tr) + t
 #plot(dpois(1:25, lambda = pois_lamb))
 ```
 
-# 2) Benchmark calculations (plug-in formulas)
+\newpage
+
+# 2) Benchmark calculations - one round only (plug-in formulas)
 
 The following two plots show power as a function of the number of villages for two different average villages sizes: 30 and 50. The plots are grouped by ICC (`0.01` and `0.02`) and MDE (`10%` and `20%`). As noted in the introduction, the assumed diarrhea incidence is 5% across all specifications.
 
 On the backend, the code uses the function `clusterPower::cpa.binary()` many times to compute each point in the plots.
+
+The bottom line of these calculations is that for an MDE of 10% we are not going to be sufficiently powered. For the MDE of 20%, the following table summarizes the different scenarios where power is approximately 80% (extracted from the data that can be seen in the plots).
 
 ```{r}
 # INSTRUCTIONS
@@ -414,34 +418,10 @@ store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50
 store$ICC <- as.factor(store$ICC)
 store$MDE <- as.factor(store$MDE)
 
-
-
+store50 <- store
 ```
 
 
-```{r plotpoweravgsize50, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
-
-
-#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
-p <- ggplot(store, aes(x = nclusters, y = power, 
-                       #col = interaction(ICC, MDE, sep = ' - '),
-                       col = MDE,
-                       #shape = interaction(MDE, ICC, sep = ' - '),
-                       shape = ICC,
-                       #linetype = interaction(MDE, ICC, sep = ' - '),
-                       linetype = MDE,
-                       )) + 
-  geom_point() + geom_line() + 
-  ggtitle("Power for total number of villages, avg size: 50") +
-  theme_bw() +
-  guides(colour = guide_legend(override.aes = list(shape = NA))) +
-  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
-  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
-  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.05)) # shrink default expansion (0.6 for discrete) 
-
-p
-
-```
 ```{r, eval = T}
 # copy the exact same thing FOR VILLAGESIZE 30- ugly I know - quick fix
 # we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
@@ -458,16 +438,29 @@ store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30
 store$ICC <- as.factor(store$ICC)
 store$MDE <- as.factor(store$MDE)
 
-
+store30 <- store
 
 ```
+
+
+```{r, eval = T, include = T, }
+# find the entry that is closest to 80 and 90%
+closepowerfinder <- function(df, target_value) {df[which.min(abs(df$power - target_value)), ]}
+store <- bind_rows(store30, store50)
+storesubs <- store |> group_by(clusize_avg, MDE, ICC) |> do(closepowerfinder(.,.80))
+storesubs <- storesubs |> filter(MDE == .2)
+storesubs$power <- round(storesubs$power, 1)
+names(storesubs) <- c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")
+knitr::kable(storesubs, caption = "Number of villages needed for different scenarios.")
+```
+
 
 
 ```{r plotpoweravgsize30, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
 
 
 #ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
-p <- ggplot(store, aes(x = nclusters, y = power, 
+p <- ggplot(store30, aes(x = nclusters, y = power, 
                        #col = interaction(ICC, MDE, sep = ' - '),
                        col = MDE,
                        #shape = interaction(MDE, ICC, sep = ' - '),
@@ -489,11 +482,67 @@ p
 
 
 
+
+```{r plotpoweravgsize50, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
+
+
+#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
+p <- ggplot(store50, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  ggtitle("Power for total number of villages, avg size: 50") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.05)) # shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+
+\newpage
+
 # 3) Simulation: multiple rounds of data collection
 
-```{r}
-# experiment with AR1
+The simulation code that is used here models the data generating process (DGP) as draws from a Bernoulli distribution with a cluster level random effect that induces ICC. The events within individuals across rounds are modeled with a correlated error term that induces an AR(1) process to approximately match the data in Pickering et. al. (2019). The following simulations are carried out 1,000 times for each dot that is visualized.
+
+To showcase that the code delivers meaningful power estimates, the following plots showcase the scenario where the number of rounds in the simulations is 1. It can be seen that the resulting power curves are very similar to the results from above, verifying that they can approximate the results from the plug-in formula. Note that the curve for MDEs of 10% is a bit wobbly due to the small effect size, a larger amount of iterations would straighten them out further. 
+
+
+```{r plotsimpowerconfirm, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Showcase the working of the simulation code by matching the results from the plug-in formulas'}
+# load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
+df.sim.1 <- readRDS("powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
+
+
+p <- ggplot(df.sim.1, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  #ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.025,0.05)) +
+  facet_wrap( ~ clusize, nrow = 2)# shrink default expansion (0.6 for discrete) 
+
+p
+
 ```
+
 
 
 

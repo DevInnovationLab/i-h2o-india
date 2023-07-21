@@ -253,24 +253,26 @@ mean(abs(store$tstat) > 1.96) # power
 # ---------------------------------------------------------------------------------
 # NOW START THE MULTILAYERED runs
 # ... we do it in two instances for the ICC (specifying the clus_sd) because the actual ICC value never comes out as 0.01, so it is hard to categorize (without doing something within the lapplies - which is something I want to avoid)
+nrounds <- 3
 clus_sds <- c(.425, .575)
 vilsizes <- c(30, 50)
 MDEs <- c(.2, .1)
 vilsizevec <- seq(50, 1000, by = 100)
 nruns <- 1000 # how many iterations per villagesize?
+# if you want to switch back to single-threading, remove the "future_" and the ", future.seed = TRUE" at the end of the applies
 store <- future_lapply(rep(vilsizevec, each = nruns), function(nvil) {
            lapply(MDEs, function(MDE) {
              lapply(vilsizes, function(vilsize) {
-                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[1]], p_diar = p_diar, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
-             }) # close innter lapply (vilsizes)
+                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[1]], p_diar = p_diar, nrounds = nrounds, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
+             }) # close inner lapply (vilsizes)
            }) # close middle lapply
          }, future.seed = TRUE) # close outer lapply - FOR PARALLEL FUTURE function we need future.seed = T
 # SECOND ICC VALUE
 stor1 <- future_lapply(rep(vilsizevec, each = nruns), function(nvil) {
            lapply(MDEs, function(MDE) {
              lapply(vilsizes, function(vilsize) {
-                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[2]], p_diar = p_diar, nrounds = 1, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
-             }) # close innter lapply (vilsizes)
+                gen_binary_rounds(nvil, MDE, vilsize, clus_sd = clus_sds[[2]], p_diar = p_diar, nrounds = nrounds, indiv_sd = indiv_sd, indiv_ar = indiv_ar)
+             }) # close inner lapply (vilsizes)
            }) # close middle lapply
          }, future.seed = TRUE) # close outer lapply - FOR PARALLEL FUTURE function we need future.seed = T
 
@@ -291,7 +293,10 @@ storesummar1$ICC <- 0.02 |> as.factor() # override ICC to have categorical
 
 storesummary <- bind_rows(storesummary, storesummar1)
 
-write_rds(storesummary, file = "reports/powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
+
+
+write_rds(storesummary, file = "reports/powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_1kruns.RDS")
+#write_rds(storesummary, file = "reports/powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
 
 
 
