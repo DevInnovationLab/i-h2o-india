@@ -120,7 +120,7 @@ The crucial assumptions for these calculations are:
 
 - Intra-cluster correlation (ICC) [`0.01` and `0.02`]
 - (Average) size of villages (U5 children) [`30` and `50`]
-- Effect sice [`15%` and `20%`]
+- Effect size [`10%` and `20%`]
 
 Autocorrelation of diarrhea incidence within individuals over time is considered here as well (in the form of an AR(1) process, roughly matching the values from Pickering et. al. (2019)), but it is less of a concern for power.
 
@@ -517,7 +517,7 @@ The simulation code that is used here models the data generating process (DGP) a
 To showcase that the code delivers meaningful power estimates, the following plots showcase the scenario where the number of rounds in the simulations is 1. It can be seen that the resulting power curves are very similar to the results from above, verifying that they can approximate the results from the plug-in formula. Note that the curve for MDEs of 10% is a bit wobbly due to the small effect size, a larger amount of iterations would straighten them out further. 
 
 
-```{r plotsimpowerconfirm, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Showcase the working of the simulation code by matching the results from the plug-in formulas'}
+```{r plotsimpowerconfirm, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Showcase the working of the simulation code by setting the number of rounds to 1 and matching the results from the plug-in formulas above.'}
 # load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
 df.sim.1 <- readRDS("powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
 
