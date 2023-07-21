@@ -116,23 +116,33 @@ rescale_pr <- function(x, pr) {
 
 This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5%) and the treatment (inline chlorination devices for clean water) is assigned at the household level for a complete cluster (a village).
 
-To inform our calculations, we first analyze data from a clustered chlorination intervention in Bangladesh from Pickering et al (2019, [The Lancet](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(19)30315-8/fulltext#gr1)).
-
 The crucial assumptions for these calculations are:
 
 - Intra-cluster correlation (ICC) [`0.01` and `0.02`]
 - (Average) size of villages (U5 children) [`30` and `50`]
 - Effect sice [`15%` and `20%`]
 
-Autocorrelation of diarrhea incidence within individuals over time is considered here as well (in the form of an AR(1) process), but seems to be less of a concern for power.
+Autocorrelation of diarrhea incidence within individuals over time is considered here as well (in the form of an AR(1) process, roughly matching the values from Pickering et. al. (2019)), but it is less of a concern for power.
 
 One of the main goals of the document is to illustrate the **trade-off between including more villages and increasing the number of survey rounds** to achieve power. 
+
+The OLS specification that is assumed regresses a dummy variable of diarrhea incidence on a treatment dummy at the village level and one fixed effect for every round - exploiting only within-round variation and thus controlling for unobserved variables that vary over time:
+
+$$Y_{ic} = \beta_1 \ T_c + \sum_{r=1}^3 \gamma_r \ ROUND_{ric} + \varepsilon_{ic},$$
+with standard errors clustered at the village level (or the village by individual level to account for autocorrelation if the number of rounds, $r$, is greater than 1).
+
+#### A quick comment on clustersizes.
+Please note that none of the following calculations assume variation in clustersize. In reality these are going to vary and thus harm statistical power. For details and some descriptices (i.e. the CV of sizes per district), please have a look [at the dashboard that contains information on all census villages of Odisha](https://lehner.shinyapps.io/odisha_interactive/).
+In practice, for the final randomization it could make sense to exclude very small and very big villages from the sample ex-ante in order to increase power. 
+
+To inform our calculations, we first analyze data from a clustered chlorination intervention in Bangladesh from Pickering et al (2019, [The Lancet](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(19)30315-8/fulltext#gr1)).
 
 The document is structured as follows:
 
 1) Relevant descriptive statistics from Pickering et. al. (2019, The Lancet)
 2) Simple benchmark calculations for only one survey round (plug-in formulas)
 3) Consideration of multiple rounds of data collection (simulations, DGP targeted to match data in Pickering et. al. (2019))
+
 
 
 
