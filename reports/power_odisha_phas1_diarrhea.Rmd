@@ -2,11 +2,17 @@
 title: "Power Considerations for Village RCT Odisha - Phase 1 - Diarrhea outcome"
 author: Alex Lehner
 date: July2023 #"2023-07-14"
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
 output:
   pdf_document:
     highlight: tango
 urlcolor: blue
+linestretch: 1.5
+fontsize: 12pt
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FALSE, message = FALSE)
@@ -114,7 +120,7 @@ rescale_pr <- function(x, pr) {
 
 ```
 
-This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5%) and the treatment (inline chlorination devices for clean water) is assigned at the household level for a complete cluster (a village).
+This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5% [latest data from NFHS]) and the treatment (inline chlorination devices for clean water) is assigned at the household level for a complete cluster (a village).
 
 The crucial assumptions for these calculations are:
 
@@ -122,26 +128,28 @@ The crucial assumptions for these calculations are:
 - (Average) size of villages (U5 children) [`30` and `50`]
 - Effect size [`10%` and `20%`]
 
-Autocorrelation of diarrhea incidence within individuals over time is considered here as well (in the form of an AR(1) process, roughly matching the values from Pickering et. al. (2019)), but it is less of a concern for power.
+One of the main goals of the document is to illustrate the **trade-off between including more villages and increasing the number of survey rounds** to achieve power.
+Autocorrelation of diarrhea incidence within individuals over time is considered here as well (in the form of an AR(1) process, roughly matching the values from Pickering et. al. (2019)). For computational reasons the current benchmark version of multi-round simulations does not consider this, however, because the autocorrelation of the binary outcome is not too strong (see analysis of Pickering data below) and thus not affecting power significantly.
 
-One of the main goals of the document is to illustrate the **trade-off between including more villages and increasing the number of survey rounds** to achieve power. 
+#### Gains from extra rounds of data collection.
+The bottom line is that there are substantial power gains from extra rounds. The intuition for this is that with every new round we get additional diarrhea cases. This is different from a scenario with a continuous outcome variable where power gains from extra periods stem mostly from averaging out noise in $Y$ (see the 2012 paper by McKenzie).
 
-The OLS specification that is assumed regresses a dummy variable of diarrhea incidence on a treatment dummy at the village level and one fixed effect for every round - exploiting only within-round variation and thus controlling for unobserved variables that vary over time:
+The OLS specification that is assumed is the one from Pickering et. al. (2019). It regresses an indicator variable of diarrhea incidence on a treatment indicator at the village level and one fixed effect for every round - exploiting only within-round variation and thus controlling for unobserved variables that change over time:
 
 $$Y_{ic} = \beta_1 \ T_c + \sum_{r=1}^3 \gamma_r \ ROUND_{ric} + \varepsilon_{ic},$$
 with standard errors clustered at the village level (or the village by individual level to account for autocorrelation if the number of rounds, $r$, is greater than 1).
 
-#### A quick comment on clustersizes.
-Please note that none of the following calculations assume variation in clustersize. In reality these are going to vary and thus harm statistical power. For details and some descriptices (i.e. the CV of sizes per district), please have a look [at the dashboard that contains information on all census villages of Odisha](https://lehner.shinyapps.io/odisha_interactive/).
+#### A quick comment on cluster sizes.
+Please note that none of the following calculations assume variation in cluster size. In reality these are going to vary and thus harm statistical power. For details and some descriptives (i.e. the CV of sizes per district), please have a look [at the dashboard that contains information on all census villages of Odisha](https://lehner.shinyapps.io/odisha_interactive/).
 In practice, for the final randomization it could make sense to exclude very small and very big villages from the sample ex-ante in order to increase power. 
 
-To inform our calculations, we first analyze data from a clustered chlorination intervention in Bangladesh from Pickering et al (2019, [The Lancet](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(19)30315-8/fulltext#gr1)).
+To inform our calculations, we analyze data from a clustered chlorination intervention in Bangladesh from Pickering et al (2019, [The Lancet](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(19)30315-8/fulltext#gr1)).
 
 The document is structured as follows:
 
-1) Relevant descriptive statistics from Pickering et. al. (2019, The Lancet)
-2) Simple benchmark calculations for only one survey round (plug-in formulas)
-3) Consideration of multiple rounds of data collection (simulations, DGP targeted to match data in Pickering et. al. (2019))
+1) Simple benchmark calculations for only one survey round (**plug-in formulas**)
+2) Consideration of multiple rounds of data collection (**simulations**, DGP targeted to match data in Pickering et. al. (2019))
+3) Relevant descriptive statistics from Pickering et. al. (2019, The Lancet)
 
 
 
@@ -153,7 +161,323 @@ The document is structured as follows:
 ```
 
 
-# 1) Descriptives from Pickering et. al. (2019, The Lancet)
+
+# 1) Benchmark calculations - one round only (plug-in formulas)
+
+The following two plots show power as a function of the number of villages for two different average villages sizes: 30 and 50. The plots are grouped by ICC (`0.01` and `0.02`) and MDE (`10%` and `20%`). As noted in the introduction, the assumed diarrhea incidence is 5% across all specifications.
+
+The plug-in formula that is being used is implemented in the R function `clusterPower::cpa.binary()`. The stata equivalent is `clustersampsi, binomial`.
+An example on how to use the code:
+```{r illustratepluginformula, include = TRUE, eval = FALSE, echo = TRUE}
+cpa.binary(nsubjects = 50, # average clustersize
+           CV = 0, # no variation in clustersize assumed
+           power = .8, # desired power
+           ICC = 0.01, 
+           p1 = 0.05, # diarrhea incidence of 5%
+           p2 = 0.05 * (1 - 0.80)) # MDE of 20%
+# Function returns the number of clusters needed PER condition, i.e. multiply by two.
+```
+
+
+
+The plots below **trace out the full power curve** for many potential combinations of inputs.
+The bottom line of these calculations is that for an MDE of 10% we are not going to be sufficiently powered. For the MDE of 20%, the following table summarizes the different scenarios where power is approximately 80% (extracted from the data that can be seen in the plots).
+
+```{r}
+# INSTRUCTIONS
+# JULY 20th on Pickering slack:
+# Hi Alex, I know your were coordinating with Akanksha to responding to MK, but I think we can play around with the power calcs and add that to the response. I discussed with him and it would like to see the tradeoffs between relying on frequent data collection vs X times the sample size. Would you be able to tell us which is the required NUMBER of villages for the following scenarios (an excel table with all combination would be helpful as a reference)
+# 1 data collection at 24 months vs 3 data collections at 12-18-24
+# ICC 0.02 and 0.01 (I agree on trying a couple)
+# MDE 10% or 20% (MK wants less than 25%, lets give some scenarios to understand what is feasible)
+# U5 children per village 30 or 50
+# No block randomization (which I think it is the assumption now?)
+# Even if you can do those quickly in stata and share the code that is helpful so we can modify things ourselves. Thansks a lot!
+
+
+```
+
+
+```{r, eval = T}
+# first we define the function that we are going to iterate over
+power_cpa.binary <- function(nclustotal, clusize_avg = nJ, ICC_choice = ICCval, 
+                             pr_incidence = p_diar, MDE = MDEdia) {
+  power.out <- clusterPower::cpa.binary(nsubjects = clusize_avg, 
+                                        nclusters = nclustotal/2,
+                                        CV = 0, # default is no variation in size, CV = 0
+                                        ICC = ICC_choice, 
+                                        p1 = pr_incidence, 
+                                        p2 = pr_incidence * (1-MDE), 
+                                          tol = .Machine$double.eps^.5)
+  # return output in dataframe
+  tibble(clusize_avg = clusize_avg, p_diar = pr_incidence, MDE = MDE, ICC = ICC_choice, 
+         nclusters = nclustotal, power = power.out)
+}
+p_diar <- .05
+#power_cpa.binary(10, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)
+clusternumbers <- seq(50, 900, by = 25) # define the 
+
+# NOTE: THIS IS AN AWFUL WAY TO WRITE THE CODE - TOO MUCH REPLICATION
+# THIS IS AGAINST THE DIL ANALYTICS PRINCIPLES ... only done due to time constraints
+# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+
+store$ICC <- as.factor(store$ICC)
+store$MDE <- as.factor(store$MDE)
+
+store50 <- store
+```
+
+
+```{r, eval = T}
+# copy the exact same thing FOR VILLAGESIZE 30- ugly I know - quick fix
+# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
+rm(store)
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
+
+
+store$ICC <- as.factor(store$ICC)
+store$MDE <- as.factor(store$MDE)
+
+store30 <- store
+
+```
+
+
+```{r, eval = T, include = T, }
+# find the entry that is closest to 80 and 90%
+closepowerfinder <- function(df, target_value) {df[which.min(abs(df$power - target_value)), ]}
+store <- bind_rows(store30, store50)
+storesubs <- store |> group_by(clusize_avg, MDE, ICC) |> do(closepowerfinder(.,.80))
+storesubs <- storesubs |> filter(MDE == .2)
+storesubs$power <- round(storesubs$power, 1)
+names(storesubs) <- c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")
+knitr::kable(storesubs, caption = "Number of villages needed for different scenarios.")
+```
+
+
+
+```{r plotpoweravgsize30, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
+
+
+#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
+p <- ggplot(store30, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.1)) # shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+
+
+
+```{r plotpoweravgsize50, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
+
+
+#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
+p <- ggplot(store50, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  ggtitle("Power for total number of villages, avg size: 50") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.05)) # shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+
+\newpage
+
+# 2) Simulation: multiple rounds of data collection
+
+The simulation code that is used here models the data generating process (DGP) as draws from a Bernoulli distribution with a cluster level random effect that induces ICC. The events (diarrhea incidence) within individuals across rounds are modeled with an **i.i.d. error to first give a benchmark scenario**. In the subsequent section we assume a correlated error term that induces an AR(1) process to approximately match the data in Pickering et. al. (2019). The simulations are carried out 1,000 times for each dot that is visualized.
+
+To showcase that the code delivers meaningful power estimates, the plots at the end of this section showcase the scenario where the number of rounds in the simulations is 1. It can be seen that the resulting power curves are very similar to the results from above, verifying that they can approximate the results from the plug-in formula well. Note that the curve for MDEs of 10% is a bit wobbly due to the small effect size, a larger amount of iterations would straighten them out further. 
+
+## 2.1) Simulations with 3 rounds, iid errors
+
+As indicated in the introduction, there are substantial power gains from additional rounds - mostly because we add additional diarrhea incidences to the data. The following table summarizes the scenarios where power is approximately 80%, extracted from the values that you can see in the plot - as in the plug-in formula case. **To get a better picture for the power numbers it is ideal to check the interpolated values in the plots**. The plots trace out the full power curve (note that there are less dots as compared to the above because for every value we need a substantial amount of simulations, which is computationally very costly given the many different scenarios).
+
+```{r, eval = T, include = T}
+df.sim.iid <- readRDS("powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_NoAR1_1kruns.RDS")
+
+storesubsiid <- df.sim.iid |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.80))
+#storesubs <- storesubs |> filter(MDE == .2)
+storesubsiid$power <- round(storesubsiid$power, 2)
+storesubsiid$diarrhea_pc <- .05
+names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea_pc")
+storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")]
+
+storesubs20 <- storesubsiid |> filter(MDE == .2)
+storesubs20 |># group_by(MDE) |> 
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%")
+```
+
+```{r, eval = T, include = T}
+
+storesubs10 <- storesubsiid |> filter(MDE == .1)
+storesubs10 |># group_by(MDE) |> 
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%")
+
+```
+
+
+
+```{r plotsimpowerIID, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Power with three rounds of data collection. Upper panel: 30 U5 children per village. Lower panel: 50 U5 children per village.'}
+# load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
+
+
+p <- ggplot(df.sim.iid, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  #ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.025,0.05)) +
+  facet_wrap( ~ clusize, nrow = 2, scales = 'free')# shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+\newpage 
+
+## 2.2) Simulations with 3 rounds, AR(1) errors
+
+to be added - computationally costly due to the AR1 process. Need to find a way to make code more efficient. As noted above, the autocorrelation is not too high and won't affect power numbers much.
+
+## 2.3) Showcase that simulations with 1 round match formulas
+
+```{r plotsimpowerconfirm, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Showcase the working of the simulation code by setting the number of rounds to 1 and matching the results from the plug-in formulas above.'}
+# load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
+df.sim.1 <- readRDS("powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
+
+
+p <- ggplot(df.sim.1, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  #ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.025,0.05)) +
+  facet_wrap( ~ clusize, nrow = 2)# shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+
+
+
+```{r}
+# then on July12th there was a response by MK
+
+# Hi, 
+# 
+# Thanks so much for your email. Sone quick reactions
+# 
+# I think we need to pick up smaller than 25% reductions in diarrhea. 
+# 
+# I don't think we can afford three rounds of data collection within our current budget. Can we get cost estimates? These calculations suggest the ratio of cost of mortality to diarrhea power is high for ILC India relative to individually randomizable treatments.
+# 
+# what ICC is being used?
+# 
+# I think it's critical to take into account intra-cluster correlation. 
+# 
+#  Can you share all the parameters that are assumed? 
+# 
+# Does this involve any baseline data collection? 
+# 
+# IIt would be great if you could share the code that you're using as well. 
+# 
+# I'm a little confused because I thought there was supposed to be 150 villages rather than 100. 
+# 
+# Best Wishes,
+# Michael
+
+# ------------------------
+ # Akankhsa then said in Person on July 13th at Booth during DIL teamweek that they only put 150 to have buffer (befoer it was 80 and they put 100 to have buffer). She also said that new village numbers will be based on outcome of power calculations
+
+
+# ------------------------
+# later the same day, Elisa wrote on the pickering slack
+# Hi 
+# @Alex Lehner
+#  can you calculate how many villages we need if we want to do 1 data collection for U2 mortality with ICC NOT zero (we considered 0.01 in the past right?). What MK wants to know is the trade-off to do 1 data collection with 3 times the sample or 3 rounds of data collection with less sample. We are going to ask for additional funds to GiveWell so we would like to budget for both scenarios after we know the required sample size for a MDE < 25% (maybe 20%? or maybe 15%, but with 95% power, NO less). Then we can put together the budget and think about the trade-offs 0 Thanks a lot!
+
+
+
+# -----------
+# Not included in response to Elisa: Just as a quick back of the envelope to anticipate: for just having one round, given 50 U5children per village, a 95% powered MDE of 20% would require 550 villages
+
+
+
+
+```
+
+\newpage
+
+# 3) Descriptives from Pickering et. al. (2019, The Lancet)
 
 Pickering et. al. (2019): 100 shared water points (clusters) in two low-income urban communities in Bangladesh were randomly assigned (1:1) to have their drinking water automatically chlorinated at the point of collection by a solid tablet chlorine doser (intervention group) or to be treated by a visually identical doser that supplied vitamin C (active control group). The trial followed an open cohort design; all children younger than 5 years residing in households accessing enrolled water points were measured every 2–3 months during a 14-month follow-up period (children could migrate into or out of the cluster). The primary outcome was caregiver-reported child diarrhoea (more than 2 loose or watery stools in a 24-h period [WHO criteria]) with a 1-week recall, including all available childhood observations in the analyses. Children in the treatment group had less WHO-defined diarrhoea than did children in the control group (control 216 [10.0%] of 2154; treatment 156 [7.5%] of 2073; prevalence ratio 0.77, 95% CI 0.65–0.91).
 
@@ -362,234 +686,4 @@ ggplot(data = amy_counts) + geom_histogram(aes(diarrh_n)) + facet_grid(~ tr) + t
 ```
 
 \newpage
-
-# 2) Benchmark calculations - one round only (plug-in formulas)
-
-The following two plots show power as a function of the number of villages for two different average villages sizes: 30 and 50. The plots are grouped by ICC (`0.01` and `0.02`) and MDE (`10%` and `20%`). As noted in the introduction, the assumed diarrhea incidence is 5% across all specifications.
-
-On the backend, the code uses the function `clusterPower::cpa.binary()` many times to compute each point in the plots.
-
-The bottom line of these calculations is that for an MDE of 10% we are not going to be sufficiently powered. For the MDE of 20%, the following table summarizes the different scenarios where power is approximately 80% (extracted from the data that can be seen in the plots).
-
-```{r}
-# INSTRUCTIONS
-# JULY 20th on Pickering slack:
-# Hi Alex, I know your were coordinating with Akanksha to responding to MK, but I think we can play around with the power calcs and add that to the response. I discussed with him and it would like to see the tradeoffs between relying on frequent data collection vs X times the sample size. Would you be able to tell us which is the required NUMBER of villages for the following scenarios (an excel table with all combination would be helpful as a reference)
-# 1 data collection at 24 months vs 3 data collections at 12-18-24
-# ICC 0.02 and 0.01 (I agree on trying a couple)
-# MDE 10% or 20% (MK wants less than 25%, lets give some scenarios to understand what is feasible)
-# U5 children per village 30 or 50
-# No block randomization (which I think it is the assumption now?)
-# Even if you can do those quickly in stata and share the code that is helpful so we can modify things ourselves. Thansks a lot!
-
-
-```
-
-
-```{r, eval = T}
-# first we define the function that we are going to iterate over
-power_cpa.binary <- function(nclustotal, clusize_avg = nJ, ICC_choice = ICCval, 
-                             pr_incidence = p_diar, MDE = MDEdia) {
-  power.out <- clusterPower::cpa.binary(nsubjects = clusize_avg, 
-                                        nclusters = nclustotal/2,
-                                        CV = 0, # default is no variation in size, CV = 0
-                                        ICC = ICC_choice, 
-                                        p1 = pr_incidence, 
-                                        p2 = pr_incidence * (1-MDE), 
-                                          tol = .Machine$double.eps^.5)
-  # return output in dataframe
-  tibble(clusize_avg = clusize_avg, p_diar = pr_incidence, MDE = MDE, ICC = ICC_choice, 
-         nclusters = nclustotal, power = power.out)
-}
-p_diar <- .05
-#power_cpa.binary(10, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)
-clusternumbers <- seq(50, 900, by = 25) # define the 
-
-# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 50, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-
-store$ICC <- as.factor(store$ICC)
-store$MDE <- as.factor(store$MDE)
-
-store50 <- store
-```
-
-
-```{r, eval = T}
-# copy the exact same thing FOR VILLAGESIZE 30- ugly I know - quick fix
-# we want to do the checks across clusternumbers for different values of ICC and MDE - split by the two avg clustersizes
-rm(store)
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)) |> bind_rows()
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .2)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-store <- lapply(clusternumbers, function(x) power_cpa.binary(x, clusize_avg = 30, ICC_choice = 0.02, pr_incidence = p_diar, MDE = .1)) |> bind_rows() |> bind_rows(store) # stitch onto the previos one
-
-
-store$ICC <- as.factor(store$ICC)
-store$MDE <- as.factor(store$MDE)
-
-store30 <- store
-
-```
-
-
-```{r, eval = T, include = T, }
-# find the entry that is closest to 80 and 90%
-closepowerfinder <- function(df, target_value) {df[which.min(abs(df$power - target_value)), ]}
-store <- bind_rows(store30, store50)
-storesubs <- store |> group_by(clusize_avg, MDE, ICC) |> do(closepowerfinder(.,.80))
-storesubs <- storesubs |> filter(MDE == .2)
-storesubs$power <- round(storesubs$power, 1)
-names(storesubs) <- c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")
-knitr::kable(storesubs, caption = "Number of villages needed for different scenarios.")
-```
-
-
-
-```{r plotpoweravgsize30, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
-
-
-#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
-p <- ggplot(store30, aes(x = nclusters, y = power, 
-                       #col = interaction(ICC, MDE, sep = ' - '),
-                       col = MDE,
-                       #shape = interaction(MDE, ICC, sep = ' - '),
-                       shape = ICC,
-                       #linetype = interaction(MDE, ICC, sep = ' - '),
-                       linetype = MDE,
-                       )) + 
-  geom_point() + geom_line() + 
-  ggtitle("Power for total number of villages, avg size: 30") +
-  theme_bw() +
-  guides(colour = guide_legend(override.aes = list(shape = NA))) +
-  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
-  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
-  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.1)) # shrink default expansion (0.6 for discrete) 
-
-p
-
-```
-
-
-
-
-```{r plotpoweravgsize50, eval = T, include = T,  fig.width=7, fig.height=4, fig.align='center'}
-
-
-#ggplot(store, aes(x = nclusters, y = power, col = ICC, linetype = MDE, shape = MDE)) + 
-p <- ggplot(store50, aes(x = nclusters, y = power, 
-                       #col = interaction(ICC, MDE, sep = ' - '),
-                       col = MDE,
-                       #shape = interaction(MDE, ICC, sep = ' - '),
-                       shape = ICC,
-                       #linetype = interaction(MDE, ICC, sep = ' - '),
-                       linetype = MDE,
-                       )) + 
-  geom_point() + geom_line() + 
-  ggtitle("Power for total number of villages, avg size: 50") +
-  theme_bw() +
-  guides(colour = guide_legend(override.aes = list(shape = NA))) +
-  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
-  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
-  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.05,0.05)) # shrink default expansion (0.6 for discrete) 
-
-p
-
-```
-
-
-\newpage
-
-# 3) Simulation: multiple rounds of data collection
-
-The simulation code that is used here models the data generating process (DGP) as draws from a Bernoulli distribution with a cluster level random effect that induces ICC. The events within individuals across rounds are modeled with a correlated error term that induces an AR(1) process to approximately match the data in Pickering et. al. (2019). The following simulations are carried out 1,000 times for each dot that is visualized.
-
-To showcase that the code delivers meaningful power estimates, the following plots showcase the scenario where the number of rounds in the simulations is 1. It can be seen that the resulting power curves are very similar to the results from above, verifying that they can approximate the results from the plug-in formula. Note that the curve for MDEs of 10% is a bit wobbly due to the small effect size, a larger amount of iterations would straighten them out further. 
-
-
-```{r plotsimpowerconfirm, eval = T, include = T,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Showcase the working of the simulation code by setting the number of rounds to 1 and matching the results from the plug-in formulas above.'}
-# load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
-df.sim.1 <- readRDS("powerruns_stored/sim_1round_allvalues_2comparewithformulaoutput.RDS")
-
-
-p <- ggplot(df.sim.1, aes(x = nclusters, y = power, 
-                       #col = interaction(ICC, MDE, sep = ' - '),
-                       col = MDE,
-                       #shape = interaction(MDE, ICC, sep = ' - '),
-                       shape = ICC,
-                       #linetype = interaction(MDE, ICC, sep = ' - '),
-                       linetype = MDE,
-                       )) + 
-  geom_point() + geom_line() + 
-  #ggtitle("Power for total number of villages, avg size: 30") +
-  theme_bw() +
-  guides(colour = guide_legend(override.aes = list(shape = NA))) +
-  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
-  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
-  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.025,0.05)) +
-  facet_wrap( ~ clusize, nrow = 2)# shrink default expansion (0.6 for discrete) 
-
-p
-
-```
-
-
-
-
-```{r}
-# then on July12th there was a response by MK
-
-# Hi, 
-# 
-# Thanks so much for your email. Sone quick reactions
-# 
-# I think we need to pick up smaller than 25% reductions in diarrhea. 
-# 
-# I don't think we can afford three rounds of data collection within our current budget. Can we get cost estimates? These calculations suggest the ratio of cost of mortality to diarrhea power is high for ILC India relative to individually randomizable treatments.
-# 
-# what ICC is being used?
-# 
-# I think it's critical to take into account intra-cluster correlation. 
-# 
-#  Can you share all the parameters that are assumed? 
-# 
-# Does this involve any baseline data collection? 
-# 
-# IIt would be great if you could share the code that you're using as well. 
-# 
-# I'm a little confused because I thought there was supposed to be 150 villages rather than 100. 
-# 
-# Best Wishes,
-# Michael
-
-# ------------------------
- # Akankhsa then said in Person on July 13th at Booth during DIL teamweek that they only put 150 to have buffer (befoer it was 80 and they put 100 to have buffer). She also said that new village numbers will be based on outcome of power calculations
-
-
-# ------------------------
-# later the same day, Elisa wrote on the pickering slack
-# Hi 
-# @Alex Lehner
-#  can you calculate how many villages we need if we want to do 1 data collection for U2 mortality with ICC NOT zero (we considered 0.01 in the past right?). What MK wants to know is the trade-off to do 1 data collection with 3 times the sample or 3 rounds of data collection with less sample. We are going to ask for additional funds to GiveWell so we would like to budget for both scenarios after we know the required sample size for a MDE < 25% (maybe 20%? or maybe 15%, but with 95% power, NO less). Then we can put together the budget and think about the trade-offs 0 Thanks a lot!
-
-
-
-# -----------
-# Not included in response to Elisa: Just as a quick back of the envelope to anticipate: for just having one round, given 50 U5children per village, a 95% powered MDE of 20% would require 550 villages
-
-
-
-
-```
-
 
