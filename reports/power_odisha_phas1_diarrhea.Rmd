@@ -120,7 +120,7 @@ rescale_pr <- function(x, pr) {
 
 ```
 
-This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5% [latest data from NFHS]) and the treatment (inline chlorination devices for clean water) is assigned at the household level for a complete cluster (a village).
+This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5% [latest data from NFHS]) and the treatment (inline chlorination devices for clean water) is assigned for a complete cluster (a village).
 
 The crucial assumptions for these calculations are:
 
@@ -141,7 +141,7 @@ with standard errors clustered at the village level (or the village by individua
 
 #### A quick comment on cluster sizes.
 Please note that none of the following calculations assume variation in cluster size. In reality these are going to vary and thus harm statistical power. For details and some descriptives (i.e. the CV of sizes per district), please have a look [at the dashboard that contains information on all census villages of Odisha](https://lehner.shinyapps.io/odisha_interactive/).
-In practice, for the final randomization it could make sense to exclude very small and very big villages from the sample ex-ante in order to increase power. 
+In practice, for the final randomization it could make sense to exclude very small and very big villages from the sample ex-ante in order to increase power (I am thinking of somewhere around the 5th and 95th percentile - depending on the state).
 
 To inform our calculations, we analyze data from a clustered chlorination intervention in Bangladesh from Pickering et al (2019, [The Lancet](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(19)30315-8/fulltext#gr1)).
 
@@ -149,7 +149,7 @@ The document is structured as follows:
 
 1) Simple benchmark calculations for only one survey round (**plug-in formulas**)
 2) Consideration of multiple rounds of data collection (**simulations**, DGP targeted to match data in Pickering et. al. (2019))
-3) Relevant descriptive statistics from Pickering et. al. (2019, The Lancet)
+3) Relevant descriptive statistics from Pickering et. al. (2019)
 
 
 
@@ -267,13 +267,14 @@ store30 <- store
 
 ```{r, eval = T, include = T, }
 # find the entry that is closest to 80 and 90%
+#library(kableExtra)
 closepowerfinder <- function(df, target_value) {df[which.min(abs(df$power - target_value)), ]}
 store <- bind_rows(store30, store50)
-storesubs <- store |> group_by(clusize_avg, MDE, ICC) |> do(closepowerfinder(.,.80))
+storesubs <- store |> group_by(clusize_avg, MDE, ICC) |> do(closepowerfinder(.,.90))
 storesubs <- storesubs |> filter(MDE == .2)
 storesubs$power <- round(storesubs$power, 1)
-names(storesubs) <- c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")
-knitr::kable(storesubs, caption = "Number of villages needed for different scenarios.")
+names(storesubs) <- c("avg_clustersize", "diarrhea incidence", "MDE", "ICC", "villages_needed", "power")
+knitr::kable(storesubs, caption = "Number of villages needed for different scenarios (total, both arms - numbers extracted from the powercurves in the figures below).") #|> column_spec(6, border_right = T) |> kable_styling()
 ```
 
 
@@ -347,23 +348,24 @@ As indicated in the introduction, there are substantial power gains from additio
 # only include the fingrained version - I checked and the two coincide for when we have same villagesize in both
 df.sim.iid <- readRDS("powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_NoAR1_1kruns_finervillagejumps.RDS")
 
-storesubsiid <- df.sim.iid |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.80))
+storesubsiid <- df.sim.iid |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.90))
 #storesubs <- storesubs |> filter(MDE == .2)
 storesubsiid$power <- round(storesubsiid$power, 2)
 storesubsiid$diarrhea_pc <- .05
-names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea_pc")
-storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")]
+storesubsiid <- storesubsiid |> select(-cor12)
+names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea incidence")
+storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea incidence", "MDE", "ICC", "villages_needed", "power")]
 
 storesubs20 <- storesubsiid |> filter(MDE == .2)
 storesubs20 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%", digits = 2)
+  knitr::kable(caption = "Effectsize 20%, 3 rounds. Number of villages needed for different scenarios (total, both arms - numbers extracted from the powercurves in the figures below).", digits = 2)
 ```
 
 ```{r, eval = T, include = T}
 
 storesubs10 <- storesubsiid |> filter(MDE == .1)
 storesubs10 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%", digits = 2)
+  knitr::kable(caption = "Effectsize 10%, 3 rounds. Number of villages needed for different scenarios (total, both arms - numbers extracted from the powercurves in the figures below).", digits = 2)
 
 ```
 
@@ -398,28 +400,28 @@ p
 
 ## 2.2) Simulations with 3 rounds, AR(1) errors
 
-to be added 
+to be added. For the case of 3 rounds, results won't change substantially, however.
 
 ```{r, eval = F, include = F}
 df.sim.AR1 <- readRDS(file = "powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_1kruns.RDS")
 
-storesubsiid <- df.sim.AR1 |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.80))
+storesubsiid <- df.sim.AR1 |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.90))
 #storesubs <- storesubs |> filter(MDE == .2)
 storesubsiid$power <- round(storesubsiid$power, 2)
 storesubsiid$diarrhea_pc <- .05
-names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea_pc")
-storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")]
+names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea incidence")
+storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea incidence", "MDE", "ICC", "villages_needed", "power")]
 
 storesubs20 <- storesubsiid |> filter(MDE == .2)
 storesubs20 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%")
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20% (total, both arms - numbers extracted from the powercurves in the figures below)")
 ```
 
 ```{r, eval = F, include = F}
 
 storesubs10 <- storesubsiid |> filter(MDE == .1)
 storesubs10 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%")
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10% (total, both arms - numbers extracted from the powercurves in the figures below)")
 
 ```
 
