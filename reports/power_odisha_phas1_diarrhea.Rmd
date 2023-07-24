@@ -174,7 +174,7 @@ cpa.binary(nsubjects = 50, # average clustersize
            power = .8, # desired power
            ICC = 0.01, 
            p1 = 0.05, # diarrhea incidence of 5%
-           p2 = 0.05 * (1 - 0.80)) # MDE of 20%
+           p2 = 0.05 * (1 - 0.20)) # MDE of 20%
 # Function returns the number of clusters needed PER condition, i.e. multiply by two.
 ```
 
@@ -343,7 +343,9 @@ To showcase that the code delivers meaningful power estimates, the plots at the 
 As indicated in the introduction, there are substantial power gains from additional rounds - mostly because we add additional diarrhea incidences to the data. The following table summarizes the scenarios where power is approximately 80%, extracted from the values that you can see in the plot - as in the plug-in formula case. **To get a better picture for the power numbers it is ideal to check the interpolated values in the plots**. The plots trace out the full power curve (note that there are less dots as compared to the above because for every value we need a substantial amount of simulations, which is computationally very costly given the many different scenarios).
 
 ```{r, eval = T, include = T}
-df.sim.iid <- readRDS("powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_NoAR1_1kruns.RDS")
+#df.sim.iid <- readRDS("powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_NoAR1_1kruns.RDS")
+# only include the fingrained version - I checked and the two coincide for when we have same villagesize in both
+df.sim.iid <- readRDS("powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_NoAR1_1kruns_finervillagejumps.RDS")
 
 storesubsiid <- df.sim.iid |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.80))
 #storesubs <- storesubs |> filter(MDE == .2)
@@ -354,14 +356,14 @@ storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea_pc", "MDE", "ICC",
 
 storesubs20 <- storesubsiid |> filter(MDE == .2)
 storesubs20 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%")
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%", digits = 2)
 ```
 
 ```{r, eval = T, include = T}
 
 storesubs10 <- storesubsiid |> filter(MDE == .1)
 storesubs10 |># group_by(MDE) |> 
-  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%")
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%", digits = 2)
 
 ```
 
@@ -396,7 +398,59 @@ p
 
 ## 2.2) Simulations with 3 rounds, AR(1) errors
 
-to be added - computationally costly due to the AR1 process. Need to find a way to make code more efficient. As noted above, the autocorrelation is not too high and won't affect power numbers much.
+to be added 
+
+```{r, eval = F, include = F}
+df.sim.AR1 <- readRDS(file = "powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_1kruns.RDS")
+
+storesubsiid <- df.sim.AR1 |> group_by(clusize, MDE, ICC) |> do(closepowerfinder(.,.80))
+#storesubs <- storesubs |> filter(MDE == .2)
+storesubsiid$power <- round(storesubsiid$power, 2)
+storesubsiid$diarrhea_pc <- .05
+names(storesubsiid) <- c("villages_needed", "MDE", "avg_clustersize",  "power", "ICC", "diarrhea_pc")
+storesubsiid <- storesubsiid[, c("avg_clustersize", "diarrhea_pc", "MDE", "ICC", "villages_needed", "power")]
+
+storesubs20 <- storesubsiid |> filter(MDE == .2)
+storesubs20 |># group_by(MDE) |> 
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 20%")
+```
+
+```{r, eval = F, include = F}
+
+storesubs10 <- storesubsiid |> filter(MDE == .1)
+storesubs10 |># group_by(MDE) |> 
+  knitr::kable(caption = "Number of villages needed for different scenarios. Effectsize 10%")
+
+```
+
+
+
+```{r plotsimpowerAR1, eval = F, include = F,  fig.width=7, fig.height=8, fig.align='center', fig.cap='Power with three rounds of data collection. Upper panel: 30 U5 children per village. Lower panel: 50 U5 children per village.'}
+# load the data that was stored from the power_odisha_diarrhea_runs.R file for one round
+
+
+p <- ggplot(df.sim.AR1, aes(x = nclusters, y = power, 
+                       #col = interaction(ICC, MDE, sep = ' - '),
+                       col = MDE,
+                       #shape = interaction(MDE, ICC, sep = ' - '),
+                       shape = ICC,
+                       #linetype = interaction(MDE, ICC, sep = ' - '),
+                       linetype = MDE,
+                       )) + 
+  geom_point() + geom_line() + 
+  #ggtitle("Power for total number of villages, avg size: 30") +
+  theme_bw() +
+  guides(colour = guide_legend(override.aes = list(shape = NA))) +
+  labs(colour="MDE", shape="ICC") + scale_color_DIL() +
+  scale_x_discrete(name = "Number of villages", limits = seq(50, 900, by = 50)) + 
+  scale_y_discrete(name = "power", limits = seq(0, 1, by = .1), expand = c(0.025,0.05)) +
+  facet_wrap( ~ clusize, nrow = 2, scales = 'free')# shrink default expansion (0.6 for discrete) 
+
+p
+
+```
+
+
 
 ## 2.3) Showcase that simulations with 1 round match formulas
 
@@ -518,24 +572,9 @@ meanctrl <- mean(amy_lancet$child_diarrhea1[amy_lancet$tr != "trchlorine"])
 (meanctrl + olsamy$coefficients) / meanctrl
 
 
-# AUTOCORRELATION
-# check how the lag works
-data.frame(id = c(1,1,1,2,2,2), val = rep(1:3, 2)) |> group_by(id) |> 
-  mutate(lagged = lag(val, n = 1, default = NA, order_by = id))
+```
 
-# sort by id and round first (is sorted by default? no but the order_By does the job):
-amy_lancet <- amy_lancet %>%                           
-  group_by(childidfull) %>%
-  dplyr::mutate(laggedval = lag(child_diarrhea1, n = 1, default = NA, order_by = round))
-#View(amy_lancet |> select(round, child_diarrhea1, laggedval, diarrhea_count))
-
-amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
-
-lm(child_diarrhea1 ~ laggedval + childidfull, data = amy_lancet) |> summary()
-
-
-
-
+```{r, eval = T}
 # wanna see ICC + block effect
 # wanna do the calc with how many unique 1's in the diarrhea case
 # run the regression with indiv FE and error
@@ -563,14 +602,14 @@ fixest::fixef(test) # |> plot()
 
 
 ```{r meansperround, eval = T, include = T }
-knitr::kable(amy_lancet |> group_by(round,tr) |> summarise(meandiarrhea = mean(child_diarrhea1)) |> pivot_wider(id_cols = round, names_from = tr, values_from = meandiarrhea), caption = "Diarrhea incidence for every round of collection, broken down by treatment and control group.")
+knitr::kable(amy_lancet |> group_by(round,tr) |> summarise(meandiarrhea = mean(child_diarrhea1)) |> pivot_wider(id_cols = round, names_from = tr, values_from = meandiarrhea), caption = "Diarrhea incidence for every round of collection, broken down by treatment and control group.", digits = 3)
 
 ```
 
 
 
-```{r}
-
+```{r, eval = T}
+# TABLES PRINTED BELOW - NEXT TO AUTOCORRELATION
 
 # checking diarrhea frequency
 
@@ -629,13 +668,6 @@ mean(amy_lancet_unique$diarrhea_ever)
 ```
 
 
-```{r autocorrest, eval = F, include = F}
-# 100 villages with roughly 50
-# broken down also by trt now
-amy_lancet |> group_by(round, tr) |> summarise(diarrheanew = mean(diarrhea_first)) 
-amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
-amy_lancet |> group_by(round, tr) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
-```
 
 #### Intra-cluster correlation (ICC)
 
@@ -659,6 +691,94 @@ amy_lancet$residual4ICC <- lm(child_diarrhea1 ~ Block, data = amy_lancet)$resid
 ```
 
 We calculate the raw ICC to be `r round(ICC::ICCest(pumpid, child_diarrhea1, data = amy_lancet)$ICC, 4)` and `r round(ICC::ICCest(pumpid, residual4ICC, data = amy_lancet)$ICC, 4)` after taking into account the blocking structure of the experiment. The sample size is not very large and we thus have reasons to believe that these estimates are not very precise. From earlier data work on child mortality with substantially larger sample sizes we obtained estimates of around 0.01. We therefore want to use 0.01 and 0.02 as benchmark values in our power calculations. 
+
+
+#### Autocorrelation
+
+Using the residual of the main specification of interest - a regression of diarrhea on a treatment indicator with block and round fixed effects - from Pickering et. al. (2019), we can estimate an autocorrelation parameter. Specifically, we are regressing the error from that regression on its lagged values, forcing the intercept to be 0:
+
+$$e_{it} = \rho \ e_{i,t-1} + \epsilon_{it}.$$
+
+```{r autocorrest, eval = T, include = F}
+
+# AUTOCORRELATION
+# check how the lag works
+data.frame(id = c(1,1,1,2,2,2), val = rep(1:3, 2)) |> group_by(id) |> 
+  mutate(lagged = lag(val, n = 1, default = NA, order_by = id))
+
+olsamy <- fixest::feols(child_diarrhea1 ~ tr | round + Block, data = amy_lancet)
+# estimate 
+amy_lancet$err <- olsamy$residuals
+# remove intercept with -1
+autocorr <- lm(err ~ -1 + lag(err), data = amy_lancet)
+autocorr$coefficients[[1]]
+
+# CHECK LAGGED DEPENDENT VARIABLE
+# sort by id and round first (is sorted by default? no but the order_By does the job):
+amy_lancet <- amy_lancet %>%                           
+  group_by(childidfull) %>%
+  dplyr::mutate(laggedval = lag(child_diarrhea1, n = 1, default = NA, order_by = round))
+#View(amy_lancet |> select(round, child_diarrhea1, laggedval, diarrhea_count))
+
+amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
+
+#lm(child_diarrhea1 ~ laggedval + as.factor(childidfull), data = amy_lancet) |> summary()
+ARreg <- fixest::feols(child_diarrhea1 ~ laggedval | childidfull, data = amy_lancet)
+summary(ARreg)
+# lmtest::dwtest(ARreg)
+# car::durbinWatsonTest(ARreg)
+autocorrelation <- sapply(split(amy_lancet$child_diarrhea1, amy_lancet$childidfull), function(x) acf(x, plot = FALSE)$acf[2])
+mean_autocorrelation <- mean(autocorrelation, na.rm = T)
+
+
+
+
+
+# 100 villages with roughly 50
+# broken down also by trt now
+
+```
+
+
+Alternatively, we can also check the raw correlation between the diarrhea incidence in every round with its lagged value (omitting round 1 by force because we to not observe $t=0$.):
+
+
+```{r lagcorrperround, eval = T, include = T}
+#amy_lancet |> group_by(round, tr) |> summarise(diarrheanew = mean(diarrhea_first)) 
+
+#amy_lancet |> group_by(round, tr) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs"))
+knitr::kable(amy_lancet |> group_by(round) |> summarise(corr = cor(child_diarrhea1, laggedval, use = "complete.obs")), caption = "Raw correlation of diarrhea incidence and its lagged value, broken down per round", digits = 3)
+
+```
+
+
+
+The following table shows the counts of the total number of diarrhea cases over the seven rounds per child. The maximum number of cases per child was 5, while most children that had diarrhea only had it in one out of seven rounds.
+
+```{r, eval = T, include = T}
+amy_lancet <- amy_lancet |> group_by(childidfull) |> mutate(diarrhea_count = sum(child_diarrhea1))
+
+# DIARRHEA COUNTS
+table(amy_lancet$diarrhea_count)
+#table(amy_lancet$diarrhea_count[amy_lancet$tr == "chlorine"])
+#table(amy_lancet$diarrhea_count[amy_lancet$tr != "chlorine"])
+```
+
+
+
+```{r, eval = T}
+
+# UNIQUE CHILDREN
+amy_lancet$diarrhea_ever <- ifelse(amy_lancet$diarrhea_count > 0, 1, 0) # assign a 1 if a child ever had diarrhea at some point
+amy_lancet_unique <- amy_lancet[!duplicated(amy_lancet$childidfull), ]
+table(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"]) 
+table(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"])
+mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
+```
+
+The percentage of children in the control group that ever had diarrhea is `r mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"]) |> round(3) * 100` and in the control group `r mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"]) |> round(3) * 100` percent of children had diarrhea recorded at least once.
+
 
 
 ### Checking counts per cluster
