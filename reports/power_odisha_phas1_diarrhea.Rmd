@@ -759,13 +759,18 @@ The following table shows the counts of the total number of diarrhea cases over 
 
 ```{r, eval = T, include = T}
 amy_lancet <- amy_lancet |> group_by(childidfull) |> mutate(diarrhea_count = sum(child_diarrhea1))
-
+amy_lancet_unique <- amy_lancet[!duplicated(amy_lancet$childidfull), ] # do not doublecount the entries
 # DIARRHEA COUNTS
-table(amy_lancet$diarrhea_count)
+table(amy_lancet_unique$diarrhea_count)
 #table(amy_lancet$diarrhea_count[amy_lancet$tr == "chlorine"])
 #table(amy_lancet$diarrhea_count[amy_lancet$tr != "chlorine"])
 ```
 
+In terms of percent, these numbers look as follows:
+
+```{r, eval = T, include = T}
+(table(amy_lancet_unique$diarrhea_count) / nrow(amy_lancet_unique)) |> round(3)
+```
 
 
 ```{r, eval = T}
@@ -781,6 +786,19 @@ mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"])
 
 The percentage of children in the control group that ever had diarrhea is `r mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr != "chlorine"]) |> round(3) * 100` and in the control group `r mean(amy_lancet_unique$diarrhea_ever[amy_lancet_unique$tr == "chlorine"]) |> round(3) * 100` percent of children had diarrhea recorded at least once.
 
+When we divide the table on counts by the number of children that ever had diarrhea (instead of the total number of children), the percentages look as follows:
+
+
+```{r, eval = T, include = T}
+(table(amy_lancet_unique$diarrhea_count)[-1] / sum(amy_lancet_unique$diarrhea_ever)) |> round(3)
+```
+
+
+```{r}
+amy_lancet_unique$diarrhea_substr <- amy_lancet_unique$diarrhea_count
+(amy_lancet_unique$diarrhea_substr[amy_lancet_unique$diarrhea_substr > 0] - 1) |> sum() # cases that are beyond a single diarrhea case
+((amy_lancet_unique$diarrhea_substr[amy_lancet_unique$diarrhea_substr > 0] - 1) |> sum() ) / sum(amy_lancet_unique$diarrhea_count)
+```
 
 
 ### Checking counts per cluster
