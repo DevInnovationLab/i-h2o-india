@@ -3,6 +3,11 @@
 Relevant link
 [Survey tools](https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-)
 
+> Quick note
+- "Data" is the place where people have been placing data with no PII. The data with PII collected in the field will be saved in the U chicago box
+
+# TO BE CLEANED
+
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
 
 - Edit `programs/config.do` to adjust the default path
