@@ -1,0 +1,30 @@
+---
+title: "Electricity Data India + Odisha"
+author: Alex Lehner, August2023
+#bibliography: alex_india.bib
+#output: html_notebook
+output:
+  pdf_document: default
+  dev: cairo_pdf
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, include = FALSE, warning = FALSE, message = FALSE)
+
+rm(list = ls())
+library(sf)
+library(rnaturalearth)
+library(tmap)
+library(stars)
+library(tidyverse)
+
+```
+
+# Introduction
+
+Electricity coverage is an important variable for water coverage in many rural areas because the waterpumps depend on electrical power.
+
+
+
