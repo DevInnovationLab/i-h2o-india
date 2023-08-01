@@ -689,6 +689,13 @@ amy_lancet$residual4ICC <- lm(child_diarrhea1 ~ Block, data = amy_lancet)$resid
 
 #ICC::ICCest(pumpid, residual4ICC, data = amy_lancet)$ICC
 
+# CHANGE OF ICC
+# SEE BELOW FOR THE ICC ON THE COUNT
+#amy_lancet |> group_by(childidfull) |> mutate(indiv_resid = residual4ICC)
+
+
+#amy_lancet |> group_by(round) |> summarise(temp = lm(child_diarrhea1 ~ Block, data = cur_data())$resid)
+
 
 ```
 
@@ -799,6 +806,19 @@ amy_lancet_unique$diarrhea_substr <- amy_lancet_unique$diarrhea_count
 (amy_lancet_unique$diarrhea_substr[amy_lancet_unique$diarrhea_substr > 0] - 1) |> sum() # cases that are beyond a single diarrhea case
 ((amy_lancet_unique$diarrhea_substr[amy_lancet_unique$diarrhea_substr > 0] - 1) |> sum() ) / sum(amy_lancet_unique$diarrhea_count)
 ```
+
+
+```{r}
+# ICC ON COUNTS
+ICC::ICCest(pumpid, diarrhea_count, data = amy_lancet_unique)$ICC
+
+amy_lancet_unique$residual4ICC <- lm(diarrhea_count ~ Block, data = amy_lancet_unique)$resid
+
+ICC::ICCest(pumpid, residual4ICC, data = amy_lancet_unique)$ICC
+
+# 0.02886731 and 0.02168379 for the counts, raw and blocked
+```
+
 
 
 ### Checking counts per cluster
