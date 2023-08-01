@@ -1,0 +1,206 @@
+---
+title: "India ILC -- Pilot Village Randomization"
+author: "Jeremy Lowe"
+date: "2023-06-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+
+```
+
+```{r package loading}
+
+library(rsurveycto)
+library(httr)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(googlesheets4)
+library(googledrive)
+library(readxl)
+library(experiment)
+library(tidyverse)
+
+
+```
+
+```{r pulling data from surveyCTO server and writing to the existing Google Sheet}
+
+
+# # Set your SurveyCTO server URL, form ID, API token, dataset name, and local folder path
+# server_url <- "https://dil.surveycto.com"
+# form_id <- "pilot_census"
+# api_token <- "your-api-token"
+# dataset_name <- " "
+# 
+# # Connect to the SurveyCTO server
+# srv <- connect(server_url, api_token)
+# 
+# # Fetch the survey data
+# hh_raw <- get_data(srv, form_id, dataset = dataset_name)
+
+
+#Or try this:
+
+#auth = scto_auth('scto_auth.txt')
+#form_submissions = scto_read(auth, form_id)
+
+
+```
+
+
+
+
+```{r raw dataset loading}
+
+#From Google Drive -- Excel
+# drive_auth()
+# files <- drive_find(n_max = 1, pattern = "India ILC_Pilot_Household Tracking.xlsx", type = "spreadsheet")
+# hh <- drive_download(files)%>%
+#   read_excel()
+
+#from Google Drive -- Google Sheets
+gs4_auth()
+sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
+hh <- read_sheet(sheet_url, sheet = 3)
+#hh <- gs4_find(sheet_url)
+
+
+
+```
+
+
+
+```{r Conduct baseline randomization}
+
+#Conducting randomization of households in each village to be visited each round
+#IMPORTANT: Only conduct randomization once for a village. Do not overwrite
+#           any prior randomization that has already been done!
+
+
+#initializing empty tibble to store random numbers
+hh_randomization <- tibble(household_ID = numeric(),
+                           participant_name = character(),
+                           phone = numeric(),
+                           second_name = character(),
+                           backup_phone = numeric(),
+                           elder_male_name = character(),
+                           address = character(),
+                           landmark = character(),
+                           district = character(),
+                           block = character(),
+                           village = character(),
+                           village_ID = numeric(),
+                           assignment = numeric(),
+                           baseline_census_date = dmy(),
+                           selected_for_baseline_survey = numeric() ,
+                           selected_for_baseline_WQ_sample = numeric(),
+                           baseline_survey_date = dmy(),
+                           selected_for_follow_up_1 = numeric() ,
+                           selected_for_follow_up_1_WQ_sample = numeric(),
+                           follow_up_1_date = dmy(),
+                           selected_for_follow_up_2 = numeric() ,
+                           selected_for_follow_up_2_WQ_sample = numeric(),
+                           follow_up_2_date = dmy(),
+                           selected_for_follow_up_3 = numeric() ,
+                           selected_for_follow_up_3_WQ_sample = numeric(),
+                           follow_up_3_date = character())
+
+
+#Filter for villages that need to have HHs randomized for follow-up visits
+#Allows for us to select villages that need to be randomized at different times
+#Based on the data collection schedule
+###############################################################################
+ID_selected <- c(1001, 1002)
+
+village_ID <- hh%>%
+  filter(village_ID %in% ID_selected)%>% 
+  #This serves as a survey data check to confirm the ID is in the dataset 
+  dplyr::select(village_ID)%>%
+  unique()
+###############################################################################
+#Filter for villages that only have pregnant/expecting women or children under 5
+
+
+#Selecting village for randomization ----
+#HHs will be randomized one village at a time
+for (i in village_ID$village_ID){
+  hh_select <- hh%>%
+  filter(village_ID == i)
+
+#Filter for HHs that only have pregnant/expecting women or children under 5
+  #and report using the JJM tap as their primary drinking water source
+#hh_select <- hh_select%>%
+#  filter(preg_moth == 1 | child_under5 == 1)%>%
+#  filter(primary_source == "JJM Tap")
+# UNCOMMENT LINES ABOVE BEFORE RUNNING
+  
+  
+#Assigning random numbers to HHs, 
+#numbers 1-10 will be selected for HH follow-up visits
+set.seed(123)
+random_numbers_0 <-  sample(1:length(hh_select$household_ID))
+random_numbers_1 <-  sample(1:length(hh_select$household_ID))
+random_numbers_2 <-  sample(1:length(hh_select$household_ID))
+random_numbers_3 <-  sample(1:length(hh_select$household_ID))
+
+hh_select <- hh_select%>%
+  mutate(selected_for_baseline_survey = random_numbers_0)%>%
+  mutate(selected_for_baseline_WQ_sample = random_numbers_0)%>%
+  mutate(selected_for_follow_up_1 = random_numbers_1)%>%
+  mutate(selected_for_follow_up_1_WQ_sample = random_numbers_1)%>%
+  mutate(selected_for_follow_up_2 = random_numbers_2)%>%
+  mutate(selected_for_follow_up_2_WQ_sample = random_numbers_2)%>%
+  mutate(selected_for_follow_up_3 = random_numbers_3)%>%
+  mutate(selected_for_follow_up_3_WQ_sample = random_numbers_3)
+
+#Joining random numbers to main dataset
+hh_randomization <- hh_randomization%>%
+  bind_rows(hh_select)
+
+}
+
+
+#Writing updates to Google Sheets,
+#This sheet will be used as a backup list by the field manager in case any HHs cannot be visited
+sheet_append(hh_randomization, ss = sheet_url, sheet = 2)
+
+
+```
+
+
+```{r Combining household followup randomization with main tracking sheet}
+
+#Assigning 1 for HHs that should be visited in the follow-up round
+#based on if their random number is 1-10
+hh_randomization <- hh_randomization%>%
+  mutate(selected_for_baseline_survey = 
+           ifelse(selected_for_baseline_survey <= 10, 1, 0))%>%
+  mutate(selected_for_baseline_WQ_sample = 
+           ifelse(selected_for_baseline_WQ_sample <= 4, 1, 0))%>%
+  mutate(selected_for_follow_up_1 = 
+           ifelse(selected_for_follow_up_1 <= 10, 1, 0))%>%
+  mutate(selected_for_follow_up_1_WQ_sample = 
+           ifelse(selected_for_follow_up_1_WQ_sample <= 4, 1, 0))%>%
+  mutate(selected_for_follow_up_2 = 
+           ifelse(selected_for_follow_up_2 <= 10, 1, 0))%>%
+  mutate(selected_for_follow_up_2_WQ_sample = 
+           ifelse(selected_for_follow_up_2_WQ_sample <= 4, 1, 0))%>%
+  mutate(selected_for_follow_up_3 = 
+           ifelse(selected_for_follow_up_3 <= 10, 1, 0))%>%
+  mutate(selected_for_follow_up_3_WQ_sample = 
+           ifelse(selected_for_follow_up_3_WQ_sample <= 4, 1, 0))
+
+
+#Appending rows to existing main household tracker
+sheet_append(hh_randomization, ss = sheet_url, sheet = 1)
+
+
+
+```
+
+

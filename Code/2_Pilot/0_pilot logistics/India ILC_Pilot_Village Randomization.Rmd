@@ -1,0 +1,100 @@
+---
+title: "India ILC -- Pilot Village Randomization"
+author: "Jeremy Lowe"
+date: "2023-06-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+
+```
+
+```{r package loading}
+
+library(rsurveycto)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(googlesheets4)
+library(googledrive)
+library(readxl)
+library(experiment)
+
+
+```
+
+
+```{r dataset loading}
+
+#From Google Drive -- Excel
+# drive_auth()
+# files <- drive_find(n_max = 1, pattern = "India ILC_Pilot_Village Tracking.xlsx", type = "spreadsheet")
+# vill <- drive_download(files)%>%
+#   read_excel()
+
+#from Google Drive -- Google Sheets
+gs4_auth()
+sheet_url <- "https://docs.google.com/spreadsheets/d/13v0BYsLYappyAlyxbWUYAPtuO695eiQLGvGTVhaPg_4/edit#gid=0"
+vill <- read_sheet(sheet_url)
+#vill <- gs4_find(sheet_url)
+
+
+```
+
+
+
+```{r Conduct randomization and write to excel file}
+backup_vill <- vill%>%
+  filter(village_id %in% c(1021, 1022, 1023, 1024))
+
+vill <- vill%>%
+  filter(!village_id %in% c(1021, 1022, 1023, 1024))
+
+#Conducting randomization of water tanks in villages
+village_rand <- 
+  randomize(
+  data = vill,
+  group = c("Treatment", "Control"),
+  ratio = NULL,
+  indx = NULL,
+  block = vill$tank,
+  n.block = NULL,
+  match = NULL,
+  complete = TRUE
+)
+
+vill <- vill%>%
+  mutate(assignment = village_rand$treatment)
+
+
+
+#Conducting randomization of water tanks in backup villages
+backup_village_rand <- 
+  randomize(
+  data = backup_vill,
+  group = c("Treatment", "Control"),
+  ratio = NULL,
+  indx = NULL,
+  block = backup_vill$tank,
+  n.block = NULL,
+  match = NULL,
+  complete = TRUE
+)
+
+backup_vill <- backup_vill%>%
+  mutate(assignment = backup_village_rand$treatment)
+
+vill <- rbind(vill, backup_vill)
+
+
+
+#Writing updates to Google Sheets
+write_sheet(vill, ss = sheet_url, sheet = 1)
+
+```
+

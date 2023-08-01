@@ -1,0 +1,60 @@
+---
+title: "India ILC Pilot SurveyCTO Data Download and Upload"
+author: "Jeremy Lowe"
+date: "2023-07-26"
+output: html_document
+---
+
+```{r setup, echo = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+
+```{r package loading}
+
+
+library(rsurveycto)
+library(httr)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(googlesheets4)
+library(googledrive)
+library(readxl)
+library(experiment)
+library(tidyverse)
+
+```
+
+```{r downloading and decrypting data using SurveyCTO API}
+
+auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/dilserver.txt",
+                  servername = NULL,
+                  username = NULL,
+                  password = NULL,
+                  validate = TRUE
+                  )
+  
+  
+  
+ilc <- scto_read(auth,
+                 ids = "ilc_monitoring",
+                 start_date = "1900-01-01",
+                 review_status = c("approved", "pending"),
+                 private_key = "C:/Users/jerem/Box/India_ILC/india_ilc_pilot_PRIVATEDONOTSHARE.pem",
+                 drop_empty_cols = TRUE,
+                 convert_datetime = c("CompletionDate", "SubmissionDate", "starttime", "endtime"),
+                 datetime_format = "%b %e, %Y %I:%M:%S %p",
+                 simplify = TRUE
+                 )
+
+
+
+
+```
+
+
+
+
