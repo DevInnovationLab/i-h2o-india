@@ -129,6 +129,8 @@ ires.odisha$village_ward_name
 ires.odisha$village_ward_census_code
 census11.odisha$pc11_town_village_id
 
+# CODE THE OUTAGES AS A 0/1, did you have them or not
+
 # create village level aggs
 ires.odisha.vil <- ires.odisha |> group_by(village_ward_census_code) |>
   summarise(q306_grid_rural_powercut_days_20 = mean(q306_grid_rural_powercut_days_20, na.rm = T),
@@ -153,6 +155,7 @@ Initial task by Michael:
 1. high mortality might plausibly be correlated with intermittent electricity and systems that have muddy/silty water. Vaishnavi/Alex/Akanksha, is there any source of data you can use to provide evidence and ideally quantification for that conjecture? Or to compare Odisha to the India average on variables like that?
 2. I imagine that electricity reliability and muddiness/siltiness of the water will improve over time, both as JJM moves forward and as a result of general economic development. Vaishnavi/Alex/Akanksha, is there any source of data you can use to provide evidence and ideally quantification for trends over time?
 
+This is Markdown a very scattered collection of things that could be done. My email response from Aug2nd to Michael was mostly negative, reporting what I found below. Saying that substantial time investment would be needed.
 
 # Data
 
