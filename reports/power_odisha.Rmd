@@ -8,7 +8,6 @@ output:
   dev: cairo_pdf
 ---
 
-
 Questions unresolved:
 - which villages have the SVS scheme?
 - district mortality from latest DHS
@@ -321,7 +320,6 @@ odishasum_SVSsubs$avg_u5_per_vil <- odishasum_SVSsubs$avg_preg_per_vil * 5
 # load estimates from Michelle
 #u5distr <- readstata13::read.dta13("under5_districtwise_odisha.dta")
 odishasum_SVSsubs$diarrhea_incidence <- c(0.04, 0.05, 0.04, 0.05) # districts alphabetically kalahandi, kandhamal, nabarang, rayagad
-
 # diarrhea comes from this sheet https://docs.google.com/spreadsheets/d/1876Ut6NbNp-tCwECXbtC4v6JQ0V_GG1F/edit#gid=1567497203
 num_vil_2_visit <- 100 # acc to Akanksha, 150 from IRB was just to have some slack
 odishasum_SVSsubs$MDE_diarrhea_100vil <- NA
@@ -405,9 +403,6 @@ Above we took the average expected pregnant women and multiplied that by 5. Now 
 # keeping all the rest from above
 # now using the actual distribution across villages and using the CV to account for the dispersion (before we just had means)
 # so we do the u6 here with pop from 2011 but do not account for population growth. this should kind of give an ok approximation then
-
-# update with an upscaling based on BGD
-odishasum_SVSsubs$diarrhea_incidence <- c(0.09, 0.1, 0.09, 0.1) # districts alphabetically kalahandi, kandhamal, nabarang, rayagad
 
 num_vil_2_visit <- 100 # acc to Akanksha, 150 from IRB was just to have some slack
 odishasum_SVSsubs$MDE_diarrhea_100vil <- NA

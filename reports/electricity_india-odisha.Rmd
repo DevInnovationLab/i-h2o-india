@@ -20,11 +20,217 @@ library(tmap)
 library(stars)
 library(tidyverse)
 
+ires2020 <- readr::read_csv("../data/electricity/IRES2020/CEEW - IRES Data.csv")
+#ires2020 <- readstata13::read.dta13("../data/electricity/IRES2020/CEEW - IRES Data.dta")
+
+ires.odisha <- ires2020 |> filter(s_name == "Odisha")
+
+# need to concatenate strings to obtain census codes
+
+# for census census11$census_2011 <- stringr::str_c(census11$pc11_state_id, census11$pc11_district_id, census11$pc11_subdistrict_id, census11$pc11_town_village_id)
+
+
+
+
 ```
+
+
+```{r shrug}
+# loading the geographies for india out of the DIL Box
+
+vil.sf <- sf::st_read("/Users/alexanderlehner/Library/CloudStorage/Box-Box/Chlorine Coupons Kenya/1_Data/3_Secondary Data/Harvard_Geographic_Insights/geometries_shrug-v1/village.gpkg")
+distr.sf <- sf::st_read("/Users/alexanderlehner/Library/CloudStorage/Box-Box/Chlorine Coupons Kenya/1_Data/3_Secondary Data/Harvard_Geographic_Insights/geometries_shrug-v1/district.gpkg")
+
+census11 <- read_csv("/Users/alexanderlehner/Library/CloudStorage/Box-Box/Chlorine Coupons Kenya/1_Data/3_Secondary Data/Harvard_Geographic_Insights/csv_shrug-v1/shrug-v1.5.samosa-pop-econ-census-csv/shrug_pc11.csv")
+census11.distrkey <- read_csv("/Users/alexanderlehner/Library/CloudStorage/Box-Box/Chlorine Coupons Kenya/1_Data/3_Secondary Data/Harvard_Geographic_Insights/csv_shrug-v1/shrug-v1.5.samosa-keys-csv/shrug_pc11_subdistrict_key.csv") # load the SUBdistrict keys (which also includes state keys and names), you never know, maybe we need the subdistrict at some point as a unit of aggregation (the geographic data for it we have)
+
+# add population
+#census11.pop <- 
+
+census11 <- left_join(census11, census11.distrkey, by = "shrid")
+
+# now we need to match the shrug geofile onto that
+# create the shrid for the geofile (no documentation found, AL eyeballed this from cross-checking)
+
+vil.sf$shrid <- paste0("11-", vil.sf$pc11_state_id, "-", vil.sf$pc11_town_village_id)
+
+census11 <- left_join(census11, vil.sf, by = "shrid", suffix=c("",".y")) %>%
+  select(-ends_with(".y")) # drop duplicate columns
+
+# create the census identifier by concatenating strings
+census11$census_2011 <- stringr::str_c(census11$pc11_state_id, census11$pc11_district_id, census11$pc11_subdistrict_id, census11$pc11_town_village_id)
+
+# need to (re)set the geometry for Census11
+census11 <- st_set_geometry(census11, census11$geom)
+# takes a bit, not super elegant (should have done the filter by odisha before to save time):
+# IF you want centroids:
+#census11 <- st_set_geometry(census11, st_geometry(st_centroid(census11)))
+
+
+#census11.odisha <- census11 |> dplyr::filter(state_name == "Odisha")
+ # ------------------------------------------------
+# only keep big states (initial intent was to only eliminate islands so we can get the zonal stats to work)
+
+census11$pc11_state_name |> unique()
+statelist <- c("punjab", "uttarakhand", "haryana", "rajasthan", "uttar pradesh", "bihar",          "west bengal", "jharkhand", "odisha", "chhattisgarh", "madhya pradesh", "gujarat",                 "maharashtra", "andhra pradesh", "karnataka", "goa", "kerala", "tamil nadu")
+census11 <- census11 |> filter(pc11_state_name %in% statelist)
+
+```
+
+
+```{r}
+# read the U5 raster out of the odisha app
+#u5mr <- stars::read_stars("odisha_interactive/india_under5_mean_2017.tif")
+u5mr <- raster::raster("odisha_interactive/india_under5_mean_2017.tif")
+st_crs(u5mr)
+
+# to check on smaller area
+census11.odisha <- census11 |> dplyr::filter(pc11_state_name == "odisha")
+tm_shape(census11.odisha) + tm_polygons() + tm_shape(u5mr) + tm_raster()
+
+
+#sum(!st_is_valid(census11)) # all geometries seem to be valid, probably the islands caused trouble
+
+# after 44% on full village set: Error in CPP_stats(x, weights, wkb, default_value, default_weight, coverage_area, :
+# Error getting geometry extent.
+
+# SAVE as RData (rasterstats were heavy to compute)
+
+# do only odisha for now
+
+census11.odisha$U5MR2017 <- exactextractr::exact_extract(u5mr, census11.odisha, 'mean')
+#saveRDS(census11.odisha, file = "census11odisha_u5extracted.rds")
+
+# try again with reduced statelist
+census11$U5MR2017 <- exactextractr::exact_extract(u5mr, census11, 'mean')
+# just save this one vector bc it takes so long to create
+saveRDS(census11$U5MR2017, file = "census11U5MR2017_u5extracted.rds")
+
+```
+
+
+
+
+
+```{r}
+# matching villages between census 11 and ires - in odisha. more is not possible because subdistrict number missing and thus census identifier in IRES not complete and useless
+
+
+ires.odisha$s_code
+ires.odisha$d_code
+ires.odisha$village_ward_census_code
+# THIS IS MISSING THE SUBDISTR CODE
+
+stringr::str_c(ires.odisha$s_code, ires.odisha$d_code, ires.odisha$village_ward_census_code)
+census11.odisha$census_2011
+
+ires.odisha$village_ward_name
+# codes seem to match
+ires.odisha$village_ward_census_code
+census11.odisha$pc11_town_village_id
+
+# create village level aggs
+ires.odisha.vil <- ires.odisha |> group_by(village_ward_census_code) |>
+  summarise(q306_grid_rural_powercut_days_20 = mean(q306_grid_rural_powercut_days_20, na.rm = T),
+            q308_grid_voltage_low_app = mean(q308_grid_voltage_low_app, na.rm = T))
+
+
+ires.odisha$village_ward_census_code %in% census11.odisha$pc11_town_village_id
+# just to a left join
+ires.odisha.vil <- left_join(ires.odisha.vil, census11.odisha, by = join_by(village_ward_census_code == pc11_town_village_id))
+
+```
+
+
 
 # Introduction
 
 Electricity coverage is an important variable for water coverage in many rural areas because the waterpumps depend on electrical power.
+
+Initial task by Michael:
+
+“Re: Time-sensitive: use of alternative water sources in odisha”.
+1. high mortality might plausibly be correlated with intermittent electricity and systems that have muddy/silty water. Vaishnavi/Alex/Akanksha, is there any source of data you can use to provide evidence and ideally quantification for that conjecture? Or to compare Odisha to the India average on variables like that?
+2. I imagine that electricity reliability and muddiness/siltiness of the water will improve over time, both as JJM moves forward and as a result of general economic development. Vaishnavi/Alex/Akanksha, is there any source of data you can use to provide evidence and ideally quantification for trends over time?
+
+
+# Data
+
+This analysis could be carried out on different levels of aggregation: the village or the district.
+
+Took in geographic estimates for child mortality (U5) in 2017 from the same paper that is being used in the Odisha app.
+
+Survey data from the IRES2020 household survey which has three relevant questions on electricity supply.
+
+From the census village directory we have data on power availability per village (agriculture, commercial, and domestic use) as indicators.
+
+
+## Analysis with IRES survey
+
+```{r}
+# variables we care about
+ires.odisha$q306_grid_rural_powercut_days_20
+
+ires.odisha$q307_grid_urban_powercut_days_10
+
+ires.odisha$q308_grid_voltage_low_app
+
+# how many years on grid?
+ires.odisha$q311_grid_yrs
+
+
+ggplot(ires.odisha.vil) + geom_point(aes(q306_grid_rural_powercut_days_20, U5MR2017))
+
+
+cor(ires.odisha.vil$q306_grid_rural_powercut_days_20, ires.odisha.vil$U5MR2017, use = "complete.obs")
+
+lm(U5MR2017 ~ q308_grid_voltage_low_app, data = ires.odisha.vil) |> summary()
+# no relationship
+
+```
+
+
+## Analysis with village level census (village directory)
+
+```{r}
+# within census villages
+
+lm(U5MR2017 ~ pc11_vd_power_dom, data = census11.odisha) |> summary()
+lm(U5MR2017 ~ pc11_vd_power_dom_sum, data = census11.odisha) |> summary()
+lm(U5MR2017 ~ pc11_vd_power_dom_win, data = census11.odisha) |> summary()
+```
+# Muddy/silty water
+
+For muddy/ silty water, I don't think there is a database. Because these water supply systems are so new, it takes a while for them to stabilise. Suppliers are usually large infrastructure companies or small contractors who have won bids to put in the taps and pipes -- I doubt that they collect this data in any meaningful way. Further, since there are hundreds of individual contractors and suppliers who are responsible for putting in the infrastructure, it's fractured, and we won't find a central repository of data. The other alternative is looking at government water quality monitoring data, but we've requested them for this months ago and not had any luck
+
+
+# Appendix: Other sources for electricity
+
+## Census India
+
+Houselisting Primary Census Abstract: The Houselisting Primary Census Abstract (HPCA) reports on a variety of household-related variables. These include physical housing stock character- istics such as type of floor/wall/roof and number of rooms; drinking water source; type of latrine; primary cooking fuel; and main source of in-home lighting (e.g., electricity vs. kerosene). HPCA data also report the number of household members; the number of married couples per household; and whether houses are owned or rented. Finally, they report household asset ownership, including telephones, televisions, motorcycles, radios, and other durable goods. The 2011 HPCA dataset reports the above variables as village-level household shares (i.e., share of households in the village meeting each criterion), for 597,502 total villages. The 2001 HPCA is only available at higher levels of aggregation (either Census block or district), and reports average village-level household shares for (most of) the same variables.
+
+Village Directory The Village Directory (VD): provides detailed village-level amenity data, anal- ogous the community survey that often accompanies household survey data.32 These community- level characteristics are not specific to individual households. They include the number of pri- mary/middle/secondary schools and other educational facilities; the number of hospitals, commu- nity health centers, and other health facilities; community drinking water sources; phone, post office, and other communication services; bus service, rail service, and road quality; and the presence of banking facilities and credit societies. Importantly for our purposes, VD data include 1/0 indica- tors for the availability of electric power services anywhere in the village, broken out by domestic, agricultural, and commercial end-use sectors; the 2011 VD also reports average hours per day of electric power received by each sector.33 We use these electric power variables in our first-stage analysis (in Table 2). Finally, the VD contains several geographic indicators, including village area
+
+## India’s National Sample Survey (NSS),
+
+“thick” (55th, 1999–2000; 61st, 2004–05; and 66th; 2009–10) rounds: These rounds collect data on household consumer ex- penditures, and surveyed 60,000–80,000 households per round, living all across India.55 Households are asked about their expenditures on a variety of consumable and durable goods, including food- stuffs, fuel, and other household items such as soap. In each of these rounds, the rural NSS is representative at the district level (Topalova (2010)), though it obscures the identifies of surveyed villages and households. The NSS is collected by the National Sample Survey Office in the Min- istry of Statistics and Programme Implementation (MoSPI).56 The surveys also include household characteristics, district identifiers, and sampling (or “survey”) weights, which we use to construct a representative household at the district level.
+Nothing on intermittent electricity seemingly.
+
+Outcome variables: We use three sets of NSS outcome variables in our analysis. First, we use the quantity of electricity consumed over the previous 30 days (kWh per household-month), and spending on electricity consumption (rupees per household-month). These two variables let us derive an average price per kWh for each NSS household with non-zero electricity consumption. The NSS electricity consumption variables include all purchased electricity, whether from the grid or from other sources (e.g. a diesel microgrid operator). The NSS also collects each household’s spending on diesel and petrol used for self-generation, which we use to test for crowding-out effects (see Table A11).
+
+Second, we use total monthly expenditure per capita for each household, computed using a 30 day recall period and adjusted to 2010 rupees. Because saving is limited in rural India, this is also a close approximation for household income (Atkin et al. (2020)). To make this variable a more accurate proxy for electrification-induced welfare changes, we subtract electricity spending per capita (converting from rupees per household to rupees per person using the household size variable). The average electrified NSS household allocates 3.2% of total expenditures to electricity purchases.
+
+## DISE school dataset
+
+DISE data are collected by school headmasters (or head teachers), and submitted to district- and state-level authorities before entering the official national system.50 In total, these data cover 1.68 million schools across over 600,000 villages. However, the annual panel is quite unbalanced, with the average school appearing in only 7 of 10 years.51 We observe DISE data for 536,330 villages in 2005–06, with an average of 1.9 schools per village. This increases to 559,442 villages and 2.3 schools per village in 2014–15.
+DISE data include additional school characteristics that we do not use in our analysis, including whether each school has electricity access. We do not detect first-stage RD effects on school electrification, likely due to the fact that only 40% of villages in our main RD sample had schools.
+
+
+## Nightlights
+
+Several issues that would make us believe that it is hard to capture intermittent power (or outage frequency) from nightlights.
+
 
 
 
