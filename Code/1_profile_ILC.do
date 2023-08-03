@@ -42,34 +42,25 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	else if c(username) == "akitokamei" {		
 		global box 		"/Users/akitokamei/Box Sync/India Water project/"
-		global github	"/Users/akitokamei/Dropbox/Mac/Documents/GitHub/i-h2o-IndiaILC/"
+		global github	"/Users/akitokamei/Dropbox/Mac/Documents/GitHub/i-h2o-india/"
 		global Overleaf "/Users/akitokamei/Dropbox/Apps/Overleaf"
-		global DataRaw  "${box}01. Raw/"
+		
 	}
 
 	global code		     "${github}Code"
-	/* 
-	global	data_box	"${box}/data"
-	global  data_git	"${github}/data"
-	global	doc_box		"${box}/documentation"
-	global	doc_git		"${github}/documentation"
-	global	output		"${github}/output" 
 	
-	global DataArchive   "${DataRaw}Z_Archive/Keep especially for DOB/"
-	global Data          "${box}1_Data/"
-	global DataPre       "${box}1_Data/1_0_Project_preload/"
-	global DataClean     "${box}1_Data/1_2_Project_clean/"
-	global DataFinal     "${box}1_Data/1_3_Project_final/"
-	global DataLogistic  "${box}1_Data/1_4_Project_logistic/"
-	global Do_impliment  "${github}Code/1_Implimentation/"
-	global Do_lab        "${github}Code/1_Implimentation/Label/"
-	global Do_analysis   "${github}Code/2_Analysis/"
-	* global Map      "${box}1_Shapefiles/ken_adm_iebc_20191031_shp/"
-	global MapData  "${box}1_Data/4_Shapefiles/Shape files/"
-	global Map      "${box}1_Shapefiles/ken_adm_iebc_20191031_shp/"
-	global Data2nd  "${Data}3_Secondary Data/"
-	*/
+	* Box 
+	global pilot     "${box}2_Pilot/Data/"
+	global DataRaw   "${pilot}1_raw/"
+	global DataDeid  "${pilot}2_deidentified/"
+	global DataFinal "${pilot}3_final/"
+	global DataTemp  "${pilot}99_temp/"
 	
+	* Do files
+	global Do_pilot   "${github}Code/1_profile_ILC/"
+	global Do_lab     "${github}Code/1_profile_ILC/Label/"
+	
+	* Overleaf
 	global Table =  "${Overleaf}/Everything document -ILC/Table/"
 	global Figure = "${Overleaf}/Everything document -ILC/Figure/"
 	
@@ -95,15 +86,24 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 ------------------------------------------------------------------------------*/
 * Search function
 	/* 
-local string List_ANC_final_HF.dta
+local string ABC.dta
 	cd "${github}code/1_Implimentation"
 	find, match(`string') show zero
 */ 
 	
 cd "${DataRaw}"
 
-* (1.0) First datat set
-* do "${Do_impliment}1_2_0_IssueCoupon.do"
+* (0) First apply SurveyCTO code cleaning do file
+do "${Do_pilot}0_Preparation.do"
+
+* (1) Cleaning (Discuss more what is needed)
+do "${Do_pilot}1_Cleaning.do"
+
+* (2) Descriptive stats
+do "${Do_pilot}2_Descriptive.do"
+
+* (3) Analysis
+do "${Do_pilot}3_Analysis.do"
 
 ********************************
 * Erasing unccessary databases *
