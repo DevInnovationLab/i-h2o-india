@@ -5,8 +5,11 @@
 
 * STATA User
 if c(username)      == "akitokamei" | c(username)=="ABC" {
-do "${Do_lab}1_0_1_label.do"
-save "${DataRaw}1. Contact details.dta", replace
+do "${Do_lab}import_india_ilc_pilot_census.do"
+save "${DataRaw}1_1_Census.dta", replace
+
+do "${Do_lab}import_india_ilc_pilot_followup_survey.do"
+save "${DataRaw}1_2_Followup.dta", replace
 }
 
 * Windows User
