@@ -6,14 +6,12 @@ Relevant link
 > Quick note
 - "Data" is the place where people have been placing data with no PII. The data with PII collected in the field will be saved in the U chicago box
 
-# TO BE CLEANED
-
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
 
-- Edit `programs/config.do` to adjust the default path
-- Run `programs/00_setup.do` once on a new system to set up the working environment. 
+- Edit `1_profile_ILC.do` to adjust the default path
+- Run `1_profile_ILC.do` once on a new system to set up the working environment. 
 - Download the data files referenced above. Each should be stored in the prepared subdirectories of `data/`, in the format that you download them in. Do not unzip. Scripts are provided in each directory to download the public-use files. Confidential data files requested as part of your FSRDC project will appear in the `/data` folder. No further action is needed on the replicator's part.
-- Run `programs/01_master.do` to run all steps in sequence.
+- Run `1_profile_ILC.do` to run all steps in sequence.
 
 **Contents**
 - [Comments for replicators](#comments-for-replicators)
@@ -22,6 +20,9 @@ Relevant link
 - [List of final outputs](#list-of-final-outputs)
 - [List of datasets](#list-of-datasets)
 - [Acknowledgements](#acknowledgements)
+
+
+# TO BE CLEANED
 
 ## Comments for replicators
 
