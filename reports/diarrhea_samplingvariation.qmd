@@ -27,10 +27,12 @@ library(dplyr)
 
 The ILC Pilot in Odisha will have a fixed sample of 20 villages. We want to get a sense for how precise and informative diarrhea prevalence estimates from an endline census in all villages will be. The assumed diarrhea prevalance is **five percent** as per the latest NFHS survey at a district level.
 
-There will be substantial sampling variation depending on the size of the villages. Therefore I show the variation of the prevalence rate across different village sizes from 5 to 50 U5 children per village in increments of 5. Vaishnavi mentioned that a total village size of 500 people might be already too big because their water systems might get complex. Therefore, 50 U5 children might already be too high of an upper bound.
+There will be substantial sampling variation depending on the size of the villages. Therefore, I show the variation of the prevalence rate across different village sizes from 5 to 50 U5 children per village in increments of 5. Vaishnavi mentioned that a total village size of 500 people might be already too big because their water systems might get complex. Therefore, 50 U5 children could already be too high of an upper bound for what is a realistic number of U5 children that can be expected.
 
-For each village size, the graphic displays the average total prevalence over all 20 villages. 100 simulations within each village size category are displayed and 95 percent confidence intervals are displayed with red errorbars.
+For each village size, the graphic displays the average total prevalence over all 20 villages. 100 simulations within each village size category are displayed (village size always constant) and 95 percent confidence intervals are displayed with red errorbars.
 These confidence intervals are printed in a separate table below the plot for every village size category.
+
+The results suggest that **if diarrhea prevalance is five percent**, having somewhere between 25 and 40 U5 children per village should keep the margins of error reasonably in check. Obviously, a second census (at baseline) will give you another draw and thus more certainty - which would also allow you to assess the usefulness of multiple rounds of diarrhea censuses.
 
 
 ```{r}
@@ -89,7 +91,7 @@ ggplot() +
   geom_jitter(data = df, mapping = aes(x = GroupSize, y = Proportion), 
               alpha = .5, position = position_jitter(width = 1)) +
   geom_hline(yintercept = p_baseline, linetype = "dashed", color = "red") +
-  labs(title = "Simulated Diarrhia Rates Across Village Sizes (U5 Children)",
+  labs(title = "Simulated Diarrhea Rates Across Village Sizes (U5 Children)",
        y = "Estimated Proportion Per Simulation (over all 20 villages)",
        x = "Number of U5 children per village (20 villages fixed)") +
   scale_x_continuous(breaks = group_sizes) + 
