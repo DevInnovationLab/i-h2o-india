@@ -28,34 +28,12 @@ library(tidyverse)
 
 ```
 
-```{r pulling data from surveyCTO server and writing to the existing Google Sheet}
-
-
-# # Set your SurveyCTO server URL, form ID, API token, dataset name, and local folder path
-# server_url <- "https://dil.surveycto.com"
-# form_id <- "pilot_census"
-# api_token <- "your-api-token"
-# dataset_name <- " "
-# 
-# # Connect to the SurveyCTO server
-# srv <- connect(server_url, api_token)
-# 
-# # Fetch the survey data
-# hh_raw <- get_data(srv, form_id, dataset = dataset_name)
-
-
-#Or try this:
-
-#auth = scto_auth('scto_auth.txt')
-#form_submissions = scto_read(auth, form_id)
-
-
-```
-
-
 
 
 ```{r raw dataset loading}
+
+#Data is pulled from SurveyCTO and uploaded as an Excel file using a separate R code
+
 
 #From Google Drive -- Excel
 # drive_auth()

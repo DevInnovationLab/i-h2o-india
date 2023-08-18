@@ -30,6 +30,7 @@ library(tidyverse)
 
 ```{r downloading and decrypting data using SurveyCTO API}
 
+#Jeremy's authentication for SurveyCTO API
 auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/dilserver.txt",
                   servername = NULL,
                   username = NULL,
@@ -37,13 +38,13 @@ auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/d
                   validate = TRUE
                   )
   
-  
+
   
 ilc <- scto_read(auth,
-                 ids = "ilc_monitoring",
+                 ids = "india_ilc_pilot_census",
                  start_date = "1900-01-01",
                  review_status = c("approved", "pending"),
-                 private_key = "C:/Users/jerem/Box/India_ILC/india_ilc_pilot_PRIVATEDONOTSHARE.pem",
+                 #private_key = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/0_keys/india_ilc_pilot_PRIVATEDONOTSHARE.pem",
                  drop_empty_cols = TRUE,
                  convert_datetime = c("CompletionDate", "SubmissionDate", "starttime", "endtime"),
                  datetime_format = "%b %e, %Y %I:%M:%S %p",
@@ -55,6 +56,12 @@ ilc <- scto_read(auth,
 
 ```
 
+```{r Writing raw data to existing household tracking sheet}
+
+
+
+
+```
 
 
 

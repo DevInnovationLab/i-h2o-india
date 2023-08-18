@@ -32,7 +32,6 @@ library(tidyverse)
 
 ```{r data loading}
 
-
 #From Google Drive -- Excel
 # drive_auth()
 # files <- drive_find(n_max = 1, pattern = "India ILC_Pilot_Household Tracking.xlsx", type = "spreadsheet")
@@ -41,29 +40,56 @@ library(tidyverse)
 
 #from Google Drive -- Google Sheets
 #Pulls raw survey data
-gs4_auth()
-sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
-hh <- read_sheet(sheet_url, sheet = 3)
+#gs4_auth()
+#sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
+#hh <- read_sheet(sheet_url, sheet = 3)
 #hh <- gs4_find(sheet_url)
-
-
 
 
 #from Google Drive -- Google Sheets
 #Pulls HHs randomly selected for follow-up
-gs4_auth()
-sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
-hh_randomization <- read_sheet(sheet_url, sheet = 1)%>%
-  dplyr::select(household_ID, 
-                selected_for_baseline_survey,
-                selected_for_baseline_WQ_sample,
-                selected_for_follow_up_1,
-                selected_for_follow_up_1_WQ_sample,
-                selected_for_follow_up_2,
-                selected_for_follow_up_2_WQ_sample,
-                selected_for_follow_up_3,
-                selected_for_follow_up_3_WQ_sample)
+#OLD Method -- no longer using Google Drive but keeping for reference
+#gs4_auth()
+#sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
+#hh_randomization <- read_sheet(sheet_url, sheet = 1)%>%
+#  dplyr::select(household_ID, 
+#                selected_for_baseline_survey,
+#                selected_for_baseline_WQ_sample,
+#                selected_for_follow_up_1,
+#                selected_for_follow_up_1_WQ_sample,
+#                selected_for_follow_up_2,
+#                selected_for_follow_up_2_WQ_sample,
+#                selected_for_follow_up_3,
+#                selected_for_follow_up_3_WQ_sample)
 #hh <- gs4_find(sheet_url)
+
+
+#Selecting file path to Household Tracking Excel Sheet
+#Jeremy's file path
+sheet_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/India ILC_Pilot_Household Tracking.xlsx" 
+
+
+#Reading in raw data
+hh <- read_excel(sheet_path, sheet = 3)
+
+
+#Reading in data for HHs that were randomly selected
+#Data are located in Box at: Box\India Water project\2_Pilot\Data\1_raw\0_field logistics
+
+  
+hh_randomization <- read_excel(sheet_path, sheet = 1)%>%
+ dplyr::select(household_ID,
+               selected_for_baseline_survey,
+               selected_for_baseline_WQ_sample,
+               selected_for_follow_up_1,
+               selected_for_follow_up_1_WQ_sample,
+               selected_for_follow_up_2,
+               selected_for_follow_up_2_WQ_sample,
+               selected_for_follow_up_3,
+               selected_for_follow_up_3_WQ_sample)
+
+
+
 
 
 ```
@@ -72,9 +98,10 @@ hh_randomization <- read_sheet(sheet_url, sheet = 1)%>%
 
 #Selecting which villages to create an information printout for
 ID_selected <- c(1001,1002)
-
 #Important to change this for the village you want information on!
 #Could adapt this code to prompt the user for an ID list instead
+
+#Selecting key information from raw data
 hh <- hh%>%
   filter(village_ID %in% ID_selected)%>%
   dplyr::select(household_ID, district, block, village, village_ID, assignment,
@@ -112,7 +139,7 @@ hh_printout%>%
   kable_styling(position = "center",
                 bootstrap_options = "striped",
                 latex_options = c("scale_down", "HOLD_position"))%>%
-  add_header_above(c("Baseline Survey HH Information " = 12)) %>%
+  add_header_above(c("Baseline Survey HH Information " = 14)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE)%>%
   column_spec(2, width = "75px")%>%
