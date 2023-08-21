@@ -1,7 +1,7 @@
 ---
 title: "Power Considerations for Village RCT Odisha - Phase 1 - Diarrhea outcome"
 author: Alex Lehner
-date: July2023 #"2023-07-14"
+date: July2023 (update with 7.5pc incidence - ONLY for Ch1 however, the simulations in Ch2 are the old ones with 5pc incidence) #"2023-07-14"
 header-includes:
    - \usepackage{lineno}
    - \linenumbers
@@ -17,73 +17,74 @@ fontsize: 12pt
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
+library(DILmisc) # color stuff is now in there - no need to copy over the defining code anymroe
 
-DIL_colors <- c(
-  `red`        = "#8B0021",
-  `yellow`     = "#FAA61A",
-  `orange`     = "#E2821B",
-  `black`      = "#303540",
-  `light grey` = "#939698",
-  `dark grey`  = "#8c8c8c")
-
-DIL_cols <- function(...) {
-  cols <- c(...)
-
-  if (is.null(cols))
-    return (DIL_colors)
-
-  DIL_colors[cols]
-}
-
-DIL_palettes <- list(
-  `main`  = DIL_cols("red", "light grey", "yellow", "black", "orange")
-  #`main`  = DIL_cols("red", "yellow", "orange", "black", "light grey"),
-)
-
-DIL_pal <- function(palette = "main", reverse = FALSE, ...) {
-  pal <- DIL_palettes[[palette]]
-
-  if (reverse) pal <- rev(pal)
-
-  colorRampPalette(pal, ...)
-}
-
-
-#' Color scale constructor for drsimonj colors
-#'
-#' @param palette Character name of palette in drsimonj_palettes
-#' @param discrete Boolean indicating whether color aesthetic is discrete or not
-#' @param reverse Boolean indicating whether the palette should be reversed
-#' @param ... Additional arguments passed to discrete_scale() or
-#'            scale_color_gradientn(), used respectively when discrete is TRUE or FALSE
-#'
-scale_color_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
-  pal <- DIL_pal(palette = palette, reverse = reverse)
-
-  if (discrete) {
-    discrete_scale("colour", paste0("DIL_", palette), palette = pal, ...)
-  } else {
-    scale_color_gradientn(colours = pal(256), ...)
-  }
-}
-
-#' Fill scale constructor for drsimonj colors
-#'
-#' @param palette Character name of palette in drsimonj_palettes
-#' @param discrete Boolean indicating whether color aesthetic is discrete or not
-#' @param reverse Boolean indicating whether the palette should be reversed
-#' @param ... Additional arguments passed to discrete_scale() or
-#'            scale_fill_gradientn(), used respectively when discrete is TRUE or FALSE
-#'
-scale_fill_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
-  pal <- DIL_pal(palette = palette, reverse = reverse)
-
-  if (discrete) {
-    discrete_scale("fill", paste0("DIL_", palette), palette = pal, ...)
-  } else {
-    scale_fill_gradientn(colours = pal(256), ...)
-  }
-}
+# DIL_colors <- c(
+#   `red`        = "#8B0021",
+#   `yellow`     = "#FAA61A",
+#   `orange`     = "#E2821B",
+#   `black`      = "#303540",
+#   `light grey` = "#939698",
+#   `dark grey`  = "#8c8c8c")
+# 
+# DIL_cols <- function(...) {
+#   cols <- c(...)
+# 
+#   if (is.null(cols))
+#     return (DIL_colors)
+# 
+#   DIL_colors[cols]
+# }
+# 
+# DIL_palettes <- list(
+#   `main`  = DIL_cols("red", "light grey", "yellow", "black", "orange")
+#   #`main`  = DIL_cols("red", "yellow", "orange", "black", "light grey"),
+# )
+# 
+# DIL_pal <- function(palette = "main", reverse = FALSE, ...) {
+#   pal <- DIL_palettes[[palette]]
+# 
+#   if (reverse) pal <- rev(pal)
+# 
+#   colorRampPalette(pal, ...)
+# }
+# 
+# 
+# #' Color scale constructor for drsimonj colors
+# #'
+# #' @param palette Character name of palette in drsimonj_palettes
+# #' @param discrete Boolean indicating whether color aesthetic is discrete or not
+# #' @param reverse Boolean indicating whether the palette should be reversed
+# #' @param ... Additional arguments passed to discrete_scale() or
+# #'            scale_color_gradientn(), used respectively when discrete is TRUE or FALSE
+# #'
+# scale_color_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+#   pal <- DIL_pal(palette = palette, reverse = reverse)
+# 
+#   if (discrete) {
+#     discrete_scale("colour", paste0("DIL_", palette), palette = pal, ...)
+#   } else {
+#     scale_color_gradientn(colours = pal(256), ...)
+#   }
+# }
+# 
+# #' Fill scale constructor for drsimonj colors
+# #'
+# #' @param palette Character name of palette in drsimonj_palettes
+# #' @param discrete Boolean indicating whether color aesthetic is discrete or not
+# #' @param reverse Boolean indicating whether the palette should be reversed
+# #' @param ... Additional arguments passed to discrete_scale() or
+# #'            scale_fill_gradientn(), used respectively when discrete is TRUE or FALSE
+# #'
+# scale_fill_DIL <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+#   pal <- DIL_pal(palette = palette, reverse = reverse)
+# 
+#   if (discrete) {
+#     discrete_scale("fill", paste0("DIL_", palette), palette = pal, ...)
+#   } else {
+#     scale_fill_gradientn(colours = pal(256), ...)
+#   }
+# }
 ```
 
 
@@ -120,7 +121,7 @@ rescale_pr <- function(x, pr) {
 
 ```
 
-This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5% [latest data from NFHS]) and the treatment (inline chlorination devices for clean water) is assigned for a complete cluster (a village).
+This document lays out power calculations for a binary outcome, measured at the individual level, for a cluster randomized trial (C-RCT) in Odisha, India. The outcome of interest is diarrhea (approximate incidence rate of 5% [latest data from NFHS] - **ATTENTION: in this iteration, the incidence rate is increased to 7.5%**) and the treatment (inline chlorination devices for clean water) is assigned for a complete cluster (a village).
 
 The crucial assumptions for these calculations are:
 
@@ -214,6 +215,8 @@ power_cpa.binary <- function(nclustotal, clusize_avg = nJ, ICC_choice = ICCval,
          nclusters = nclustotal, power = power.out)
 }
 p_diar <- .05
+# CHANGE IN THIS ITERATION
+p_diar <- .075 
 #power_cpa.binary(10, clusize_avg = 50, ICC_choice = 0.01, pr_incidence = p_diar, MDE = .2)
 clusternumbers <- seq(50, 900, by = 25) # define the 
 
@@ -400,7 +403,7 @@ p
 
 ## 2.2) Simulations with 3 rounds, AR(1) errors
 
-to be added. For the case of 3 rounds, results won't change substantially, however.
+Results are essentially the same as above for reasonable degrees of autocorrelation because the number of periods is so low.
 
 ```{r, eval = F, include = F}
 df.sim.AR1 <- readRDS(file = "powerruns_stored/sim_3rounds_allvalues_2ICC2MDE2vilsize_1kruns.RDS")

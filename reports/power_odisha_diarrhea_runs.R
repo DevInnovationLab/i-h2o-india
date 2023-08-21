@@ -1,3 +1,9 @@
+# ATTENTION:
+# ... this file is legacy and superseded by "power_odisha_diarrhea_runs_noAR1.R" in the reports folder.
+# ... it contains the code in loop format, whereas the other file above does vectorized code with parallelizeation
+# ... and is embedded in the power_odisha_phas1_diarrhea.Rmd file
+
+
 # this file simulates binary outcomes for multiple rounds
 # the original report is in the "power_odisha_phas1_diarrhea.Rmd"
 # this small .R file just hosts the (multithreaded?) version of the main simulations in that .Rmd
