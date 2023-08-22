@@ -1,11 +1,11 @@
-* import_india_ilc_pilot_census.do
+* import_india_ilc_pilot_census_enc.do
 *
-* 	Imports and aggregates "india_ilc_pilot_census" (ID: india_ilc_pilot_census) data.
+* 	Imports and aggregates "india_ilc_pilot_census_enc" (ID: india_ilc_pilot_census_enc) data.
 *
-*	Inputs:  "india_ilc_pilot_census_WIDE.csv"
-*	Outputs: "india_ilc_pilot_census.dta"
+*	Inputs:  "india_ilc_pilot_census_enc_WIDE.csv"
+*	Outputs: "india_ilc_pilot_census_enc.dta"
 *
-*	Output by SurveyCTO August 3, 2023 8:06 PM.
+*	Output by SurveyCTO August 22, 2023 10:49 AM.
 
 * initialize Stata
 clear all
@@ -21,9 +21,9 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "india_ilc_pilot_census_WIDE.csv"
-local dtafile "india_ilc_pilot_census.dta"
-local corrfile "india_ilc_pilot_census_corrections.csv"
+local csvfile "india_ilc_pilot_census_enc_WIDE.csv"
+local dtafile "india_ilc_pilot_census_enc.dta"
+local corrfile "india_ilc_pilot_census_enc_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum hamlet_name unique_id enum_name_label reasons_no_consent no_consent_oth no_consent_comment a1_resp_name a3_femhead_name a3_malehead_name a4_oldmale_name"
 local text_fields2 "a6_phone_num a7_phone_oth a8_address a9_landmark hh_member_names_count namenumber_* a14_hhmember_name_* hh_member_gender_count_* namefromearlier_* hh_member_age_count_* pregnant_oth_status_count"
@@ -258,7 +258,7 @@ if _N>0 {
 
 	label variable a12_school_level "A12) What is the highest level of schooling that you have completed?"
 	note a12_school_level: "A12) What is the highest level of schooling that you have completed?"
-	label define a12_school_level 1 "Incomplete primary (8th grade not completed)" 2 "Complete primary (8th grade completed)" 3 "Incomplete secondary (12th grade not completed)" 4 "Complete secondary (12th grade not completed)" 5 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Don’t know/refused."
+	label define a12_school_level 1 "Incomplete primary (8th grade not completed)" 2 "Complete primary (8th grade completed)" 3 "Incomplete secondary (12th grade not completed)" 4 "Complete secondary (12th grade not completed)" 5 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Don't know/refused."
 	label values a12_school_level a12_school_level
 
 	label variable a13_read_write "A13) Can you read and write with understanding in any language?"
@@ -452,7 +452,7 @@ if _N>0 {
 
 	label variable a25_water_sec_freq "A25) How often do you collect water for drinking from these other water sources?"
 	note a25_water_sec_freq: "A25) How often do you collect water for drinking from these other water sources?"
-	label define a25_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" -98 "Other" -99 "Don’t know"
+	label define a25_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" -98 "Other" -99 "Don't know"
 	label values a25_water_sec_freq a25_water_sec_freq
 
 	label variable a25_water_sec_freq_oth "A25.1) If Other, please specify"
@@ -562,7 +562,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  india_ilc_pilot_census_corrections.csv
+*   Corrections file path and filename:  india_ilc_pilot_census_enc_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
