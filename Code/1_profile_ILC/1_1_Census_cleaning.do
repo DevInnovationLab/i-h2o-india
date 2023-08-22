@@ -27,7 +27,7 @@ foreach x of var * {
 rename  R_Cen_unique_id unique_id
 * replace unique_id = subinstr(unique_id, "-", "",.)
 destring unique_id, replace ignore(-)
-format unique_id %10.0fc
+format   unique_id %10.0fc
 
 /*------------------------------------------------------------------------------
 	2 Cleaning (2.1 aaa)
@@ -44,7 +44,17 @@ bys `i': gen `i'_Unique=_N
 capture export excel unique_id using "${pilot}Data_quality.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Census") firstrow(var) cell(A1) sheetreplace
 drop unique_id_Unique
 
+* Make sure that unique ID is consective (no jumping)
+
 * Discussion point: Agree what to do when we have duplicate
 duplicates drop unique_id, force
 
+
+* Change as we finalzie the treatment village
+gen Census=1
+gen     Treatment=.
+replace Treatment=0 if R_Cen_village_name==11231
+replace Treatment=1 if R_Cen_village_name==11321
 save "${DataDeid}1_1_Census_cleaned.dta", replace
+
+export excel unique_id R_Cen_a1_resp_name using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)

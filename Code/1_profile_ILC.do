@@ -112,7 +112,6 @@ do "${Do_pilot}1_1_Census_cleaning.do"
 
 * Do we have the system to avoid the non-unique unique_id?
 
-
 * (1.2) Cleaning
 do "${Do_pilot}1_2_Followup_cleaning.do"
 * Who is incharge
