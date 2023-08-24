@@ -20,10 +20,8 @@ foreach x of var * {
 } 
 * Variable cuts across will not have prefix
 * R_FU_hh_code
-rename R_FU_hh_code unique_id
-
-* Ad hoc until we fix the ID management system
-replace  unique_id=1111110101 if R_FU_key=="uuid:c4913cc2-4b5d-409a-a245-ee619feffda4"
+rename R_FU_unique_id unique_id
+destring unique_id,replace
 
 /*------------------------------------------------------------------------------
 	2 Cleaning (2.1 aaa)

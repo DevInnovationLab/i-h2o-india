@@ -19,6 +19,7 @@ use "${DataRaw}1_1_Census.dta", clear
 /*------------------------------------------------------------------------------
 	1 Deidentify and renaming
 ------------------------------------------------------------------------------*/
+rename (consented1hh_member_names1hh_mem consented1hh_member_names2hh_mem consented1hh_member_names3hh_mem) (consented1hh_member_names1 consented1hh_member_names2 consented1hh_member_names3)
 foreach x of var * { 
 	rename `x' R_Cen_`x' 
 } 
@@ -53,8 +54,10 @@ duplicates drop unique_id, force
 * Change as we finalzie the treatment village
 gen Census=1
 gen     Treatment=.
-replace Treatment=0 if R_Cen_village_name==11231
-replace Treatment=1 if R_Cen_village_name==11321
+replace Treatment=0 if R_Cen_village_name==11231 | R_Cen_village_name==11111 | R_Cen_village_name==11241
+replace Treatment=1 if R_Cen_village_name==11321 | R_Cen_village_name==11221 | R_Cen_village_name==11311
+fre R_Cen_village_name if Treatment==.
 save "${DataDeid}1_1_Census_cleaned.dta", replace
 
-export excel unique_id R_Cen_a1_resp_name using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+gen Concat_info=R_Cen_a1_resp_name
+export excel unique_id Concat_info using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)

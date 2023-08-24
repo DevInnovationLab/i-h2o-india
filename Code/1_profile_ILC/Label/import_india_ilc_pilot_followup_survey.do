@@ -1,11 +1,11 @@
-* import_india_ilc_pilot_followup_survey.do
+* import_india_ilc_pilot_followup_survey_enc.do
 *
-* 	Imports and aggregates "india_ilc_pilot_followup_survey" (ID: india_ilc_pilot_followup_survey) data.
+* 	Imports and aggregates "india_ilc_pilot_followup_survey_enc" (ID: india_ilc_pilot_followup_survey_enc) data.
 *
-*	Inputs:  "india_ilc_pilot_followup_survey_WIDE.csv"
-*	Outputs: "india_ilc_pilot_followup_survey.dta"
+*	Inputs:  "india_ilc_pilot_followup_survey_enc_WIDE.csv"
+*	Outputs: "india_ilc_pilot_followup_survey_enc.dta"
 *
-*	Output by SurveyCTO August 3, 2023 9:39 PM.
+*	Output by SurveyCTO August 24, 2023 4:59 AM.
 
 * initialize Stata
 clear all
@@ -21,14 +21,14 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "india_ilc_pilot_followup_survey_WIDE.csv"
-local dtafile "india_ilc_pilot_followup_survey.dta"
-local corrfile "india_ilc_pilot_followup_survey_corrections.csv"
+local csvfile "india_ilc_pilot_followup_survey_enc_WIDE.csv"
+local dtafile "india_ilc_pilot_followup_survey_enc.dta"
+local corrfile "india_ilc_pilot_followup_survey_enc_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum hamlet_name enum_name_label reasons_no_consent no_consent_oth no_consent_comment no_test_reason no_tap_sample no_stored_sample stored_sample_source"
-local text_fields2 "water_prim_oth water_source_sec water_sec_other primary_water_label water_sec_circumstances water_sec_circumstances_oth water_sec_freq_oth secondary_water_label water_treat_freq water_treat_type"
-local text_fields3 "tap_install_oth tap_supply_oth tap_supply_freq_oth tap_use tap_use_oth tap_use_future_oth tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth collect_resp treat_resp"
-local text_fields4 "overall_comment instanceid instancename"
+local text_fields1 "deviceid subscriberid simid devicephonenum hamlet_name unique_id unique_id_check concat_info enum_name_label reasons_no_consent no_consent_oth no_consent_comment no_test_reason no_tap_sample"
+local text_fields2 "no_stored_sample stored_sample_source water_prim_oth water_source_sec water_sec_other primary_water_label water_sec_circumstances water_sec_circumstances_oth water_sec_freq_oth secondary_water_label"
+local text_fields3 "water_treat_freq water_treat_type tap_install_oth tap_supply_oth tap_supply_freq_oth tap_use tap_use_oth tap_use_future_oth tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth"
+local text_fields4 "collect_resp treat_resp overall_comment instanceid instancename"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -157,15 +157,16 @@ if _N>0 {
 	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106"
 	label values enum_code enum_code
 
-	label variable hh_code "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this"
-	note hh_code: "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this household"
-	label define hh_code 10010101 "10010101" 10010102 "10010102" 10010103 "10010103" 10010104 "10010104" 10010105 "10010105" 10010106 "10010106" 10010107 "10010107" 10010108 "10010108" 10010109 "10010109" 10010110 "10010110" 10010111 "10010111" 10010112 "10010112" 10010113 "10010113" 10010114 "10010114" 10010115 "10010115" 10010116 "10010116" 10010117 "10010117" 10010118 "10010118" 10010119 "10010119" 10010120 "10010120" 10010121 "10010121" 10010122 "10010122" 10010123 "10010123" 10010124 "10010124" 10010125 "10010125" 10010126 "10010126" 10010127 "10010127" 10010128 "10010128" 10010129 "10010129"
-	label values hh_code hh_code
+	label variable unique_id "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this"
+	note unique_id: "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this household"
 
-	label variable hh_code_repeat "Select the same ID (VVVV-EID-HH) from the dropdown menu"
-	note hh_code_repeat: "Select the same ID (VVVV-EID-HH) from the dropdown menu"
-	label define hh_code_repeat 10010101 "10010101" 10010102 "10010102" 10010103 "10010103" 10010104 "10010104" 10010105 "10010105" 10010106 "10010106" 10010107 "10010107" 10010108 "10010108" 10010109 "10010109" 10010110 "10010110" 10010111 "10010111" 10010112 "10010112" 10010113 "10010113" 10010114 "10010114" 10010115 "10010115" 10010116 "10010116" 10010117 "10010117" 10010118 "10010118" 10010119 "10010119" 10010120 "10010120" 10010121 "10010121" 10010122 "10010122" 10010123 "10010123" 10010124 "10010124" 10010125 "10010125" 10010126 "10010126" 10010127 "10010127" 10010128 "10010128" 10010129 "10010129"
-	label values hh_code_repeat hh_code_repeat
+	label variable unique_id_check "Record the same ID (VVVV-EID-HH) again"
+	note unique_id_check: "Record the same ID (VVVV-EID-HH) again"
+
+	label variable noteconf1 "Please confirm the households that you are visiting correspond to the following "
+	note noteconf1: "Please confirm the households that you are visiting correspond to the following information [Here, whatever specified here in the contact info will show up]\${Concat_info}"
+	label define noteconf1 1 "Yes" 0 "No"
+	label values noteconf1 noteconf1
 
 	label variable consent "Do I have your permission to proceed with the interview?"
 	note consent: "Do I have your permission to proceed with the interview?"
@@ -278,7 +279,7 @@ if _N>0 {
 
 	label variable water_sec_freq "A2.2 How often do you collect water for drinking from these other water sources?"
 	note water_sec_freq: "A2.2 How often do you collect water for drinking from these other water sources?"
-	label define water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once a week" 5 "Once a month" 6 "No fixed schedule" -98 "Other" -99 "Don’t know"
+	label define water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once a week" 5 "Once a month" 6 "No fixed schedule" -98 "Other" -99 "Don't know"
 	label values water_sec_freq water_sec_freq
 
 	label variable water_sec_freq_oth "Please specify other"
@@ -315,12 +316,12 @@ if _N>0 {
 
 	label variable chlorine_consumption "If your drinking water is treated with chlorine, do you drink it?"
 	note chlorine_consumption: "If your drinking water is treated with chlorine, do you drink it?"
-	label define chlorine_consumption 1 "Yes" 2 "No" 3 "Drinking water is not chlorinated" -99 "Don’t know"
+	label define chlorine_consumption 1 "Yes" 2 "No" 3 "Drinking water is not chlorinated" -99 "Don't know"
 	label values chlorine_consumption chlorine_consumption
 
 	label variable tap_install "A8. When was the tap installed outside your house?"
 	note tap_install: "A8. When was the tap installed outside your house?"
-	label define tap_install 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don’t know"
+	label define tap_install 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don't know"
 	label values tap_install tap_install
 
 	label variable tap_install_oth "Please specify other"
@@ -328,7 +329,7 @@ if _N>0 {
 
 	label variable tap_supply "A9. When did the water supply from the tap begin?"
 	note tap_supply: "A9. When did the water supply from the tap begin?"
-	label define tap_supply 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don’t know"
+	label define tap_supply 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don't know"
 	label values tap_supply tap_supply
 
 	label variable tap_supply_oth "Please specify other"
@@ -336,7 +337,7 @@ if _N>0 {
 
 	label variable tap_supply_freq "A10. How often is water supplied from the JJM tap?"
 	note tap_supply_freq: "A10. How often is water supplied from the JJM tap?"
-	label define tap_supply_freq 1 "Daily" 2 "2-3 days in a week" 3 "Once a week" 4 "Less than once a week" 5 "2-3 times in a month" 6 "Once a month" 7 "Less than once a month" 8 "No fixed schedule" -98 "Other" -99 "Don’t know"
+	label define tap_supply_freq 1 "Daily" 2 "2-3 days in a week" 3 "Once a week" 4 "Less than once a week" 5 "2-3 times in a month" 6 "Once a month" 7 "Less than once a month" 8 "No fixed schedule" -98 "Other" -99 "Don't know"
 	label values tap_supply_freq tap_supply_freq
 
 	label variable tap_supply_freq_oth "Please specify other"
@@ -363,7 +364,7 @@ if _N>0 {
 
 	label variable tap_function_reason "A13.1 Why was the JJM tap not working?"
 	note tap_function_reason: "A13.1 Why was the JJM tap not working?"
-	label define tap_function_reason 1 "Pump operator did not turn on the water flow" 2 "Water was not flowing due to an issue in the storage tank or distribution system" 3 "Water was not flowing due to an issue with the JJM tap itself (broken valve/pipe" 4 "JJM tap was not functioning for a different reason" -99 "Don’t know"
+	label define tap_function_reason 1 "Pump operator did not turn on the water flow" 2 "Water was not flowing due to an issue in the storage tank or distribution system" 3 "Water was not flowing due to an issue with the JJM tap itself (broken valve/pipe" 4 "JJM tap was not functioning for a different reason" -99 "Don't know"
 	label values tap_function_reason tap_function_reason
 
 	label variable tap_use_future "A14. How likely are you to use/continue using the JJM tap for drinking in the fu"
@@ -373,7 +374,7 @@ if _N>0 {
 
 	label variable tap_use_discontinue "A14.1 Can you provide any reasons for why you would not continue using the JJM t"
 	note tap_use_discontinue: "A14.1 Can you provide any reasons for why you would not continue using the JJM tap in the future?"
-	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -98 "Other" -99 "Don’t know"
+	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -98 "Other" -99 "Don't know"
 	label values tap_use_discontinue tap_use_discontinue
 
 	label variable tap_use_future_oth "Please specify other"
@@ -402,7 +403,7 @@ if _N>0 {
 
 	label variable tap_color "A18. How do you find the color or look of the water from the JJM tap?"
 	note tap_color: "A18. How do you find the color or look of the water from the JJM tap?"
-	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" -98 "Other" -99 "Don’t know"
+	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" -98 "Other" -99 "Don't know"
 	label values tap_color tap_color
 
 	label variable tap_color_oth "Please specify other"
@@ -501,7 +502,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  india_ilc_pilot_followup_survey_corrections.csv
+*   Corrections file path and filename:  india_ilc_pilot_followup_survey_enc_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
