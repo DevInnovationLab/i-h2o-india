@@ -1,0 +1,29 @@
+---
+title: "1_profile"
+author: "Jeremy Lowe"
+date: "2023-08-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r setting profiles}
+
+#Jeremy
+#sheet_path <- 
+
+
+```
+
+
+```{r Downloading Data}
+
+source(purl("C:/Users/jerem/Documents/i-h2o-india/Code/2_Pilot/1_data cleaning/India_ILC_Pilot_SurveyCTO Download.Rmd", quiet = TRUE))
+
+```
+

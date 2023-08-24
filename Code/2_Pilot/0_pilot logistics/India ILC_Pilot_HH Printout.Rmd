@@ -66,18 +66,18 @@ library(tidyverse)
 
 #Selecting file path to Household Tracking Excel Sheet
 #Jeremy's file path
-sheet_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/India ILC_Pilot_Household Tracking.xlsx" 
-
-
+sheet_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/1_raw/India ILC_Pilot_Household Tracking_raw.csv" 
 #Reading in raw data
-hh <- read_excel(sheet_path, sheet = 3)
+hh <- read_csv(sheet_path)
 
 
+
+
+#Jeremy's file path
+sheet_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/3_household tracking/India ILC_Pilot_Household Tracking_full.csv" 
 #Reading in data for HHs that were randomly selected
 #Data are located in Box at: Box\India Water project\2_Pilot\Data\1_raw\0_field logistics
-
-  
-hh_randomization <- read_excel(sheet_path, sheet = 1)%>%
+hh_randomization <- read_csv(sheet_path)%>%
  dplyr::select(household_ID,
                selected_for_baseline_survey,
                selected_for_baseline_WQ_sample,
@@ -104,7 +104,7 @@ ID_selected <- c(1001,1002)
 #Selecting key information from raw data
 hh <- hh%>%
   filter(village_ID %in% ID_selected)%>%
-  dplyr::select(household_ID, district, block, village, village_ID, assignment,
+  dplyr::select(household_ID, district, block, village, village_ID,
                 participant_name, phone, second_name, backup_phone, elder_male_name, address, landmark)%>%
   mutate(visited = "  ")
 # preg_moth, child_under5) # Will update when survey is finished and variable names are coded
@@ -139,7 +139,7 @@ hh_printout%>%
   kable_styling(position = "center",
                 bootstrap_options = "striped",
                 latex_options = c("scale_down", "HOLD_position"))%>%
-  add_header_above(c("Baseline Survey HH Information " = 14)) %>%
+  add_header_above(c("Baseline Survey HH Information " = 13)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE)%>%
   column_spec(2, width = "75px")%>%

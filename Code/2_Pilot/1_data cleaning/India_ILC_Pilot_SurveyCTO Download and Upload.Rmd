@@ -14,16 +14,7 @@ knitr::opts_chunk$set(echo = FALSE, include = FALSE)
 
 
 library(rsurveycto)
-library(httr)
-library(lubridate)
-library(quantitray)
-library(sjmisc)
 library(knitr)
-library(kableExtra)
-library(googlesheets4)
-library(googledrive)
-library(readxl)
-library(experiment)
 library(tidyverse)
 
 ```
@@ -41,10 +32,10 @@ auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/d
 
   
 ilc <- scto_read(auth,
-                 ids = "india_ilc_pilot_census",
+                 ids = "india_ilc_pilot_census_enc",
                  start_date = "1900-01-01",
                  review_status = c("approved", "pending"),
-                 #private_key = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/0_keys/india_ilc_pilot_PRIVATEDONOTSHARE.pem",
+                 private_key = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/0_keys/i-h2o-IndiaILC_PRIVATEDONOTSHARE.pem",
                  drop_empty_cols = TRUE,
                  convert_datetime = c("CompletionDate", "SubmissionDate", "starttime", "endtime"),
                  datetime_format = "%b %e, %Y %I:%M:%S %p",
@@ -56,9 +47,9 @@ ilc <- scto_read(auth,
 
 ```
 
-```{r Writing raw data to existing household tracking sheet}
+```{r Writing raw data to raw data folder}
 
-
+write_csv(ilc, "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/1_raw/India ILC_Pilot_Household Tracking_raw.csv")
 
 
 ```
