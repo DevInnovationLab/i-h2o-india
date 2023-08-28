@@ -11,5 +11,6 @@
 ** In this do file: 
 	* This do file exports.....
 	
-	
 use "${DataFinal}Final_HH_Odisha.dta", clear
+
+* Astha

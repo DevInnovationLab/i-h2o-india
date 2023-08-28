@@ -1,0 +1,44 @@
+---
+title: "1_profile"
+author: "Jeremy Lowe"
+date: "2023-08-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r setting profiles}
+
+#Jeremy
+box_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data"
+github_path <- "C:/Users/jerem/Documents/i-h2o-india/Code/2_Pilot/0_pilot logistics"
+
+
+```
+
+
+```{r Downloading Data}
+#This code chunk should be used to download new data directly from SurveyCTO into Box.
+#Updated Raw data is needed before each round of randomization
+setwd(github_path)
+source("0_pilot logistics/India ILC_Pilot_SurveyCTO Data Download and Upload.R")
+
+```
+
+
+```{r Creating household printout sheet}
+#This code creates a pdf printout of the randomized households to be visited during follow-up survey rounds.
+#This code will need to be ran each time a new village is visited, so that households can be randomly selected for follow-up
+
+setwd(github_path)
+rmarkdown::render(input = 'India ILC_Pilot_HH Printout.Rmd', output_format = 'pdf_document')
+
+
+
+```
+

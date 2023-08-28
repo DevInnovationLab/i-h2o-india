@@ -1,25 +1,18 @@
----
-title: "India ILC Pilot SurveyCTO Data Download and Upload"
-author: "Jeremy Lowe"
-date: "2023-07-26"
-output: html_document
----
+#India ILC Project
+#Pilot Field Logistics
+#Author: Jeremy Lowe
+#Created: 8/25/23
 
-```{r setup, echo = FALSE, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, include = FALSE)
-```
+#SurveyCTO Data Download and Upload to Box
+#This script is used to downlaod data frequently from SurveyCTO and
+#upload it directly to a Box folder
 
 
-```{r package loading}
-
-
+#Package Loading
 library(rsurveycto)
 library(knitr)
 library(tidyverse)
 
-```
-
-```{r downloading and decrypting data using SurveyCTO API}
 
 #Jeremy's authentication for SurveyCTO API
 auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/dilserver.txt",
@@ -27,10 +20,10 @@ auth <- scto_auth(auth_file = "~/India-ILC/June 2023 Pilot/data/SurveyCTO_auth/d
                   username = NULL,
                   password = NULL,
                   validate = TRUE
-                  )
-  
+)
 
-  
+
+
 ilc <- scto_read(auth,
                  ids = "india_ilc_pilot_census_enc",
                  start_date = "1900-01-01",
@@ -40,19 +33,13 @@ ilc <- scto_read(auth,
                  convert_datetime = c("CompletionDate", "SubmissionDate", "starttime", "endtime"),
                  datetime_format = "%b %e, %Y %I:%M:%S %p",
                  simplify = TRUE
-                 )
+)
 
 
+setwd(box_path)
+download_path <- paste(box_path, 
+                  "/1_raw/0_field logistics/1_raw/India ILC_Pilot_Household Tracking_raw.csv",
+                  sep = "")
 
-
-```
-
-```{r Writing raw data to raw data folder}
-
-write_csv(ilc, "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/0_field logistics/1_raw/India ILC_Pilot_Household Tracking_raw.csv")
-
-
-```
-
-
-
+#Writing raw csv file to existing Box folder
+write_csv(ilc, download_path)

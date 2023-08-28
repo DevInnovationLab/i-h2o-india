@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = FALSE, include = FALSE)
 library(rsurveycto)
 library(httr)
 library(lubridate)
+#devtools::install_github("jknappe/quantitray")
 library(quantitray)
 library(sjmisc)
 library(knitr)
@@ -32,6 +33,9 @@ library(tidyverse)
 
 ```{r data loading}
 
+#Jeremy's paths
+box_path <- "C:/Users/jerem/Box/India Water project/2_Pilot/Data"
+github_path <- "C:/Users/jerem/Documents/i-h2o-india/Code/2_Pilot/0_pilot logistics"
 
 #From Google Drive -- Excel
 # drive_auth()
@@ -41,43 +45,77 @@ library(tidyverse)
 
 #from Google Drive -- Google Sheets
 #Pulls raw survey data
-gs4_auth()
-sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
-hh <- read_sheet(sheet_url, sheet = 3)
+#gs4_auth()
+#sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
+#hh <- read_sheet(sheet_url, sheet = 3)
 #hh <- gs4_find(sheet_url)
-
-
-
 
 #from Google Drive -- Google Sheets
 #Pulls HHs randomly selected for follow-up
-gs4_auth()
-sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
-hh_randomization <- read_sheet(sheet_url, sheet = 1)%>%
-  dplyr::select(household_ID, 
-                selected_for_baseline_survey,
-                selected_for_baseline_WQ_sample,
-                selected_for_follow_up_1,
-                selected_for_follow_up_1_WQ_sample,
-                selected_for_follow_up_2,
-                selected_for_follow_up_2_WQ_sample,
-                selected_for_follow_up_3,
-                selected_for_follow_up_3_WQ_sample)
+#OLD Method -- no longer using Google Drive but keeping for reference
+#gs4_auth()
+#sheet_url <- "https://docs.google.com/spreadsheets/d/1pQISSkcqa1VQYoaWnfXaXMHUWYs4nhqYCcxviQqUn3Y/edit#gid=0"
+#hh_randomization <- read_sheet(sheet_url, sheet = 1)%>%
+#  dplyr::select(household_ID, 
+#                selected_for_baseline_survey,
+#                selected_for_baseline_WQ_sample,
+#                selected_for_follow_up_1,
+#                selected_for_follow_up_1_WQ_sample,
+#                selected_for_follow_up_2,
+#                selected_for_follow_up_2_WQ_sample,
+#                selected_for_follow_up_3,
+#                selected_for_follow_up_3_WQ_sample)
 #hh <- gs4_find(sheet_url)
+
+
+#Selecting file path to Household Tracking Excel Sheet
+#Jeremy's file path
+setwd(box_path) 
+#Reading in raw data
+hh <- read_csv("1_raw/0_field logistics/1_raw/India ILC_Pilot_Household Tracking_raw.csv")
+
+
+
+
+#Jeremy's file path
+setwd(box_path)
+#Appending rows to existing main household tracker
+hh_randomization <- read_csv("1_raw/0_field logistics/3_household tracking/India ILC_Pilot_Household Tracking_full.csv")
+#Reading in data for HHs that were randomly selected
+#Data are located in Box at: Box\India Water project\2_Pilot\Data\1_raw\0_field logistics
+# hh_randomization <- hh_randomization%>%
+#  dplyr::select(household_ID,
+#                selected_for_baseline_survey,
+#                selected_for_baseline_WQ_sample,
+#                selected_for_follow_up_1,
+#                selected_for_follow_up_1_WQ_sample,
+#                selected_for_follow_up_2,
+#                selected_for_follow_up_2_WQ_sample,
+#                selected_for_follow_up_3,
+#                selected_for_follow_up_3_WQ_sample)
+
+
+
 
 
 ```
 
 ```{r selecting village(s) of interest and formatting data}
 
-#Selecting which villages to create an information printout for
-ID_selected <- c(1001,1002)
+#Selecting for HHs that were randomly selected for baseline survey
+hh_printout <- hh_randomization%>%
+  filter(selected_for_baseline_survey == 1)%>%
+  dplyr::select(household_ID)
 
+#Selecting which villages to create an information printout for
+ID_selected <- c(11111)
 #Important to change this for the village you want information on!
 #Could adapt this code to prompt the user for an ID list instead
-hh <- hh%>%
-  filter(village_ID %in% ID_selected)%>%
-  dplyr::select(household_ID, district, block, village, village_ID, assignment,
+
+#Selecting key information from raw data
+hh_randomization <- hh_randomization%>%
+  dplyr::filter(village_ID %in% ID_selected)%>%
+  dplyr::select(household_ID, district, block, village, village_ID,
                 participant_name, phone, second_name, backup_phone, elder_male_name, address, landmark)%>%
   mutate(visited = "  ")
 # preg_moth, child_under5) # Will update when survey is finished and variable names are coded
@@ -89,13 +127,8 @@ hh <- hh%>%
 
 ```{r Baseline print out, include = TRUE}
 
-#Selecting for HHs that were randomly selected for baseline survey
-hh_printout <- hh_randomization%>%
-  filter(selected_for_baseline_survey == 1)%>%
-  dplyr::select(household_ID)
-
 #Joining HH raw data to these HH IDs
-hh_printout <- left_join(hh_printout, hh, by = "household_ID")
+#hh_printout <- left_join(hh_printout, hh, by = "household_ID")
 
 #Creating kable printout of key information for enumerators
 #Need to update variable names to Odia translation
@@ -103,7 +136,7 @@ column_names <- hh_printout%>%
   names() %>% 
   str_replace_all( "_", "\n")
 
-hh_printout%>%
+hh_randomization%>%
   kbl(
     align = "l",
     #col.names = linebreak(column_names, align = "l"),
@@ -112,7 +145,7 @@ hh_printout%>%
   kable_styling(position = "center",
                 bootstrap_options = "striped",
                 latex_options = c("scale_down", "HOLD_position"))%>%
-  add_header_above(c("Baseline Survey HH Information " = 12)) %>%
+  add_header_above(c("Baseline Survey HH Information " = 13)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE)%>%
   column_spec(2, width = "75px")%>%

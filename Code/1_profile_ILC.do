@@ -46,7 +46,6 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global Overleaf "/Users/akitokamei/Dropbox/Apps/Overleaf"
 		
 	}
-
 		
 	else if c(username) == "jeremylowe" {		
 		global box 		"/Users/jerem/Box/India Water project/"
@@ -54,7 +53,6 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		*global Overleaf "/Users/jerem/Apps/Overleaf"
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
-	
 	
 	global code		     "${github}Code"
 	
@@ -104,15 +102,46 @@ cd "${DataRaw}"
 
 * (0) First apply SurveyCTO code cleaning do file
 do "${Do_pilot}0_Preparation.do"
+* Who: Akito
+* Akito to add descrioption
 
-* (1) Cleaning (Discuss more what is needed)
-do "${Do_pilot}1_Cleaning.do"
+* (1.1) Cleaning
+do "${Do_pilot}1_1_Census_cleaning.do"
+* Who is incharge
+* Unit: Household (all)
 
-* (2) Descriptive stats
-do "${Do_pilot}2_Descriptive.do"
+* Do we have the system to avoid the non-unique unique_id?
 
-* (3) Analysis
-do "${Do_pilot}3_Analysis.do"
+* (1.2) Cleaning
+do "${Do_pilot}1_2_Followup_cleaning.do"
+* Who is incharge
+* Unit: Household (selected sample)
+
+* (1.3) Cleaning
+do "${Do_pilot}1_3_Chlorine_cleaning.do"
+* Who is incharge
+* Unit: Device (merge at village level)
+
+* (1.4) Cleaning
+do "${Do_pilot}1_4_Operator_cleaning.do"
+* Who is incharge
+* Unit: Pump operater (merge at village level)
+
+* (2.1) Final data creation
+* Who: Akito
+do "${Do_pilot}2_1_Final_data.do"
+
+* (2.2) High frequency checks
+* Who: Astha/Michelle
+do "${Do_pilot}2_2_Checks.do"
+
+* (3) Descriptive stats
+* Who: All
+do "${Do_pilot}3_Descriptive.do"
+
+* (4) Analysis
+* Who: All
+do "${Do_pilot}4_Analysis.do"
 
 ********************************
 * Erasing unccessary databases *
