@@ -20,29 +20,40 @@ do "${Do_pilot}2_1_Final_data.do"
 use "${DataFinal}Final_HH_Odisha.dta", clear
 recode Merge_C_F 1=0 3=1
 
-gen    Non_R_Cen_consent=R_Cen_consent
-recode Non_R_Cen_consent 0=1 1=0
+foreach i in R_Cen_consent R_FU_consent {
+	gen    Non_`i'=`i'
+	recode Non_`i' 0=1 1=0	
+}
+
 expand 2, generate(expand_n)
 replace R_Cen_village_name=99999 if expand_n==1
-keep Census R_Cen_village_name R_Cen_consent Non_R_Cen_consent Merge_C_F
-collapse  (sum) Census  R_Cen_consent Non_R_Cen_consent Merge_C_F, by(R_Cen_village_name)
+keep Census R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
+collapse  (sum) Census  R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent, by(R_Cen_village_name)
 	label define R_Cen_village_namel 11111 "Aribi" 11121 "Gopikankubadi" 11131 "Rengalpadu" 11141 "Panichhatra" 11151 "Bhujabala" 11161 "Mukundapur" 11411 "Bichikote" 11412 "Gudiabandha" 11421 "Jatili" 11431 "Mariguda" 11441 "Lachiamanaguda" 11451 "Naira" 11311 "Gulumunda" 11321 "Amiti" 11211 "Penikana" 11331 "Khilingira" 11221 "Gajigaon" 11231 "Barijhola" 11241 "Karlakana" 11251 "Biranarayanpur" 11252 "Kuljing" 11261 "Meerabali" 11271 "Pipalguda" 11281 "Nathma" 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
 	label var Census  "Submission"
-	label var R_Cen_consent "Consented"
-	label var Non_R_Cen_consent "Refused"
 	label var R_Cen_village_name_str "Village"
-	label var Merge_C_F "Consented"
+	label var Non_R_Cen_consent "Refused"
+	label var Non_R_FU_consent "Refused"
+	label var R_FU_consent "Consented"
+	label var R_Cen_consent "Consented"
 	
-global Variables R_Cen_village_name_str Census  R_Cen_consent Non_R_Cen_consent Merge_C_F
+global Variables R_Cen_village_name_str Census  R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
 texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{3}{c}{Census}&\multicolumn{1}{c}{Follow up}")
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{3}{c}{Census}&\multicolumn{2}{c}{Follow up}")
 
-*********************
+************************
 * 2) Descriptive table *
-*********************
+*    Follow-up         *
+************************
+start_from_clean_file_Follow
+
+************************
+* 2) Descriptive table *
+*    Census.           *
+************************
 start_from_clean_file_Census
 global All R_Cen_a14_hh_member_count R_Cen_a2_gender_2 R_Cen_a2_gender_1 ///
            R_Cen_a22_water_source_prim_1 R_Cen_a22_water_source_prim_2 R_Cen_a22_water_source_prim_3 ///

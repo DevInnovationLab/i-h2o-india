@@ -26,4 +26,17 @@ destring unique_id,replace
 /*------------------------------------------------------------------------------
 	2 Cleaning (2.1 aaa)
 ------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------
+	3 Quality check
+------------------------------------------------------------------------------*/
+* Make sure that the unique_id is unique
+foreach i in unique_id {
+bys `i': gen `i'_Unique=_N
+}
+capture export excel unique_id using "${pilot}Data_quality.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Follow") firstrow(var) cell(A1) sheetreplace
+drop if unique_id_Unique!=1
+drop unique_id_Unique
+
+
 save "${DataDeid}1_2_Followup_cleaned.dta", replace

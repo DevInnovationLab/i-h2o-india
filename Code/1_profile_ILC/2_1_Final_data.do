@@ -63,11 +63,15 @@ program define   start_from_clean_file_Census
   
 end
 
-* Follof up
-cap program drop start_from_clean_file_E
-program define   start_from_clean_file_E
+* Follow up
+cap program drop start_from_clean_file_Follow
+program define   start_from_clean_file_Follow
   * Open clean file
   start_from_clean_file_Census
+  
+  * Followed up and consented
+  keep if Merge_C_F==3
+  keep if R_FU_consent==1
   
 end
 
