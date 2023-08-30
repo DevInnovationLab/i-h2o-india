@@ -100,11 +100,12 @@ ilc <- ilc%>%
 #ID_selected <- c(11321, 11111)
 
 #Automatic based on HH IDs that have not been randomized yet
-IDs_selected <- hh_randomization$village_ID%>%
+#village_ID variable is the IDs that have not yet been randomized
+IDs_existing <- hh_randomization$village_ID%>%
   unique()
 
 village_ID <- ilc%>%
-  filter(!(village_ID %in% IDs_selected))%>% 
+  filter(!(village_ID %in% IDs_existing))%>% 
   #This serves as a survey data check to confirm the ID is in the dataset 
   dplyr::select(village_ID)%>%
   unique()
@@ -226,7 +227,21 @@ write_csv(hh_randomization, append = TRUE, file = "1_raw/0_field logistics/3_hou
           #, col_names = TRUE #Needed for initializing the dataset so there are column names
 )
 
+#Writing preload file for Akito's SurveyCTO case management
+#This smaller dataset is meant to be plugged into the SurveyCTO Follow-up Surveys
+#To allow for easier tracking of IDs by enumerators
+hh_preload <- hh_randomization%>%
+  mutate(info = paste(participant_name, "_", phone,"_", second_name,"_", 
+                      backup_phone, "_", elder_male_name,"_", address, "_", 
+                      landmark, "_", village))%>%
+  select(household_ID, info)
 
 
+#Setting sheet path
+setwd(box_path)
+#Appending rows to existing main household tracker
+write_csv(hh_preload, append = TRUE, file = "1_raw/0_field logistics/4_SurveyCTO preload/followup_preload.csv"
+          #, col_names = TRUE #Needed for initializing the dataset so there are column names
+)
 
 
