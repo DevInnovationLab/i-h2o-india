@@ -13,6 +13,12 @@
 	
 do "${Do_pilot}2_1_Final_data.do"
 
+/* Example: 
+tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
+       f(0c) style(tex) clab(_) replace ///
+       topf("${Table}top.tex") botf("${Table}bot.tex")
+*/
+
 *********************
 * 1) Progress table *
 *********************
@@ -28,7 +34,7 @@ foreach i in R_Cen_consent R_FU_consent {
 expand 2, generate(expand_n)
 replace R_Cen_village_name=99999 if expand_n==1
 keep Census R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-collapse  (sum) Census  R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent, by(R_Cen_village_name)
+collapse  (sum) Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent, by(R_Cen_village_name)
 	label define R_Cen_village_namel 11111 "Aribi" 11121 "Gopikankubadi" 11131 "Rengalpadu" 11141 "Panichhatra" 11151 "Bhujabala" 11161 "Mukundapur" 11411 "Bichikote" 11412 "Gudiabandha" 11421 "Jatili" 11431 "Mariguda" 11441 "Lachiamanaguda" 11451 "Naira" 11311 "Gulumunda" 11321 "Amiti" 11211 "Penikana" 11331 "Khilingira" 11221 "Gajigaon" 11231 "Barijhola" 11241 "Karlakana" 11251 "Biranarayanpur" 11252 "Kuljing" 11261 "Meerabali" 11271 "Pipalguda" 11281 "Nathma" 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
@@ -77,7 +83,6 @@ start_from_clean_file_Census
 	eststo  model0: estpost summarize $`k'
 	eststo  model1: estpost summarize $`k' if Treatment==0
 	eststo  model2: estpost summarize $`k' if Treatment==1
-	
 	
 	* Diff
 start_from_clean_file_Census
