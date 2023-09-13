@@ -62,6 +62,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataDeid  "${pilot}2_deidentified/"
 	global DataFinal "${pilot}3_final/"
 	global DataTemp  "${pilot}99_temp/"
+	global DataPre  "${pilot}99_Preload/"
 	
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
@@ -105,12 +106,16 @@ do "${Do_pilot}0_Preparation.do"
 * Who: Akito
 * Akito to add descrioption
 
-* (1.1) Cleaning
-do "${Do_pilot}1_1_Census_cleaning.do"
+* (1_1_A) Cleaning
+do "${Do_pilot}1_1_A_Census_cleaning.do"
 * Who is incharge
 * Unit: Household (all)
-
 * Do we have the system to avoid the non-unique unique_id?
+
+* (1_1_B) Picking up the household randomly
+do "${Do_pilot}1_1_B_HH_selection.do"
+* Who is incharge
+* Unit: Household (all)
 
 * (1.2) Cleaning
 do "${Do_pilot}1_2_Followup_cleaning.do"

@@ -38,5 +38,4 @@ capture export excel unique_id using "${pilot}Data_quality.xlsx" if unique_id_Un
 drop if unique_id_Unique!=1
 drop unique_id_Unique
 
-
 save "${DataDeid}1_2_Followup_cleaned.dta", replace
