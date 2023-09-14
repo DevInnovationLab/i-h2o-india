@@ -67,6 +67,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
 	global Do_lab     "${github}Code/1_profile_ILC/Label/"
+	global Data_map   "${box}4_Admin data/shrug-pc11-village-poly-shp/"
 	
 	* Overleaf
 	global Table =  "${Overleaf}/Everything document -ILC/Table/"

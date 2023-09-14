@@ -17,9 +17,9 @@
 	* Q.What was the rule for the selection into water survey among follow up? All?
 	* Question: IF there is some HH not surveyed, we cannot move on to the next village
 
-********************
-* Step 1: Cleaning *
-********************
+*****************************************
+* Step 1: Cleaning and sample selection *
+*****************************************
 use "${DataPre}1_1_Census_cleaned.dta", clear
     local Village_R 11321
     keep if R_Cen_village_name==`Village_R'	
@@ -33,6 +33,11 @@ foreach i in $Var_Select {
 	gen `i'=. 
 	gen `i'_random=runiform(0,1)	
 }
+
+*** Astha
+* What kind of HH do we choose? 
+* HH with small children: Which variable?
+* HH who are using the JJM tap: Which variable?
 
 ***********************************************************************
 * Step 2: Assign 1 for households selected based on random numbers *
