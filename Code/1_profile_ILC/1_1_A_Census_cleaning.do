@@ -66,5 +66,6 @@ replace Treatment=1 if R_Cen_village_name==11321 | R_Cen_village_name==11221 | R
 fre R_Cen_village_name if Treatment==.
 save "${DataPre}1_1_Census_cleaned.dta", replace
 
-keep unique_id
-save "${DataDeid}1_1_Census_cleaned.dta", replace
+** Drop ID information
+
+save "${DataDeid}1_1_Census_cleaned_noid.dta", replace
