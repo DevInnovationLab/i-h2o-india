@@ -1,0 +1,111 @@
+---
+title: "Odisha Pilot - Sampling Variation of Diarrhea Outcome"
+author: Alex Lehner
+date: "2023-08-14"
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+format: pdf
+urlcolor: blue
+linestretch: 1.5
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FALSE, message = FALSE)
+library(dplyr)
+# Original problem
+
+# Vaishnavi on the Pickering Lab Slack on August 14th
+# 
+# > Hi Alex,
+# > As you may have followed, the PIs decided that India Phase 1 is essentially the 20-village Pilot. The pilot was initially designed to generate insights on engineering outcomes (chlorine dosing, frequency of refills) and user take-up, but we are now considering adding health questions as an endline census so that we have prevalence estimates (not impact!) we need for Phase 2 power calcs.
+# > How precise and informative would prevalence estimates from an endline census in 20 villages in 1 district be? Specifically, can you help us calculate the margin of error on these estimates so that we can understand whether the additional cost of an endline census is worth it? If the margin is too wide we need to consider other options but PIs’ first preference is to exploit the data collection already planned. Let us know how we can help!
+
+```
+
+
+The ILC Pilot in Odisha will have a fixed sample of 20 villages. We want to get a sense for how precise and informative diarrhea prevalence estimates from an endline census in all villages will be. The assumed diarrhea prevalance is **five percent** as per the latest NFHS survey at a district level.
+
+There will be substantial sampling variation depending on the size of the villages. Therefore, I show the variation of the prevalence rate across different village sizes from 5 to 50 U5 children per village in increments of 5. Vaishnavi mentioned that a total village size of 500 people might be already too big because their water systems might get complex. Therefore, 50 U5 children could already be too high of an upper bound for what is a realistic number of U5 children that can be expected.
+
+For each village size, the graphic displays the average total prevalence over all 20 villages. 100 simulations within each village size category are displayed (village size always constant) and 95 percent confidence intervals are displayed with red errorbars.
+These confidence intervals are printed in a separate table below the plot for every village size category.
+
+The results suggest that **if diarrhea prevalance is five percent**, having somewhere between 25 and 40 U5 children per village should keep the margins of error reasonably in check. Obviously, a second census (at baseline) will give you another draw and thus more certainty - which would also allow you to assess the usefulness of multiple rounds of diarrhea censuses.
+
+
+```{r}
+#| eval: true
+set.seed(1088) # Setting a seed for reproducibility
+
+# Parameters
+n_runs <- 100
+group_sizes <- seq(5, 50, by = 5) # nobs per group, 20 villages fixed
+p_baseline <- 0.05
+
+# Function to simulate the data for each run and group size (once for 20 villages)
+simulate_run <- function(group_size) {
+  simulated_data <- lapply(1:20, function(x) { # number of villages fixed at 20
+    rbinom(group_size, 1, p_baseline)
+  })
+  
+  # Calculate the proportions for each group
+  mean(sapply(simulated_data, function(x) {
+    sum(x)/length(x)
+  }))
+}
+
+# Running the simulation N times for each group size (with 20 villages fixed)
+all_proportions <- sapply(group_sizes, function(gs) {
+  replicate(n_runs, simulate_run(gs))
+})
+
+# Transforming data for ggplot
+df <- data.frame(
+  GroupSize = rep(group_sizes, each=n_runs),
+  Proportion = as.vector(all_proportions)
+)
+
+# compute confidence intervals
+dfsum <- df |> group_by(GroupSize) |> 
+  summarise(CI_lower = 0.05 - sd(Proportion) * 2,
+            CI_upper = 0.05 + sd(Proportion) * 2)
+```
+
+
+
+
+```{r}
+#| eval: true
+#| include: true
+#| fig-width: 6
+#| fig-height: 5
+
+
+# Plotting the funnel plot
+library(ggplot2)
+ggplot() +
+  geom_errorbar(data = dfsum, aes(x = GroupSize, ymin = CI_lower, ymax = CI_upper), 
+                width = 2, color = "red", alpha = .5) +
+  geom_jitter(data = df, mapping = aes(x = GroupSize, y = Proportion), 
+              alpha = .5, position = position_jitter(width = 1)) +
+  geom_hline(yintercept = p_baseline, linetype = "dashed", color = "red") +
+  labs(title = "Simulated Diarrhea Rates Across Village Sizes (U5 Children)",
+       y = "Estimated Proportion Per Simulation (over all 20 villages)",
+       x = "Number of U5 children per village (20 villages fixed)") +
+  scale_x_continuous(breaks = group_sizes) + 
+  theme_minimal()
+
+```
+
+{{< pagebreak >}}
+
+```{r}
+#| eval: true
+#| include: true
+#| tbl-cap: "95percent confidence intervals for every village size (U5 children) as displayed by the errorbars in the plot above"
+
+knitr::kable(dfsum |> round(3))
+```
+

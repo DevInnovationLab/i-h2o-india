@@ -11,13 +11,40 @@
 ** In this do file: 
 	* This do file exports.....
 	
-do "${Do_pilot}2_1_Final_data.do"
+* do "${Do_pilot}2_1_Final_data.do"
 
 /* Example: 
 tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
        f(0c) style(tex) clab(_) replace ///
        topf("${Table}top.tex") botf("${Table}bot.tex")
 */
+
+*********************
+* 0) Map
+*********************
+****************
+* Creating map *
+* KEMRI data   *
+****************
+* shp2dta using ${Data_map}village.shp, database(${Data_map}phdb) coordinates(${Data_map}phxy) genid(id) genc(c) replace
+* Source: https://www.devdatalab.org/shrug_download/
+use "${Data_map}phdb.dta",clear
+keep if pc11_s_id=="21"
+keep if pc11_d_id=="396"
+spmap using "${Data_map}phxy"  , ///
+           id(id)
+graph export "${Figure}Map_Rayagada.eps", replace  
+* point(x(lon_mod) y(lat_mod) legenda(on) legl(lon_mod_s) fcolor(Oranges) by(id) size(0.3 1 2) ) ///
+*  clnumber(9) fcolor(Blues) ndfcolor(gray) clnumber(9) fcolor(Blues) ndfcolor(gray)
+
+* Title: Overall statistics of recruitment and program registration
+use "${DataFinal}Final_HH_Odisha.dta", clear
+recode Merge_C_F 1=0 3=1
+
+foreach i in R_Cen_consent R_FU_consent {
+	gen    Non_`i'=`i'
+	recode Non_`i' 0=1 1=0	
+}
 
 *********************
 * 1) Progress table *
