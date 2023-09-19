@@ -1,4 +1,4 @@
-* 00000005
+* 00000007
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -206,4 +206,75 @@ f s/spmap_point.ado
 f s/spmap_polygon.ado
 f s/spmap_psl.ado
 f s/spmap_scalebar.ado
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N geo2xy.pkg
+D 19 Sep 2023
+U 6
+d 'GEO2XY': module to convert latitude and longitude to xy using map projections
+d 
+d  geo2xy converts geographic latitude and longitude to cartesian
+d coordinates (x,y) using map projection transformations. The
+d default projection is a Web Mercator, which is the same used by
+d most web mapping applications (Google Maps, Bing Maps, etc.). As
+d an option, -geo2xy- can generate Tissot's indicatrices (grid of
+d circles) which, when overlaid on a map of the projected
+d coordinates, help visualize the distortions of the chosen
+d projection. With projected coordinates, high quality maps can be
+d produced using standard Stata graph commands or with user-written
+d commands like -spmap-.
+d 
+d KW: map projection
+d KW: shapefiles
+d KW:  latitude and longitude
+d KW:  coordinates
+d KW: shp2dta
+d KW: spmap
+d 
+d Requires: Stata version 9.2
+d 
+d Distribution-Date: 20170608
+d 
+d Author: Robert Picard
+d Support: email picard@@netbox.com
+d 
+d Author: Michael Stepner
+d Support: email stepner@@mit.edu
+d 
+f g/geo2xy.ado
+f g/geo2xy_albers_sphere.hlp
+f g/geo2xy_albers.hlp
+f g/geo2xy_equidistant_cylindrical.hlp
+f g/geo2xy_fun_with_maps.hlp
+f g/geo2xy_lambert_sphere.hlp
+f g/geo2xy_mercator_sphere.hlp
+f g/geo2xy_mercator.hlp
+f g/geo2xy_picard.hlp
+f g/geo2xy_web_mercator.hlp
+f g/geo2xy.hlp
+f g/geo2xy_lambert_sphere.ado
+f g/geo2xy_run.ado
+e
+S http://fmwww.bc.edu/repec/bocode/s
+N savesome.pkg
+D 19 Sep 2023
+U 7
+d 'SAVESOME': module to save subset of data
+d 
+d savesome saves part of the data in memory to filename.
+d 
+d KW: save
+d KW: data management
+d KW: files
+d 
+d Requires: Stata version 7.0
+d 
+d 
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20150228
+d 
+f s/savesome.ado
+f s/savesome.sthlp
 e

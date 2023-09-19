@@ -66,12 +66,21 @@ merge 1:1 unique_id using "${DataPre}Selected_11321_13 Sep 2023.dta", gen(Merge_
 * Step 4: Creating the data for pre-load
 ***********************************************************************
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
-gen Concat_info="You are in visiting the household of " + R_Cen_a1_resp_name +". The household is located in the " + R_Cen_village_name_str + "." 
+gen Concat_info="You are in visiting the household of " + R_Cen_a1_resp_name +". The household is located in the " + R_Cen_village_name_str + "." + "HERE WE PUT THE NAME OF BLOCK< VLILLAGG and all the other info to confirm" 
 
 keep unique_id $Var_Select Concat_info
-export excel using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+capture export excel using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 *------------------------------------------------------------------- Follow up -------------------------------------------------------------------*
+/*
+Enumerator to confirm the remaining 
+Enumerator: District Name
+Enumerator: Block Name
+Enumerator: Gram Panchayat Name
+Enumerator: Village Name
+"Enumerator to fill up : Hamlet Name 
+If unknown, please enter 999"
+*/
 
 
 /*
