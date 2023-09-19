@@ -16,11 +16,13 @@ clear all
 set seed 758235657 // Just in case
 
 use "${DataRaw}1_1_Census.dta", clear
+drop fam_name*
 /*------------------------------------------------------------------------------
 	1 Deidentify and renaming
 ------------------------------------------------------------------------------*/
-rename (consented1hh_member_names1hh_mem consented1hh_member_names2hh_mem consented1hh_member_names3hh_mem) (consented1hh_member_names1 consented1hh_member_names2 consented1hh_member_names3)
-
+rename a5_hhmember_relation_other_1  a5_hhm_rel_other_1 
+rename a12_water_source_prim_other  a12_ws_prim_other 
+rename water_prim_source_kids_other wp_source_kids_other
 foreach x of var * { 
 	rename `x' R_Cen_`x' 
 } 
@@ -59,10 +61,10 @@ drop unique_id_Unique
 duplicates drop unique_id, force
 
 * Change as we finalzie the treatment village
-gen Census=1
+gen     Census=1
 gen     Treatment=.
-replace Treatment=0 if R_Cen_village_name==11231 | R_Cen_village_name==11111 | R_Cen_village_name==11241
-replace Treatment=1 if R_Cen_village_name==11321 | R_Cen_village_name==11221 | R_Cen_village_name==11311
+replace Treatment=0 if R_Cen_village_name==11211 
+replace Treatment=1 if R_Cen_village_name==11211
 fre R_Cen_village_name if Treatment==.
 save "${DataPre}1_1_Census_cleaned.dta", replace
 

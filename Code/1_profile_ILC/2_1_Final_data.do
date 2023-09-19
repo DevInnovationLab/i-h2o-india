@@ -26,17 +26,18 @@ drop if Merge_C_F==2
 ************
 * Labeling *
 ************
-	label define R_Cen_a22_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Community standpipe" 3 "PWS: Manual handpump", modify
-	label values R_Cen_a22_water_source_prim R_Cen_a22_water_source_priml
-	label define R_Cen_a230_water_sec_ynl 0 "SWS: No" 1 "SWS: Yes", modify
-	label values R_Cen_a230_water_sec_yn R_Cen_a230_water_sec_ynl
-	label define R_Cen_a26_water_treatl 0 "WT: No" 1 "WT: Yes", modify
-	label values R_Cen_a26_water_treat R_Cen_a26_water_treatl
-	label define R_Cen_a25_water_sec_freql 2 "Freq: Every 2-3 days in a week" 5 "Freq: Once a month", modify
-	label values R_Cen_a25_water_sec_freq R_Cen_a25_water_sec_freql	
+destring R_Cen_a12_water_source_prim, replace
+	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Community standpipe" 3 "PWS: Manual handpump", modify
+	label values R_Cen_a12_water_source_prim R_Cen_a12_water_source_priml
+	label define R_Cen_a13_water_sec_ynl 0 "SWS: No" 1 "SWS: Yes", modify
+	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
+	label define R_Cen_a16_water_treatl 0 "WT: No" 1 "WT: Yes", modify
+	label values R_Cen_a16_water_treat R_Cen_a16_water_treatl
+	label define R_Cen_a15_water_sec_freql 2 "Freq: Every 2-3 days in a week" 5 "Freq: Once a month", modify
+	label values R_Cen_a15_water_sec_freq R_Cen_a15_water_sec_freql	
 
 * Create Dummy
-	foreach v in R_Cen_a2_gender R_Cen_a22_water_source_prim R_Cen_a25_water_sec_freq R_Cen_a26_water_treat R_Cen_a230_water_sec_yn {
+	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_water_source_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -59,7 +60,7 @@ cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
   use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
-  label var R_Cen_a14_hh_member_count "Household size"
+  label var R_Cen_a2_hhmember_count "Household size"
   
 end
 
@@ -76,3 +77,5 @@ program define   start_from_clean_file_Follow
 end
 
 
+start_from_clean_file_Census
+start_from_clean_file_Follow

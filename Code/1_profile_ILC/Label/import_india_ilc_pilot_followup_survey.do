@@ -5,7 +5,7 @@
 *	Inputs:  "india_ilc_pilot_followup_survey_enc_WIDE.csv"
 *	Outputs: "india_ilc_pilot_followup_survey_enc.dta"
 *
-*	Output by SurveyCTO August 24, 2023 4:59 AM.
+*	Output by SurveyCTO September 19, 2023 5:38 PM.
 
 * initialize Stata
 clear all
@@ -25,10 +25,9 @@ local csvfile "india_ilc_pilot_followup_survey_enc_WIDE.csv"
 local dtafile "india_ilc_pilot_followup_survey_enc.dta"
 local corrfile "india_ilc_pilot_followup_survey_enc_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum hamlet_name unique_id unique_id_check concat_info enum_name_label reasons_no_consent no_consent_oth no_consent_comment no_test_reason no_tap_sample"
-local text_fields2 "no_stored_sample stored_sample_source water_prim_oth water_source_sec water_sec_other primary_water_label water_sec_circumstances water_sec_circumstances_oth water_sec_freq_oth secondary_water_label"
-local text_fields3 "water_treat_freq water_treat_type tap_install_oth tap_supply_oth tap_supply_freq_oth tap_use tap_use_oth tap_use_future_oth tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth"
-local text_fields4 "collect_resp treat_resp overall_comment instanceid instancename"
+local text_fields1 "deviceid subscriberid simid devicephonenum unique_id unique_id_check concat_info info_update enum_name_label reasons_no_consent no_consent_oth no_consent_comment no_test_reason no_tap_sample"
+local text_fields2 "no_stored_sample stored_sample_source water_prim_oth primary_water_label liter_estimation_count container_nmbr_* water_treat_type tap_supply_freq_oth tap_use tap_use_oth tap_use_future_oth"
+local text_fields3 "tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth collect_resp treat_resp overall_comment instanceid instancename"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -124,39 +123,6 @@ if _N>0 {
 	cap label variable review_corrections "Corrections made during review"
 
 
-	label variable district_name "Enumerator to fill up: District Name"
-	note district_name: "Enumerator to fill up: District Name"
-	label define district_name 11 "Rayagada"
-	label values district_name district_name
-
-	label variable block_name "Enumerator to fill up: Block Name"
-	note block_name: "Enumerator to fill up: Block Name"
-	label define block_name 111 "Kolnara" 112 "Rayagada" 113 "Ramanguda" 114 "Padmapur"
-	label values block_name block_name
-
-	label variable gp_name "Enumerator to fill up: Gram Panchayat Name"
-	note gp_name: "Enumerator to fill up: Gram Panchayat Name"
-	label define gp_name 1111 "B.K.Padar" 1112 "Dumuriguda" 1113 "Dunduli" 1114 "Katikana" 1115 "Kolanara" 1116 "Mukundupur" 1141 "Gudiabandha" 1142 "Jatili" 1143 "Kamapadara" 1144 "Khilapadar" 1145 "Naira" 1131 "Gulumunda" 1132 "Ukkamba" 1133 "Bhamini" 1121 "Dangalodi" 1122 "Gajigaon" 1123 "Halua" 1124 "Karlakana" 1125 "Kothapeta" 1126 "Meerabali" 1127 "Pipalaguda" 1128 "Tadma"
-	label values gp_name gp_name
-
-	label variable village_name "Enumerator to fill up: Village Name"
-	note village_name: "Enumerator to fill up: Village Name"
-	label define village_name 11111 "Aribi" 11121 "Gopikankubadi" 11131 "Rengalpadu" 11141 "Panichhatra" 11151 "Bhujabala" 11161 "Mukundapur" 11411 "Bichikote" 11412 "Gudiabandha" 11421 "Jatili" 11431 "Mariguda" 11441 "Lachiamanaguda" 11451 "Naira" 11311 "Gulumunda" 11321 "Amiti" 11211 "Penikana" 11331 "Khilingira" 11221 "Gajigaon" 11231 "Barijhola" 11241 "Karlakana" 11251 "Biranarayanpur" 11252 "Kuljing" 11261 "Meerabali" 11271 "Pipalguda" 11281 "Nathma"
-	label values village_name village_name
-
-	label variable hamlet_name "Enumerator to fill up : Hamlet Name"
-	note hamlet_name: "Enumerator to fill up : Hamlet Name"
-
-	label variable enum_name "Enumerator to fill up: Enumerator Name"
-	note enum_name: "Enumerator to fill up: Enumerator Name"
-	label define enum_name 101 "Jeremy Lowe" 102 "Vaishnavi Prathap" 103 "Akanksha Saletore" 104 "Astha Vohra" 105 "Shashank Patil" 106 "Michelle Cherian"
-	label values enum_name enum_name
-
-	label variable enum_code "Enumerator to fill up: Enumerator Code"
-	note enum_code: "Enumerator to fill up: Enumerator Code"
-	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106"
-	label values enum_code enum_code
-
 	label variable unique_id "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this"
 	note unique_id: "Record the unique ID (VVVV-EID-HH) provided to you by the field manager for this household"
 
@@ -164,303 +130,280 @@ if _N>0 {
 	note unique_id_check: "Record the same ID (VVVV-EID-HH) again"
 
 	label variable noteconf1 "Please confirm the households that you are visiting correspond to the following "
-	note noteconf1: "Please confirm the households that you are visiting correspond to the following information [Here, whatever specified here in the contact info will show up]\${Concat_info}"
-	label define noteconf1 1 "Yes" 0 "No"
+	note noteconf1: "Please confirm the households that you are visiting correspond to the following information. \${Concat_info}"
+	label define noteconf1 1 "I am visiting the correct household and the information is correct" 2 "I am visiting the correct household but the information needs to be updated" 3 "The household I am visiting does not corresponds to the confirmation info."
 	label values noteconf1 noteconf1
+
+	label variable info_update "Please describe the information need to be updated here."
+	note info_update: "Please describe the information need to be updated here."
+
+	label variable enum_name "Enumerator name: Please select from the drop-down list"
+	note enum_name: "Enumerator name: Please select from the drop-down list"
+	label define enum_name 101 "Jeremy Lowe" 102 "Vaishnavi Prathap" 103 "Akanksha Saletore" 104 "Astha Vohra" 105 "Shashank Patil" 106 "Michelle Cherian"
+	label values enum_name enum_name
+
+	label variable enum_code "Enumerator code: Please select from the drop-down list (generates enum code EID)"
+	note enum_code: "Enumerator code: Please select from the drop-down list (generates enum code EID)"
+	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106"
+	label values enum_code enum_code
+
+	label variable resp_available "Did you find a household to interview?"
+	note resp_available: "Did you find a household to interview?"
+	label define resp_available 1 "Household available for interview and opened the door" 2 "Family has left the house permanently" 3 "This is my first visit: The family is temporarily unavailable but might be avail" 4 "This is my 2nd visit: The family is temporarily unavailable."
+	label values resp_available resp_available
 
 	label variable consent "Do I have your permission to proceed with the interview?"
 	note consent: "Do I have your permission to proceed with the interview?"
 	label define consent 1 "Yes" 0 "No" -99 "Don't know"
 	label values consent consent
 
-	label variable reasons_no_consent "Can you tell me why you do not want to participate in the survey?"
-	note reasons_no_consent: "Can you tell me why you do not want to participate in the survey?"
+	label variable reasons_no_consent "B1) Can you tell me why you do not want to participate in the survey?"
+	note reasons_no_consent: "B1) Can you tell me why you do not want to participate in the survey?"
 
-	label variable no_consent_oth "Please specify other"
-	note no_consent_oth: "Please specify other"
+	label variable no_consent_oth "B1.1) Please specify other"
+	note no_consent_oth: "B1.1) Please specify other"
 
-	label variable no_consent_followup "Can I speak to the person who makes decisions regarding your household's study p"
-	note no_consent_followup: "Can I speak to the person who makes decisions regarding your household's study participation?"
+	label variable no_consent_followup "B1.2) Can I speak to the person who makes decisions regarding your household's s"
+	note no_consent_followup: "B1.2) Can I speak to the person who makes decisions regarding your household's study participation?"
 	label define no_consent_followup 1 "Yes" 0 "No" -99 "Don't know"
 	label values no_consent_followup no_consent_followup
 
-	label variable followup_consent "Do I have your permission to proceed with the interview?"
-	note followup_consent: "Do I have your permission to proceed with the interview?"
+	label variable followup_consent "B1.3) Do I have your permission to proceed with the interview?"
+	note followup_consent: "B1.3) Do I have your permission to proceed with the interview?"
 	label define followup_consent 1 "Yes" 0 "No" -99 "Don't know"
 	label values followup_consent followup_consent
 
 	label variable no_consent_comment "Record any relevant notes if the respondent refused the interview"
 	note no_consent_comment: "Record any relevant notes if the respondent refused the interview"
 
-	label variable wq_tests "A28. What water quality tests will you conduct?"
-	note wq_tests: "A28. What water quality tests will you conduct?"
+	label variable wq_tests "A1) What water quality tests will you conduct?"
+	note wq_tests: "A1) What water quality tests will you conduct?"
 	label define wq_tests 0 "No test" 1 "Free and total chlorine only" 2 "Sample collection and free/total chlorine"
 	label values wq_tests wq_tests
 
-	label variable no_test_reason "A28.1. Why are you not testing the water at this household tap?"
-	note no_test_reason: "A28.1. Why are you not testing the water at this household tap?"
+	label variable no_test_reason "A1.2) Why are you not testing the water at this household tap?"
+	note no_test_reason: "A1.2) Why are you not testing the water at this household tap?"
 
-	label variable wq_tap_fc "A29. What is the free chlorine reading from the JJM tap?"
-	note wq_tap_fc: "A29. What is the free chlorine reading from the JJM tap?"
+	label variable wq_tap_fc "A2) What is the free chlorine reading from the JJM tap?"
+	note wq_tap_fc: "A2) What is the free chlorine reading from the JJM tap?"
 
-	label variable wq_tap_tc "A30. What is the total chlorine reading from the JJM tap?"
-	note wq_tap_tc: "A30. What is the total chlorine reading from the JJM tap?"
+	label variable wq_tap_tc "A3) What is the total chlorine reading from the JJM tap?"
+	note wq_tap_tc: "A3) What is the total chlorine reading from the JJM tap?"
 
-	label variable wq_tap_sample "A32. Are you able to collect a water sample from the tap connection?"
-	note wq_tap_sample: "A32. Are you able to collect a water sample from the tap connection?"
+	label variable wq_tap_sample "A4) Are you able to collect a water sample from the tap connection?"
+	note wq_tap_sample: "A4) Are you able to collect a water sample from the tap connection?"
 	label define wq_tap_sample 1 "Yes" 0 "No" -99 "Don't know"
 	label values wq_tap_sample wq_tap_sample
 
-	label variable no_tap_sample "Why are you not able to collect a tap water sample?"
-	note no_tap_sample: "Why are you not able to collect a tap water sample?"
+	label variable no_tap_sample "A4.1) Why are you not able to collect a tap water sample?"
+	note no_tap_sample: "A4.1) Why are you not able to collect a tap water sample?"
 
-	label variable tap_sample_id "A32.1 Please prepare a sample collection bag and scan the sample ID barcode"
-	note tap_sample_id: "A32.1 Please prepare a sample collection bag and scan the sample ID barcode"
+	label variable tap_sample_id "Please prepare a sample collection bag and scan the sample ID barcode"
+	note tap_sample_id: "Please prepare a sample collection bag and scan the sample ID barcode"
 
-	label variable tap_sample_id_typed "A32.2 Please enter the sample ID"
-	note tap_sample_id_typed: "A32.2 Please enter the sample ID"
+	label variable tap_sample_id_typed "A5) Please enter the sample ID"
+	note tap_sample_id_typed: "A5) Please enter the sample ID"
 
-	label variable tap_bag_id "A32.3 Please enter the bag ID"
-	note tap_bag_id: "A32.3 Please enter the bag ID"
+	label variable tap_bag_id "A6) Please enter the bag ID"
+	note tap_bag_id: "A6) Please enter the bag ID"
 
-	label variable wq_stored_sample "A33. Are you able to collect a stored water sample?"
-	note wq_stored_sample: "A33. Are you able to collect a stored water sample?"
+	label variable wq_stored_sample "A6) Are you able to collect a stored water sample?"
+	note wq_stored_sample: "A6) Are you able to collect a stored water sample?"
 	label define wq_stored_sample 1 "Yes" 0 "No" -99 "Don't know"
 	label values wq_stored_sample wq_stored_sample
 
-	label variable no_stored_sample "A33.1 Why are you not able to collect a stored water sample?"
-	note no_stored_sample: "A33.1 Why are you not able to collect a stored water sample?"
+	label variable no_stored_sample "A6.1) Why are you not able to collect a stored water sample?"
+	note no_stored_sample: "A6.1) Why are you not able to collect a stored water sample?"
 
-	label variable stored_sample_source "A35. What is the source of water for this stored sample?"
-	note stored_sample_source: "A35. What is the source of water for this stored sample?"
+	label variable stored_sample_source "A7) What is the source of water for this stored sample?"
+	note stored_sample_source: "A7) What is the source of water for this stored sample?"
 
-	label variable sample_time "A36.1 How long has this water been stored for?"
-	note sample_time: "A36.1 How long has this water been stored for?"
+	label variable sample_time "A8) How long has this water been stored for?"
+	note sample_time: "A8) How long has this water been stored for?"
 
-	label variable sample_time_unit "Unit"
-	note sample_time_unit: "Unit"
+	label variable sample_time_unit "A9) Unit"
+	note sample_time_unit: "A9) Unit"
 	label define sample_time_unit 1 "Minutes" 2 "Hours" 3 "Days" 4 "Weeks"
 	label values sample_time_unit sample_time_unit
 
-	label variable wq_stored_fc "A29. What is the free chlorine reading from the sample?"
-	note wq_stored_fc: "A29. What is the free chlorine reading from the sample?"
+	label variable wq_stored_fc "A10) What is the free chlorine reading from the sample?"
+	note wq_stored_fc: "A10) What is the free chlorine reading from the sample?"
 
-	label variable wq_stored_tc "A30. What is the total chlorine reading from the sample?"
-	note wq_stored_tc: "A30. What is the total chlorine reading from the sample?"
+	label variable wq_stored_tc "A11) What is the total chlorine reading from the sample?"
+	note wq_stored_tc: "A11) What is the total chlorine reading from the sample?"
 
-	label variable stored_sample_id "A37. Please prepare a sample collection bag and scan the sample ID barcode"
-	note stored_sample_id: "A37. Please prepare a sample collection bag and scan the sample ID barcode"
+	label variable stored_sample_id "A12) Please prepare a sample collection bag and scan the sample ID barcode"
+	note stored_sample_id: "A12) Please prepare a sample collection bag and scan the sample ID barcode"
 
-	label variable stored_sample_id_typed "A38. Please enter the sample ID"
-	note stored_sample_id_typed: "A38. Please enter the sample ID"
+	label variable stored_sample_id_typed "A13) Please enter the sample ID"
+	note stored_sample_id_typed: "A13) Please enter the sample ID"
 
-	label variable stored_bag_id "A39. Please enter the bag ID"
-	note stored_bag_id: "A39. Please enter the bag ID"
+	label variable stored_bag_id "A14) Please enter the bag ID"
+	note stored_bag_id: "A14) Please enter the bag ID"
 
-	label variable water_source_prim "A1. Which water source do you primarily use for drinking?"
-	note water_source_prim: "A1. Which water source do you primarily use for drinking?"
-	label define water_source_prim 1 "JJM Taps" 2 "Community standpipe" 3 "Manual handpump" 4 "Private well" -98 "Other"
+	label variable water_source_prim "W1) Which water source do you primarily use for drinking?"
+	note water_source_prim: "W1) Which water source do you primarily use for drinking?"
+	label define water_source_prim 1 "Government Provided Household Taps" 2 "Community standpipe" 3 "Manual handpump" 4 "Protected dug well" 5 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 6 "Private Surface well" -98 "Other"
 	label values water_source_prim water_source_prim
 
-	label variable water_prim_oth "Please specify other"
-	note water_prim_oth: "Please specify other"
+	label variable water_prim_oth "W1.2) Please specify other"
+	note water_prim_oth: "W1.2) Please specify other"
 
-	label variable water_source_sec "A2.What other water sources have you used for drinking in the past month?"
-	note water_source_sec: "A2.What other water sources have you used for drinking in the past month?"
+	label variable quant "W2) How much of your drinking water for yesterday came from your primary drinkin"
+	note quant: "W2) How much of your drinking water for yesterday came from your primary drinking water source: (\${primary_water_label})?"
+	label define quant 1 "All of it" 2 "Most of it" 3 "Half of it" 4 "Little of it" 5 "None of it" -98 "Don't know"
+	label values quant quant
 
-	label variable water_sec_other "Please specify other"
-	note water_sec_other: "Please specify other"
+	label variable quant_containers "W3) How many containers do you collect drinking water in"
+	note quant_containers: "W3) How many containers do you collect drinking water in"
 
-	label variable water_sec_circumstances "A2.1 In what circumstances do you collect drinking water from these other water "
-	note water_sec_circumstances: "A2.1 In what circumstances do you collect drinking water from these other water sources?"
-
-	label variable water_sec_circumstances_oth "Please specify other"
-	note water_sec_circumstances_oth: "Please specify other"
-
-	label variable water_sec_freq "A2.2 How often do you collect water for drinking from these other water sources?"
-	note water_sec_freq: "A2.2 How often do you collect water for drinking from these other water sources?"
-	label define water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once a week" 5 "Once a month" 6 "No fixed schedule" -98 "Other" -99 "Don't know"
-	label values water_sec_freq water_sec_freq
-
-	label variable water_sec_freq_oth "Please specify other"
-	note water_sec_freq_oth: "Please specify other"
-
-	label variable liters "How many liters of water do you have stored in your house right now?"
-	note liters: "How many liters of water do you have stored in your house right now?"
-
-	label variable liters_prim "How many liters come from \${primary_water_label}?"
-	note liters_prim: "How many liters come from \${primary_water_label}?"
-
-	label variable liters_sec_jjm "JJM tap:"
-	note liters_sec_jjm: "JJM tap:"
-
-	label variable liters_sec_ct "Community standpipe:"
-	note liters_sec_ct: "Community standpipe:"
-
-	label variable liters_sec_handpump "Manual handpump:"
-	note liters_sec_handpump: "Manual handpump:"
-
-	label variable liters_sec_well "Private well:"
-	note liters_sec_well: "Private well:"
-
-	label variable water_treat "Do you ever treat the water from your primary drinking water source (\${primary_"
-	note water_treat: "Do you ever treat the water from your primary drinking water source (\${primary_water_label} ) before drinking it?"
-	label define water_treat 1 "Yes" 0 "No" -99 "Don't know"
+	label variable water_treat "W6) Do you ever do anything to the water from your primary drinking water source"
+	note water_treat: "W6) Do you ever do anything to the water from your primary drinking water source (\${primary_water_label} ) to make it safe before drinking it?"
+	label define water_treat 1 "Never treat the water" 2 "Always treat the water" 3 "Treat the water in the summers" 4 "Treat the water in the monsoons" 5 "Treat the water in the winters" 6 "Treat the water when kids/ old people fall sick" 7 "Treat the water when it looks or smells dirty"
 	label values water_treat water_treat
 
-	label variable water_treat_freq "When do you treat the water from your primary drinking water source (\${primary_"
-	note water_treat_freq: "When do you treat the water from your primary drinking water source (\${primary_water_label} ) before drinking it?"
+	label variable water_treat_type "W7) What do you do to the water from your primary drinking water source to make "
+	note water_treat_type: "W7) What do you do to the water from your primary drinking water source to make it safe?"
 
-	label variable water_treat_type "How do you treat the water from your primary drinking water source (\${primary_w"
-	note water_treat_type: "How do you treat the water from your primary drinking water source (\${primary_water_label})?"
-
-	label variable chlorine_consumption "If your drinking water is treated with chlorine, do you drink it?"
-	note chlorine_consumption: "If your drinking water is treated with chlorine, do you drink it?"
-	label define chlorine_consumption 1 "Yes" 2 "No" 3 "Drinking water is not chlorinated" -99 "Don't know"
-	label values chlorine_consumption chlorine_consumption
-
-	label variable tap_install "A8. When was the tap installed outside your house?"
-	note tap_install: "A8. When was the tap installed outside your house?"
-	label define tap_install 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don't know"
-	label values tap_install tap_install
-
-	label variable tap_install_oth "Please specify other"
-	note tap_install_oth: "Please specify other"
-
-	label variable tap_supply "A9. When did the water supply from the tap begin?"
-	note tap_supply: "A9. When did the water supply from the tap begin?"
-	label define tap_supply 1 "1-7 Days ago" 2 "1-4 Weeks ago" 3 "1-6 Months ago" 4 "7-12 Months ago" 5 "Over a year ago" -98 "Other" -99 "Don't know"
-	label values tap_supply tap_supply
-
-	label variable tap_supply_oth "Please specify other"
-	note tap_supply_oth: "Please specify other"
-
-	label variable tap_supply_freq "A10. How often is water supplied from the JJM tap?"
-	note tap_supply_freq: "A10. How often is water supplied from the JJM tap?"
-	label define tap_supply_freq 1 "Daily" 2 "2-3 days in a week" 3 "Once a week" 4 "Less than once a week" 5 "2-3 times in a month" 6 "Once a month" 7 "Less than once a month" 8 "No fixed schedule" -98 "Other" -99 "Don't know"
+	label variable tap_supply_freq "G1) How often is water supplied from the government provided tap?"
+	note tap_supply_freq: "G1) How often is water supplied from the government provided tap?"
+	label define tap_supply_freq 1 "Daily" 2 "Few days in a week" 3 "Once a week" 4 "Few times in a month" 5 "No fixed schedule" -77 "Other, please specify" -99 "Don't know" -98 "Refused to answer"
 	label values tap_supply_freq tap_supply_freq
 
-	label variable tap_supply_freq_oth "Please specify other"
-	note tap_supply_freq_oth: "Please specify other"
+	label variable tap_supply_freq_oth "G1.1) Please specify other"
+	note tap_supply_freq_oth: "G1.1) Please specify other"
 
-	label variable tap_supply_daily "A11. How many times in a day is water supplied from the JJM tap?"
-	note tap_supply_daily: "A11. How many times in a day is water supplied from the JJM tap?"
+	label variable tap_supply_daily "G2) How many times in a day is water supplied from the government provided house"
+	note tap_supply_daily: "G2) How many times in a day is water supplied from the government provided household tap (on days that the water is supplied from the taps)?"
 
-	label variable tap_use "A12. For what purposes do you use water collected from the JJM taps?"
-	note tap_use: "A12. For what purposes do you use water collected from the JJM taps?"
+	label variable tap_use "G3) For what purposes do you use water collected from the government provided ho"
+	note tap_use: "G3) For what purposes do you use water collected from the government provided household taps?"
 
-	label variable tap_use_oth "Please specify other"
-	note tap_use_oth: "Please specify other"
+	label variable tap_use_oth "G3.1) Please specify other"
+	note tap_use_oth: "G3.1) Please specify other"
 
-	label variable tap_use_drinking "A12.2 When was the last time you collected water from the JJM taps for drinking "
-	note tap_use_drinking: "A12.2 When was the last time you collected water from the JJM taps for drinking purposes? Not used for drinking Today Yesterday Earlier this week Earlier this month"
-	label define tap_use_drinking 1 "Today" 2 "Yesterday" 3 "Earlier this week" 4 "Earlier this month"
+	label variable tap_use_drinking "G4) When was the last time you collected water from the government provided hous"
+	note tap_use_drinking: "G4) When was the last time you collected water from the government provided household taps for drinking purposes?"
+	label define tap_use_drinking 1 "Today" 2 "Yesterday" 3 "Earlier this week" 4 "Earlier this month" 5 "Not used for drinking" -77 "Other"
 	label values tap_use_drinking tap_use_drinking
 
-	label variable tap_function "A13. In the last two weeks, have you tried to collect water from the JJM tap and"
-	note tap_function: "A13. In the last two weeks, have you tried to collect water from the JJM tap and it has not worked?"
+	label variable tap_function "G5) In the last two weeks, have you tried to collect water from the government p"
+	note tap_function: "G5) In the last two weeks, have you tried to collect water from the government provided household tap and it has not worked?"
 	label define tap_function 1 "Yes" 0 "No" -99 "Don't know"
 	label values tap_function tap_function
 
-	label variable tap_function_reason "A13.1 Why was the JJM tap not working?"
-	note tap_function_reason: "A13.1 Why was the JJM tap not working?"
-	label define tap_function_reason 1 "Pump operator did not turn on the water flow" 2 "Water was not flowing due to an issue in the storage tank or distribution system" 3 "Water was not flowing due to an issue with the JJM tap itself (broken valve/pipe" 4 "JJM tap was not functioning for a different reason" -99 "Don't know"
+	label variable tap_function_reason "G6) Why was the government provided household tap not working?"
+	note tap_function_reason: "G6) Why was the government provided household tap not working?"
+	label define tap_function_reason 1 "Pump operator did not turn on the water flow" 2 "Water was not flowing due to an issue in the storage tank or distribution system" 3 "Water was not flowing due to an issue with the JJM tap itself (broken valve/pipe" 4 "Government provided household tap was not functioning for a different reason" -99 "Don't know" -77 "Other, please specify"
 	label values tap_function_reason tap_function_reason
 
-	label variable tap_use_future "A14. How likely are you to use/continue using the JJM tap for drinking in the fu"
-	note tap_use_future: "A14. How likely are you to use/continue using the JJM tap for drinking in the future?"
+	label variable tap_use_future "G7) How likely are you to use/continue using the government provided household t"
+	note tap_use_future: "G7) How likely are you to use/continue using the government provided household tap for drinking in the future?"
 	label define tap_use_future 1 "Very likely" 2 "Somewhat likely" 3 "Neither likely nor unlikely" 4 "Somewhat Unlikely" 5 "Very unlikely"
 	label values tap_use_future tap_use_future
 
-	label variable tap_use_discontinue "A14.1 Can you provide any reasons for why you would not continue using the JJM t"
-	note tap_use_discontinue: "A14.1 Can you provide any reasons for why you would not continue using the JJM tap in the future?"
-	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -98 "Other" -99 "Don't know"
+	label variable tap_use_discontinue "G8) Can you provide any reasons for why you would not continue using the governm"
+	note tap_use_discontinue: "G8) Can you provide any reasons for why you would not continue using the government provided household tap in the future?"
+	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -77 "Other" -99 "Don't know"
 	label values tap_use_discontinue tap_use_discontinue
 
-	label variable tap_use_future_oth "Please specify other"
-	note tap_use_future_oth: "Please specify other"
+	label variable tap_use_future_oth "G8.1) Please specify other"
+	note tap_use_future_oth: "G8.1) Please specify other"
 
-	label variable tap_taste_satisfied "A15. How satisfied are you with the taste of water from the JJM tap?"
-	note tap_taste_satisfied: "A15. How satisfied are you with the taste of water from the JJM tap?"
-	label define tap_taste_satisfied 1 "Very satisfied" 2 "Satisfied" 3 "Neither satisfied nor dissatisfied" 4 "Dissatisfied" 5 "Very dissatisfied"
+	label variable drinking_chlorine "C1) If your drinking water is treated with chlorine in it, do you drink it?"
+	note drinking_chlorine: "C1) If your drinking water is treated with chlorine in it, do you drink it?"
+	label define drinking_chlorine 1 "Yes" 2 "No" 3 "Drinking water is not chlorinated" -99 "Don't know"
+	label values drinking_chlorine drinking_chlorine
+
+	label variable tap_taste_satisfied "C2) How satisfied are you with the taste of water from the government provided h"
+	note tap_taste_satisfied: "C2) How satisfied are you with the taste of water from the government provided household tap?"
+	label define tap_taste_satisfied 1 "Very satisfied" 2 "Satisfied" 3 "Neither satisfied nor dissatisfied" 4 "Dissatisfied" 5 "Very dissatisfied" -99 "Don't know"
 	label values tap_taste_satisfied tap_taste_satisfied
 
-	label variable tap_taste_desc "A16. How would you describe the taste of the water from the JJM tap?"
-	note tap_taste_desc: "A16. How would you describe the taste of the water from the JJM tap?"
-	label define tap_taste_desc 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" -98 "Others"
+	label variable tap_taste_desc "C3) How would you describe the taste of the water from the government provided h"
+	note tap_taste_desc: "C3) How would you describe the taste of the water from the government provided household tap?"
+	label define tap_taste_desc 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" -99 "Don't know" -77 "Others"
 	label values tap_taste_desc tap_taste_desc
 
-	label variable tap_taste_desc_oth "Please specify other"
-	note tap_taste_desc_oth: "Please specify other"
+	label variable tap_taste_desc_oth "C3.1) Please specify other"
+	note tap_taste_desc_oth: "C3.1) Please specify other"
 
-	label variable tap_smell "A17. How would you describe the smell of the water from the JJM tap?"
-	note tap_smell: "A17. How would you describe the smell of the water from the JJM tap?"
-	label define tap_smell 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" -98 "Other"
+	label variable tap_smell "C4) How would you describe the smell of the water from the government provided h"
+	note tap_smell: "C4) How would you describe the smell of the water from the government provided household tap?"
+	label define tap_smell 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" -99 "Don't know" -77 "Other"
 	label values tap_smell tap_smell
 
-	label variable tap_smell_oth "Please specify other"
-	note tap_smell_oth: "Please specify other"
+	label variable tap_smell_oth "C4.1) Please specify other"
+	note tap_smell_oth: "C4.1) Please specify other"
 
-	label variable tap_color "A18. How do you find the color or look of the water from the JJM tap?"
-	note tap_color: "A18. How do you find the color or look of the water from the JJM tap?"
-	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" -98 "Other" -99 "Don't know"
+	label variable tap_color "C5) How do you find the color or look of the water from the government provided "
+	note tap_color: "C5) How do you find the color or look of the water from the government provided household tap?"
+	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" -99 "Don't know" -77 "Other"
 	label values tap_color tap_color
 
-	label variable tap_color_oth "Please specify other"
-	note tap_color_oth: "Please specify other"
+	label variable tap_color_oth "C5.1) Please specify other"
+	note tap_color_oth: "C5.1) Please specify other"
 
-	label variable tap_trust "A19. How confident are you that the water from the JJM tap is safe to drink?"
-	note tap_trust: "A19. How confident are you that the water from the JJM tap is safe to drink?"
+	label variable tap_trust "C6) How confident are you that the water from the government provided household "
+	note tap_trust: "C6) How confident are you that the water from the government provided household tap is safe to drink on its own?"
 	label define tap_trust 1 "Very confident" 2 "Somewhat confident" 3 "Neither confident or not confident" 4 "Somewhat not confident" 5 "Not confident at all"
 	label values tap_trust tap_trust
 
-	label variable tap_trust_fu "A19.1. Why are you not confident the water is safe to drink?"
-	note tap_trust_fu: "A19.1. Why are you not confident the water is safe to drink?"
+	label variable tap_trust_fu "C6.1) Why are you not confident the water is safe to drink?"
+	note tap_trust_fu: "C6.1) Why are you not confident the water is safe to drink?"
 
-	label variable tap_trust_oth "Please specify other"
-	note tap_trust_oth: "Please specify other"
+	label variable tap_trust_oth "C6.1.1) Please specify other"
+	note tap_trust_oth: "C6.1.1) Please specify other"
 
-	label variable collect_resp "A20. Who in your household is responsible for collecting drinking water?"
-	note collect_resp: "A20. Who in your household is responsible for collecting drinking water?"
+	label variable collect_resp "T1) Who in your household is responsible for collecting drinking water?"
+	note collect_resp: "T1) Who in your household is responsible for collecting drinking water?"
 
-	label variable collect_time "A21. When you collect water, how much time does it take to walk to your primary "
-	note collect_time: "A21. When you collect water, how much time does it take to walk to your primary water point, collect water, and return home?"
+	label variable collect_time "T2) When you collect water, how much time does it take to walk to your primary w"
+	note collect_time: "T2) When you collect water, how much time does it take to walk to your primary water point, collect water, and return home?"
 	label define collect_time 1 "Water point is on-premises" 2 "< 5 minutes" 3 "5-15 minutes" 4 "15-30 minutes" 5 "30-60 minutes" 6 "> 60 minutes"
 	label values collect_time collect_time
 
-	label variable collect_freq "A22. How many times in a week do you collect water?"
-	note collect_freq: "A22. How many times in a week do you collect water?"
+	label variable collect_freq "T3) How many times in a week do you collect water?"
+	note collect_freq: "T3) How many times in a week do you collect water?"
 
-	label variable treat_resp "A23. Who is responsible for treating water before drinking in your household?"
-	note treat_resp: "A23. Who is responsible for treating water before drinking in your household?"
+	label variable treat_resp "T4) Who is responsible for treating water before drinking in your household?"
+	note treat_resp: "T4) Who is responsible for treating water before drinking in your household?"
 
-	label variable treat_time "A24. How much time does it take to treat your drinking water each time you treat"
-	note treat_time: "A24. How much time does it take to treat your drinking water each time you treat it?"
+	label variable treat_time "T5) When you make your drinking water safe, how much time does it take to comple"
+	note treat_time: "T5) When you make your drinking water safe, how much time does it take to complete the process?"
 	label define treat_time 1 "No treatment is used" 2 "< 5 minutes" 3 "5-15 minutes" 4 "15-30 minutes" 5 "30-60 minutes" 6 "> 60 minutes"
 	label values treat_time treat_time
 
-	label variable treat_freq "A25. How many times in a week do you treat your drinking water?"
-	note treat_freq: "A25. How many times in a week do you treat your drinking water?"
+	label variable treat_freq "T6) How many times in a week do you treat your drinking water?"
+	note treat_freq: "T6) How many times in a week do you treat your drinking water?"
 
-	label variable collect_treat_difficult "A26. How difficult is it to collect and treat your drinking water?"
-	note collect_treat_difficult: "A26. How difficult is it to collect and treat your drinking water?"
+	label variable collect_treat_difficult "T7) How difficult is it to collect and treat your drinking water?"
+	note collect_treat_difficult: "T7) How difficult is it to collect and treat your drinking water?"
 	label define collect_treat_difficult 1 "Very difficult" 2 "Somewhat difficult" 3 "Neither difficult nor easy" 4 "Somewhat easy" 5 "Very easy"
 	label values collect_treat_difficult collect_treat_difficult
-
-	label variable tap_benefit "A27. Has the installation of the JJM taps saved you time when collecting or trea"
-	note tap_benefit: "A27. Has the installation of the JJM taps saved you time when collecting or treating drinking water?"
-	label define tap_benefit 1 "No difference in time saved" 2 "Little" 3 "Somewhat" 4 "Much" 5 "A great amount of time"
-	label values tap_benefit tap_benefit
-
-	label variable comment_opt "For enumerator : Do you wish to add any additional comments about this survey?"
-	note comment_opt: "For enumerator : Do you wish to add any additional comments about this survey?"
-	label define comment_opt 1 "Yes" 0 "No" -99 "Don't know"
-	label values comment_opt comment_opt
 
 	label variable overall_comment "For enumerator : Please add any additional comments about this survey"
 	note overall_comment: "For enumerator : Please add any additional comments about this survey"
 
 
+
+	capture {
+		foreach rgvar of varlist size_container_* {
+			label variable `rgvar' "W4) What is the size of container \${container_nmbr} that you use to collect dri"
+			note `rgvar': "W4) What is the size of container \${container_nmbr} that you use to collect drinking water?"
+			label define `rgvar' 1 "< 5 Liters" 2 "5-10 Liters" 3 "10-15 Liters" 4 "15-20 Liters" 5 "> 20 Liters"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist source_container_* {
+			label variable `rgvar' "W5) What is the source of the drinking water for this container \${container_nmb"
+			note `rgvar': "W5) What is the source of the drinking water for this container \${container_nmbr} ?"
+			label define `rgvar' 1 "Government provided household Taps (supply paani)" 2 "Community standpipe" 3 "Manual handpump" 4 "Protected dug well" 5 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 6 "Surface well" -98 "Other (please specify)"
+			label values `rgvar' `rgvar'
+		}
+	}
 
 
 
