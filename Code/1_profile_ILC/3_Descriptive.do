@@ -19,23 +19,58 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
        topf("${Table}top.tex") botf("${Table}bot.tex")
 */
 
-*********************
+/*--------------------
 * 0) Map
-*********************
-****************
-* Creating map *
-* KEMRI data   *
-****************
+--------------------*/
 * shp2dta using ${Data_map}village.shp, database(${Data_map}phdb) coordinates(${Data_map}phxy) genid(id) genc(c) replace
 * Source: https://www.devdatalab.org/shrug_download/
+
+* Household data
+use "${DataFinal}Final_HH_Odisha.dta", clear
+keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude
+gen Type=1
+save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
+export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+
+* Village shape file
 use "${Data_map}phdb.dta",clear
-keep if pc11_s_id=="21"
-keep if pc11_d_id=="396"
-spmap using "${Data_map}phxy"  , ///
-           id(id)
+keep if pc11_s_id=="21" // Odisha
+keep if pc11_d_id=="396" // Rayagada
+
+* Afer knowing the treatment status of the village
+gen     Treat_v=0
+replace Treat_v=1 if pc11_tv_id=="801899"
+
+* Village map
+spmap Treat_v using "${Data_map}phxy" , id(id) clnumber(9) fcolor(Blues)
+graph export "${Figure}Map_villages.eps", replace  
+
+gen Village_label=tv_name if (x_c>83.4 & x_c<83.5) & (y_c>19.1 & y_c<19.2)
+keep if                      (x_c>83.4 & x_c<83.5) & (y_c>19.1 & y_c<19.2) | y_c==.
+savesome x_c y_c Village_label using "${Data_map}Village_label.dta", replace
+
+
+append using "${DataDeid}1_1_Census_cleaned_noid_maplab.dta"
+count
+local observation = `r(N)'+1
+set obs `observation'
+replace  R_Cen_a40_gps_latitude=19.18 in `observation'
+replace  R_Cen_a40_gps_longitude=83.41824 in `observation'
+replace  Type=2 in `observation'
+
+label define Typel 1 "Census" 2 "Baseline - Water Survey", modify
+	label values Type Typel
+
+* Houseeholds map
+spmap using "${Data_map}phxy" , id(id) ///
+      point(x(R_Cen_a40_gps_longitude) y(R_Cen_a40_gps_latitude) legenda(on) fcolor(Reds) by(Type)) ///
+      label(data("${Data_map}Village_label.dta") x(x_c) y(y_c) label(Village_label) size(tiny))
 graph export "${Figure}Map_Rayagada.eps", replace  
-* point(x(lon_mod) y(lat_mod) legenda(on) legl(lon_mod_s) fcolor(Oranges) by(id) size(0.3 1 2) ) ///
-*  clnumber(9) fcolor(Blues) ndfcolor(gray) clnumber(9) fcolor(Blues) ndfcolor(gray)
+	  
+
+/*--------------------
+* 1) Tables
+--------------------*/
 
 * Title: Overall statistics of recruitment and program registration
 use "${DataFinal}Final_HH_Odisha.dta", clear
@@ -88,11 +123,10 @@ start_from_clean_file_Follow
 *    Census.           *
 ************************
 start_from_clean_file_Census
-global All R_Cen_a14_hh_member_count R_Cen_a2_gender_2 R_Cen_a2_gender_1 ///
-           R_Cen_a22_water_source_prim_1 R_Cen_a22_water_source_prim_2 R_Cen_a22_water_source_prim_3 ///
-           R_Cen_a26_water_treat_0 R_Cen_a26_water_treat_1 ///
-           R_Cen_a230_water_sec_yn_0 R_Cen_a230_water_sec_yn_1 ///
-           R_Cen_a25_water_sec_freq_2 R_Cen_a25_water_sec_freq_5
+global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
+           R_Cen_a12_water_source_prim_1 ///
+           R_Cen_a16_water_treat_1 ///
+		   R_Cen_a13_water_sec_yn_0
 
 local All "Baseline balance among treatment arms"
 local LabelAll "MaintableHH"

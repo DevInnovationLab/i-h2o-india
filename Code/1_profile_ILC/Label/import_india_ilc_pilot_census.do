@@ -1,11 +1,11 @@
-* import_india_ilc_pilot_census_enc.do
+* import_india_ilc_pilot_census.do
 *
-* 	Imports and aggregates "india_ilc_pilot_census_enc" (ID: india_ilc_pilot_census_enc) data.
+* 	Imports and aggregates "Baseline Census" (ID: india_ilc_pilot_census) data.
 *
-*	Inputs:  "india_ilc_pilot_census_enc_WIDE.csv"
-*	Outputs: "india_ilc_pilot_census_enc.dta"
+*	Inputs:  "Baseline Census_WIDE.csv"
+*	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO August 22, 2023 10:49 AM.
+*	Output by SurveyCTO September 21, 2023 9:25 AM.
 
 * initialize Stata
 clear all
@@ -21,15 +21,18 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "india_ilc_pilot_census_enc_WIDE.csv"
-local dtafile "india_ilc_pilot_census_enc.dta"
-local corrfile "india_ilc_pilot_census_enc_corrections.csv"
+local csvfile "Baseline Census_WIDE.csv"
+local dtafile "Baseline Census.dta"
+local corrfile "Baseline Census_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum hamlet_name unique_id enum_name_label reasons_no_consent no_consent_oth no_consent_comment a1_resp_name a3_femhead_name a3_malehead_name a4_oldmale_name"
-local text_fields2 "a6_phone_num a7_phone_oth a8_address a9_landmark hh_member_names_count namenumber_* a14_hhmember_name_* hh_member_gender_count_* namefromearlier_* hh_member_age_count_* pregnant_oth_status_count"
-local text_fields3 "num_preg_oth_* pregnant_oth_name_* water_prim_oth primary_water_label a23_water_source_sec a23_water_sec_oth a24_sec_source_reason sec_source_reason_oth a25_water_sec_freq_oth a26_water_treat_freq"
-local text_fields4 "a26_water_treat_type a28_jjm_use a28_jjm_use_oth comment instanceid instancename"
-local date_fields1 "a5_age"
+local text_fields1 "deviceid subscriberid simid devicephonenum intro_duration hamlet_name hh_code_format unique_id landmark address intro_dur_end consent_duration enum_name_label no_consent_reason no_consent_oth"
+local text_fields2 "no_consent_comment consent_dur_end sectionb_duration a1_resp_name hh_member_names_count namenumber_* a3_hhmember_name_* namefromearlier_* a5_relation_oth_* a6_age_confirm2_* a5_autoage_*"
+local text_fields3 "female_above12 num_femaleabove12 fam_name1 fam_name2 fam_name3 fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14 fam_name15 fam_name16"
+local text_fields4 "fam_name17 fam_name18 fam_name19 fam_name20 a10_hhhead a11_oldmale_name sectionb_dur_end a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth a14_sec_source_reason"
+local text_fields5 "sec_source_reason_oth a15_water_sec_freq_oth a16_water_treat_type a16_water_treat_oth a16_water_treat_freq a16_treat_freq_oth water_prim_kids_oth a17_water_treat_kids water_treat_kids_oth"
+local text_fields6 "a18_reason_nodrink a18_reason_nodrink_other a20_jjm_use a20_jjm_use_oth pregnant_followup_count pregnant_index_* get_pregnant_status_* pregwoman_* child_followup_count child_index_* get_u5_status_*"
+local text_fields7 "u5child_* livestock_oth a36_castename phone_number_count a39_phone_name_* a39_phone_num_* a41_end_comments a42_survey_accompany instanceid instancename"
+local date_fields1 "a6_dob_*"
 local datetime_fields1 "submissiondate starttime endtime"
 
 disp
@@ -38,6 +41,9 @@ disp
 
 * import data from primary .csv file
 insheet using "`csvfile'", names clear
+
+replace  water_prim_source_kids="-77" if water_prim_source_kids=="other"
+destring water_prim_source_kids, replace
 
 * drop extra table-list columns
 cap drop reserved_name_for_field_*
@@ -131,17 +137,17 @@ if _N>0 {
 
 	label variable block_name "Enumerator to fill up: Block Name"
 	note block_name: "Enumerator to fill up: Block Name"
-	label define block_name 111 "Kolnara" 112 "Rayagada" 113 "Ramanguda" 114 "Padmapur"
+	label define block_name 1 "Gudari" 2 "Gunupur" 3 "Kolnara" 4 "Padmapur" 5 "Rayagada"
 	label values block_name block_name
 
 	label variable gp_name "Enumerator to fill up: Gram Panchayat Name"
 	note gp_name: "Enumerator to fill up: Gram Panchayat Name"
-	label define gp_name 1111 "B.K.Padar" 1112 "Dumuriguda" 1113 "Dunduli" 1114 "Katikana" 1115 "Kolanara" 1116 "Mukundupur" 1141 "Gudiabandha" 1142 "Jatili" 1143 "Kamapadara" 1144 "Khilapadar" 1145 "Naira" 1131 "Gulumunda" 1132 "Ukkamba" 1133 "Bhamini" 1121 "Dangalodi" 1122 "Gajigaon" 1123 "Halua" 1124 "Karlakana" 1125 "Kothapeta" 1126 "Meerabali" 1127 "Pipalaguda" 1128 "Tadma"
+	label define gp_name 101 "Asada" 102 "Khariguda" 201 "G Gurumunda" 202 "Jaltar" 301 "Badaalubadi" 302 "BK Padar" 303 "Dunduli" 305 "Kolnara" 306 "Mukundpur" 401 "Derigam" 402 "Gudiabandh" 403 "Kamapadara" 404 "Naira" 501 "Dangalodi" 502 "Halua" 503 "Karlakana" 504 "Kothapeta" 505 "Tadma"
 	label values gp_name gp_name
 
 	label variable village_name "Enumerator to fill up: Village Name"
 	note village_name: "Enumerator to fill up: Village Name"
-	label define village_name 11111 "Aribi" 11121 "Gopikankubadi" 11131 "Rengalpadu" 11141 "Panichhatra" 11151 "Bhujabala" 11161 "Mukundapur" 11411 "Bichikote" 11412 "Gudiabandha" 11421 "Jatili" 11431 "Mariguda" 11441 "Lachiamanaguda" 11451 "Naira" 11311 "Gulumunda" 11321 "Amiti" 11211 "Penikana" 11331 "Khilingira" 11221 "Gajigaon" 11231 "Barijhola" 11241 "Karlakana" 11251 "Biranarayanpur" 11252 "Kuljing" 11261 "Meerabali" 11271 "Pipalguda" 11281 "Nathma"
+	label define village_name 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 30101 "Badaalubadi" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma"
 	label values village_name village_name
 
 	label variable hamlet_name "Enumerator to fill up: Hamlet Name"
@@ -157,368 +163,865 @@ if _N>0 {
 	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106"
 	label values enum_code enum_code
 
-	label variable hh_code "Assign a number to the household you are visiting based on how many you have vis"
-	note hh_code: "Assign a number to the household you are visiting based on how many you have visited today"
+	label variable hh_code "NEW: Assign a number to the household you are visiting based on how many you hav"
+	note hh_code: "NEW: Assign a number to the household you are visiting based on how many you have visited in this village. If you are working in the same village as the previous day, use sequential numbers."
 
-	label variable hh_repeat_code "Repeat the same number of the household you are visiting based on how many you h"
-	note hh_repeat_code: "Repeat the same number of the household you are visiting based on how many you have visited today"
+	label variable hh_repeat_code "Repeat the number of the household you are visiting"
+	note hh_repeat_code: "Repeat the number of the household you are visiting"
+
+	label variable landmark "Can you provide a landmark or description of the house so it can be located late"
+	note landmark: "Can you provide a landmark or description of the house so it can be located later?"
+
+	label variable address "Enumerator to ask respondent for address and enter the address"
+	note address: "Enumerator to ask respondent for address and enter the address"
+
+	label variable resp_available "Enumerator to record after knocking at the door of a house: Did you find a house"
+	note resp_available: "Enumerator to record after knocking at the door of a house: Did you find a household to interview?"
+	label define resp_available 1 "Household available for an interview and opened the door" 2 "Family has left the house permanently" 3 "This is my first visit: The family is temporarily unavailable but might be avail" 4 "This is my 1st re-visit: The family is temporarily unavailable but might be avai" 5 "This is my 2nd re-visit: The revisit within two days is not possible (e.g. all t" 6 "This is my 2nd re-visit: The family is temporarily unavailable (Please leave the"
+	label values resp_available resp_available
+
+	label variable screen_u5child "S1) Are there any children under the age of 5 years in this household?"
+	note screen_u5child: "S1) Are there any children under the age of 5 years in this household?"
+	label define screen_u5child 1 "Yes" 0 "No"
+	label values screen_u5child screen_u5child
+
+	label variable screen_preg "S2) Are there currently any pregnant women in this household?"
+	note screen_preg: "S2) Are there currently any pregnant women in this household?"
+	label define screen_preg 1 "Yes" 0 "No"
+	label values screen_preg screen_preg
+
+	label variable instruction "Instructions for Enumerator to identify the primary respondent: 1. The primary r"
+	note instruction: "Instructions for Enumerator to identify the primary respondent: 1. The primary respondent will be the pregnant woman or the mother of the child whose age is below 5 years. 2. After the screening question, request to speak to the pregnant woman or the mother of the U5 child, if you are already not speaking with her. 3. If the primary respondent is not available, ask to speak to the female head of the house or any other member of the household who could provide information about the pregnant women or young children in the house. 4. If there are multiple pregnant women or mothers with children under the age of 5, request to speak to one of them for the main survey but ensure that the interview for every pregnant women is conducted for the respondent health section, and that each of the mothers of U5 report on their respective child's health. 5. If no pregnant woman or mother/ caregiver of a child below 5 years is available to be surveyed now but is available later, enumerator to revisit the household. S3) Enumerator: Is the pregnant woman or mother/caregiver of the child under 5 or any other women who can provide the information available to continue the survey with?"
+	label define instruction 1 "Yes" 0 "No"
+	label values instruction instruction
+
+	label variable visit_num "S4) Is this your 1st visit, or 2nd visit?"
+	note visit_num: "S4) Is this your 1st visit, or 2nd visit?"
+	label define visit_num 1 "1st visit" 2 "2nd visit"
+	label values visit_num visit_num
 
 	label variable consent "Do I have your permission to proceed with the interview?"
 	note consent: "Do I have your permission to proceed with the interview?"
-	label define consent 1 "Yes" 0 "No" -98 "Don't know/refused"
+	label define consent 1 "Yes" 0 "No"
 	label values consent consent
 
-	label variable reasons_no_consent "B1) Can you tell me why you do not want to participate in the survey?"
-	note reasons_no_consent: "B1) Can you tell me why you do not want to participate in the survey?"
+	label variable no_consent_reason "B1) Can you tell me why you do not want to participate in the survey?"
+	note no_consent_reason: "B1) Can you tell me why you do not want to participate in the survey?"
 
 	label variable no_consent_oth "B1.1) Please specify other"
 	note no_consent_oth: "B1.1) Please specify other"
 
-	label variable no_consent_followup "B1.2) Can I speak to the person who makes decisions regarding your household's s"
-	note no_consent_followup: "B1.2) Can I speak to the person who makes decisions regarding your household's study participation?"
-	label define no_consent_followup 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values no_consent_followup no_consent_followup
+	label variable no_consent_comment "B2) Record any relevant notes if the respondent refused the interview"
+	note no_consent_comment: "B2) Record any relevant notes if the respondent refused the interview"
 
-	label variable followup_consent "B1.3) Do I have your permission to proceed with the interview?"
-	note followup_consent: "B1.3) Do I have your permission to proceed with the interview?"
-	label define followup_consent 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values followup_consent followup_consent
+	label variable a40_gps_autolatitude "A40) Auto GPS (This will not be shown because it is in background setting) (lati"
+	note a40_gps_autolatitude: "A40) Auto GPS (This will not be shown because it is in background setting) (latitude)"
 
-	label variable no_consent_comment "Record any relevant notes if the respondent refused the interview"
-	note no_consent_comment: "Record any relevant notes if the respondent refused the interview"
+	label variable a40_gps_autolongitude "A40) Auto GPS (This will not be shown because it is in background setting) (long"
+	note a40_gps_autolongitude: "A40) Auto GPS (This will not be shown because it is in background setting) (longitude)"
+
+	label variable a40_gps_autoaltitude "A40) Auto GPS (This will not be shown because it is in background setting) (alti"
+	note a40_gps_autoaltitude: "A40) Auto GPS (This will not be shown because it is in background setting) (altitude)"
+
+	label variable a40_gps_autoaccuracy "A40) Auto GPS (This will not be shown because it is in background setting) (accu"
+	note a40_gps_autoaccuracy: "A40) Auto GPS (This will not be shown because it is in background setting) (accuracy)"
 
 	label variable a1_resp_name "A1) What is your name?"
 	note a1_resp_name: "A1) What is your name?"
 
-	label variable a2_gender "A2) What is your gender?"
-	note a2_gender: "A2) What is your gender?"
-	label define a2_gender 1 "Male" 2 "Female" 3 "Other" -98 "Refused"
-	label values a2_gender a2_gender
+	label variable a2_hhmember_count "A2) How many people live in this household including you?"
+	note a2_hhmember_count: "A2) How many people live in this household including you?"
 
-	label variable a3_femhead "A3.1) Is there a female head of household?"
-	note a3_femhead: "A3.1) Is there a female head of household?"
-	label define a3_femhead 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a3_femhead a3_femhead
+	label variable a10_hhhead "A10) What is the name of the head of household? (Household head can be either ma"
+	note a10_hhhead: "A10) What is the name of the head of household? (Household head can be either male or female)"
 
-	label variable a3_femhead_name "A3.1.1) What is the female household head's name?"
-	note a3_femhead_name: "A3.1.1) What is the female household head's name?"
+	label variable a10_hhhead_gender "A10.1) What is the gender of the household head?"
+	note a10_hhhead_gender: "A10.1) What is the gender of the household head?"
+	label define a10_hhhead_gender 1 "Male" 2 "Female" 3 "Other" -98 "Refused"
+	label values a10_hhhead_gender a10_hhhead_gender
 
-	label variable a3_malehead "A3.2) Is there a male head of household?"
-	note a3_malehead: "A3.2) Is there a male head of household?"
-	label define a3_malehead 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a3_malehead a3_malehead
+	label variable a11_oldmale "A11) Is there an older male in the household?"
+	note a11_oldmale: "A11) Is there an older male in the household?"
+	label define a11_oldmale 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a11_oldmale a11_oldmale
 
-	label variable a3_malehead_name "A3.2.1) What is the male household head's name?"
-	note a3_malehead_name: "A3.2.1) What is the male household head's name?"
+	label variable a11_oldmale_name "A11.1) What is their name?"
+	note a11_oldmale_name: "A11.1) What is their name?"
 
-	label variable a4_oldmale "A4) Is there an older male in the household?"
-	note a4_oldmale: "A4) Is there an older male in the household?"
-	label define a4_oldmale 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a4_oldmale a4_oldmale
+	label variable a12_water_source_prim "A12) In the past month, which water source did your household primarily use for "
+	note a12_water_source_prim: "A12) In the past month, which water source did your household primarily use for drinking?"
+	label define a12_water_source_prim 1 "Government provided household Taps (supply paani)" 2 "Community standpipe" 3 "Community Solar pump PVC tank" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
+	label values a12_water_source_prim a12_water_source_prim
 
-	label variable a4_oldmale_name "A4.1) What is their name?"
-	note a4_oldmale_name: "A4.1) What is their name?"
+	label variable a12_prim_source_oth "A12.1) If Other, please specify:"
+	note a12_prim_source_oth: "A12.1) If Other, please specify:"
 
-	label variable a5_age "A5) What is your date of birth?"
-	note a5_age: "A5) What is your date of birth?"
+	label variable a13_water_sec_yn "A13) In the past month, did your household use any sources of water for drinking"
+	note a13_water_sec_yn: "A13) In the past month, did your household use any sources of water for drinking purposes besides the one you already mentioned?"
+	label define a13_water_sec_yn 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a13_water_sec_yn a13_water_sec_yn
 
-	label variable a6_phone_num "A6) What is your phone number?"
-	note a6_phone_num: "A6) What is your phone number?"
+	label variable a13_water_source_sec "A13.1) In the past month, what other water sources have you used for drinking?"
+	note a13_water_source_sec: "A13.1) In the past month, what other water sources have you used for drinking?"
 
-	label variable a7_phone_oth "A7) What is the phone number of the other head of household?"
-	note a7_phone_oth: "A7) What is the phone number of the other head of household?"
+	label variable a13_water_sec_oth "A13.2) If Other, please specify:"
+	note a13_water_sec_oth: "A13.2) If Other, please specify:"
 
-	label variable a8_address "A8) What is your address?"
-	note a8_address: "A8) What is your address?"
+	label variable a14_sec_source_reason "A14) In what circumstances do you collect drinking water from these other water "
+	note a14_sec_source_reason: "A14) In what circumstances do you collect drinking water from these other water sources?"
 
-	label variable a9_landmark "A9) Can you provide a landmark or description of the house so it can be located "
-	note a9_landmark: "A9) Can you provide a landmark or description of the house so it can be located later?"
+	label variable sec_source_reason_oth "A14.1) If Other, please specify"
+	note sec_source_reason_oth: "A14.1) If Other, please specify"
 
-	label variable a9_gpslatitude "A9.1) Please record the GPS location of this household (latitude)"
-	note a9_gpslatitude: "A9.1) Please record the GPS location of this household (latitude)"
+	label variable a15_water_sec_freq "A15) How often do you collect water for drinking from these other water sources?"
+	note a15_water_sec_freq: "A15) How often do you collect water for drinking from these other water sources?"
+	label define a15_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" -99 "Don't know"
+	label values a15_water_sec_freq a15_water_sec_freq
 
-	label variable a9_gpslongitude "A9.1) Please record the GPS location of this household (longitude)"
-	note a9_gpslongitude: "A9.1) Please record the GPS location of this household (longitude)"
+	label variable a15_water_sec_freq_oth "A15.1) If Other, please specify:"
+	note a15_water_sec_freq_oth: "A15.1) If Other, please specify:"
 
-	label variable a9_gpsaltitude "A9.1) Please record the GPS location of this household (altitude)"
-	note a9_gpsaltitude: "A9.1) Please record the GPS location of this household (altitude)"
+	label variable a16_water_treat "A16) Do you ever do anything to the water from the primary source (\${primary_wa"
+	note a16_water_treat: "A16) Do you ever do anything to the water from the primary source (\${primary_water_label}) to make it safe for drinking?"
+	label define a16_water_treat 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a16_water_treat a16_water_treat
 
-	label variable a9_gpsaccuracy "A9.1) Please record the GPS location of this household (accuracy)"
-	note a9_gpsaccuracy: "A9.1) Please record the GPS location of this household (accuracy)"
+	label variable a16_water_treat_type "A16.1) What do you do to the water from the primary source (\${primary_water_lab"
+	note a16_water_treat_type: "A16.1) What do you do to the water from the primary source (\${primary_water_label}) to make it safe for drinking?"
 
-	label variable a10_head_hh "A10) Is this a female headed household?"
-	note a10_head_hh: "A10) Is this a female headed household?"
-	label define a10_head_hh 1 "Yes, female headed" 2 "No, male headed" 3 "No, child-headed household"
-	label values a10_head_hh a10_head_hh
+	label variable a16_water_treat_oth "A16.2) If Other, please specify:"
+	note a16_water_treat_oth: "A16.2) If Other, please specify:"
 
-	label variable a11_school "A11) Have you ever attended school?"
-	note a11_school: "A11) Have you ever attended school?"
-	label define a11_school 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a11_school a11_school
+	label variable a16_water_treat_freq "A16.3) When do you make the water from your primary drinking water source (\${pr"
+	note a16_water_treat_freq: "A16.3) When do you make the water from your primary drinking water source (\${primary_water_label}) safe before drinking it?"
 
-	label variable a12_school_level "A12) What is the highest level of schooling that you have completed?"
-	note a12_school_level: "A12) What is the highest level of schooling that you have completed?"
-	label define a12_school_level 1 "Incomplete primary (8th grade not completed)" 2 "Complete primary (8th grade completed)" 3 "Incomplete secondary (12th grade not completed)" 4 "Complete secondary (12th grade not completed)" 5 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Don't know/refused."
-	label values a12_school_level a12_school_level
+	label variable a16_treat_freq_oth "A16.4) If Other, please specify:"
+	note a16_treat_freq_oth: "A16.4) If Other, please specify:"
 
-	label variable a13_read_write "A13) Can you read and write with understanding in any language?"
-	note a13_read_write: "A13) Can you read and write with understanding in any language?"
-	label define a13_read_write 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a13_read_write a13_read_write
+	label variable a17_water_source_kids "A17) Do your youngest children drink from the same water source as the household"
+	note a17_water_source_kids: "A17) Do your youngest children drink from the same water source as the household's primary drinking water source i.e (\${primary_water_label}) ?"
+	label define a17_water_source_kids 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a17_water_source_kids a17_water_source_kids
 
-	label variable a14_hh_member_count "A14) How many people live in this household besides you?"
-	note a14_hh_member_count: "A14) How many people live in this household besides you?"
+	label variable water_prim_source_kids "A17.1) What is the primary drinking water source for your youngest children?"
+	note water_prim_source_kids: "A17.1) What is the primary drinking water source for your youngest children?"
+	label define water_prim_source_kids 1 "Government provided household Taps (supply paani)" 2 "Community standpipe" 3 "Community Solar pump PVC tank" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
+	label values water_prim_source_kids water_prim_source_kids
 
-	label variable a17_pregnant "A17) Are you currently pregnant?"
-	note a17_pregnant: "A17) Are you currently pregnant?"
-	label define a17_pregnant 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a17_pregnant a17_pregnant
+	label variable water_prim_kids_oth "A17.2) If Other, please specify:"
+	note water_prim_kids_oth: "A17.2) If Other, please specify:"
 
-	label variable a18_pregnant_freq "A18) How many months pregnant are you?"
-	note a18_pregnant_freq: "A18) How many months pregnant are you?"
+	label variable a17_water_treat_kids "A17.3) What do you do to the water for your youngest children to make it safe fo"
+	note a17_water_treat_kids: "A17.3) What do you do to the water for your youngest children to make it safe for drinking?"
 
-	label variable a19_pregnant_oth "A19) Are there any (other) pregnant women in this household?"
-	note a19_pregnant_oth: "A19) Are there any (other) pregnant women in this household?"
-	label define a19_pregnant_oth 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a19_pregnant_oth a19_pregnant_oth
+	label variable water_treat_kids_oth "A17.4) If Other, please specify:"
+	note water_treat_kids_oth: "A17.4) If Other, please specify:"
 
-	label variable a19_pregnant_freq_oth "A19.1) How many (other) pregnant women are in this household?"
-	note a19_pregnant_freq_oth: "A19.1) How many (other) pregnant women are in this household?"
+	label variable a18_jjm_drinking "A18) Do you use the government provided household tap for drinking?"
+	note a18_jjm_drinking: "A18) Do you use the government provided household tap for drinking?"
+	label define a18_jjm_drinking 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a18_jjm_drinking a18_jjm_drinking
 
-	label variable a20_caste "A20) Do you belong to a scheduled caste, scheduled tribe, or other backward clas"
-	note a20_caste: "A20) Do you belong to a scheduled caste, scheduled tribe, or other backward class, or none of these?"
-	label define a20_caste 1 "Scheduled caste" 2 "Scheduled tribe" 3 "Other backward caste" 4 "None of the above"
-	label values a20_caste a20_caste
+	label variable a18_reason_nodrink "A18.1) what is the reason for not using this household tap for drinking?"
+	note a18_reason_nodrink: "A18.1) what is the reason for not using this household tap for drinking?"
 
-	label variable labels "A21) Does your household have:"
-	note labels: "A21) Does your household have:"
-	label define labels 1 "Yes" 0 "No" -98 "Don't know/refused"
+	label variable a18_reason_nodrink_other "Specify other."
+	note a18_reason_nodrink_other: "Specify other."
+
+	label variable a19_jjm_stored "A19) Is any water from the Government provided household tap stored in your hous"
+	note a19_jjm_stored: "A19) Is any water from the Government provided household tap stored in your house currently or was stored in today/ yesterday?"
+	label define a19_jjm_stored 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a19_jjm_stored a19_jjm_stored
+
+	label variable a20_jjm_yes "A20) Do you use water collected from the government provided household taps for "
+	note a20_jjm_yes: "A20) Do you use water collected from the government provided household taps for any other purposes (other than drinking)?"
+	label define a20_jjm_yes 1 "Yes" 0 "No"
+	label values a20_jjm_yes a20_jjm_yes
+
+	label variable a20_jjm_use "A20.1) For what purposes do you use water collected from the government provided"
+	note a20_jjm_use: "A20.1) For what purposes do you use water collected from the government provided household taps?"
+
+	label variable a20_jjm_use_oth "A20.2) If Other, please specify:"
+	note a20_jjm_use_oth: "A20.2) If Other, please specify:"
+
+	label variable labels "A33) Does your household have:"
+	note labels: "A33) Does your household have:"
+	label define labels 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
 	label values labels labels
 
-	label variable a21_electricity "Electricity?"
-	note a21_electricity: "Electricity?"
-	label define a21_electricity 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_electricity a21_electricity
+	label variable a33_electricity "Electricity?"
+	note a33_electricity: "Electricity?"
+	label define a33_electricity 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_electricity a33_electricity
 
-	label variable a21_mattress "A mattress?"
-	note a21_mattress: "A mattress?"
-	label define a21_mattress 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_mattress a21_mattress
+	label variable a33_mattress "A mattress?"
+	note a33_mattress: "A mattress?"
+	label define a33_mattress 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_mattress a33_mattress
 
-	label variable a21_pressurecooker "A pressure cooker?"
-	note a21_pressurecooker: "A pressure cooker?"
-	label define a21_pressurecooker 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_pressurecooker a21_pressurecooker
+	label variable a33_pressurecooker "A pressure cooker?"
+	note a33_pressurecooker: "A pressure cooker?"
+	label define a33_pressurecooker 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_pressurecooker a33_pressurecooker
 
-	label variable a21_chair "A chair?"
-	note a21_chair: "A chair?"
-	label define a21_chair 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_chair a21_chair
+	label variable a33_chair "A chair?"
+	note a33_chair: "A chair?"
+	label define a33_chair 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_chair a33_chair
 
-	label variable a21_cotbed "A cot or bed?"
-	note a21_cotbed: "A cot or bed?"
-	label define a21_cotbed 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_cotbed a21_cotbed
+	label variable a33_cotbed "A cot or bed?"
+	note a33_cotbed: "A cot or bed?"
+	label define a33_cotbed 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_cotbed a33_cotbed
 
-	label variable a21_table "A table?"
-	note a21_table: "A table?"
-	label define a21_table 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_table a21_table
+	label variable a33_table "A table?"
+	note a33_table: "A table?"
+	label define a33_table 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_table a33_table
 
-	label variable a21_electricfan "An electric fan?"
-	note a21_electricfan: "An electric fan?"
-	label define a21_electricfan 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_electricfan a21_electricfan
+	label variable a33_electricfan "An electric fan?"
+	note a33_electricfan: "An electric fan?"
+	label define a33_electricfan 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_electricfan a33_electricfan
 
-	label variable a21_radiotransistor "A radio or transistor?"
-	note a21_radiotransistor: "A radio or transistor?"
-	label define a21_radiotransistor 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_radiotransistor a21_radiotransistor
+	label variable a33_radiotransistor "A radio or transistor?"
+	note a33_radiotransistor: "A radio or transistor?"
+	label define a33_radiotransistor 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_radiotransistor a33_radiotransistor
 
-	label variable a21_bwtv "A black and white television?"
-	note a21_bwtv: "A black and white television?"
-	label define a21_bwtv 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_bwtv a21_bwtv
+	label variable a33_bwtv "A black and white television?"
+	note a33_bwtv: "A black and white television?"
+	label define a33_bwtv 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_bwtv a33_bwtv
 
-	label variable a21_colourtv "A colour television?"
-	note a21_colourtv: "A colour television?"
-	label define a21_colourtv 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_colourtv a21_colourtv
+	label variable a33_colourtv "A colour television?"
+	note a33_colourtv: "A colour television?"
+	label define a33_colourtv 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_colourtv a33_colourtv
 
-	label variable a21_sewingmachine "A sewing machine?"
-	note a21_sewingmachine: "A sewing machine?"
-	label define a21_sewingmachine 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_sewingmachine a21_sewingmachine
+	label variable a33_sewingmachine "A sewing machine?"
+	note a33_sewingmachine: "A sewing machine?"
+	label define a33_sewingmachine 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_sewingmachine a33_sewingmachine
 
-	label variable a21_mobile "A mobile telephone?"
-	note a21_mobile: "A mobile telephone?"
-	label define a21_mobile 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_mobile a21_mobile
+	label variable a33_mobile "A mobile telephone?"
+	note a33_mobile: "A mobile telephone?"
+	label define a33_mobile 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_mobile a33_mobile
 
-	label variable a21_landline "A landline?"
-	note a21_landline: "A landline?"
-	label define a21_landline 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_landline a21_landline
+	label variable a33_landline "A landline?"
+	note a33_landline: "A landline?"
+	label define a33_landline 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_landline a33_landline
 
-	label variable a21_internet "Internet?"
-	note a21_internet: "Internet?"
-	label define a21_internet 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_internet a21_internet
+	label variable a33_internet "Internet?"
+	note a33_internet: "Internet?"
+	label define a33_internet 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_internet a33_internet
 
-	label variable a21_computer "A computer?"
-	note a21_computer: "A computer?"
-	label define a21_computer 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_computer a21_computer
+	label variable a33_computer "A computer?"
+	note a33_computer: "A computer?"
+	label define a33_computer 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_computer a33_computer
 
-	label variable a21_fridge "A refrigerator?"
-	note a21_fridge: "A refrigerator?"
-	label define a21_fridge 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_fridge a21_fridge
+	label variable a33_fridge "A refrigerator?"
+	note a33_fridge: "A refrigerator?"
+	label define a33_fridge 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_fridge a33_fridge
 
-	label variable a21_ac "An air conditioning (AC) unit?"
-	note a21_ac: "An air conditioning (AC) unit?"
-	label define a21_ac 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_ac a21_ac
+	label variable a33_ac "An air conditioning (AC) unit?"
+	note a33_ac: "An air conditioning (AC) unit?"
+	label define a33_ac 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_ac a33_ac
 
-	label variable a21_washingmachine "A washing machine?"
-	note a21_washingmachine: "A washing machine?"
-	label define a21_washingmachine 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_washingmachine a21_washingmachine
+	label variable a33_washingmachine "A washing machine?"
+	note a33_washingmachine: "A washing machine?"
+	label define a33_washingmachine 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_washingmachine a33_washingmachine
 
-	label variable a21_watchclock "A watch or clock?"
-	note a21_watchclock: "A watch or clock?"
-	label define a21_watchclock 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_watchclock a21_watchclock
+	label variable a33_watchclock "A watch or clock?"
+	note a33_watchclock: "A watch or clock?"
+	label define a33_watchclock 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_watchclock a33_watchclock
 
-	label variable a21_bicycle "A bicycle?"
-	note a21_bicycle: "A bicycle?"
-	label define a21_bicycle 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_bicycle a21_bicycle
+	label variable a33_bicycle "A bicycle?"
+	note a33_bicycle: "A bicycle?"
+	label define a33_bicycle 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_bicycle a33_bicycle
 
-	label variable a21_motorcycle "A motorcycle or scooter?"
-	note a21_motorcycle: "A motorcycle or scooter?"
-	label define a21_motorcycle 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_motorcycle a21_motorcycle
+	label variable a33_motorcycle "A motorcycle or scooter?"
+	note a33_motorcycle: "A motorcycle or scooter?"
+	label define a33_motorcycle 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_motorcycle a33_motorcycle
 
-	label variable a21_cart "An animal-drawn cart?"
-	note a21_cart: "An animal-drawn cart?"
-	label define a21_cart 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_cart a21_cart
+	label variable a33_cart "An animal-drawn cart?"
+	note a33_cart: "An animal-drawn cart?"
+	label define a33_cart 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_cart a33_cart
 
-	label variable a21_car "A car?"
-	note a21_car: "A car?"
-	label define a21_car 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_car a21_car
+	label variable a33_car "A car?"
+	note a33_car: "A car?"
+	label define a33_car 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_car a33_car
 
-	label variable a21_waterpump "A water pump?"
-	note a21_waterpump: "A water pump?"
-	label define a21_waterpump 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_waterpump a21_waterpump
+	label variable a33_waterpump "A water pump?"
+	note a33_waterpump: "A water pump?"
+	label define a33_waterpump 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_waterpump a33_waterpump
 
-	label variable a21_thresher "A thresher?"
-	note a21_thresher: "A thresher?"
-	label define a21_thresher 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_thresher a21_thresher
+	label variable a33_thresher "A thresher?"
+	note a33_thresher: "A thresher?"
+	label define a33_thresher 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_thresher a33_thresher
 
-	label variable a21_tractor "A tractor?"
-	note a21_tractor: "A tractor?"
-	label define a21_tractor 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a21_tractor a21_tractor
+	label variable a33_tractor "A tractor?"
+	note a33_tractor: "A tractor?"
+	label define a33_tractor 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a33_tractor a33_tractor
 
-	label variable a22_water_source_prim "A22) Which water source do you primarily use for drinking?"
-	note a22_water_source_prim: "A22) Which water source do you primarily use for drinking?"
-	label define a22_water_source_prim 1 "JJM Taps" 2 "Community standpipe" 3 "Manual handpump" 4 "Private well" -98 "Other"
-	label values a22_water_source_prim a22_water_source_prim
+	label variable a34_roof "A34) Do you have a pucca (solid or permanent, made from stone, brick, cement, co"
+	note a34_roof: "A34) Do you have a pucca (solid or permanent, made from stone, brick, cement, concrete, or timber) roof on the house?"
+	label define a34_roof 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a34_roof a34_roof
 
-	label variable water_prim_oth "A22.1) If Other, please specify"
-	note water_prim_oth: "A22.1) If Other, please specify"
+	label variable labels2 "A35) Does your household have any:"
+	note labels2: "A35) Does your household have any:"
+	label define labels2 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values labels2 labels2
 
-	label variable a230_water_sec_yn "A23.0) Do you use any sources of water besides the one you already mentioned ove"
-	note a230_water_sec_yn: "A23.0) Do you use any sources of water besides the one you already mentioned over the past year?"
-	label define a230_water_sec_yn 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a230_water_sec_yn a230_water_sec_yn
+	label variable a35_cattle "Cows and buffaloes?"
+	note a35_cattle: "Cows and buffaloes?"
+	label define a35_cattle 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a35_cattle a35_cattle
 
-	label variable a23_water_source_sec "A23.1) What other water sources have you used for drinking in the past year?"
-	note a23_water_source_sec: "A23.1) What other water sources have you used for drinking in the past year?"
+	label variable a35_sheep "Sheep?"
+	note a35_sheep: "Sheep?"
+	label define a35_sheep 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a35_sheep a35_sheep
 
-	label variable a23_water_sec_oth "A23.2) If Other, please specify"
-	note a23_water_sec_oth: "A23.2) If Other, please specify"
+	label variable a35_goats "Goats?"
+	note a35_goats: "Goats?"
+	label define a35_goats 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a35_goats a35_goats
 
-	label variable a24_sec_source_reason "A24) In what circumstances do you collect drinking water from these other water "
-	note a24_sec_source_reason: "A24) In what circumstances do you collect drinking water from these other water sources?"
+	label variable a35_chicken "Chicken?"
+	note a35_chicken: "Chicken?"
+	label define a35_chicken 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a35_chicken a35_chicken
 
-	label variable sec_source_reason_oth "A24.1) If Other, please specify"
-	note sec_source_reason_oth: "A24.1) If Other, please specify"
+	label variable a35_poultry "Other poultry?"
+	note a35_poultry: "Other poultry?"
+	label define a35_poultry 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a35_poultry a35_poultry
 
-	label variable a25_water_sec_freq "A25) How often do you collect water for drinking from these other water sources?"
-	note a25_water_sec_freq: "A25) How often do you collect water for drinking from these other water sources?"
-	label define a25_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" -98 "Other" -99 "Don't know"
-	label values a25_water_sec_freq a25_water_sec_freq
+	label variable livestock_oth "A35.1) If Other, please specify"
+	note livestock_oth: "A35.1) If Other, please specify"
 
-	label variable a25_water_sec_freq_oth "A25.1) If Other, please specify"
-	note a25_water_sec_freq_oth: "A25.1) If Other, please specify"
+	label variable a36_castename "A36) Please provide the name of your caste/tribe"
+	note a36_castename: "A36) Please provide the name of your caste/tribe"
 
-	label variable a26_water_treat "A26) Do you ever treat the water from your primary drinking water source (\${pri"
-	note a26_water_treat: "A26) Do you ever treat the water from your primary drinking water source (\${primary_water_label} ) before drinking it?"
-	label define a26_water_treat 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values a26_water_treat a26_water_treat
+	label variable a37_caste "A37) Do you belong to a scheduled caste, scheduled tribe, or other backward clas"
+	note a37_caste: "A37) Do you belong to a scheduled caste, scheduled tribe, or other backward class, or none of these?"
+	label define a37_caste 1 "Scheduled caste" 2 "Scheduled tribe" 3 "Other backward caste" 4 "None of the above" -99 "Don't know"
+	label values a37_caste a37_caste
 
-	label variable a26_water_treat_freq "A26.1) When do you treat the water from your primary drinking water source (\${p"
-	note a26_water_treat_freq: "A26.1) When do you treat the water from your primary drinking water source (\${primary_water_label} ) before drinking it?"
+	label variable a40_gps_manuallatitude "A40.1) Please record the GPS location of this household (latitude)"
+	note a40_gps_manuallatitude: "A40.1) Please record the GPS location of this household (latitude)"
 
-	label variable a26_water_treat_type "A26.2) How do you treat the water from your primary drinking water source (\${pr"
-	note a26_water_treat_type: "A26.2) How do you treat the water from your primary drinking water source (\${primary_water_label})?"
+	label variable a40_gps_manuallongitude "A40.1) Please record the GPS location of this household (longitude)"
+	note a40_gps_manuallongitude: "A40.1) Please record the GPS location of this household (longitude)"
 
-	label variable a28_jjm_use "A28) For what purposes do you use water collected from the JJM taps?"
-	note a28_jjm_use: "A28) For what purposes do you use water collected from the JJM taps?"
+	label variable a40_gps_manualaltitude "A40.1) Please record the GPS location of this household (altitude)"
+	note a40_gps_manualaltitude: "A40.1) Please record the GPS location of this household (altitude)"
 
-	label variable a28_jjm_use_oth "A28.1) If Other, please specify"
-	note a28_jjm_use_oth: "A28.1) If Other, please specify"
+	label variable a40_gps_manualaccuracy "A40.1) Please record the GPS location of this household (accuracy)"
+	note a40_gps_manualaccuracy: "A40.1) Please record the GPS location of this household (accuracy)"
 
-	label variable comment_opt "For enumerator : Do you wish to add any additional comments about this survey?"
-	note comment_opt: "For enumerator : Do you wish to add any additional comments about this survey?"
-	label define comment_opt 1 "Yes" 0 "No" -98 "Don't know/refused"
-	label values comment_opt comment_opt
+	label variable a40_gps_handlongitude "Please put the longitude of the household location"
+	note a40_gps_handlongitude: "Please put the longitude of the household location"
 
-	label variable comment "For enumerator : Please add any additional comments about this survey"
-	note comment: "For enumerator : Please add any additional comments about this survey"
+	label variable a40_gps_handlatitude "Please put the latitude of the household location"
+	note a40_gps_handlatitude: "Please put the latitude of the household location"
+
+	label variable a41_end_comments "A41) Please add any additional comments about this survey."
+	note a41_end_comments: "A41) Please add any additional comments about this survey."
+
+	label variable a42_survey_accompany "A42) Please record who attended or accompanied this interview."
+	note a42_survey_accompany: "A42) Please record who attended or accompanied this interview."
+
+	label variable a43_revisit "A43) Please record the following about your visit"
+	note a43_revisit: "A43) Please record the following about your visit"
+	label define a43_revisit 1 "This is my first visit" 2 "This is my second visit (1st REVISIT)" 3 "This is my third visit (2nd REVISIT)"
+	label values a43_revisit a43_revisit
 
 
 
 	capture {
-		foreach rgvar of varlist a14_hhmember_name_* {
-			label variable `rgvar' "A14.1) What is the name of household member #\${namenumber}?"
-			note `rgvar': "A14.1) What is the name of household member #\${namenumber}?"
+		foreach rgvar of varlist a3_hhmember_name_* {
+			label variable `rgvar' "A3) What is the name of household member \${namenumber}?"
+			note `rgvar': "A3) What is the name of household member \${namenumber}?"
 		}
 	}
 
 	capture {
-		foreach rgvar of varlist a15_hhmember_gender_* {
-			label variable `rgvar' "A15) What is the gender of \${namefromearlier}?"
-			note `rgvar': "A15) What is the gender of \${namefromearlier}?"
+		foreach rgvar of varlist a4_hhmember_gender_* {
+			label variable `rgvar' "A4) What is the gender of \${namefromearlier}?"
+			note `rgvar': "A4) What is the gender of \${namefromearlier}?"
 			label define `rgvar' 1 "Male" 2 "Female" 3 "Other" -98 "Refused"
 			label values `rgvar' `rgvar'
 		}
 	}
 
 	capture {
-		foreach rgvar of varlist a16_hhmember_age_* {
-			label variable `rgvar' "A16) How old is \${namefromearlier}?"
-			note `rgvar': "A16) How old is \${namefromearlier}?"
+		foreach rgvar of varlist a5_hhmember_relation_* {
+			label variable `rgvar' "A5) Who is \${namefromearlier} to you ?"
+			note `rgvar': "A5) Who is \${namefromearlier} to you ?"
+			label define `rgvar' 1 "Self" 2 "Wife/Husband" 3 "Son/Daughter" 4 "Son-In-Law/ Daughter-In-Law" 5 "Grandchild" 6 "Parent" 7 "Parent-In-Law" 8 "Brother/Sister" 9 "Nephew/niece" 10 "Other relative" 11 "Adopted/Foster/step child" 12 "Not related" -99 "Don't know"
+			label values `rgvar' `rgvar'
 		}
 	}
 
 	capture {
-		foreach rgvar of varlist pregnant_oth_name_* {
-			label variable `rgvar' "A19.2) What is the name of woman #\${num_preg_oth}?"
-			note `rgvar': "A19.2) What is the name of woman #\${num_preg_oth}?"
+		foreach rgvar of varlist a5_relation_oth_* {
+			label variable `rgvar' "A5.1) If Other, please specify:"
+			note `rgvar': "A5.1) If Other, please specify:"
 		}
 	}
 
 	capture {
-		foreach rgvar of varlist pregnant_oth_month_* {
-			label variable `rgvar' "A19.3) How many months pregnant is woman #\${num_preg_oth}?"
-			note `rgvar': "A19.3) How many months pregnant is woman #\${num_preg_oth}?"
+		foreach rgvar of varlist a6_hhmember_age_* {
+			label variable `rgvar' "A6) How old is \${namefromearlier} in years?"
+			note `rgvar': "A6) How old is \${namefromearlier} in years?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a6_dob_* {
+			label variable `rgvar' "A6.2) What is the date of birth for \${namefromearlier}?"
+			note `rgvar': "A6.2) What is the date of birth for \${namefromearlier}?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a6_u1age_month_* {
+			label variable `rgvar' "A6.3) How old is \${namefromearlier} in months?"
+			note `rgvar': "A6.3) How old is \${namefromearlier} in months?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a6_u1age_days_* {
+			label variable `rgvar' "A6.4) How old is \${namefromearlier} in days?"
+			note `rgvar': "A6.4) How old is \${namefromearlier} in days?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist correct_age_* {
+			label variable `rgvar' "Enumerator to note if the above age for the child U5 was accurate (i.e verified "
+			note `rgvar': "Enumerator to note if the above age for the child U5 was accurate (i.e verified from a birth certificate) or imputed/guessed"
+			label define `rgvar' 1 "Age for U5 child accurate" 2 "Age for U5 child imputed/guessed"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a7_pregnant_* {
+			label variable `rgvar' "A7) Is \${namefromearlier} pregnant?"
+			note `rgvar': "A7) Is \${namefromearlier} pregnant?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a7_pregnant_month_* {
+			label variable `rgvar' "A7.1) How many months pregnant is \${namefromearlier}?"
+			note `rgvar': "A7.1) How many months pregnant is \${namefromearlier}?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a7_pregnant_hh_* {
+			label variable `rgvar' "A7.2) Is this \${namefromearlier}'s usual residence?"
+			note `rgvar': "A7.2) Is this \${namefromearlier}'s usual residence?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a7_pregnant_leave_* {
+			label variable `rgvar' "A7.3) When does \${namefromearlier} plan to leave (record in months)?"
+			note `rgvar': "A7.3) When does \${namefromearlier} plan to leave (record in months)?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a8_u5mother_* {
+			label variable `rgvar' "A8) Does the mother/ caregiver of \${namefromearlier} live in this household cur"
+			note `rgvar': "A8) Does the mother/ caregiver of \${namefromearlier} live in this household currently?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist u5mother_name_* {
+			label variable `rgvar' "A8.1) What is the name of \${namefromearlier}'s mother/ caregiver?"
+			note `rgvar': "A8.1) What is the name of \${namefromearlier}'s mother/ caregiver?"
+			label define `rgvar' 0 "Mother/ caregiver not present right now" 1 "\${fam_name1}" 2 "\${fam_name2}" 3 "\${fam_name3}" 4 "\${fam_name4}" 5 "\${fam_name5}" 6 "\${fam_name6}" 7 "\${fam_name7}" 8 "\${fam_name8}" 9 "\${fam_name9}" 10 "\${fam_name10}" 11 "\${fam_name11}" 12 "\${fam_name12}" 13 "\${fam_name13}" 14 "\${fam_name14}" 15 "\${fam_name15}" 16 "\${fam_name16}" 17 "\${fam_name17}" 18 "\${fam_name18}" 19 "\${fam_name19}" 20 "\${fam_name20}"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a9_school_* {
+			label variable `rgvar' "A9) Has \${namefromearlier} ever attended school?"
+			note `rgvar': "A9) Has \${namefromearlier} ever attended school?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a9_school_level_* {
+			label variable `rgvar' "A9.1) What is the highest level of schooling that \${namefromearlier} has comple"
+			note `rgvar': "A9.1) What is the highest level of schooling that \${namefromearlier} has completed?"
+			label define `rgvar' 1 "Incomplete pre-school (pre-primary or Anganwadi schooling)" 2 "Completed pre-school (pre-primary or Anganwadi schooling)" 3 "Incomplete primary (1st-8th grade not completed)" 4 "Complete primary (1st-8th grade completed)" 5 "Incomplete secondary (9th-12th grade not completed)" 6 "Complete secondary (9th-12th grade not completed)" 7 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Refused" -99 "Don't know"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a9_read_write_* {
+			label variable `rgvar' "A9.2) Can \${namefromearlier} read or write with understanding in any language?"
+			note `rgvar': "A9.2) Can \${namefromearlier} read or write with understanding in any language?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a21_wom_cuts_day_* {
+			label variable `rgvar' "A21) Did \${pregwoman} have any bruising, scrapes, or cuts today or yesterday?"
+			note `rgvar': "A21) Did \${pregwoman} have any bruising, scrapes, or cuts today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a21_wom_cuts_week_* {
+			label variable `rgvar' "A21.1) Did \${pregwoman} have any bruising, scrapes, or cuts in the last 7 days?"
+			note `rgvar': "A21.1) Did \${pregwoman} have any bruising, scrapes, or cuts in the last 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a21_wom_cuts_2week_* {
+			label variable `rgvar' "A21.2) Did \${pregwoman} have any bruising, scrapes, or cuts in the past 2 weeks"
+			note `rgvar': "A21.2) Did \${pregwoman} have any bruising, scrapes, or cuts in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a22_wom_vomit_day_* {
+			label variable `rgvar' "A22) Did \${pregwoman} vomit today or yesterday?"
+			note `rgvar': "A22) Did \${pregwoman} vomit today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a22_wom_vomit_week_* {
+			label variable `rgvar' "A22.1) Did \${pregwoman} vomit in the last 7 days?"
+			note `rgvar': "A22.1) Did \${pregwoman} vomit in the last 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a22_wom_vomit_2week_* {
+			label variable `rgvar' "A22.2) Did \${pregwoman} vomit in the past 2 weeks?"
+			note `rgvar': "A22.2) Did \${pregwoman} vomit in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a23_wom_diarr_day_* {
+			label variable `rgvar' "A23) Did \${pregwoman} have diarrhea today or yesterday?"
+			note `rgvar': "A23) Did \${pregwoman} have diarrhea today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a23_wom_diarr_week_* {
+			label variable `rgvar' "A23.1) Did \${pregwoman} have diarrhea in the past 7 days?"
+			note `rgvar': "A23.1) Did \${pregwoman} have diarrhea in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a23_wom_diarr_2week_* {
+			label variable `rgvar' "A23.2) Did \${pregwoman} have diarrhea in the past 2 weeks?"
+			note `rgvar': "A23.2) Did \${pregwoman} have diarrhea in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a24_wom_diarr_num_* {
+			label variable `rgvar' "A24) How many days did {\${pregwoman} have diarrhea?"
+			note `rgvar': "A24) How many days did {\${pregwoman} have diarrhea?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a25_wom_stool_24h_* {
+			label variable `rgvar' "A25) Did \${pregwoman} have 3 or more loose or watery stools within the last 24 "
+			note `rgvar': "A25) Did \${pregwoman} have 3 or more loose or watery stools within the last 24 hours?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a25_wom_stool_yest_* {
+			label variable `rgvar' "A25.1) Did \${pregwoman} have 3 or more loose or watery stools yesterday?"
+			note `rgvar': "A25.1) Did \${pregwoman} have 3 or more loose or watery stools yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a25_wom_stool_week_* {
+			label variable `rgvar' "A25.2) Did \${pregwoman} have 3 or more loose or watery stools in the past 7 day"
+			note `rgvar': "A25.2) Did \${pregwoman} have 3 or more loose or watery stools in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a25_wom_stool_2week_* {
+			label variable `rgvar' "A25.3) Did \${pregwoman} have 3 or more loose or watery stools in the past 2 wee"
+			note `rgvar': "A25.3) Did \${pregwoman} have 3 or more loose or watery stools in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a26_wom_blood_day_* {
+			label variable `rgvar' "A26) Did \${pregwoman} have blood in her stool today or yesterday?"
+			note `rgvar': "A26) Did \${pregwoman} have blood in her stool today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a26_wom_blood_week_* {
+			label variable `rgvar' "A26.1) Did \${pregwoman} have blood in her stool in the past 7 days?"
+			note `rgvar': "A26.1) Did \${pregwoman} have blood in her stool in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a26_wom_blood_2week_* {
+			label variable `rgvar' "A26.2) Did \${pregwoman} have blood in her stool in the past 2 weeks?"
+			note `rgvar': "A26.2) Did \${pregwoman} have blood in her stool in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a27_child_cuts_day_* {
+			label variable `rgvar' "A27) Did \${U5child} have any bruising, scrapes, or cuts today or yesterday?"
+			note `rgvar': "A27) Did \${U5child} have any bruising, scrapes, or cuts today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a27_child_cuts_week_* {
+			label variable `rgvar' "A27.1) Did \${U5child} have any bruising, scrapes, or cuts in the last 7 days?"
+			note `rgvar': "A27.1) Did \${U5child} have any bruising, scrapes, or cuts in the last 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a27_child_cuts_2week_* {
+			label variable `rgvar' "A27.2) Did \${U5child} have any bruising, scrapes, or cuts in the past 2 weeks?"
+			note `rgvar': "A27.2) Did \${U5child} have any bruising, scrapes, or cuts in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a28_child_vomit_day_* {
+			label variable `rgvar' "A28) Did \${U5child} vomit today or yesterday?"
+			note `rgvar': "A28) Did \${U5child} vomit today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a28_child_vomit_week_* {
+			label variable `rgvar' "A28.1) Did \${U5child} vomit in the last 7 days?"
+			note `rgvar': "A28.1) Did \${U5child} vomit in the last 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a28_child_vomit_2week_* {
+			label variable `rgvar' "A28.2) Did \${U5child} vomit in the past 2 weeks?"
+			note `rgvar': "A28.2) Did \${U5child} vomit in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a29_child_diarr_day_* {
+			label variable `rgvar' "A29) Did \${U5child} have diarrhea today or yesterday?"
+			note `rgvar': "A29) Did \${U5child} have diarrhea today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a29_child_diarr_week_* {
+			label variable `rgvar' "A29.1) Did \${U5child} have diarrhea in the past 7 days?"
+			note `rgvar': "A29.1) Did \${U5child} have diarrhea in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a29_child_diarr_2week_* {
+			label variable `rgvar' "A29.2) Did \${U5child} have diarrhea in the past 2 weeks?"
+			note `rgvar': "A29.2) Did \${U5child} have diarrhea in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a30_child_diarr_num_* {
+			label variable `rgvar' "A30) How many days did \${U5child} have diarrhea?"
+			note `rgvar': "A30) How many days did \${U5child} have diarrhea?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a30_child_diarr_freq_* {
+			label variable `rgvar' "A30.1) What was the highest number of stools in a 24-hour period?"
+			note `rgvar': "A30.1) What was the highest number of stools in a 24-hour period?"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a31_child_stool_24h_* {
+			label variable `rgvar' "A31) Did \${U5child} have 3 or more loose or watery stools within the last 24 ho"
+			note `rgvar': "A31) Did \${U5child} have 3 or more loose or watery stools within the last 24 hours?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a31_child_stool_yest_* {
+			label variable `rgvar' "A31.1) Did \${U5child} have 3 or more loose or watery stools yesterday?"
+			note `rgvar': "A31.1) Did \${U5child} have 3 or more loose or watery stools yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a31_child_stool_week_* {
+			label variable `rgvar' "A31.2) Did \${U5child} have 3 or more loose or watery stools in the past 7 days?"
+			note `rgvar': "A31.2) Did \${U5child} have 3 or more loose or watery stools in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a31_child_stool_2week_* {
+			label variable `rgvar' "A31.3) Did \${U5child} have 3 or more loose or watery stools in the past 2 weeks"
+			note `rgvar': "A31.3) Did \${U5child} have 3 or more loose or watery stools in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a32_child_blood_day_* {
+			label variable `rgvar' "A32) Did \${U5child} have blood in the stool today or yesterday?"
+			note `rgvar': "A32) Did \${U5child} have blood in the stool today or yesterday?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a32_child_blood_week_* {
+			label variable `rgvar' "A32.1) Did \${U5child} have blood in the stool in the past 7 days?"
+			note `rgvar': "A32.1) Did \${U5child} have blood in the stool in the past 7 days?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a32_child_blood_2week_* {
+			label variable `rgvar' "A32.2) Did \${U5child} have blood in the stool in the past 2 weeks?"
+			note `rgvar': "A32.2) Did \${U5child} have blood in the stool in the past 2 weeks?"
+			label define `rgvar' 1 "Yes" 0 "No" 2 "NA (not applicable since the baby is a new born child)"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a39_phone_name_* {
+			label variable `rgvar' "A39) Phone number owner:"
+			note `rgvar': "A39) Phone number owner:"
+		}
+	}
+
+	capture {
+		foreach rgvar of varlist a39_phone_num_* {
+			label variable `rgvar' "A39) Phone number:"
+			note `rgvar': "A39) Phone number:"
 		}
 	}
 
@@ -562,7 +1065,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  india_ilc_pilot_census_enc_corrections.csv
+*   Corrections file path and filename:  Baseline Census_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
