@@ -26,19 +26,19 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
 * Source: https://www.devdatalab.org/shrug_download/
 
 * Household data
-use  "${DataDeid}1_1_Census_cleaned_noid.dta", clear
-keep   unique_id R_Cen_a40_gps_*
+use "${DataFinal}Final_HH_Odisha.dta", clear
+keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude
 gen Type=1
 save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
 export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 * Village shape file
 use "${Data_map}phdb.dta",clear
-keep if pc11_s_id=="21"
-keep if pc11_d_id=="396"
+keep if pc11_s_id=="21" // Odisha
+keep if pc11_d_id=="396" // Rayagada
 
 * Afer knowing the treatment status of the village
-gen Treat_v=0
+gen     Treat_v=0
 replace Treat_v=1 if pc11_tv_id=="801899"
 
 * Village map
@@ -54,8 +54,8 @@ append using "${DataDeid}1_1_Census_cleaned_noid_maplab.dta"
 count
 local observation = `r(N)'+1
 set obs `observation'
-replace  R_Cen_a40_gps_autolatitude=19.18 in `observation'
-replace  R_Cen_a40_gps_autolongitude=83.41824 in `observation'
+replace  R_Cen_a40_gps_latitude=19.18 in `observation'
+replace  R_Cen_a40_gps_longitude=83.41824 in `observation'
 replace  Type=2 in `observation'
 
 label define Typel 1 "Census" 2 "Baseline - Water Survey", modify
@@ -63,7 +63,7 @@ label define Typel 1 "Census" 2 "Baseline - Water Survey", modify
 
 * Houseeholds map
 spmap using "${Data_map}phxy" , id(id) ///
-      point(x( R_Cen_a40_gps_autolongitude) y(R_Cen_a40_gps_autolatitude) legenda(on) fcolor(Reds) by(Type)) ///
+      point(x(R_Cen_a40_gps_longitude) y(R_Cen_a40_gps_latitude) legenda(on) fcolor(Reds) by(Type)) ///
       label(data("${Data_map}Village_label.dta") x(x_c) y(y_c) label(Village_label) size(tiny))
 graph export "${Figure}Map_Rayagada.eps", replace  
 	  
@@ -126,7 +126,7 @@ start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
            R_Cen_a12_water_source_prim_1 ///
            R_Cen_a16_water_treat_1 ///
-           R_Cen_a13_water_sec_yn_0
+		   R_Cen_a13_water_sec_yn_0
 
 local All "Baseline balance among treatment arms"
 local LabelAll "MaintableHH"

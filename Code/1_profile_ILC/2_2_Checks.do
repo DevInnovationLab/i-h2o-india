@@ -13,4 +13,5 @@
 	
 use "${DataFinal}Final_HH_Odisha.dta", clear
 
+
 * High frequnecy chekc

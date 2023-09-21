@@ -18,8 +18,8 @@
 *****************************************
 * Step 1: Cleaning and sample selection *
 *****************************************
-use "${DataPre}1_1_Census_cleaned.dta", clear
-    local Village_R 11321
+use "${DataPre}1_1_Census_cleaned_consented.dta", clear
+    local Village_R 10101
     keep if R_Cen_village_name==`Village_R'	
 
 keep R_Cen_village_name unique_id
@@ -32,10 +32,8 @@ foreach i in $Var_Select {
 	gen `i'_random=runiform(0,1)	
 }
 
-*** Astha
-* What kind of HH do we choose? 
-* HH with small children: Which variable?
-* HH who are using the JJM tap: Which variable?
+* Household selection, all the HH consented are 
+* keep if R_Cen_A18_JJM_drinking==1 // They drink water from the JJM tap
 
 ***********************************************************************
 * Step 2: Assign 1 for households selected based on random numbers *
@@ -59,16 +57,17 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 * Step 3: Carefully integrate back to the master list 
 * Only the village where we complete the randomization should be included in the merge list
 ***********************************************************************
-use   "${DataPre}1_1_Census_cleaned.dta", clear
-merge 1:1 unique_id using "${DataPre}Selected_11321_13 Sep 2023.dta", gen(Merge_Selection) keep(matched)
+use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+merge 1:1 unique_id using "${DataPre}Selected_10101_21 Sep 2023.dta", keep(master matched) nogen
 
 ***********************************************************************
 * Step 4: Creating the data for pre-load
 ***********************************************************************
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
-gen Concat_info="You are in visiting the household of " + R_Cen_a1_resp_name +". The household is located in the " + R_Cen_village_name_str + "." + "HERE WE PUT THE NAME OF BLOCK< VLILLAGG and all the other info to confirm" 
+gen Concat_info1="The household head " + R_Cen_a10_hhhead + "     Respondent name " + R_Cen_a1_resp_name 
+gen Concat_info2="Village: " + R_Cen_village_name_str +".     " + "The address of the household is " + R_Cen_address + "." + " The landmark you should follow is: " + R_Cen_landmark + "." 
 
-keep unique_id $Var_Select Concat_info
+keep unique_id $Var_Select Concat_info*
 capture export excel using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 *------------------------------------------------------------------- Follow up -------------------------------------------------------------------*
