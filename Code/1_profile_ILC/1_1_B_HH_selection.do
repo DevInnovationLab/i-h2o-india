@@ -15,29 +15,6 @@
 	(3) Once you run the randomization, you will "merge" the informtion of selected household into the master census list       ------ */
 
 *------------------------------------------------------------------- Baseline -------------------------------------------------------------------*
-
-cap program drop Adding_Ram
-program define   Adding_Ram
-
-count
-local observation = `r(N)'+1
-set obs `observation'
-replace unique_id=99999999999 in `observation'
-replace R_Cen_a10_hhhead="Ram Charan" in `observation'
-replace R_Cen_a1_resp_name="Alia Bhat" in `observation'
-replace R_Cen_village_name_str="Bombay" in `observation'
-replace R_Cen_address="111 Hollywood Ave" in `observation'
-replace R_Cen_landmark="In front of actor school" in `observation'
-replace R_Cen_landmark="Rajamouli" in `observation'
-replace R_Cen_a39_phone_name_1="Rajamouli" in `observation'
-replace R_Cen_a39_phone_num_1="1234567890" in `observation'
-replace R_Cen_a39_phone_name_2="Rama Rao" in `observation'
-replace R_Cen_a39_phone_num_2="1234567890" in `observation'
-replace R_Cen_hamlet_name="Bollywood"  in `observation'
-replace S_BLS=1  in `observation'
-replace S_BLWQ=1  in `observation'
- 
-end
 *****************************************
 * Step 1: Cleaning and sample selection *
 *****************************************
@@ -87,9 +64,10 @@ merge 1:1 unique_id using "${DataPre}Selected_10101_21 Sep 2023.dta", keep(maste
 * Step 4: Creating the data for pre-load
 ***********************************************************************
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
-Adding_Ram
+gen Concat_info1="The household head " + R_Cen_a10_hhhead + "     Respondent name " + R_Cen_a1_resp_name 
+gen Concat_info2="Village: " + R_Cen_village_name_str +".     " + "The address of the household is " + R_Cen_address + "." + " The landmark you should follow is: " + R_Cen_landmark + "." 
 
-keep unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name
+keep unique_id $Var_Select Concat_info*
 capture export excel using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 *------------------------------------------------------------------- Follow up -------------------------------------------------------------------*
