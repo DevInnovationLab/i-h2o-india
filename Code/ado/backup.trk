@@ -1,4 +1,4 @@
-* 00000006
+* 00000008
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -254,4 +254,53 @@ f g/geo2xy_web_mercator.hlp
 f g/geo2xy.hlp
 f g/geo2xy_lambert_sphere.ado
 f g/geo2xy_run.ado
+e
+S http://fmwww.bc.edu/repec/bocode/s
+N savesome.pkg
+D 19 Sep 2023
+U 7
+d 'SAVESOME': module to save subset of data
+d 
+d savesome saves part of the data in memory to filename.
+d 
+d KW: save
+d KW: data management
+d KW: files
+d 
+d Requires: Stata version 7.0
+d 
+d 
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20150228
+d 
+f s/savesome.ado
+f s/savesome.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/m
+N mdesc.pkg
+D 22 Sep 2023
+U 8
+d 'MDESC': module to tabulate prevalence of missing values
+d 
+d  Produces a table with the number of missing values, total number
+d of cases, and percent missing for each variable in varlist. mdesc
+d works with both numeric and character variables.
+d 
+d KW: missing values
+d KW: data management
+d 
+d Requires: Stata version 10
+d 
+d Distribution-Date: 20110825
+d 
+d Author: Rose Anne Medeiros, Department of Sociology, Rice University
+d Support: email rose.a.medeiros@@rice.edu
+d 
+d Author: Dan Blanchette, The Carolina Population Center, UNC-CH
+d Support: email dan_blanchette@@unc.edu
+d 
+f m/mdesc.ado
+f m/mdesc.sthlp
 e
