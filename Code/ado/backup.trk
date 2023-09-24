@@ -1,4 +1,4 @@
-* 00000008
+* 00000015
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -303,4 +303,244 @@ d Support: email dan_blanchette@@unc.edu
 d 
 f m/mdesc.ado
 f m/mdesc.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/i
+N ivreg2.pkg
+D 22 Sep 2023
+U 9
+d 'IVREG2': module for extended instrumental variables/2SLS and GMM estimation
+d 
+d  ivreg2 provides extensions to Stata's official ivregress and
+d newey. Its main capabilities: two-step feasible GMM estimation;
+d continuously updated GMM estimation (CUE); LIML and k-class
+d estimation; automatic output of the Hansen-Sargan or
+d Anderson-Rubin statistic for overidentifying restrictions; C
+d statistic test of exogeneity of subsets of instruments (orthog()
+d option); kernel-based autocorrelation-consistent (AC) and
+d heteroskedastic and autocorrelation-consistent (HAC) estimation,
+d with user-specified choice of kernel; Cragg's "heteroskedastic
+d OLS" (HOLS) estimator; default reporting of large-sample
+d statistics (z and chi-squared rather than t and F); small option
+d to report small-sample statistics; first-stage regression
+d reported with F-test of excluded instruments and R-squared with
+d included instruments "partialled-out"; enhanced Kleibergen-Paap
+d and Cragg-Donald tests for weak instruments, redundancy of
+d instruments, significance of endogenous regressors; two-way
+d clustering of standard errors;  Kiefer and Driscoll-Kraay
+d standard errors. ivreg2 can also be used for ordinary least
+d squares (OLS) estimation using the same command syntax as Stata's
+d official regress and newey. New in this version: ivreg2 now
+d supports factor variables. This is version 4.1.11 of ivreg2,
+d updated from that published in Stata Journal, 5(4), requiring
+d Stata 11.2 or better. Stata 8.2/9.2/10.2 users may use this
+d routine, which will  automatically call ivreg28, ivreg29, or
+d ivreg210, respectively. These versions are now included in the
+d ivreg2 package. Stata 7 users may use the Stata Journal version
+d of ivreg2, accessible via net search ivreg2.
+d 
+d KW: instrumental variables
+d KW: Sargan test
+d KW: robust estimation
+d KW: orthogonality
+d KW: GMM
+d KW: Hansen's J
+d KW: heteroskedastic OLS,
+d 
+d Requires: Stata version 11.2 and ranktest from SSC
+d 
+d Distribution-Date: 20230730
+d 
+d Author: Christopher F Baum, Boston College
+d Support: email baum@@bc.edu
+d 
+d Author: Mark E Schaffer, Heriot-Watt University
+d Support: email m.e.schaffer@@hw.ac.uk
+d 
+d Author: Steven Stillman, Free University of Bozen-Bolzano
+d Support: email  Steven.Stillman@@unibz.it
+d 
+f i/ivreg2.ado
+f i/ivreg2.sthlp
+f i/ivreg2_p.ado
+f l/livreg2.mlib
+f i/ivreg210.ado
+f i/ivreg210.sthlp
+f i/ivreg210_p.ado
+f i/ivreg29.ado
+f i/ivreg29.hlp
+f i/ivreg29_p.ado
+f i/ivreg29_cue.ado
+f i/ivreg28.ado
+f i/ivreg28.hlp
+f i/ivreg28_p.ado
+f i/ivreg28_cue.ado
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N geoinpoly.pkg
+D 23 Sep 2023
+U 10
+d 'GEOINPOLY': module to match geographic locations to shapefile polygons
+d 
+d  -geoinpoly- finds, for geographic locations in memory, polygons
+d from a shapefile that spatially overlay the points. This is a
+d point-in-polygon operation, also known as a spatial join in GIS
+d (geographic information system) terminology.
+d 
+d KW: GIS
+d KW: spatial join
+d KW: point in polygon
+d KW: loxodrome
+d KW: rhumb line
+d 
+d Requires: Stata version 11
+d 
+d Distribution-Date: 20150816
+d 
+d Author: Robert Picard
+d Support: email picard@@netbox.com
+d 
+f g/geoinpoly.ado
+f g/geoinpoly.sthlp
+f g/geoinpoly_examples.ado
+e
+S http://fmwww.bc.edu/repec/bocode/u
+N unique.pkg
+D 23 Sep 2023
+U 11
+d 'UNIQUE': module to report number of unique values in variable(s)
+d 
+d  The command unique without a by reports the number of unique
+d values for the varlist. With a by it does the same, but also
+d creates a new variable (_Unique by default but can be named in
+d the gen option). This new variable contains the number of unique
+d values of the varlist for each level of the by variable. The new
+d variable is coded missing except for the first record in each
+d group defined by the levels of the by variable. The command is
+d useful for exploring data where the records refer to more than
+d one level, for example longitudinal data where each record refers
+d to a visit by a subject.
+d 
+d 
+d Requires: Stata version 10.1
+d 
+d Distribution-Date: 20200618
+d 
+d Author: Tony Brady
+d Support: email tony@@sealedenvelope.com
+d 
+f u/unique.ado
+f u/unique.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N randtreat.pkg
+D 23 Sep 2023
+U 12
+d 'RANDTREAT': module to randomly assign treatments uneven treatments and deal with misfits
+d 
+d      The randtreat command performs random treatment assignment.
+d It can handle an arbitrary number    of treatments and uneven
+d treatment fractions, which are common in real-world randomized
+d control trials.  Stratified randomization can be achieved by
+d optionally specifying a variable    list that defines multiple
+d strata.  It also provides several methods to deal with 'misfits',
+d a    practical issue that arises in treatment assignment whenever
+d observations can't be neatly   distributed among treatments.
+d The command performs all tasks in a way that marks misfit
+d observations and provides several methods to deal with those
+d misfits.
+d 
+d KW: treatment effects
+d KW: treatment
+d KW: random treatment
+d KW: misfits
+d 
+d Requires: Stata version 11
+d 
+d Distribution-Date: 20170413
+d 
+d Author: Alvaro Carril, University of Chile
+d Support: email acarril@@fen.uchile.cl
+d 
+f r/randtreat.ado
+f r/randtreat.sthlp
+e
+S http://fmwww.bc.edu/RePEc/bocode/g
+N geodist2.pkg
+D 23 Sep 2023
+U 13
+d 'GEODIST2': module to calculate straight line distance between two coordinates
+d 
+d  The geodist2 module calculates straight line distance between
+d two coordinates using google geocode data.  The module requires
+d json file reader module `insheetjson' written by Erik Lindsley.
+d Module sends data request to google server and requires search
+d address in clean alphanumeric (single space) format and without
+d non-alphanumeric characters. It supports reverse coding.
+d 
+d KW: distance
+d KW: Google
+d KW: geocode
+d KW: Haversine
+d 
+d Requires: Stata version 12 and insheetjson from SSC (q.v.)
+d 
+d Distribution-Date: 20150617
+d 
+d Author: Muhammad Rashid Ansari, INSEAD Business School, Singapore
+d Support: email rashid.ansari@@insead.edu
+d 
+f g/geodist2.ado
+f g/geodist2.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N geodist.pkg
+D 23 Sep 2023
+U 14
+d 'GEODIST': module to compute geographical distances
+d 
+d   geodist calculates geographical distances by measuring the
+d length of the shortest path between two points along the surface
+d of a mathematical model of the earth. By default, geodist
+d implements Vincenty's (1975) formula to calculate distances on a
+d reference ellipsoid. geodist can also calculate great-circle
+d distances using the haversine formula.
+d 
+d KW: geodetic
+d KW: geodesic,Vincenty,great-circle,ellipsoid,distance
+d 
+d Requires: Stata version 9.2
+d 
+d Distribution-Date: 20190624
+d 
+d Author: Robert Picard
+d Support: email robertpicard@@gmail.com
+d 
+f g/geodist.ado
+f g/geodist_run.ado
+f g/geodist.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N geocode.pkg
+D 23 Sep 2023
+U 15
+d 'GEOCODE': module to geocode data
+d 
+d  This is an updated version of the routine published in SJ 11-1
+d (dm0053).
+d 
+d KW: geocoding
+d KW: data management
+d 
+d Requires: Stata version 8.2
+d 
+d Distribution-Date: 20120509
+d 
+d Author: Adam Ozimek , Econsult Corporation
+d Support: email ozimek@@econsult.com
+d 
+d Author: Daniel Miles, Econsult Corporation
+d Support: email
+d 
+f g/geocode.ado
+f g/geocode.hlp
 e

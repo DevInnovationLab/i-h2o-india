@@ -85,8 +85,6 @@ ilc <- ilc%>%
   mutate(village_ID = village) #Need to create a variable that assigns village names to the village IDs generated in surveycto
 
 
-
-
 #Conducting randomization of households in each village to be visited each round
 #IMPORTANT: Only conduct randomization once for a village. Do not overwrite
 #           any prior randomization that has already been done!
