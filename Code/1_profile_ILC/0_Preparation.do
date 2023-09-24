@@ -18,3 +18,12 @@ else if c(username) == "cueva" | c(username) == "ABC"   {
 do   "${Do_lab}1_0_1_label_w.do"
 save "${DataRaw}1. Contact details.dta", replace
 }
+
+import excel using "${DataOther}India ILC_Pilot_Rayagada Village Tracking.xlsx", first clear
+drop if Block==""
+keep Block Selected Village village_IDinternal Pointgeolocationlat1 Pointgeolocationlon1 Panchatvillage BlockCode
+destring BlockCode, replace
+
+randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage) misfits(global) setseed(75823565)
+
+save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", replace

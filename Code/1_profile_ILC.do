@@ -61,6 +61,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataRaw   "${pilot}1_raw/"
 	global DataDeid  "${pilot}2_deidentified/"
 	global DataFinal "${pilot}3_final/"
+	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
 	global DataPre  "${pilot}99_Preload/"
 	

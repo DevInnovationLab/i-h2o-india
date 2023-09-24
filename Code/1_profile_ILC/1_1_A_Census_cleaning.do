@@ -36,6 +36,10 @@ foreach x of var * {
 	rename `x' R_Cen_`x' 
 } 
 
+* Adding village level info
+rename R_Cen_village_name village_name
+merge m:1 village_name using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean_final.dta", keep(master matched)
+rename  village_name R_Cen_village_name
 * Variable cuts across will not have prefix
 rename R_Cen_unique_id unique_id
 
@@ -71,11 +75,6 @@ duplicates drop unique_id, force
 
 * Change as we finalzie the treatment village
 gen     Census=1
-gen     Treatment=runiform(0,1)
-recode Treatment 0/0.2=0 0.2/1=1
-* replace Treatment=0 if R_Cen_village_name==11211 
-* replace Treatment=1 if R_Cen_village_name==11211
-fre R_Cen_village_name if Treatment==.
 save "${DataPre}1_1_Census_cleaned.dta", replace
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
 

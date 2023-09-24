@@ -76,12 +76,21 @@ replace S_BLS=0  if [_n]>`BLWQ_num' & S_BLS==1
 
 save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 
-***********************************************************************
-* Step 3: Carefully integrate back to the master list 
-* Only the village where we complete the randomization should be included in the merge list
-***********************************************************************
+
+
+
+
+
+
+
+                                                 * Step 3: Carefully integrate back to the master list *
+                               * Only the village where we complete the randomization should be included in the merge list
+
 use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
 merge 1:1 unique_id using "${DataPre}Selected_10101_21 Sep 2023.dta", keep(master matched) nogen
+label define S_BLWQl 0 "No" 1 "Water sample", modify
+label values S_BLWQ S_BLWQl
+
 
 ***********************************************************************
 * Step 4: Creating the data for pre-load
@@ -89,8 +98,20 @@ merge 1:1 unique_id using "${DataPre}Selected_10101_21 Sep 2023.dta", keep(maste
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
 Adding_Ram
 
-keep unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name
-capture export excel using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name using "${pilot}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+drop if unique_id==99999999999
+
+***********************************************************************
+* Step 5: Data to be uploaded for google sheet
+***********************************************************************
+gen Date_Random="$S_DATE"
+format   unique_id %15.0gc
+tostring unique_id, force replace format(%15.0gc)
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+export excel ID Block R_Cen_village_name_str  R_Cen_hamlet_name Date_Random S_BLWQ Pointgeolocationlat1 Pointgeolocationlon1 using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt
 
 *------------------------------------------------------------------- Follow up -------------------------------------------------------------------*
 /*

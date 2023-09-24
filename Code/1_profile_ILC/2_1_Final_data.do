@@ -79,6 +79,64 @@ keep if R_Cen_consent==1
 save "${DataFinal}Final_HH_Odisha_consented.dta", replace
 *------------------------------------------------------------ Final data creation (END)-----------------------------------------------------------*
 
+/* Village shape file with geo code
+use "${Data_map}phdb.dta",clear
+drop if pc11_tv_id=="000000"
+keep if pc11_s_id=="21" // Odisha
+keep if pc11_d_id=="396" | pc11_d_id=="397" | pc11_d_id=="398" 
+gen    Selected_b=0
+foreach i in 03196 03197 03198 03199 03200 03201 03202 03204 03205 03207 03176 {
+replace Selected_b=1 if pc11_sd_id=="`i'"
+}
+encode pc11_sd_id, gen(pc11_sd_id_num)
+keep if Selected_b==1
+append using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", 
+geoinpoly Pointgeolocationlat1 Pointgeolocationlon1 using "${Data_map}phxy"
+keep if _ID!=.
+* keep _ID Village Selected
+drop pc11_tv_id
+rename _ID pc11_tv_id
+tostring pc11_tv_id, replace
+save "${Data_map}Village_geo.dta", replace
+*/
+
+*********************************
+* Household data for google map *
+*********************************
+use "${DataFinal}Final_HH_Odisha.dta", clear
+keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude
+gen Type=1
+save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
+export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+
+
+cap program drop start_from_clean_file_Village
+program define   start_from_clean_file_Village
+  * Open clean file
+use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
+drop if Selected=="Backup"
+
+destring village_IDinternal, replace
+rename  village_IDinternal village_name
+
+label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
+label values BlockCode BlockCodel
+
+* Create Dummy
+	foreach v in BlockCode {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean_final.dta", replace
+  
+end
+
+
 * Sample size=ANC contact list
 cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
