@@ -29,17 +29,16 @@ drop fam_name*
 * rename a5_hhmember_relation_other_1  a5_hhm_rel_other_1 
 * rename a12_water_source_prim_other  a12_ws_prim_other 
 * rename water_prim_source_kids_other wp_source_kids_other
-rename (consented1hh_member_names1a6_age consented1a36_caste consented1a37_castename consented1a38_tribename consented1hh_member_names2a6_age consented1hh_member_names3a6_age consented1hh_member_names4a6_age consented1water_treatment1water_) (c1hh_member_names1a6_age c1a36_caste c1a37_castename c1a38_tribename c1hh_member_names2a6_age c1hh_member_names3a6_age c1hh_member_names4a6_age c1water_treatment1water_)
-rename consented1a19_reason_nodrink c1a19_reason_nodrink
+* rename (consented1hh_member_names1a6_age consented1a36_caste consented1a37_castename consented1a38_tribename consented1hh_member_names2a6_age consented1hh_member_names3a6_age consented1hh_member_names4a6_age consented1water_treatment1water_) (c1hh_member_names1a6_age c1a36_caste c1a37_castename c1a38_tribename c1hh_member_names2a6_age c1hh_member_names3a6_age c1hh_member_names4a6_age c1water_treatment1water_)
+* rename consented1a19_reason_nodrink c1a19_reason_nodrink
 
 foreach x of var * { 
 	rename `x' R_Cen_`x' 
 } 
 
 * Adding village level info
-rename R_Cen_village_name village_name
-merge m:1 village_name using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean_final.dta", keep(master matched)
-rename  village_name R_Cen_village_name
+rename R_Cen_village_name village
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean_final.dta", keep(master matched) gen(Merge_Village)
 * Variable cuts across will not have prefix
 rename R_Cen_unique_id unique_id
 

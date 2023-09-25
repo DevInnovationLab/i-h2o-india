@@ -116,9 +116,8 @@ program define   start_from_clean_file_Village
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
 drop if Selected=="Backup"
 
-destring village_IDinternal, replace
-rename  village_IDinternal village_name
-
+destring village V_Num_HH, replace
+label var V_Num_HH "Number of HH in the village"
 label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
 label values BlockCode BlockCodel
 
@@ -136,14 +135,18 @@ save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean_final.dta", re
   
 end
 
-
-* Sample size=ANC contact list
+* Sample size=Number of HH
 cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
   use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
-  label var R_Cen_a2_hhmember_count "Household size"
+  label var R_Cen_a2_hhmember_count "Household size" 
   
+  * Akito to drop
+	drop Treat_V
+	gen  Treat_V=runiform(0,1)
+	recode Treat_V 0/0.5=0 0.5/1=1
+ 
 end
 
 * Follow up
@@ -161,3 +164,4 @@ end
 
 start_from_clean_file_Census
 start_from_clean_file_Follow
+start_from_clean_file_Village
