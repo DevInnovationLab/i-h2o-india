@@ -1,4 +1,4 @@
-* 00000016
+* 00000018
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -569,4 +569,56 @@ d Support: email
 d 
 f t/traveltime.ado
 f t/traveltime.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/m
+N matchit.pkg
+D 25 Sep 2023
+U 17
+d 'MATCHIT': module to match two datasets based on similar text patterns
+d 
+d  matchit is a tool to join observations from two datasets based
+d on string variables which do not necessarily need to be exactly
+d the same. It performs many different string-based matching
+d techniques, allowing for a fuzzy similarity between the two
+d different text variables.
+d 
+d KW: match
+d KW: merge
+d KW: fuzzy match
+d 
+d Requires: Stata version 12 and freqindex from SSC (q.v.)
+d 
+d Distribution-Date: 20200520
+d 
+d Author: Julio Raffo, World Intellectual Property Organization
+d Support: email julio.raffo@@wipo.int
+d 
+f m/matchit.ado
+f m/matchit.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/f
+N freqindex.pkg
+D 25 Sep 2023
+U 18
+d 'FREQINDEX': module to generate an index of terms from string variable
+d 
+d  freqindex indexes each singular term in a given string variable
+d from the current dataset and computes its frequencies. It returns
+d a new dataset containing a string variable listing the terms and
+d a numeric variable with the corresponding frequencies.
+d 
+d KW: index
+d KW: string
+d KW: string manipulation
+d KW: frequency
+d 
+d Requires: Stata version 12
+d 
+d Distribution-Date: 20190413
+d 
+d Author: Julio Raffo, World Intellectual Property Organization
+d Support: email julio.raffo@@wipo.int
+d 
+f f/freqindex.ado
+f f/freqindex.sthlp
 e
