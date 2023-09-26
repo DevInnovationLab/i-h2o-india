@@ -1,4 +1,4 @@
-* 00000015
+* 00000017
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -543,4 +543,56 @@ d Support: email
 d 
 f g/geocode.ado
 f g/geocode.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/t
+N traveltime.pkg
+D 23 Sep 2023
+U 16
+d 'TRAVELTIME': module to generate travel time and travel distance information
+d 
+d  This is an updated version of the routine published in SJ 11-1
+d (dm0053).
+d 
+d KW: travel time
+d KW: travel distance
+d KW: data management
+d 
+d Requires: Stata version 8.2
+d 
+d Distribution-Date: 20120820
+d 
+d Author: Adam Ozimek , Econsult Corporation
+d Support: email ozimek@@econsult.com
+d 
+d Author: Daniel Miles, Econsult Corporation
+d Support: email
+d 
+f t/traveltime.ado
+f t/traveltime.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/m
+N matchit.pkg
+D 25 Sep 2023
+U 17
+d 'MATCHIT': module to match two datasets based on similar text patterns
+d 
+d  matchit is a tool to join observations from two datasets based
+d on string variables which do not necessarily need to be exactly
+d the same. It performs many different string-based matching
+d techniques, allowing for a fuzzy similarity between the two
+d different text variables.
+d 
+d KW: match
+d KW: merge
+d KW: fuzzy match
+d 
+d Requires: Stata version 12 and freqindex from SSC (q.v.)
+d 
+d Distribution-Date: 20200520
+d 
+d Author: Julio Raffo, World Intellectual Property Organization
+d Support: email julio.raffo@@wipo.int
+d 
+f m/matchit.ado
+f m/matchit.sthlp
 e
