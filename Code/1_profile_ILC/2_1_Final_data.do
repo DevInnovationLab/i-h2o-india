@@ -44,8 +44,10 @@ foreach i in latitude longitude {
 	replace R_Cen_a40_gps_`i'=R_Cen_a40_gps_manual`i' if R_Cen_a40_gps_`i'==.
 	* Add manual
 	
-	drop R_Cen_a40_gps_auto`i' R_Cen_a40_gps_manual`i'
+	* drop R_Cen_a40_gps_auto`i' R_Cen_a40_gps_manual`i'
 }
+drop R_Cen_a40_gps_autoaltitude R_Cen_a40_gps_manualaltitude
+
 
 ************
 * Labeling *
@@ -121,8 +123,12 @@ label var V_Num_HH "Number of HH in the village"
 label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
 label values BlockCode BlockCodel
 
+xtile  V_Num_HH_Categ = V_Num_HH, nq(3)
+label define V_Num_HH_Categl 1 "VSize: Small"2 "VSize: Meduium" 3 "VSize: Large", modify
+label values V_Num_HH_Categ V_Num_HH_Categl
+
 * Create Dummy
-	foreach v in BlockCode {
+	foreach v in BlockCode V_Num_HH_Categ {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -146,6 +152,7 @@ program define   start_from_clean_file_Census
 	drop Treat_V
 	gen  Treat_V=runiform(0,1)
 	recode Treat_V 0/0.5=0 0.5/1=1
+	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
  
 end
 

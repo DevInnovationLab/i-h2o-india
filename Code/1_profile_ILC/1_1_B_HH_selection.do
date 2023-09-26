@@ -77,13 +77,17 @@ recode S_BLS 0=0 1=2 2=1
 
 save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 
-                                                 * Step 3: Carefully integrate back to the master list *
-                               * Only the village where we complete the randomization should be included in the merge list
+
+
+*******************************************************
+* Step 3: Carefully integrate back to the master list *
+*******************************************************
+* You need to understand each line to work on this do file
+* Only the village where we complete the randomization should be included in the merge list
+
 use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
-merge 1:1 unique_id using "${DataPre}Selected_88888_25 Sep 2023.dta", keep(master matched) gen(Merge_WS)
-
-
+merge 1:1 unique_id using "${DataPre}Selected_88888_26 Sep 2023.dta", keep(master matched) gen(Merge_WS)
 
 
 label define S_BLWQl 0 "No" 1 "Water sample", modify
@@ -102,7 +106,7 @@ forvalue i = 1/9 {
 decode village, gen(R_Cen_village_name_str)
 Adding_Ram
 
-export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 drop if unique_id==99999999999
 
 ***********************************************************************

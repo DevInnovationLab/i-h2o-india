@@ -73,7 +73,6 @@ drop unique_id_Unique
 duplicates drop unique_id, force
 
 * Change as we finalzie the treatment village
-gen     Census=1
 save "${DataPre}1_1_Census_cleaned.dta", replace
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
 
