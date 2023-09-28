@@ -4,12 +4,12 @@
 * Sele note: To run smoothly, the data must be downloaded with the same computer that is running the labels of the do files
 
 * STATA User
-if c(username)      == "akitokamei" | c(username)=="MI" {
+if c(username)      == "akitokamei" | c(username)=="MI" | c(username)=="michellecherian" {
 cd "${DataRaw}"
 do "${Do_lab}import_india_ilc_pilot_census.do"
 save "${DataRaw}1_1_Census.dta", replace
 
-do "${Do_lab}import_india_ilc_pilot_followup_survey.do"
+do "${Do_lab}import_india_ilc_pilot_followup_survey_enc.do"
 save "${DataRaw}1_2_Followup.dta", replace
 }
 
