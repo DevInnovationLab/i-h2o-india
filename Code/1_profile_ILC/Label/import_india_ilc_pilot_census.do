@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline Census_WIDE.csv"
 *	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO September 25, 2023 11:42 AM.
+*	Output by SurveyCTO September 26, 2023 9:29 PM.
 
 * initialize Stata
 clear all
@@ -25,14 +25,14 @@ local csvfile "Baseline Census_WIDE.csv"
 local dtafile "Baseline Census.dta"
 local corrfile "Baseline Census_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum intro_duration hamlet_name hh_code_format unique_id landmark address intro_dur_end consent_duration enum_name_label no_consent_reason no_consent_oth"
-local text_fields2 "no_consent_comment consent_dur_end sectionb_duration a1_resp_name hh_member_names_count namenumber_* a3_hhmember_name_* namefromearlier_* a5_relation_oth_* a6_age_confirm2_* a5_autoage_* fam_name1"
-local text_fields3 "fam_name2 fam_name3 fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14 fam_name15 fam_name16 fam_name17 fam_name18 fam_name19 fam_name20"
-local text_fields4 "female_above12 num_femaleabove12 adults_hh_above12 num_adultsabove12 a11_oldmale_name sectionb_dur_end a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth"
-local text_fields5 "a14_sec_source_reason sec_source_reason_oth a15_water_sec_freq_oth a16_water_treat_type a16_water_treat_oth a16_water_treat_freq a16_treat_freq_oth stored_treat_freq_oth water_prim_kids_oth"
-local text_fields6 "water_treat_kids_type water_treat_kids_oth a17_treat_kids_freq treat_kids_freq_oth a18_reason_nodrink a18_water_treat_oth a20_jjm_use a20_jjm_use_oth pregnant_followup_count pregnant_index_*"
-local text_fields7 "get_pregnant_status_* pregwoman_* child_followup_count child_index_* get_u5_status_* u5child_* a36_castename phone_number_count a39_phone_name_* a39_phone_num_* a41_end_comments"
-local text_fields8 "survey_member_names_count surveynumber_* instanceid instancename"
+local text_fields1 "deviceid subscriberid simid devicephonenum survey_duration hamlet_name saahi_name hh_code_format unique_id landmark address intro_dur_end enum_name_label no_consent_reason no_consent_oth"
+local text_fields2 "no_consent_comment consent_dur_end a1_resp_name hh_member_names_count namenumber_* a3_hhmember_name_* namefromearlier_* a5_relation_oth_* a6_age_confirm2_* a5_autoage_* fam_name1 fam_name2 fam_name3"
+local text_fields3 "fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14 fam_name15 fam_name16 fam_name17 fam_name18 fam_name19 fam_name20 female_above12"
+local text_fields4 "num_femaleabove12 adults_hh_above12 num_adultsabove12 a11_oldmale_name sectionb_dur_end a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth a14_sec_source_reason"
+local text_fields5 "sec_source_reason_oth a15_water_sec_freq_oth a16_water_treat_type a16_water_treat_oth a16_water_treat_freq a16_treat_freq_oth stored_treat_freq_oth water_prim_kids_oth water_treat_kids_type"
+local text_fields6 "water_treat_kids_oth a17_treat_kids_freq treat_kids_freq_oth sectionc_dur_end a18_reason_nodrink a18_water_treat_oth a20_jjm_use a20_jjm_use_oth sectiond_dur_end pregnant_followup_count"
+local text_fields7 "pregnant_index_* get_pregnant_status_* pregwoman_* sectione_dur_end child_followup_count child_index_* get_u5_status_* u5child_* sectionf_dur_end a35_poultry sectiong_dur_end a36_castename"
+local text_fields8 "phone_number_count a39_phone_name_* a39_phone_num_* sectionh_dur_end a41_end_comments survey_member_names_count surveynumber_* instanceid instancename"
 local date_fields1 "a6_dob_*"
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -66,9 +66,9 @@ if _N>0 {
 						tempvar tempdtvar
 						rename `dtvar' `tempdtvar'
 						gen double `dtvar'=.
-						cap replace `dtvar'=clock(`tempdtvar',"DMYhms",2025)
+						cap replace `dtvar'=clock(`tempdtvar',"MDYhms",2025)
 						* automatically try without seconds, just in case
-						cap replace `dtvar'=clock(`tempdtvar',"DMYhm",2025) if `dtvar'==. & `tempdtvar'~=""
+						cap replace `dtvar'=clock(`tempdtvar',"MDYhm",2025) if `dtvar'==. & `tempdtvar'~=""
 						format %tc `dtvar'
 						drop `tempdtvar'
 					}
@@ -83,7 +83,7 @@ if _N>0 {
 						tempvar tempdtvar
 						rename `dtvar' `tempdtvar'
 						gen double `dtvar'=.
-						cap replace `dtvar'=date(`tempdtvar',"DMY",2025)
+						cap replace `dtvar'=date(`tempdtvar',"MDY",2025)
 						format %td `dtvar'
 						drop `tempdtvar'
 					}
@@ -151,6 +151,9 @@ if _N>0 {
 	label variable hamlet_name "Enumerator to fill up: Hamlet Name"
 	note hamlet_name: "Enumerator to fill up: Hamlet Name"
 
+	label variable saahi_name "Enumerator to fill up: Saahi/Street Name"
+	note saahi_name: "Enumerator to fill up: Saahi/Street Name"
+
 	label variable enum_name "Enumerator to fill up: Enumerator Name"
 	note enum_name: "Enumerator to fill up: Enumerator Name"
 	label define enum_name 101 "Sanjay Naik" 102 "Susanta Kumar Mahanta" 103 "Rajib Panda" 104 "Santosh Kumar Das" 105 "Bibhar Pankaj" 106 "Madhusmita Samal" 107 "Rekha Behera" 108 "Sanjukta Chichuan" 109 "Swagatika Behera" 110 "Sarita Bhatra" 111 "Abhishek Rath" 112 "Binod Kumar Mohanandia" 113 "Mangulu Bagh" 114 "Padman Bhatra" 115 "Kuna Charan Naik" 116 "Sushil Kumar Pani" 117 "Jitendra Bagh" 118 "Rajeswar Digal" 119 "Pramodini Gahir" 120 "Manas Ranjan Parida" 121 "Ishadatta Pani"
@@ -189,7 +192,7 @@ if _N>0 {
 	label values screen_preg screen_preg
 
 	label variable instruction "Instructions for Enumerator to identify the primary respondent: 1. The primary r"
-	note instruction: "Instructions for Enumerator to identify the primary respondent: 1. The primary respondent will be the pregnant woman or the mother of the child whose age is below 5 years. 2. After the screening question, request to speak to the pregnant woman or the mother of the U5 child, if you are already not speaking with her. 3. If the primary respondent is not available, ask to speak to the female head of the house or any other member of the household who could provide information about the pregnant women or young children in the house. 4. If there are multiple pregnant women or mothers with children under the age of 5, request to speak to one of them for the main survey but ensure that the interview for every pregnant women is conducted for the respondent health section, and that each of the mothers of U5 report on their respective child's health. 5. If no pregnant woman or mother/ caregiver of a child below 5 years is available to be surveyed now but is available later, enumerator to revisit the household. S3) Enumerator: Is the pregnant woman or mother/caregiver of the child under 5 or any other women who can provide the information available to continue the survey with?"
+	note instruction: "Instructions for Enumerator to identify the primary respondent: 1. The primary respondent will be the pregnant woman or the mother of the child whose age is below 5 years. 2. After the screening question, request to speak to the pregnant woman or the mother of the U5 child, if you are already not speaking with her. 3. If the primary respondent is not available, ask to speak to the female head of the house or any other member of the household who could provide information about the pregnant women or young children in the house. 4. If there are multiple pregnant women or mothers with children under the age of 5, request to speak to one of them for the main survey but ensure that the interview for every pregnant women is conducted for the respondent health section, and that each of the mothers of U5 report on their respective child’s health. 5. If no pregnant woman or mother/ caregiver of a child below 5 years is available to be surveyed now but is available later, enumerator to revisit the household. S3) Enumerator: Is the pregnant woman or mother/caregiver of the child under 5 or any other women who can provide the information available to continue the survey with?"
 	label define instruction 1 "Yes" 0 "No"
 	label values instruction instruction
 
@@ -275,7 +278,7 @@ if _N>0 {
 
 	label variable a15_water_sec_freq "A15) How often do you collect water for drinking from these other water sources?"
 	note a15_water_sec_freq: "A15) How often do you collect water for drinking from these other water sources?"
-	label define a15_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" 999 "Don't know"
+	label define a15_water_sec_freq 1 "Daily" 2 "Every 2-3 days in a week" 3 "Once a week" 4 "Once every two weeks" 5 "Once a month" 6 "Once every few months" 7 "Once a year" 8 "No fixed schedule" 999 "Don’t know"
 	label values a15_water_sec_freq a15_water_sec_freq
 
 	label variable a15_water_sec_freq_oth "A15.1) If Other, please specify:"
@@ -288,7 +291,7 @@ if _N>0 {
 
 	label variable a16_stored_treat "A16.0) Did you do anything to the water currently stored in your house to make i"
 	note a16_stored_treat: "A16.0) Did you do anything to the water currently stored in your house to make it safe for drinking?"
-	label define a16_stored_treat 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label define a16_stored_treat 1 "Yes" 0 "No" 2 "No stored water currently but stored generally" -99 "Don't know"
 	label values a16_stored_treat a16_stored_treat
 
 	label variable a16_water_treat_type "A16.1) What do you do to the water from the primary source (\${primary_water_lab"
@@ -312,7 +315,7 @@ if _N>0 {
 	note stored_treat_freq_oth: "A16.6) If Other, please specify:"
 
 	label variable a17_water_source_kids "A17) Do your youngest children drink from the same water source as the household"
-	note a17_water_source_kids: "A17) Do your youngest children drink from the same water source as the household's primary drinking water source i.e (\${primary_water_label}) ?"
+	note a17_water_source_kids: "A17) Do your youngest children drink from the same water source as the household’s primary drinking water source i.e (\${primary_water_label}) ?"
 	label define a17_water_source_kids 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
 	label values a17_water_source_kids a17_water_source_kids
 
@@ -553,7 +556,7 @@ if _N>0 {
 	note a41_end_comments: "A41) Please add any additional comments about this survey."
 
 	label variable a42_survey_accompany_num "A42) Please record the number of people who attended or accompanied this intervi"
-	note a42_survey_accompany_num: "A42) Please record the number of people who attended or accompanied this interview."
+	note a42_survey_accompany_num: "A42) Please record the number of people who attended or accompanied this interview aside from yourself or household member you are interviewing"
 
 	label variable a43_revisit "A43) Please record the following about your visit"
 	note a43_revisit: "A43) Please record the following about your visit"
@@ -564,8 +567,8 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist a3_hhmember_name_* {
-			label variable `rgvar' "A3) What is the name of household member \${namenumber}?"
-			note `rgvar': "A3) What is the name of household member \${namenumber}?"
+			label variable `rgvar' "A3) What is the name of household member ?"
+			note `rgvar': "A3) What is the name of household member ?"
 		}
 	}
 
@@ -582,7 +585,7 @@ if _N>0 {
 		foreach rgvar of varlist a5_hhmember_relation_* {
 			label variable `rgvar' "A5) Who is \${namefromearlier} to you ?"
 			note `rgvar': "A5) Who is \${namefromearlier} to you ?"
-			label define `rgvar' 1 "Self" 2 "Wife/Husband" 3 "Son/Daughter" 4 "Son-In-Law/ Daughter-In-Law" 5 "Grandchild" 6 "Parent" 7 "Parent-In-Law" 8 "Brother/Sister" 9 "Nephew/niece" 11 "Adopted/Foster/step child" 12 "Not related" -77 "Other" 999 "Don't know"
+			label define `rgvar' 1 "Self" 2 "Wife/Husband" 3 "Son/Daughter" 4 "Son-In-Law/ Daughter-In-Law" 5 "Grandchild" 6 "Parent" 7 "Parent-In-Law" 8 "Brother/Sister" 9 "Nephew/niece" 11 "Adopted/Foster/step child" 12 "Not related" -77 "Other" 999 "Don’t know"
 			label values `rgvar' `rgvar'
 		}
 	}
@@ -702,9 +705,18 @@ if _N>0 {
 	}
 
 	capture {
+		foreach rgvar of varlist a9_school_current_* {
+			label variable `rgvar' "A9.2) Is \${namefromearlier} currently going to school?"
+			note `rgvar': "A9.2) Is \${namefromearlier} currently going to school?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+	capture {
 		foreach rgvar of varlist a9_read_write_* {
-			label variable `rgvar' "A9.2) Can \${namefromearlier} read or write?"
-			note `rgvar': "A9.2) Can \${namefromearlier} read or write?"
+			label variable `rgvar' "A9.3) Can \${namefromearlier} read or write?"
+			note `rgvar': "A9.3) Can \${namefromearlier} read or write?"
 			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
 			label values `rgvar' `rgvar'
 		}
@@ -1171,9 +1183,9 @@ if _rc==0 {
 					cap unab dtvarignore : `dtvar'
 					if _rc==0 {
 						gen origvalue=value
-						replace value=string(clock(value,"DMYhms",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
+						replace value=string(clock(value,"MDYhms",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
 						* allow for cases where seconds haven't been specified
-						replace value=string(clock(origvalue,"DMYhm",2025),"%25.0g") if strmatch(fieldname,"`dtvar'") & value=="." & origvalue~="."
+						replace value=string(clock(origvalue,"MDYhm",2025),"%25.0g") if strmatch(fieldname,"`dtvar'") & value=="." & origvalue~="."
 						drop origvalue
 					}
 				}
@@ -1183,7 +1195,7 @@ if _rc==0 {
 					* skip fields that aren't yet in the data
 					cap unab dtvarignore : `dtvar'
 					if _rc==0 {
-						replace value=string(clock(value,"DMY",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
+						replace value=string(clock(value,"MDY",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
 					}
 				}
 			}

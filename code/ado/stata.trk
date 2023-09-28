@@ -1,4 +1,4 @@
-* 00000018
+* 00000019
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -621,4 +621,20 @@ d Support: email julio.raffo@@wipo.int
 d 
 f f/freqindex.ado
 f f/freqindex.sthlp
+e
+S http://www.stata-journal.com/software/sj5-1
+N st0082.pkg
+D 27 Sep 2023
+U 19
+d SJ5-1 st0082.  Tabulation of multiple responses
+d Tabulation of multiple responses
+d by Ben Jann, ETH Zurich
+d Support:  jann@@soz.gess.ethz.ch
+d After installation, type help ^mrtab^, ^mrgraph^, and ^_mrsvmat^
+f m/mrtab.ado
+f m/mrtab.hlp
+f m/mrgraph.ado
+f m/mrgraph.hlp
+f _/_mrsvmat.ado
+f _/_mrsvmat.hlp
 e
