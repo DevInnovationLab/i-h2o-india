@@ -43,9 +43,9 @@ end
 *****************************************
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
     local Village_R 88888
-    keep if village==`Village_R'	
+    keep if R_Cen_village_name==`Village_R'	
 
-keep village unique_id R_Cen_a18_jjm_drinking
+keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking
 * Keep only the village where you want to conduct the randomization
 global Var_Select S_BLS S_BLWQ 
 
@@ -108,8 +108,7 @@ forvalue i = 1/9 {
 drop if Merge_WS==1
 * Dropping househods not selected for the revisit
 drop if S_BLWQ==0 
-
-decode village, gen(R_Cen_village_name_str)
+decode R_Cen_village_name, gen(R_Cen_village_name_str)
 
 * Adding_Ram
 * Add Sahi later
@@ -121,10 +120,9 @@ export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39
 * Step 5: Data to be uploaded for google sheet
 ***********************************************************************
 gen Date_Random="$S_DATE"
-format   unique_id %15.0gc
 tostring unique_id, force replace format(%15.0gc)
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-export excel ID Block R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ Pointgeolocationlat1 Pointgeolocationlon1 using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt

@@ -11,10 +11,9 @@
 ** In this do file: 
 	* This do file exports.....
 
-*------------------------------------------------------------ Final data creation ------------------------------------------------------------*
 use "${DataDeid}1_1_Census_cleaned_noid.dta", clear
 * Merge follow up and other data sets
-merge 1:1 unique_id using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
+merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 
 *****************
 * Quality check *
@@ -22,32 +21,6 @@ merge 1:1 unique_id using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 * There should be no using data
 capture export excel unique_id using "${pilot}Data_quality.xlsx" if Merge_C_F==2, sheet("Merge_C_F_2") firstrow(var) cell(A1) sheetreplace
 drop if Merge_C_F==2
-
-*************************
-* Cleaning the GPS data *
-*************************
-* Auto
-foreach i in R_Cen_a40_gps_autolatitude R_Cen_a40_gps_autolongitude R_Cen_a40_gps_autoaltitude R_Cen_a40_gps_autoaccuracy {
-	replace `i'=. if R_Cen_a40_gps_autolatitude>25  | R_Cen_a40_gps_autolatitude<15
-    replace `i'=. if R_Cen_a40_gps_autolongitude>85 | R_Cen_a40_gps_autolongitude<80
-}
-
-* Manual
-foreach i in R_Cen_a40_gps_manuallatitude R_Cen_a40_gps_manuallongitude R_Cen_a40_gps_manualaltitude R_Cen_a40_gps_manualaccuracy {
-	replace `i'=. if R_Cen_a40_gps_manuallatitude>25  | R_Cen_a40_gps_manuallatitude<15
-    replace `i'=. if R_Cen_a40_gps_manuallongitude>85 | R_Cen_a40_gps_manuallongitude<80
-}
-
-* Final GPS
-foreach i in latitude longitude {
-	gen     R_Cen_a40_gps_`i'=R_Cen_a40_gps_auto`i'
-	replace R_Cen_a40_gps_`i'=R_Cen_a40_gps_manual`i' if R_Cen_a40_gps_`i'==.
-	* Add manual
-	
-	* drop R_Cen_a40_gps_auto`i' R_Cen_a40_gps_manual`i'
-}
-drop R_Cen_a40_gps_autoaltitude R_Cen_a40_gps_manualaltitude
-
 
 ************
 * Labeling *
@@ -78,8 +51,13 @@ destring R_Cen_a12_water_source_prim, replace
 save "${DataFinal}Final_HH_Odisha.dta", replace
 keep if R_Cen_consent==1
 
+  * Akito to drop
+  set seed 1
+	gen  Treat_V=runiform(0,1)
+	recode Treat_V 0/0.5=0 0.5/1=1
+	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
+
 save "${DataFinal}Final_HH_Odisha_consented.dta", replace
-*------------------------------------------------------------ Final data creation (END)-----------------------------------------------------------*
 
 /* Village shape file with geo code
 use "${Data_map}phdb.dta",clear
@@ -112,12 +90,35 @@ save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
 export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
+
+*------------------------------------------------------------ Final data creation ------------------------------------------------------------*
+cap program drop start_from_clean_file_Population
+program define   start_from_clean_file_Population
+  * Open clean file
+use "${DataPre}1_1_Census_cleaned.dta", clear
+gen     Census=1
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent)
+* start_from_clean_file_Census
+
+* 
+gen     Screened=0
+replace Screened=1 if  R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+recode Merge_C_F 1=0 3=1
+
+foreach i in R_Cen_consent R_FU_consent {
+	gen    Non_`i'=`i'
+	recode Non_`i' 0=1 1=0	
+}
+
+end
+
 cap program drop start_from_clean_file_Village
 program define   start_from_clean_file_Village
   * Open clean file
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
 drop if Selected=="Backup"
 
+* Labeling
 destring village V_Num_HH, replace
 label var V_Num_HH "Number of HH in the village"
 label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
@@ -148,12 +149,18 @@ program define   start_from_clean_file_Census
   use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
   label var R_Cen_a2_hhmember_count "Household size" 
   
-  * Akito to drop
-	drop Treat_V
-	gen  Treat_V=runiform(0,1)
-	recode Treat_V 0/0.5=0 0.5/1=1
-	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
- 
+  	label variable R_Cen_a20_jjm_use_1 "Cooking"
+	label variable R_Cen_a20_jjm_use_2 "Washing utensils"
+	label variable R_Cen_a20_jjm_use_3 "Washing clothes"
+	label variable R_Cen_a20_jjm_use_4 "Cleaning the house"
+	label variable R_Cen_a20_jjm_use_5 "Bathing"
+	label variable R_Cen_a20_jjm_use_6 "Drinking water for animals"
+	label variable R_Cen_a20_jjm_use_7 "Irrigation"
+	label variable R_Cen_a20_jjm_use__77 "Other"
+	label variable R_Cen_a20_jjm_use_999 "Don't know"
+	
+	label variable R_Cen_a18_jjm_drinking "Drink JJM water"
+   
 end
 
 * Follow up
@@ -172,3 +179,4 @@ end
 start_from_clean_file_Census
 start_from_clean_file_Follow
 start_from_clean_file_Village
+start_from_clean_file_Population
