@@ -15,6 +15,7 @@
 	(3) Once you run the randomization, you will "merge" the informtion of selected household into the master census list       ------ */
 
 *------------------------------------------------------------------- Baseline -------------------------------------------------------------------*
+set seed 75823
 
 cap program drop Adding_Ram
 program define   Adding_Ram
@@ -49,8 +50,8 @@ keep village unique_id R_Cen_a18_jjm_drinking
 global Var_Select S_BLS S_BLWQ 
 
 * Conduct randomization
+gen S_BLS=.
 foreach i in $Var_Select {
-	gen `i'=. 
 	gen `i'_random=runiform(0,1)	
 }
 
@@ -70,14 +71,18 @@ drop ID_BLS
 
 * Sort among primary household
 gsort    -S_BLS S_BLWQ_random
-gen     ID_BLWQ=_n
-replace S_BLWQ=1 if ID_BLWQ<=4
-replace S_BLWQ=0 if S_BLWQ==.
-recode S_BLS 0=0 1=2 2=1
+gen     S_BLWQ=_n
+recode  S_BLWQ 11/15=20 16/99999=0
+replace S_BLS=S_BLWQ
+recode  S_BLS 1/10=1 20=2 0=0
+
+label define S_BLSl 1 "Primary" 2 "Secondary" 0 "No visit", modify
+label values S_BLS S_BLSl
+
+label define S_BLWQl 1 "R1" 2 "R2" 3 "R3" 4 "R4" 5 "R5" 6 "R6" 7 "R7" 8 "R8" 9 "R9" 10 "R10" 20 "Secondary" 0 "No visit" , modify
+label values S_BLWQ S_BLWQl
 
 save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
-
-
 
 *******************************************************
 * Step 3: Carefully integrate back to the master list *
@@ -87,11 +92,7 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 
 use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
-merge 1:1 unique_id using "${DataPre}Selected_88888_26 Sep 2023.dta", keep(master matched) gen(Merge_WS)
-
-
-label define S_BLWQl 0 "No" 1 "Water sample", modify
-label values S_BLWQ S_BLWQl
+merge 1:1 unique_id using "${DataPre}Selected_88888_28 Sep 2023.dta", keep(master matched) gen(Merge_WS)
 
 rename R_Cen_a10_hhhead R_Cen_a10_hhhead_num
 
@@ -103,11 +104,16 @@ forvalue i = 1/9 {
 ***********************************************************************
 * Step 4: Creating the data for pre-load
 ***********************************************************************
-decode village, gen(R_Cen_village_name_str)
-Adding_Ram
+* Drop households not using JJM for drinking
+drop if Merge_WS==1
 
+decode village, gen(R_Cen_village_name_str)
+
+* Adding_Ram
+* Add Sahi later
+sort  S_BLS S_BLWQ
 export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
-drop if unique_id==99999999999
+* drop if unique_id==99999999999 (Drop if Ram: Commenting out since we do not want Ram in the actaul data collection)
 
 ***********************************************************************
 * Step 5: Data to be uploaded for google sheet
@@ -120,33 +126,3 @@ gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 export excel ID Block R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ Pointgeolocationlat1 Pointgeolocationlon1 using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt
-
-*------------------------------------------------------------------- Follow up -------------------------------------------------------------------*
-/*
-Enumerator to confirm the remaining 
-Enumerator: District Name
-Enumerator: Block Name
-Enumerator: Gram Panchayat Name
-Enumerator: Village Name
-"Enumerator to fill up : Hamlet Name 
-If unknown, please enter 999"
-*/
-
-/*
-END
-global Var_Select S_F1S S_F1Q S_F2S S_F2Q S_F3S S_F3Q
-
-* Follow up 1-3
-foreach i in 1 2 3 {
-local   S_F`i'S_num 1 // This has to be 4?
-local   S_F`i'Q_num 1 // This has to be 4(?). Change once we have enough sample to run the code
-
-sort    S_F`i'S_random
-replace S_F`i'S=1 if [_n]<=`S_F`i'S_num 1' 
-replace S_F`i'S=0 if [_n]> `S_F`i'S_num 1' 
-
-* Sort among household visited 
-gsort  -S_F`i'S S_F`i'Q_random
-replace S_F`i'Q=1 if [_n]<=`S_F`i'Q_num' 
-replace S_F`i'Q=0 if [_n]> `S_F`i'Q_num' & S_F`i'S==1
-}
