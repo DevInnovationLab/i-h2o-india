@@ -106,6 +106,8 @@ forvalue i = 1/9 {
 ***********************************************************************
 * Drop households not using JJM for drinking
 drop if Merge_WS==1
+* Dropping househods not selected for the revisit
+drop if S_BLWQ==0 
 
 decode village, gen(R_Cen_village_name_str)
 
