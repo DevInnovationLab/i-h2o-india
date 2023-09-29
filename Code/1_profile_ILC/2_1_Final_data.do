@@ -36,7 +36,21 @@ destring R_Cen_a12_water_source_prim, replace
 	label values R_Cen_a15_water_sec_freq R_Cen_a15_water_sec_freql	
 
 * Create Dummy
-	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_water_source_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq {
+* -77 to 77
+foreach i in R_Cen_a12_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+* -99 to 99
+foreach i in R_Cen_a13_water_sec_yn {
+	replace `i'=99 if `i'==-99
+}
+	rename R_Cen_a12_water_source_prim R_Cen_a12_ws_prim
+	
+	foreach i in 1 2 3 4 5 6 7 8 _77 {
+		rename R_Cen_a13_water_source_sec_`i' R_Cen_a13_ws_sec_`i'
+	}
+	
+	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_ws_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -46,7 +60,6 @@ destring R_Cen_a12_water_source_prim, replace
 	}
 	}
 
-	
 * Save final data in STATA/R
 save "${DataFinal}Final_HH_Odisha.dta", replace
 keep if R_Cen_consent==1

@@ -246,11 +246,11 @@ local NoteAll "Notes: This table presents the village level stats. The table is 
 foreach k in All {
 start_from_clean_file_Village
 * Mean
-	eststo  model0: estpost summarize $`k'
-	eststo  model1: estpost summarize $`k' if Treat_V==0
-	eststo  model2: estpost summarize $`k' if Treat_V==1
+	eststo model0: estpost summarize $`k'
+	eststo model1: estpost summarize $`k' if Treat_V==0
+	eststo model2: estpost summarize $`k' if Treat_V==1
 	
-	* Diff
+* Diff
 start_from_clean_file_Village
 	foreach i in $`k' {
 	reg `i' i.Treat_V
@@ -258,7 +258,7 @@ start_from_clean_file_Village
 	}
 	eststo  model4: estpost summarize $`k'
 
-	* Significance
+* Significance
 start_from_clean_file_Village
 	foreach i in $`k' {
 	reg `i' i.Treat_V
@@ -281,8 +281,9 @@ start_from_clean_file_Village
 	}
 	eststo  model6: estpost summarize $`k'
 	
-esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Village.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Control}" "\shortstack[c]{Treat}" "Diff" "Sig" "P-value") ///
+esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Village.tex", replace ///
+	   cell("mean (fmt(2) label(_))") ///
+	   mtitles("\shortstack[c]{Total}" "\shortstack[c]{Control}" "\shortstack[c]{Treat}" "Diff" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
@@ -326,11 +327,10 @@ texsave $Variables using "${Table}Table_Progress.tex", ///
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
-		   R_Cen_a12_water_source_prim_1 R_Cen_a12_water_source_prim_2 R_Cen_a12_water_source_prim_4 R_Cen_a12_water_source_prim_7 ///
+		   R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 ///
 		   R_Cen_a13_water_sec_yn_0 ///
-		   R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 ///
-		   R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 ///
-		   R_Cen_a13_water_source_sec__77 ///
+		   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 ///
+		   R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 ///
 		   R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 ///
 		   R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type__77 R_Cen_a16_water_treat_type_999 ///
            R_Cen_a18_jjm_drinking ///
@@ -347,10 +347,10 @@ start_from_clean_file_Census
 
 * Mean
 	eststo  model0: estpost summarize $`k'
+/* Diff
 	eststo  model1: estpost summarize $`k' if Treat_V==0
 	eststo  model2: estpost summarize $`k' if Treat_V==1
 	
-	* Diff
 start_from_clean_file_Census
 	foreach i in $`k' {
 	reg `i' i.Treat_V
@@ -380,9 +380,31 @@ start_from_clean_file_Census
 	replace `i'=p_1
 	}
 	eststo  model6: estpost summarize $`k'
-	
-esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Control}" "\shortstack[c]{Treat}" "Diff" "Sig" "P-value") ///
+*/
+* Min
+	foreach i in $`k' {
+	egen m_`i'=min(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model4: estpost summarize $`k'
+* Max
+	start_from_clean_file_Census
+	foreach i in $`k' {
+	egen m_`i'=max(`i')
+	replace `i'=m_`i'
+	}
+	eststo model5: estpost summarize $`k'
+* Missing 
+	start_from_clean_file_Census
+	foreach i in $`k' {
+	egen `i'_M=rowmiss(`i')
+	egen m_`i'=sum(`i'_M)
+	replace `i'=m_`i'
+	}
+	eststo  model6: estpost summarize $`k'
+* esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
+esttab model0 model4 model5 model6 using "${Table}Main_Balance_Census.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Min}" "\shortstack[c]{Max}" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
