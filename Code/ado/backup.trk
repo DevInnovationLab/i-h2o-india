@@ -1,4 +1,4 @@
-* 00000019
+* 00000021
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -637,4 +637,61 @@ f m/mrgraph.ado
 f m/mrgraph.hlp
 f _/_mrsvmat.ado
 f _/_mrsvmat.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/d
+N distinct.pkg
+D 28 Sep 2023
+U 20
+d 'DISTINCT': module to display distinct values of variables
+d 
+d distinct displays the number of distinct values for each variable
+d in a varlist.  The varlist may include both numeric and string
+d variables.
+d 
+d KW: distinct observations
+d KW: unique values
+d 
+d Requires: Stata version 8.0
+d 
+d 
+d Author: Gary Longton, Fred Hutchinson Cancer Research Center
+d Support: email glongton@@fhcrc.org
+d 
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20120321
+d 
+f d/distinct.ado
+f d/distinct.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N rsource.pkg
+D 30 Sep 2023
+U 21
+d 'RSOURCE': module to run R from inside Stata using an R source file
+d 
+d  The program rsource runs the Rterm command of R from inside
+d Stata,      using an R source file, if R is installed on the
+d user's system.      The output and/or the source file can be
+d listed to the Stata log file     and/or to the Stata Results
+d window in an interactive Stata session.      If the R directory
+d on the user's system is not on the user's default  path, then
+d the user must set the global macro Rterm_path to contain the
+d path for the Rterm command, possibly in the profile.do file
+d (see on-line help for details).
+d 
+d KW: R
+d KW: language
+d KW: interface
+d 
+d Requires: Stata version 10.0
+d 
+d Distribution-Date: 20160509
+d 
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d 
+f r/rsource.ado
+f r/rsource.sthlp
 e

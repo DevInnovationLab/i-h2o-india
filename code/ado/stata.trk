@@ -1,4 +1,4 @@
-* 00000020
+* 00000022
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -664,4 +664,59 @@ d Distribution-Date: 20120321
 d 
 f d/distinct.ado
 f d/distinct.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N rsource.pkg
+D 30 Sep 2023
+U 21
+d 'RSOURCE': module to run R from inside Stata using an R source file
+d 
+d  The program rsource runs the Rterm command of R from inside
+d Stata,      using an R source file, if R is installed on the
+d user's system.      The output and/or the source file can be
+d listed to the Stata log file     and/or to the Stata Results
+d window in an interactive Stata session.      If the R directory
+d on the user's system is not on the user's default  path, then
+d the user must set the global macro Rterm_path to contain the
+d path for the Rterm command, possibly in the profile.do file
+d (see on-line help for details).
+d 
+d KW: R
+d KW: language
+d KW: interface
+d 
+d Requires: Stata version 10.0
+d 
+d Distribution-Date: 20160509
+d 
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d 
+f r/rsource.ado
+f r/rsource.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N rscript.pkg
+D 30 Sep 2023
+U 22
+d 'RSCRIPT': module to call an R script from Stata
+d 
+d   rscript calls the R script filename.R from Stata. It displays
+d the R output (and errors, if applicable) in the Stata console.
+d 
+d KW: R
+d KW: programming
+d 
+d Requires: Stata version 12
+d 
+d Distribution-Date: 20230603
+d 
+d Author: David Molitor, University of Illinois
+d Support: email  dmolitor@@illinois.edu
+d 
+d Author: Julian Reif , University of Illinois
+d Support: email  jreif@@illinois.edu
+d 
+f r/rscript.ado
+f r/rscript.sthlp
 e

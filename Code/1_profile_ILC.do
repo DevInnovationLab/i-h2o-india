@@ -92,9 +92,9 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	cd "${DataRaw}"
 
 /*------------------------------------------------------------------------------
-	3 Initial settings
+	3 Initial settings 
 ------------------------------------------------------------------------------*/
-
+* NOTE: Make sure you also paste the downloaded package ado files to your source ado files for Stata
 	* Find user-written commands in GitHub
 	sysdir set  PLUS "${code}/ado"
 	
@@ -105,6 +105,10 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	ieboilstart, v(16.0)
 	`r(version)'
 	set scheme s2color
+	
+	* Set initial configurations to be able to run R script in Stata
+	net from http://www.stata.com/statausers/packages
+    net install rscript
 	
 /*------------------------------------------------------------------------------
 	4 Run code
@@ -133,6 +137,12 @@ do "${Do_pilot}1_1_A_Census_cleaning.do"
 do "${Do_pilot}1_1_B_HH_selection.do"
 * Who is incharge
 * Unit: Household (all)
+
+* (1_1_C) Uploading selected Household data to Google Drive for HH Survey
+do "${Do_pilot}1_1_C_Upload_GDrive.do"
+* Astha
+* Unit: Household (all)
+
 
 * (1.2) Cleaning
 do "${Do_pilot}1_2_Followup_cleaning.do"
