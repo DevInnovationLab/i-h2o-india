@@ -4,7 +4,7 @@
 #  date: "2023-09-24"
 
 # install the packages
-#install.packages("googledrive", "googlesheets4", "readxl", "googlesheets", "dplyr", "lubridate")
+#install.packages("googledrive", "googlesheets4", "readxl", "dplyr", "lubridate")
 
 # load the libraries
 library(readxl) 
@@ -12,7 +12,6 @@ library(googledrive)
 library(googlesheets4)
 library(DBI)
 library(RSQLite)
-library(googlesheets)
 library(dplyr)
 library(lubridate)
 
