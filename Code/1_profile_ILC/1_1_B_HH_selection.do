@@ -113,7 +113,7 @@ decode R_Cen_village_name, gen(R_Cen_village_name_str)
 * Adding_Ram
 * Add Sahi later
 sort  S_BLS S_BLWQ
-export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+*export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 * drop if unique_id==99999999999 (Drop if Ram: Commenting out since we do not want Ram in the actaul data collection)
 
 ***********************************************************************
@@ -125,4 +125,4 @@ gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt
+*export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt

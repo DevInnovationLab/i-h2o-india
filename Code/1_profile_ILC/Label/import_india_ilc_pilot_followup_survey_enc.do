@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline follow up survey_WIDE.csv"
 *	Outputs: "Baseline follow up survey.dta"
 *
-*	Output by SurveyCTO September 26, 2023 5:07 PM.
+*	Output by SurveyCTO September 28, 2023 10:38 PM.
 
 * initialize Stata
 clear all
@@ -26,10 +26,11 @@ local dtafile "Baseline follow up survey.dta"
 local corrfile "Baseline follow up survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
-local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 s_blwq r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name info_update enum_name_label reasons_no_consent no_consent_oth water_prim_oth"
-local text_fields3 "primary_water_label liter_estimation_count container_nmbr_* water_treat water_treat_type tap_supply_freq_oth tap_use tap_use_oth tap_function_reason tap_function_reason_oth tap_use_future_oth"
-local text_fields4 "tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth collect_resp treat_resp unique_id_3_digit_wt stored_bag_source_oth no_stored_bag no_chlorine_stored no_running_bag"
-local text_fields5 "no_tap_reason overall_comment instanceid instancename"
+local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 s_blwq r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name info_update enum_name_label duration_locatehh reasons_no_consent no_consent_oth"
+local text_fields3 "duration_consent water_prim_oth primary_water_label liter_estimation_count container_nmbr_* water_treat_type water_treat_when water_treat_when_oth water_stored_freq_oth duration_seca"
+local text_fields4 "tap_supply_freq_oth tap_use tap_use_oth tap_function_reason tap_function_reason_oth tap_use_future_oth duration_secb tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth"
+local text_fields5 "duration_secc collect_resp treat_resp duration_secd unique_id_3_digit_wt stored_bag_source_oth no_stored_bag no_chlorine_stored no_running_bag no_tap_reason duration_sece overall_comment duration_end"
+local text_fields6 "instanceid instancename"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -170,11 +171,6 @@ if _N>0 {
 	label define enum_name 101 "Sanjay Naik" 102 "Susanta Kumar Mahanta" 103 "Rajib Panda" 104 "Santosh Kumar Das" 105 "Bibhar Pankaj" 106 "Madhusmita Samal" 107 "Rekha Behera" 108 "Sanjukta Chichuan" 109 "Swagatika Behera" 110 "Sarita Bhatra" 111 "Abhishek Rath" 112 "Binod Kumar Mohanandia" 113 "Mangulu Bagh" 114 "Padman Bhatra" 115 "Kuna Charan Naik" 116 "Sushil Kumar Pani" 117 "Jitendra Bagh" 118 "Rajeswar Digal" 119 "Pramodini Gahir" 120 "Manas Ranjan Parida" 121 "Ishadatta Pani"
 	label values enum_name enum_name
 
-	label variable enum_code "Enumerator code: Please select from the drop-down list (generates enum code EID)"
-	note enum_code: "Enumerator code: Please select from the drop-down list (generates enum code EID)"
-	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106" 107 "107" 108 "108" 109 "109" 110 "110" 111 "111" 112 "112" 113 "113" 114 "114" 115 "115" 116 "116" 117 "117" 118 "118" 119 "119" 120 "120" 121 "121"
-	label values enum_code enum_code
-
 	label variable resp_available "Did you find a household to interview?"
 	note resp_available: "Did you find a household to interview?"
 	label define resp_available 1 "Household available for interview and opened the door" 2 "Family has left the house permanently" 3 "This is my first visit: The family is temporarily unavailable but might be avail" 4 "This is my 1st re-visit: The family is temporarily unavailable but might be avai" 5 "This is my 2nd re-visit: The revisit within two days is not possible (e.g. all t" 6 "This is my 2nd re-visit: The family is temporarily unavailable (Please leave the"
@@ -193,14 +189,19 @@ if _N>0 {
 
 	label variable water_source_prim "W1) Which water source do you primarily use for drinking?"
 	note water_source_prim: "W1) Which water source do you primarily use for drinking?"
-	label define water_source_prim 1 "Government Provided Household Taps" 2 "Community standpipe" 3 "Manual handpump" 4 "Covered dug well" 5 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 6 "Uncovered dug well" 7 "Private Surface well" -77 "Other"
+	label define water_source_prim 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (connected to piped system, through Vasu" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 7 "Uncovered dug well" 8 "Private Surface well" -77 "Other"
 	label values water_source_prim water_source_prim
 
 	label variable water_prim_oth "W1.2) Please specify other"
 	note water_prim_oth: "W1.2) Please specify other"
 
-	label variable quant "W2) How much of your drinking water for yesterday came from your primary drinkin"
-	note quant: "W2) How much of your drinking water for yesterday came from your primary drinking water source: (\${primary_water_label})?"
+	label variable water_sec_yn "W2) In the past month, did your household use any sources of water for drinking "
+	note water_sec_yn: "W2) In the past month, did your household use any sources of water for drinking besides the one you already mentioned?"
+	label define water_sec_yn 1 "Yes" 0 "No" 999 "Don't know"
+	label values water_sec_yn water_sec_yn
+
+	label variable quant "W2) How much of your drinking water in the past one week came from your primary "
+	note quant: "W2) How much of your drinking water in the past one week came from your primary drinking water source: (\${primary_water_label})?"
 	label define quant 1 "All of it" 2 "Most of it" 3 "Half of it" 4 "Little of it" 5 "None of it" 999 "Don’t know"
 	label values quant quant
 
@@ -209,9 +210,30 @@ if _N>0 {
 
 	label variable water_treat "W6) Do you ever do anything to the water from your primary drinking water source"
 	note water_treat: "W6) Do you ever do anything to the water from your primary drinking water source (\${primary_water_label} ) to make it safe before drinking it?"
+	label define water_treat 1 "Yes" 0 "No" 999 "Don't know"
+	label values water_treat water_treat
 
-	label variable water_treat_type "W7) What do you do to the water from your primary drinking water source to make "
-	note water_treat_type: "W7) What do you do to the water from your primary drinking water source to make it safe?"
+	label variable water_stored "W7) Is the water stored currently in the house treated?"
+	note water_stored: "W7) Is the water stored currently in the house treated?"
+	label define water_stored 1 "Yes" 2 "No" 3 "No stored water currently" 999 "Don't Know"
+	label values water_stored water_stored
+
+	label variable water_treat_type "W8) What do you do to the water to make it safe for drinking?"
+	note water_treat_type: "W8) What do you do to the water to make it safe for drinking?"
+
+	label variable water_treat_when "W9) When do you make the water from your primary drinking water source (\${prima"
+	note water_treat_when: "W9) When do you make the water from your primary drinking water source (\${primary_water_label} ) safe before drinking it?"
+
+	label variable water_treat_when_oth "W9.1) Please specify other:"
+	note water_treat_when_oth: "W9.1) Please specify other:"
+
+	label variable water_stored_freq "W10) How often do you make the water currently stored at home safe for drinking?"
+	note water_stored_freq: "W10) How often do you make the water currently stored at home safe for drinking?"
+	label define water_stored_freq 1 "Once at the time of storing" 2 "Every time the stored water is used" 3 "When the water looks smelly or dirty" 4 "When kids/old people fall sick" 5 "In the monsoons" 6 "In the summers" 7 "In the winters" -77 "Others"
+	label values water_stored_freq water_stored_freq
+
+	label variable water_stored_freq_oth "W10.1) Please specify other:"
+	note water_stored_freq_oth: "W10.1) Please specify other:"
 
 	label variable tap_supply_freq "G1) How often is water supplied from the government provided tap?"
 	note tap_supply_freq: "G1) How often is water supplied from the government provided tap?"
@@ -314,27 +336,35 @@ if _N>0 {
 
 	label variable collect_time "T2) When you collect drinking water, how much time does it take to walk to your "
 	note collect_time: "T2) When you collect drinking water, how much time does it take to walk to your primary water point (\${primary_water_label}), collect water, and return home?"
-	label define collect_time 1 "Water point is on-premises" 2 "< 5 minutes" 3 "5-15 minutes" 4 "15-30 minutes" 5 "30-60 minutes" 6 "> 60 minutes"
+	label define collect_time 1 "Water point is on-premises" 2 "< 5 minutes" 3 "5-14 minutes" 4 "15-29 minutes" 5 "30-59 minutes" 6 ">= 60 minutes"
 	label values collect_time collect_time
 
-	label variable collect_freq "T3) How many times in a week do you collect drinking water?"
-	note collect_freq: "T3) How many times in a week do you collect drinking water?"
+	label variable collect_prim_freq "T3) How many times in a week do you collect drinking water from your primary wat"
+	note collect_prim_freq: "T3) How many times in a week do you collect drinking water from your primary water source (\${primary_water_label}) ?"
 
-	label variable treat_water_before "T3.1) Do you treat the water before drinking in your household?"
-	note treat_water_before: "T3.1) Do you treat the water before drinking in your household?"
+	label variable collect_sec_time "T4) When you collect water, how much time does it take to walk to your secondary"
+	note collect_sec_time: "T4) When you collect water, how much time does it take to walk to your secondary water point, collect water, and return home?"
+	label define collect_sec_time 1 "Water point is on-premises" 2 "< 5 minutes" 3 "5-14 minutes" 4 "15-29 minutes" 5 "30-59 minutes" 6 ">= 60 minutes"
+	label values collect_sec_time collect_sec_time
+
+	label variable collect_sec_freq "T5) How many times in a week do you collect drinking water from your secondary w"
+	note collect_sec_freq: "T5) How many times in a week do you collect drinking water from your secondary water point over the week?"
+
+	label variable treat_water_before "T6) Do you treat the water before drinking in your household?"
+	note treat_water_before: "T6) Do you treat the water before drinking in your household?"
 	label define treat_water_before 1 "Yes" 0 "No" 999 "Don't know"
 	label values treat_water_before treat_water_before
 
-	label variable treat_resp "T4) Who is responsible for treating water before drinking in your household?"
-	note treat_resp: "T4) Who is responsible for treating water before drinking in your household?"
+	label variable treat_resp "T6.1) Who is responsible for treating water before drinking in your household?"
+	note treat_resp: "T6.1) Who is responsible for treating water before drinking in your household?"
 
-	label variable treat_time "T5) When you make your drinking water safe, how much time does it take to comple"
-	note treat_time: "T5) When you make your drinking water safe, how much time does it take to complete the process?"
+	label variable treat_time "T6.2) When you make your drinking water safe, how much time does it take to comp"
+	note treat_time: "T6.2) When you make your drinking water safe, how much time does it take to complete the process?"
 	label define treat_time 1 "< 5 minutes" 2 "5-15 minutes" 3 "15-30 minutes" 4 "30-60 minutes" 5 "> 60 minutes"
 	label values treat_time treat_time
 
-	label variable treat_freq "T6) How many times in a week do you treat your drinking water?"
-	note treat_freq: "T6) How many times in a week do you treat your drinking water?"
+	label variable treat_freq "T6.3) How many times in a week do you treat your drinking water?"
+	note treat_freq: "T6.3) How many times in a week do you treat your drinking water?"
 
 	label variable collect_treat_difficult "T7) How difficult is it to collect and treat your drinking water?"
 	note collect_treat_difficult: "T7) How difficult is it to collect and treat your drinking water?"
@@ -357,7 +387,7 @@ if _N>0 {
 
 	label variable stored_bag_source "A2) What is the source of water for this stored sample?"
 	note stored_bag_source: "A2) What is the source of water for this stored sample?"
-	label define stored_bag_source 1 "Government provided household Taps (supply paani)" 2 "Community standpipe" 3 "Manual handpump" 4 "Covered dug well" 5 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 6 "Uncovered dug well" 7 "Private surface well" -77 "Other (please specify)"
+	label define stored_bag_source 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (connected to piped system, through Vasu" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 7 "Uncovered dug well" 8 "Private surface well" -77 "Other (please specify)"
 	label values stored_bag_source stored_bag_source
 
 	label variable stored_bag_source_oth "A2.1) Please specify other"
@@ -437,7 +467,7 @@ if _N>0 {
 		foreach rgvar of varlist size_container_* {
 			label variable `rgvar' "W4) What is the size of container \${container_nmbr} that you use to collect dri"
 			note `rgvar': "W4) What is the size of container \${container_nmbr} that you use to collect drinking water?"
-			label define `rgvar' 1 "< 5 Liters" 2 "5-10 Liters" 3 "10-15 Liters" 4 "15-20 Liters" 5 "> 20 Liters"
+			label define `rgvar' 1 "< 5 Liters" 2 "5-9 Liters" 3 "10-14 Liters" 4 "15-19 Liters" 5 ">= 20 Liters"
 			label values `rgvar' `rgvar'
 		}
 	}
@@ -446,7 +476,7 @@ if _N>0 {
 		foreach rgvar of varlist source_container_* {
 			label variable `rgvar' "W5) What is the source of the drinking water for this container \${container_nmb"
 			note `rgvar': "W5) What is the source of the drinking water for this container \${container_nmbr} ?"
-			label define `rgvar' 1 "Government provided household Taps (supply paani)" 2 "Community standpipe" 3 "Manual handpump" 4 "Covered dug well" 5 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 6 "Uncovered dug well" 7 "Private surface well" -77 "Other (please specify)"
+			label define `rgvar' 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (connected to piped system, through Vasu" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 7 "Uncovered dug well" 8 "Private surface well" -77 "Other (please specify)"
 			label values `rgvar' `rgvar'
 		}
 	}
@@ -468,7 +498,7 @@ if _N>0 {
 		gen new_data_row=1
 		
 		* pull in old data
-		append using "`dtafile'"
+		append using "`dtafile'", force
 		
 		* drop duplicates in favor of old, previously-imported data if overwrite_old_data is 0
 		* (alternatively drop in favor of new data if overwrite_old_data is 1)

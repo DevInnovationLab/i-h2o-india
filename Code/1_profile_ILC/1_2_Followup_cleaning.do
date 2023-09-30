@@ -15,6 +15,9 @@ use "${DataRaw}1_2_Followup.dta", clear
 /*------------------------------------------------------------------------------
 	1 Deidentify and renaming
 ------------------------------------------------------------------------------*/
+
+capture drop consented1chlorination_perceptio consented1burden_of_water_collec consented1water_quality_testing1
+
 foreach x of var * { 
 	rename `x' R_FU_`x' 
 } 
