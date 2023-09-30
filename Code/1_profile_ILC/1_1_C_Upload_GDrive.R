@@ -27,8 +27,8 @@ user_path <- function() {
   if (user == "asthavohra") { 
     path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
   } 
-  else if (user==""){
-    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  else if (user=="michellecherian"){
+    path = "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
   } 
   else if (user == ""){
     path = ""
@@ -48,8 +48,8 @@ knitr::opts_knit$set(root.dir = user_path())
 # setting github directory
 github_path <- function() {
   user <- Sys.info()["user"]
-  if (user == "asthavohra") {
-    github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  if (user == "michellecherian") {
+    github = "/Users/michellecherian/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user==""){
     github = ""
@@ -71,8 +71,8 @@ user <- Sys.info()["user"]
 if (user == "asthavohra") {
   gdrive = "https://drive.google.com/drive/folders/1KMZWgAgenvU20ac-9kfJUK2spON8owqO"
 } 
-if (user==""){
-  gdrive = ""
+if (user=="michellecherian"){
+  gdrive = "https://drive.google.com/drive/folders/1KMZWgAgenvU20ac-9kfJUK2spON8owqO"
 } 
 if (user == "") {
   gdrive = ""

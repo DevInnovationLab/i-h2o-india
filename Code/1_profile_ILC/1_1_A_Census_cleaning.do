@@ -96,13 +96,16 @@ save `working', replace
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
 
-//2. dropping duplicate case based on field work
-drop if R_Cen_enum_code==104 & R_Cen_hh_code==11 & C_startmin==25
+//2. dropping irrelevant entries
+drop if R_Cen_village_name==88888
+
+//3. dropping duplicate case based on field work
+drop if R_Cen_key=="uuid:c906fcad-e822-4de6-a183-f1c36e1fba9f"
 
 
 
 
-//3. Cleaning the GPS data 
+//4. Cleaning the GPS data 
 // Keeping the most reliable entry of GPS
 
 * Auto
@@ -187,8 +190,9 @@ Case 3 can exist due to data entry issues. This will be fixed below
 preserve
 keep if unique_id_Unique!=1 //for ease of observation and analysis
 duplicates report unique_id R_Cen_a1_resp_name
-bys unique_id R_Cen_a1_resp_name: gen dup_tag= _n
-//sort by submission type; keep the id for 
+//sorting and marking duplicate number by submission time 
+bys unique_id (R_Cen_starttime): gen C_dup_tag= _n
+
 
 //Case 1-
 gen C_new1= 1 if unique_id[_n]==unique_id[_n+1] & R_Cen_a1_resp_name[_n]!=R_Cen_a1_resp_name[_n+1] & R_Cen_a1_resp_name[_n]==""
@@ -209,27 +213,36 @@ keep if C_new1==1 | C_new2==1
  firstrow(var) cell(A1) sheetreplace
 
 
-/*
-***** Step 3: Creating new IDs for obvious duplicates i.e case 3 above
+
+***** Step 3: Creating new IDs for obvious duplicates; keeping the first ID based on the starttime and changing the IDs of the remaining
 use `dups', clear
-keep if C_new3==1
-//Using sequential numbers starting from 500 for duplicate ID cases because we wouldn't encounter so many pregnant women/children U5 in a village
-bys unique_id (R_Cen_starttime):gen C_seq=_n
+keep if C_dup_tag==1
+tempfile dups_part1
+save `dups_part1', replace
+
+
+//Using sequential numbers starting from 500 for remaining duplicate ID cases because we wouldn't encounter so many pregnant women/children U5 in a village
+use `dups', clear
+keep if C_dup_tag>1
+bys unique_id :gen C_seq=_n
 replace R_Cen_hh_code= R_Cen_hh_code+ C_seq + 500
 egen unique_id_new= concat (R_Cen_village_name R_Cen_enum_code R_Cen_hh_code)
-replace unique_id= unique_id_new if C_new3==1
+replace unique_id= unique_id_new 
 
-tempfile dups_final
-save `dups_final', replace
-*/
+tempfile dups_part2
+save `dups_part2', replace
+
 restore
 
 ****Step 4: Appending files with unqiue IDs
 use `working', clear
 drop if unique_id_Unique!=1
-*append using `dups_final', force
+append using `dups_part1', force
+append using `dups_part2', force
 //also append file that comes corrected from the field
 
+
+duplicates report unique_id //final check
 drop unique_id_Unique 
 
 

@@ -32,15 +32,15 @@ format   unique_id_num %15.0gc
 	2 Cleaning (2.1 aaa)
 ------------------------------------------------------------------------------*/
 
-
+/*
   * Formatting dates
     gen FU_day = day(dofc(R_FU_starttime))
 	gen FU_month_num = month(dofc(R_FU_starttime))
 	gen FU_month = word("`c(Mons)'", FU_month_num)
-    egen FU_date = concat(day_fu " " FU_month)
+    *egen FU_date = concat(day_fu " " FU_month)
 	//to change once survey date is fixed - TODO
 	* keep if (day_fu >19 & month_num_fu >=9)  
-
+*/
   // remove the test data once we have actual data coming in  - TODO
     * drop if R_FU_unique_id_1 == 99999
 
@@ -81,9 +81,9 @@ drop if unique_id_num_Unique!=1
 drop unique_id_num_Unique
 
 * In case of replacement households, check if the OG id is not the same as the unique_id
-egen replace_id = concat(R_FU_replacement_id_1 R_FU_replacement_id_2 R_FU_replacement_id_3)
-gen replace_og_id_err = 0 
-replace replace_og_id_err = 1 if replace_id == unique_id_num
+*egen replace_id = concat(R_FU_replacement_id_1 R_FU_replacement_id_2 R_FU_replacement_id_3)
+*gen replace_og_id_err = 0 
+*replace replace_og_id_err = 1 if replace_id == unique_id_num
 * to decide what we do when error in entering replacement's OG id? 
 
 
