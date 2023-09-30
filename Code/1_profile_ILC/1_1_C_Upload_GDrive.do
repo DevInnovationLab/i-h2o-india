@@ -21,4 +21,4 @@
 * Step 1: Uploaded in google sheet
 ***********************************************************************
 
-rscript using "1_1_C_Upload_GDrive.R" 
+rscript using "${Do_pilot}1_1_C_Upload_GDrive.R" 
