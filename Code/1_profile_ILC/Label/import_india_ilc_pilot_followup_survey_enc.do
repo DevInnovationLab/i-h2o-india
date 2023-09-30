@@ -5,7 +5,9 @@
 *	Inputs:  "Baseline follow up survey_WIDE.csv"
 *	Outputs: "Baseline follow up survey.dta"
 *
+
 *	Output by SurveyCTO September 29, 2023 6:16 PM.
+
 
 * initialize Stata
 clear all
@@ -202,7 +204,9 @@ if _N>0 {
 
 	label variable quant "W2) How much of your drinking water in the past one week came from your primary "
 	note quant: "W2) How much of your drinking water in the past one week came from your primary drinking water source: (\${primary_water_label})?"
-	label define quant 1 "All of it" 2 "Most of it" 3 "Half of it" 4 "Little of it" 5 "None of it" 999 "Don't know"
+
+	label define quant 1 "All of it" 2 "Most of it" 3 "Half of it" 4 "Little of it" 5 "None of it" 999 "Don’t know"
+
 	label values quant quant
 
 	label variable quant_containers "W3) How many containers do you collect drinking water in"
@@ -498,7 +502,7 @@ if _N>0 {
 		gen new_data_row=1
 		
 		* pull in old data
-		append using "`dtafile'"
+		append using "`dtafile'", force
 		
 		* drop duplicates in favor of old, previously-imported data if overwrite_old_data is 0
 		* (alternatively drop in favor of new data if overwrite_old_data is 1)

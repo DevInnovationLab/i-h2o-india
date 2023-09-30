@@ -126,7 +126,7 @@ esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", /
 */
 
 //3. Checking time per section by enumerator
-start_from_clean_file_Census
+start_from_clean_file_Census 
 ***need to check with data that comes in on Friday because for the data submitted 25th Sept the duration function is not working
 
 //4. % of HHs drinking JJM tap water
@@ -327,7 +327,7 @@ texsave $Variables using "${Table}Table_Progress.tex", ///
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
-		   R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 ///
+		   R_Cen_a12_water_source_prim_1 R_Cen_a12_water_source_prim_2 R_Cen_a12_water_source_prim_4  ///
 		   R_Cen_a13_water_sec_yn_0 ///
 		   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 ///
 		   R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 ///

@@ -54,6 +54,13 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
 	
+		else if c(username) == "michellecherian" {		
+		global box 		"/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/"
+		global github	"/Users/michellecherian/Documents/GitHub/i-h2o-india/"
+		global Overleaf "/Users/michellecherian/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
+	}
+	
 	global code		     "${github}Code"
 	
 	* Box 
@@ -64,6 +71,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
 	global DataPre  "${pilot}99_Preload/"
+	global Pilotofpilot "${pilot}1_raw/0_Archive/Pilot of pilot"
 	
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
@@ -110,7 +118,7 @@ do "${Do_pilot}0_Preparation.do"
 
 * (1_1_A) Cleaning
 do "${Do_pilot}1_1_A_Census_cleaning.do"
-* Who is incharge
+* Michelle
 * Unit: Household (all)
 * Do we have the system to avoid the non-unique unique_id?
 
