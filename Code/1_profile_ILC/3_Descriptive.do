@@ -272,4 +272,33 @@ foreach i in R_Cen_consent R_FU_consent {
 start_from_clean_file_Follow
 
 
+//1. Checking number of replacements
+	
+tab  R_FU_replacement
+
+//2. Checking number of cases for non consent and reason why not consenting
+
+use "`non_consent_tab'", clear
+gen Consent_provided = R_FU_consent
+label define yesno 1 "Yes" 0 "No" 999 "Don't Know"
+label values Consent_provided yesno
+destring R_FU_reasons_no_consent, gen(Reason_for_non_consent)
+label define reason_nonconsent 1 "Lack of time" 2 "Topic not of interest" -77 "Other"
+label values Reason_for_non_consent reason_nonconsent
+
+groups Consent_provided Reason_for_non_consent, show(f) 
+
+
+//3. Checking number of cases by respondent non availablitity
+ use "`resp_available'", clear
+ tab resp_available 
+
+* output this to overleaf - TODO
+
+	
+* output this to overleaf - TODO
+* Later, add this count of replacement by enum name - TODO
+* Later, add this count of non consent  by enum name - TODO
+
+* tab R_FU_enum_name R_FU_replacement
 	

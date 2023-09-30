@@ -108,16 +108,20 @@ googledrivedb <- paste0(gdrive_path(), "2-data")
 # Connect to the google drive file database
 con <-dbConnect(RSQLite::SQLite(), dbname = googledrivedb)
 
-sheet_append(hh_randomization, ss = sheet_url, sheet = 2)
-
-
+folder <- drive_mkdir("HH_Survey")
+gs_upload(upload_df)
 
 ## Direct storage
 # Create an empty spreadsheet. It is stored as an object with a sheet_id and drive_id 
 ss <- gs4_create(name = "my_spreadsheet", sheets = "Sheet 1")
 
 # Put the data.frame in the spreadsheet and provide the sheet_id so it can be found
-sheet_write(data=, ss = ss, sheet ="Sheet 1")
+sheet_write( ss = ss, sheet ="Sheet 1")
+sheet_id <- drive_find(type = "spreadsheet", n_max = 10, 
+                          pattern = "my_spreadsheet")$id
+
+drive_mv(file = as_id(sheet_id), path = as_id(folder_id))
+
 dbDisconnect(con)
 
 ```

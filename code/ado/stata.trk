@@ -1,4 +1,4 @@
-* 00000019
+* 00000020
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -637,4 +637,29 @@ f m/mrgraph.ado
 f m/mrgraph.hlp
 f _/_mrsvmat.ado
 f _/_mrsvmat.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N groups.pkg
+D 29 Sep 2023
+U 20
+d 'GROUPS': module to list group frequencies
+d 
+d  groups lists the distinct groups of varlist occurring  in the
+d dataset and their frequencies. groups is a wrapper  for list and
+d offers several handles for controlling the  kinds of frequencies
+d shown and their appearance.
+d 
+d KW:  tabulations
+d KW: list
+d 
+d Requires: Stata version 8.0
+d 
+d 
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20180224
+d 
+f g/groups.ado
+f g/groups.sthlp
 e
