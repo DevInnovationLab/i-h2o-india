@@ -40,7 +40,6 @@ format   unique_id_num %15.0gc
 ***Change date prior to running
 	local date "29Sept2023"
 	
-	
 	*gen date = dofc(starttime)
 	*format date %td
 	gen R_Cen_day = day(dofc(R_Cen_starttime))
@@ -101,8 +100,6 @@ drop if R_Cen_village_name==88888
 
 //3. dropping duplicate case based on field work
 drop if R_Cen_key=="uuid:c906fcad-e822-4de6-a183-f1c36e1fba9f"
-
-
 
 
 //4. Cleaning the GPS data 
@@ -241,10 +238,15 @@ append using `dups_part1', force
 append using `dups_part2', force
 //also append file that comes corrected from the field
 
-
 duplicates report unique_id //final check
 drop unique_id_Unique 
 
+* Recreating the unique variable after solving the duplicates
+* Michelle attention needed (from Akito)
+drop unique_id_num unique_id_hyphen
+destring unique_id, gen(unique_id_num)
+format   unique_id_num %15.0gc 
+gen unique_id_hyphen = substr(unique_id, 1,5) + "-"+ substr(unique_id, 6,3) + "-"+ substr(unique_id, 9,3)
 
 
 /*

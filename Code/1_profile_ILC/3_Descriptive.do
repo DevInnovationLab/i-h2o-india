@@ -32,19 +32,19 @@ start_from_clean_file_Population
 expand 2, generate(expand_n)
 replace R_Cen_village_name=99999 if expand_n==1
 
-gen     Census_C=0
-replace Census_C=1 if Census==1 & Treat_V==0
-gen     Census_T=0
-replace Census_T=1 if Census==1 & Treat_V==1
+gen     C_Census_C=0
+replace C_Census_C=1 if C_Census==1 & Treat_V==0
+gen     C_Census_T=0
+replace C_Census_T=1 if C_Census==1 & Treat_V==1
 
-keep Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent Census_C Census_T
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
 *  R_FU_consent Non_R_FU_consent
-collapse  (sum) Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened Census_C Census_T, by(R_Cen_village_name)
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T, by(R_Cen_village_name)
 	label define R_Cen_village_namel 40201 "Bichikote (T)" 50301 "Karlakana (C)" 50501 "Nathma (C)" 88888 "Pilot (village)" 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var Census  "Submission"
+	label var C_Census  "Submission"
 	label var C_Screened  "Screened"	
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refused"
@@ -52,10 +52,10 @@ collapse  (sum) Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_S
 	* label var Non_R_FU_consent "Refused"
 	* label var R_FU_consent "Consented"
 	label var R_Cen_consent "Consented"
-	label var Census_C "Control"
-	label var Census_T "Treatment"
+	label var C_Census_C "Control"
+	label var C_Census_T "Treatment"
 	
-global Variables R_Cen_village_name_str Census C_Screened R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent Census_C Census_T
+global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
 texsave $Variables using "${Table}Table_Progress.tex", ///
         title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{5}{c}{Census}&\multicolumn{2}{c}{By assignment}")
 
@@ -336,7 +336,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
-		   R_Cen_a12_water_source_prim_1 R_Cen_a12_water_source_prim_2 R_Cen_a12_water_source_prim_4  ///
+		   R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77  ///
 		   R_Cen_a13_water_sec_yn_0 ///
 		   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 ///
 		   R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 ///
