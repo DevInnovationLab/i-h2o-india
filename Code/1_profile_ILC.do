@@ -114,11 +114,6 @@ do "${Do_pilot}1_1_A_Census_cleaning.do"
 * Unit: Household (all)
 * Do we have the system to avoid the non-unique unique_id?
 
-* (1_1_B) Picking up the household randomly
-do "${Do_pilot}1_1_B_HH_selection.do"
-* Who is incharge
-* Unit: Household (all)
-
 * (1.2) Cleaning
 do "${Do_pilot}1_2_Followup_cleaning.do"
 * Who is incharge

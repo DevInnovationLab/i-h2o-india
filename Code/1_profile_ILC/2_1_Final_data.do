@@ -63,11 +63,11 @@ foreach i in R_Cen_a13_water_sec_yn {
 * Save final data in STATA/R
 save "${DataFinal}Final_HH_Odisha.dta", replace
 keep if R_Cen_consent==1
-
-  * Akito to drop
-  set seed 1
-	gen  Treat_V=runiform(0,1)
-	recode Treat_V 0/0.5=0 0.5/1=1
+  
+  * Temporal treatment status
+	gen     Treat_V=.
+	replace Treat_V=1 if R_Cen_village_name==40201
+	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501
 	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
 
 save "${DataFinal}Final_HH_Odisha_consented.dta", replace
@@ -84,12 +84,9 @@ replace Selected_b=1 if pc11_sd_id=="`i'"
 encode pc11_sd_id, gen(pc11_sd_id_num)
 keep if Selected_b==1
 append using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", 
-geoinpoly Pointgeolocationlat1 Pointgeolocationlon1 using "${Data_map}phxy"
+geoinpoly Pointgeolocationlat1 Pointgeolocationlon1 using "${Data_map}phxy", inside
 keep if _ID!=.
-* keep _ID Village Selected
-drop pc11_tv_id
-rename _ID pc11_tv_id
-tostring pc11_tv_id, replace
+keep _ID Village Selected village
 save "${Data_map}Village_geo.dta", replace
 */
 
@@ -97,12 +94,16 @@ save "${Data_map}Village_geo.dta", replace
 * Household data for google map *
 *********************************
 use "${DataFinal}Final_HH_Odisha.dta", clear
-keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude
+drop if R_Cen_village_name==88888
+keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude R_Cen_village_name
+keep if R_Cen_a40_gps_latitude!=.
 gen Type=1
+* Adding tank
+append using "${DataFinal}90_Village_Geo.dta"
+replace Type=30 if unique_id=="Tank"
+replace Type=31 if unique_id=="Anganwadi center"
 save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
-export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
-
-
+export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt 
 
 *------------------------------------------------------------ Final data creation ------------------------------------------------------------*
 cap program drop start_from_clean_file_Population
@@ -111,14 +112,18 @@ program define   start_from_clean_file_Population
 use "${DataPre}1_1_Census_cleaned.dta", clear
 gen     Census=1
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent)
-* start_from_clean_file_Census
 
-* 
-gen     Screened=0
-replace Screened=1 if  R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+drop if R_Cen_village_name==88888
+* Temporal treatment status
+	gen     Treat_V=.
+	replace Treat_V=1 if R_Cen_village_name==40201
+	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501
+
+gen     C_Screened=0
+replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+
 recode Merge_C_F 1=0 3=1
-
-foreach i in R_Cen_consent R_FU_consent {
+foreach i in R_Cen_consent R_FU_consent R_Cen_instruction {
 	gen    Non_`i'=`i'
 	recode Non_`i' 0=1 1=0	
 }
@@ -129,6 +134,9 @@ cap program drop start_from_clean_file_Village
 program define   start_from_clean_file_Village
   * Open clean file
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
+egen km_block=rowmin(km_Rayagada km_Kolnara km_Gunupur km_Gudari km_Padmapur) 
+label var km_block "Distance to closest block HQ (km)"
+
 drop if Selected=="Backup"
 
 * Labeling
@@ -160,6 +168,9 @@ cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
   use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
+  
+  drop if R_Cen_village_name==88888
+  
   label var R_Cen_a2_hhmember_count "Household size" 
   
   	label variable R_Cen_a20_jjm_use_1 "Cooking"

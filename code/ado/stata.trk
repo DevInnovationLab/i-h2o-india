@@ -1,4 +1,4 @@
-* 00000019
+* 00000023
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -637,4 +637,121 @@ f m/mrgraph.ado
 f m/mrgraph.hlp
 f _/_mrsvmat.ado
 f _/_mrsvmat.hlp
+e
+S http://fmwww.bc.edu/RePEc/bocode/n
+N nsplit.pkg
+D  1 Oct 2023
+U 20
+d 'NSPLIT': module to split numeric variable into components
+d 
+d  nsplit creates however many new numeric variables it takes to
+d split a numeric variable into the specified digit pattern.  So if
+d you have a date variable where the first two digits are the month
+d and the last 4 digits are the year, you can use nsplit like so:
+d nsplit date, digits(2 4) generate(month year)
+d 
+d KW: numeric variables
+d KW: split
+d KW: digits
+d 
+d Requires: Stata version 8.2
+d 
+d Distribution-Date: 20110226
+d 
+d Author: Dan Blanchette, The Carolina Population Center, UNC-CH
+d Support: email dan_blanchette@@unc.edu
+d 
+f n/nsplit.ado
+f n/nsplit.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/g
+N georoute.pkg
+D  1 Oct 2023
+U 21
+d 'GEOROUTE': module to calculate travel distance and travel time between two addresses or two geographical points
+d 
+d  georoute calculates the georouting distance between two
+d addresses or two geographical points identified by their
+d coordinates. It uses the HERE API (see
+d https://developer.here.com) to retrieve distances in two steps.
+d In the first step, addresses are geocoded and their geographical
+d coordinates (latitude and longitude) are obtained.  In the second
+d step, the georouting distance between the two points is obtained.
+d  The user can also directly provide geographical coordinates,
+d which will bypass the first step.
+d 
+d KW: geography
+d KW: distance
+d KW: travel time
+d KW: geocoding
+d 
+d Requires: Stata version 11 and insheetjson, libjson from SSC (q.v.)
+d 
+d Distribution-Date: 20230804
+d 
+d Author: Sylvain Weber, University of Neuchâtel, Institute of Economic Research
+d Support: email sylvain.weber@@unine.ch
+d 
+d Author: Martin Péclat, University of Neuchâtel, Institute of Economic Research
+d Support: email martin.peclat@@unine.ch
+d 
+f g/georoute.ado
+f g/georoutei.ado
+f g/georoute.sthlp
+f g/georoutei.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/i
+N insheetjson.pkg
+D  1 Oct 2023
+U 22
+d 'INSHEETJSON': module for importing tabular data from JSON sources on the internet
+d 
+d  There are many data sources now out on the Internet "web" that
+d operate by a URL query, and then respond with data formatted in
+d JavaScript Object Notation (JSON). This command is designed  to
+d support querying those sources in a user-configurable way to get
+d just the data you want from the source.
+d 
+d KW: JSON
+d KW: data retrieval
+d 
+d Requires: Stata version 11 and libjson package
+d 
+d Distribution-Date: 20140906
+d 
+d Author: Erik Lindsley
+d Support: email ssc@@holocron.org
+d 
+f i/insheetjson.ado
+f i/insheetjson.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/l
+N libjson.pkg
+D  1 Oct 2023
+U 23
+d 'LIBJSON': module to provide Mata class library for obtaining and parsing JSON strings into object trees
+d 
+d  The libjson class (library) is designed to be called from the
+d Mata environment to perform tasks related  to obtaining a
+d JavaScript Object Notation (JSON) formatted response from the
+d file or website URL (via a REST API). Most users will want to
+d write an ado file that employs the libjson object to do all the
+d heavy lifting, with  the final tailoring of the output to be
+d handled by the ado file.
+d 
+d KW: Mata
+d KW: JSON
+d KW: JavaScript
+d KW: object trees
+d 
+d Requires: Stata version 11
+d 
+d Distribution-Date: 20140906
+d 
+d Author: Erik Lindsley
+d Support: email ssc@@holocron.org
+d 
+f l/libjson.sthlp
+f l/libjson.mlib
+f l/libjson_source.mata
 e
