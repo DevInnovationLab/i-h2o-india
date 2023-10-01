@@ -42,7 +42,8 @@ end
 * Step 1: Cleaning and sample selection *
 *****************************************
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
-    local Village_R 88888
+//1. Put the village code of the village for randomization
+    local Village_R 40201 
     keep if R_Cen_village_name==`Village_R'	
 
 keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking
@@ -76,11 +77,9 @@ recode  S_BLWQ 11/15=20 16/99999=0
 replace S_BLS=S_BLWQ
 recode  S_BLS 1/10=1 20=2 0=0
 
-label define S_BLSl 1 "Primary" 2 "Secondary" 0 "No visit", modify
+label define S_BLSl 1 "Primary" 2 "Replacement" 0 "No visit", modify
 label values S_BLS S_BLSl
 
-label define S_BLWQl 1 "R1" 2 "R2" 3 "R3" 4 "R4" 5 "R5" 6 "R6" 7 "R7" 8 "R8" 9 "R9" 10 "R10" 20 "Secondary" 0 "No visit" , modify
-label values S_BLWQ S_BLWQl
 
 save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 
@@ -89,11 +88,20 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 *******************************************************
 * You need to understand each line to work on this do file
 * Only the village where we complete the randomization should be included in the merge list
+use "${DataPre}Selected_50501_30 Sep 2023.dta", clear
+append using "${DataPre}Selected_40201_30 Sep 2023.dta"
+save "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", replace
+
 
 use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
-merge 1:1 unique_id using "${DataPre}Selected_88888_28 Sep 2023.dta", keep(master matched) gen(Merge_WS)
+merge 1:1 unique_id using "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", keep(master matched) gen(Merge_WS)
 
+label define S_BLWQl 1 "Water sample : Yes" 2 "Water sample : Yes" 3 "Water sample : Yes" 4 "Water sample : Yes" 5 "Water sample backup: 1" 6 "Water sample backup: 2" 7 "Water sample backup: 3" 8 "Water sample backup: 4" 9 "Water sample backup: 5" 10 "Water sample backup: 6" 20 "Replacement HH" 0 "No visit" , modify
+label values S_BLWQ S_BLWQl
+
+
+//Cleaning the name of the household head
 rename R_Cen_a10_hhhead R_Cen_a10_hhhead_num
 
 gen     R_Cen_a10_hhhead=""
@@ -113,7 +121,7 @@ decode R_Cen_village_name, gen(R_Cen_village_name_str)
 * Adding_Ram
 * Add Sahi later
 sort  S_BLS S_BLWQ
-export excel unique_id $Var_Select R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name using "${DataPre}Followup_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 * drop if unique_id==99999999999 (Drop if Ram: Commenting out since we do not want Ram in the actaul data collection)
 
 ***********************************************************************
@@ -125,4 +133,12 @@ gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name Date_Random S_BLWQ R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude using "${pilot}Supervisor_HH_Tracker_Baseline.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt
+gen Enumerator_Assigned= ""
+
+
+
+sort R_Cen_village_name_str S_BLWQ
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_30 Sep 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+
+sort R_Cen_village_name_str S_BLWQ
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Date_Random Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_30 Sep 2023_Call Astha.xlsx", sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt

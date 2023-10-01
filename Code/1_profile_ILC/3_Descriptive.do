@@ -160,7 +160,7 @@ esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", /
 */
 
 //3. Checking time per section by enumerator
-start_from_clean_file_Census
+start_from_clean_file_Census 
 ***need to check with data that comes in on Friday because for the data submitted 25th Sept the duration function is not working
 
 //4. % of HHs drinking JJM tap water
@@ -336,7 +336,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
-		   R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 ///
+		   R_Cen_a12_water_source_prim_1 R_Cen_a12_water_source_prim_2 R_Cen_a12_water_source_prim_4  ///
 		   R_Cen_a13_water_sec_yn_0 ///
 		   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 ///
 		   R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 ///
@@ -541,4 +541,33 @@ foreach i in R_Cen_consent R_FU_consent {
 start_from_clean_file_Follow
 
 
+//1. Checking number of replacements
+	
+tab  R_FU_replacement
+
+//2. Checking number of cases for non consent and reason why not consenting
+
+use "`non_consent_tab'", clear
+gen Consent_provided = R_FU_consent
+label define yesno 1 "Yes" 0 "No" 999 "Don't Know"
+label values Consent_provided yesno
+destring R_FU_reasons_no_consent, gen(Reason_for_non_consent)
+label define reason_nonconsent 1 "Lack of time" 2 "Topic not of interest" -77 "Other"
+label values Reason_for_non_consent reason_nonconsent
+
+groups Consent_provided Reason_for_non_consent, show(f) 
+
+
+//3. Checking number of cases by respondent non availablitity
+ use "`resp_available'", clear
+ tab resp_available 
+
+* output this to overleaf - TODO
+
+	
+* output this to overleaf - TODO
+* Later, add this count of replacement by enum name - TODO
+* Later, add this count of non consent  by enum name - TODO
+
+* tab R_FU_enum_name R_FU_replacement
 	

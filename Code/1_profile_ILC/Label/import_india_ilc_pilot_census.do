@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline Census_WIDE.csv"
 *	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO September 26, 2023 9:29 PM.
+*	Output by SurveyCTO September 29, 2023 10:23 PM.
 
 * initialize Stata
 clear all
@@ -28,11 +28,11 @@ local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum survey_duration hamlet_name saahi_name hh_code_format unique_id landmark address intro_dur_end enum_name_label no_consent_reason no_consent_oth"
 local text_fields2 "no_consent_comment consent_dur_end a1_resp_name hh_member_names_count namenumber_* a3_hhmember_name_* namefromearlier_* a5_relation_oth_* a6_age_confirm2_* a5_autoage_* fam_name1 fam_name2 fam_name3"
 local text_fields3 "fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14 fam_name15 fam_name16 fam_name17 fam_name18 fam_name19 fam_name20 female_above12"
-local text_fields4 "num_femaleabove12 adults_hh_above12 num_adultsabove12 a11_oldmale_name sectionb_dur_end a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth a14_sec_source_reason"
-local text_fields5 "sec_source_reason_oth a15_water_sec_freq_oth a16_water_treat_type a16_water_treat_oth a16_water_treat_freq a16_treat_freq_oth stored_treat_freq_oth water_prim_kids_oth water_treat_kids_type"
-local text_fields6 "water_treat_kids_oth a17_treat_kids_freq treat_kids_freq_oth sectionc_dur_end a18_reason_nodrink a18_water_treat_oth a20_jjm_use a20_jjm_use_oth sectiond_dur_end pregnant_followup_count"
-local text_fields7 "pregnant_index_* get_pregnant_status_* pregwoman_* sectione_dur_end child_followup_count child_index_* get_u5_status_* u5child_* sectionf_dur_end a35_poultry sectiong_dur_end a36_castename"
-local text_fields8 "phone_number_count a39_phone_name_* a39_phone_num_* sectionh_dur_end a41_end_comments survey_member_names_count surveynumber_* instanceid instancename"
+local text_fields4 "num_femaleabove12 adults_hh_above12 num_adultsabove12 children_below12 num_childbelow12 a11_oldmale_name sectionb_dur_end a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth"
+local text_fields5 "a14_sec_source_reason sec_source_reason_oth a15_water_sec_freq_oth a16_water_treat_type a16_water_treat_oth a16_water_treat_freq a16_treat_freq_oth stored_treat_freq_oth water_prim_kids_oth"
+local text_fields6 "water_treat_kids_type water_treat_kids_oth a17_treat_kids_freq treat_kids_freq_oth sectionc_dur_end a18_reason_nodrink a18_water_treat_oth a20_jjm_use a20_jjm_use_oth sectiond_dur_end"
+local text_fields7 "pregnant_followup_count pregnant_index_* get_pregnant_status_* pregwoman_* sectione_dur_end child_followup_count child_index_* get_u5_status_* u5child_* sectionf_dur_end a35_poultry sectiong_dur_end"
+local text_fields8 "a36_castename phone_number_count a39_phone_name_* a39_phone_num_* sectionh_dur_end a41_end_comments survey_member_names_count surveynumber_* instanceid instancename"
 local date_fields1 "a6_dob_*"
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -164,8 +164,8 @@ if _N>0 {
 	label define enum_code 101 "101" 102 "102" 103 "103" 104 "104" 105 "105" 106 "106" 107 "107" 108 "108" 109 "109" 110 "110" 111 "111" 112 "112" 113 "113" 114 "114" 115 "115" 116 "116" 117 "117" 118 "118" 119 "119" 120 "120" 121 "121"
 	label values enum_code enum_code
 
-	label variable hh_code "NEW: Assign a number to the household you are visiting based on how many you hav"
-	note hh_code: "NEW: Assign a number to the household you are visiting based on how many you have visited in this village. If you are working in the same village as the previous day, use sequential numbers."
+	label variable hh_code "Assign a number to the household you are visiting based on how many you have vis"
+	note hh_code: "Assign a number to the household you are visiting based on how many you have visited in this village. If you are working in the same village as the previous day, use sequential numbers."
 
 	label variable hh_repeat_code "Repeat the number of the household you are visiting"
 	note hh_repeat_code: "Repeat the number of the household you are visiting"
@@ -534,6 +534,11 @@ if _N>0 {
 	label define a37_caste 1 "Scheduled caste" 2 "Scheduled tribe" 3 "Other backward caste" 4 "None of the above" 999 "Don't know"
 	label values a37_caste a37_caste
 
+	label variable time_availability "What is a good time to visit you in the next two days?"
+	note time_availability: "What is a good time to visit you in the next two days?"
+	label define time_availability 1 "5:00am - 6:00am" 2 "6:00am - 7:00am" 3 "7:00am - 8:00am" 4 "8:00am - 9:00am" 5 "9:00am - 10:00am" 6 "10:00am - 11:00am" 7 "11:00am - 12:00pm" 8 "12:00pm - 1:00pm" 9 "1:00pm - 2:00pm" 10 "2:00pm - 3:00pm" 11 "3:00pm - 4:00pm" 12 "4:00pm - 5:00pm" 13 "5:00pm - 6:00pm" 14 "6:00pm - 7:00pm"
+	label values time_availability time_availability
+
 	label variable a40_gps_manuallatitude "A40.1) Please record the GPS location of this household (latitude)"
 	note a40_gps_manuallatitude: "A40.1) Please record the GPS location of this household (latitude)"
 
@@ -567,8 +572,8 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist a3_hhmember_name_* {
-			label variable `rgvar' "A3) What is the name of household member ?"
-			note `rgvar': "A3) What is the name of household member ?"
+			label variable `rgvar' "A3) What is the name of household member \${namenumber}?"
+			note `rgvar': "A3) What is the name of household member \${namenumber}?"
 		}
 	}
 
@@ -663,8 +668,8 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist a7_pregnant_leave_* {
-			label variable `rgvar' "A7.3) When does \${namefromearlier} plan to leave the house (record in months)?"
-			note `rgvar': "A7.3) When does \${namefromearlier} plan to leave the house (record in months)?"
+			label variable `rgvar' "A7.3) How long is \${namefromearlier} planning to stay in the house (record in m"
+			note `rgvar': "A7.3) How long is \${namefromearlier} planning to stay in the house (record in months)?"
 		}
 	}
 
@@ -706,8 +711,8 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist a9_school_current_* {
-			label variable `rgvar' "A9.2) Is \${namefromearlier} currently going to school?"
-			note `rgvar': "A9.2) Is \${namefromearlier} currently going to school?"
+			label variable `rgvar' "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
+			note `rgvar': "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
 			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
 			label values `rgvar' `rgvar'
 		}
@@ -891,8 +896,8 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_breastfeeding_* {
-			label variable `rgvar' "A45) Was/Is \${U5child} (being) exclusively breasfed (not drinking any water)?"
-			note `rgvar': "A45) Was/Is \${U5child} (being) exclusively breasfed (not drinking any water)?"
+			label variable `rgvar' "A45) Was OR Is \${U5child} (being) exclusively breasfed (not drinking any water)"
+			note `rgvar': "A45) Was OR Is \${U5child} (being) exclusively breasfed (not drinking any water)?"
 			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
 			label values `rgvar' `rgvar'
 		}
@@ -1103,7 +1108,7 @@ if _N>0 {
 	}
 
 
-
+/*
 
 	* append old, previously-imported data (if any)
 	cap confirm file "`dtafile'"
@@ -1124,19 +1129,23 @@ if _N>0 {
 		* drop new-data flag
 		drop new_data_row
 	}
-	
+	*/
 	* save data to Stata format
 	save "`dtafile'", replace
 
-	* show codebook and notes
-	codebook
-	notes list
+	
 }
 
+/*
+
+* show codebook and notes
+	codebook
+	notes list
 disp
 disp "Finished import of: `csvfile'"
 disp
-
+*/
+/*
 * OPTIONAL: LOCALLY-APPLIED STATA CORRECTIONS
 *
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections

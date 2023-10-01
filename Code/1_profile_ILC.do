@@ -54,6 +54,20 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
 	
+		else if c(username) == "michellecherian" {		
+		global box 		"/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/"
+		global github	"/Users/michellecherian/Documents/GitHub/i-h2o-india/"
+		global Overleaf "/Users/michellecherian/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
+	}
+	
+
+	else if c(username) == "asthavohra" {		
+		global box 		"/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/"
+		global github	"/Users/asthavohra/Documents/GitHub/i-h2o-india/"
+		global Overleaf "/Users/asthavohra/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
+	}
 	global code		     "${github}Code"
 	
 	* Box 
@@ -64,6 +78,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
 	global DataPre  "${pilot}99_Preload/"
+	global Pilotofpilot "${pilot}1_raw/0_Archive/Pilot of pilot"
 	
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
@@ -77,9 +92,9 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	cd "${DataRaw}"
 
 /*------------------------------------------------------------------------------
-	3 Initial settings
+	3 Initial settings 
 ------------------------------------------------------------------------------*/
-
+* NOTE: Make sure you also paste the downloaded package ado files to your source ado files for Stata
 	* Find user-written commands in GitHub
 	sysdir set  PLUS "${code}/ado"
 	
@@ -90,6 +105,10 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	ieboilstart, v(16.0)
 	`r(version)'
 	set scheme s2color
+	
+	* Set initial configurations to be able to run R script in Stata
+	*net from http://www.stata.com/statausers/packages
+    *net install rscript
 	
 /*------------------------------------------------------------------------------
 	4 Run code
@@ -110,9 +129,16 @@ do "${Do_pilot}0_Preparation.do"
 
 * (1_1_A) Cleaning
 do "${Do_pilot}1_1_A_Census_cleaning.do"
-* Who is incharge
+* Michelle
 * Unit: Household (all)
 * Do we have the system to avoid the non-unique unique_id?
+
+/*
+* (1_1_C) Uploading selected Household data to Google Drive for HH Survey
+do "${Do_pilot}1_1_C_Upload_GDrive.do"
+* Astha
+* Unit: Household (all)
+*/
 
 * (1.2) Cleaning
 do "${Do_pilot}1_2_Followup_cleaning.do"
