@@ -11,6 +11,10 @@
 ** In this do file: 
 	* This do file exports.....
 	
+	* Loocation of Nathma
+	* Tank Location
+	* HH survey: After selection code is over
+	
 do "${Do_pilot}2_1_Final_data.do"
 
 /* Example: 
@@ -19,20 +23,49 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
        topf("${Table}top.tex") botf("${Table}bot.tex")
 */
 
-/*------------------------------------------------------------------------------
-	1 Descriptive Statistics: Census
-------------------------------------------------------------------------------*/
-
-//1. Checking number of screened and screened out cases by enumerator
 
 /*----------------------------------------------
-2) Descriptive table
-   Village level
+* 1) Progress table *
 ----------------------------------------------*/
-
-* Michelle add more variables and enumerators
+* Title: Overall statistics of recruitment and program registration
 start_from_clean_file_Population
-global All Screened R_Cen_consent R_FU_consent
+expand 2, generate(expand_n)
+replace R_Cen_village_name=99999 if expand_n==1
+
+gen     Census_C=0
+replace Census_C=1 if Census==1 & Treat_V==0
+gen     Census_T=0
+replace Census_T=1 if Census==1 & Treat_V==1
+
+keep Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent Census_C Census_T
+*  R_FU_consent Non_R_FU_consent
+collapse  (sum) Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened Census_C Census_T, by(R_Cen_village_name)
+	label define R_Cen_village_namel 40201 "Bichikote (T)" 50301 "Karlakana (C)" 50501 "Nathma (C)" 88888 "Pilot (village)" 99999 "Total", modify
+	label values R_Cen_village_name R_Cen_village_namel
+	
+	decode R_Cen_village_name, gen(R_Cen_village_name_str)
+	label var Census  "Submission"
+	label var C_Screened  "Screened"	
+	label var R_Cen_village_name_str "Village"
+	label var Non_R_Cen_consent "Refused"
+	label var Non_R_Cen_instruction "No resp"
+	* label var Non_R_FU_consent "Refused"
+	* label var R_FU_consent "Consented"
+	label var R_Cen_consent "Consented"
+	label var Census_C "Control"
+	label var Census_T "Treatment"
+	
+global Variables R_Cen_village_name_str Census C_Screened R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent Census_C Census_T
+texsave $Variables using "${Table}Table_Progress.tex", ///
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{5}{c}{Census}&\multicolumn{2}{c}{By assignment}")
+
+/*----------------------------------------------
+2) Descriptive table: Enumerator level
+----------------------------------------------*/
+* Michelle add more variables and enumerators
+//1. Checking number of screened and screened out cases by enumerator
+start_from_clean_file_Population
+global All C_Screened R_Cen_consent R_FU_consent
 local All "Table by enumerator"
 local LabelAll "MainEnum"
 local ScaleAll "1"
@@ -60,6 +93,7 @@ esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", /
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
+
 
 /* PLEASE INCLUDE WHAT YOU WERE THINKING IN ONE TABLE
 	*screened out
@@ -233,10 +267,11 @@ start_from_clean_file_Census
 
 /*----------------------------------------------
 2) Descriptive table
-   Village level
+Village level
 ----------------------------------------------*/
-
-global All BlockCode_1 BlockCode_2 BlockCode_3 BlockCode_4 BlockCode_5 Panchatvillage V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
+global All BlockCode_1 BlockCode_2 BlockCode_3 BlockCode_4 BlockCode_5 Panchatvillage ///
+           V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
+		   km_block
 
 local All "Pre-survey balance among treatment arms by village"
 local LabelAll "MainVillage"
@@ -297,33 +332,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 }
 
 /*----------------------------------------------
-* 1) Progress table *
-----------------------------------------------*/
-* Title: Overall statistics of recruitment and program registration
-start_from_clean_file_Population
-expand 2, generate(expand_n)
-replace R_Cen_village_name=99999 if expand_n==1
-keep Census Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-collapse  (sum) Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent Screened, by(R_Cen_village_name)
-	label define R_Cen_village_namel 88888 "Pilot (village)" 99999 "Total", modify
-	label values R_Cen_village_name R_Cen_village_namel
-	
-	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var Census  "Submission"
-	label var Screened  "Screened"	
-	label var R_Cen_village_name_str "Village"
-	label var Non_R_Cen_consent "Refused"
-	label var Non_R_FU_consent "Refused"
-	label var R_FU_consent "Consented"
-	label var R_Cen_consent "Consented"
-	
-global Variables R_Cen_village_name_str Census Screened R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{4}{c}{Census}&\multicolumn{2}{c}{Follow up}")
-
-/*----------------------------------------------
-2) Descriptive table
-   Census
+2) Descriptive table: Census (Treatment)
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
@@ -347,21 +356,21 @@ start_from_clean_file_Census
 
 * Mean
 	eststo  model0: estpost summarize $`k'
-/* Diff
+* Diff
 	eststo  model1: estpost summarize $`k' if Treat_V==0
 	eststo  model2: estpost summarize $`k' if Treat_V==1
 	
 start_from_clean_file_Census
 	foreach i in $`k' {
-	reg `i' i.Treat_V
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model4: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 
 	* Significance
 start_from_clean_file_Census
 	foreach i in $`k' {
-	reg `i' i.Treat_V
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
 	matrix b = r(table)
 	scalar p_1 = b[4,2]
 	replace `i'=99996 if p_1> 0.1
@@ -369,31 +378,32 @@ start_from_clean_file_Census
 	replace `i'=99998 if p_1<= 0.05
 	replace `i'=99999 if p_1<=0.01
 	}
-	eststo model5: estpost summarize $`k'
+	eststo model4: estpost summarize $`k'
 	
 	* P-value
 start_from_clean_file_Census
 	foreach i in $`k' {
-	reg `i' i.Treat_V
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
 	matrix b = r(table)
 	scalar p_1 = b[4,2]
 	replace `i'=p_1
 	}
-	eststo  model6: estpost summarize $`k'
-*/
+	eststo  model5: estpost summarize $`k'
+
 * Min
+start_from_clean_file_Census
 	foreach i in $`k' {
 	egen m_`i'=min(`i')
 	replace `i'=m_`i'
 	}
-	eststo  model4: estpost summarize $`k'
+	eststo  model6: estpost summarize $`k'
 * Max
 	start_from_clean_file_Census
 	foreach i in $`k' {
 	egen m_`i'=max(`i')
 	replace `i'=m_`i'
 	}
-	eststo model5: estpost summarize $`k'
+	eststo model7: estpost summarize $`k'
 * Missing 
 	start_from_clean_file_Census
 	foreach i in $`k' {
@@ -401,12 +411,47 @@ start_from_clean_file_Census
 	egen m_`i'=sum(`i'_M)
 	replace `i'=m_`i'
 	}
-	eststo  model6: estpost summarize $`k'
+	eststo  model8: estpost summarize $`k'
 * esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
-esttab model0 model4 model5 model6 using "${Table}Main_Balance_Census.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Min}" "\shortstack[c]{Max}" "Missing") ///
+esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Balance_Census.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "C" "T" "Diff" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _\\" "" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
+}
+
+/*----------------------------------------------
+2) Descriptive table: Census (Village)
+----------------------------------------------*/
+start_from_clean_file_Census
+local All "Baseline balance among villages"
+local LabelAll "Maintable"
+local ScaleAll "1"
+local NoteAll "Notes: This table presents the household characteristics from the census. The table is autocreated by 3_Descriptive.do."
+
+foreach k in All {
+start_from_clean_file_Census
+
+* Mean
+	eststo  model0: estpost summarize $`k'
+* Sub-category
+	eststo  model1: estpost summarize $`k' if R_Cen_village_name==40201
+	eststo  model2: estpost summarize $`k' if R_Cen_village_name==50301
+	eststo  model3: estpost summarize $`k' if R_Cen_village_name==50501
+	
+* esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
+esttab model0  model1  model2 model3 using "${Table}Main_Village_Census.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("Total" "Bichikote" "Karlakana" "Nathma" "Sig" "P-value" "Min" "Max" "Missing") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
 				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
@@ -424,6 +469,7 @@ esttab model0 model4 model5 model6 using "${Table}Main_Balance_Census.tex", ///
 ----------------------------------------------*/
 * shp2dta using ${Data_map}village.shp, database(${Data_map}phdb) coordinates(${Data_map}phxy) genid(id) genc(c) replace
 * Source: https://www.devdatalab.org/shrug_download/
+use "${Data_map}Village_geo.dta", clear
 
 * Village shape file
 use "${Data_map}phdb.dta",clear
@@ -431,47 +477,50 @@ use "${Data_map}phdb.dta",clear
 * Selecting the areas of study
 drop if pc11_tv_id=="000000"
 gen    Selected_b=0
-foreach i in 03196 03197 03198 03199 03200 03201 03202 03204 03205 03207 03176 {
-replace Selected_b=1 if pc11_sd_id=="`i'"
+foreach i in 428438 {
+replace Selected_b=1 if id==`i'
 }
 keep if Selected_b==1
 encode pc11_sd_id, gen(pc11_sd_id_num)
 
-* Mark for selected village
-merge 1:1 pc11_tv_id using "${Data_map}Village_geo.dta", keepusing(Village Selected village_IDinternal) gen(Merge_selected)
+* Mark for selected village:  
+rename id _ID
+merge 1:1 _ID using "${Data_map}Village_geo.dta", gen(Merge_selected)
 replace pc11_sd_id_num=. if Merge_selected==3
 replace Village=Village + "*" if Selected=="Backup"
 savesome x_c y_c Village using "${Data_map}Village_label.dta", replace
 
-* Village map
+/* Village map
 spmap pc11_sd_id_num using "${Data_map}phxy" , id(id) clnumber(9) fcolor(Blues) ndfcolor(red) ///
 	  ndlabel("Selected") ///
 	  label(data("${Data_map}Village_label.dta") x(x_c) y(y_c) label(Village) size(vsmall) color(orange))
 graph export "${Figure}Map_villages.eps", replace  
+*/
 
 * Adding the location of the HH
 append using "${DataDeid}1_1_Census_cleaned_noid_maplab.dta"
-count
-local observation = `r(N)'+1
-set obs `observation'
-replace  R_Cen_a40_gps_latitude=19.18 in `observation'
-replace  R_Cen_a40_gps_longitude=83.41824 in `observation'
-replace  Type=2 in `observation'
-
-label define Typel 1 "Census" 2 "Baseline - Water Survey", modify
+label define Typel 1 "Census" 2 "Baseline - Water Survey" 30 "Tank" 31 "Anganwadi center", modify
 	label values Type Typel
 
 * Houseeholds map
-foreach i in 10101 10201 10301 10401 ///
+/*
+10101 10201 10301 10401 ///
              20101 ///
 			 30101 30201 30202 30301 30401 30501 30502 30601 30602 ///
-			 40201 40202 40203 40204 40401 ///
-			 50101 50201 50301 50401 50402 50501 ///
- {
-* spmap using "${Data_map}phxy" if  village_IDinternal =="`i'" |  village_IDinternal =="", id(id) 
-* graph export "${Figure}Map_`i'.eps", replace  
+			  40202 40203 40204 40401 ///
+			 50101 50201  50401 50402  ///
+*/
+gen Map_ID=.
+replace Map_ID=40201  if _ID==428438
+replace Map_ID=50301  if _ID==428011
+replace Map_ID=50501  if _ID==428157
+   
+foreach i in 40201 50301 50501 {
+spmap using "${Data_map}phxy" if  Map_ID==`i', id(_ID) ///
+      point(x(R_Cen_a40_gps_longitude) y(R_Cen_a40_gps_latitude) select(keep if R_Cen_village_name==`i') legenda(on) fcolor(Rainbow) by(Type) size(1 2))
+graph export "${Figure}Map_`i'.eps", replace  
 }	  
-* label(data("${Data_map}Village_label.dta") x(x_c) y(y_c) label(Village) size(tiny))
+
 
 /*--------------------
 * 1) Tables
