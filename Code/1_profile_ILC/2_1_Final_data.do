@@ -82,8 +82,6 @@ destring R_Cen_a12_water_source_prim, replace
 	label variable R_Cen_a13_water_source_sec_7 "Surface water"
 	label variable R_Cen_a13_water_source_sec_8 "Private surface well"
 	label variable R_Cen_a13_water_source_sec__77 "Other"
-	
-
 
 	label variable R_Cen_a16_water_treat_type_1 "Filter through cloth/sieve" 
 	label variable R_Cen_a16_water_treat_type_2 "Letting water stand" 
@@ -92,8 +90,6 @@ destring R_Cen_a12_water_source_prim, replace
 	label variable R_Cen_a16_water_treat_type__77 "Other"
 	label variable R_Cen_a16_water_treat_type_999 "Don't know"
 
-
-/*
 * Create Dummy
 * -77 to 77
 foreach i in R_Cen_a12_water_source_prim  {
@@ -118,7 +114,6 @@ foreach i in R_Cen_a13_water_sec_yn {
 		label var `v'_`value' "`: label (`v') `value''"
 	}
 	}
-*/
 
 * Save final data in STATA/R
 save "${DataFinal}Final_HH_Odisha.dta", replace
