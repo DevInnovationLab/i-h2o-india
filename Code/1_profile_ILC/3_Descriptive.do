@@ -40,7 +40,7 @@ replace C_Census_T=1 if C_Census==1 & Treat_V==1
 keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T, by(R_Cen_village_name)
-	label define R_Cen_village_namel 40201 "Bichikote (T)" 50301 "Karlakana (C)" 50501 "Nathma (C)" 88888 "Pilot (village)" 99999 "Total", modify
+	label define R_Cen_village_namel 40201 "Bichikote (T)" 50301 "Karlakana (C)" 50501 "Nathma (C)"  99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -92,10 +92,10 @@ start_from_clean_file_Population
 	** ADD MORE
 		
 esttab model0 model104 model105 model106 model107 model108 model109 model110 model111 model113 model115 model117 model119 using "${Table}Main_Enum_Census.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{SantoshKumar}" "\shortstack[c]{BibharPankaj}" ///
-	   "\shortstack[c]{MadhusmitaSamal}" "\shortstack[c]{RekhaBehera}" "\shortstack[c]{SanjuktaChichuan}" "\shortstack[c]{SwagatikaBehera}" ///
-	   "\shortstack[c]{SaritaBhatra}" "\shortstack[c]{AbhishekRath}" "\shortstack[c]{ManguluBagh}" "\shortstack[c]{KunaCharan}" ///
-	   "\shortstack[c]{PramodiniGahir}") substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{Santosh\\Kumar}" "\shortstack[c]{Bibhar\\Pankaj}" ///
+	   "\shortstack[c]{Madhusmita\\Samal}" "\shortstack[c]{Rekha\\Behera}" "\shortstack[c]{Sanjukta\\Chichuan}" "\shortstack[c]{Swagatika\\Behera}" ///
+	   "\shortstack[c]{Sarita\\Bhatra}" "\shortstack[c]{Abhishek\\Rath}" "\shortstack[c]{Mangulu\\Bagh}" "\shortstack[c]{Kuna\\Charan}" ///
+	   "\shortstack[c]{Pramodini\\Gahir}") substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
@@ -176,38 +176,16 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
 
-/*--------------------------------------------------------
-2) Descriptive table: Census (Treatment) Progress table
-----------------------------------------------------------*/
-* Title: Overall statistics of recruitment and program registration
-start_from_clean_file_Population
-expand 2, generate(expand_n)
-replace R_Cen_village_name=99999 if expand_n==1
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent C_Screened, by(R_Cen_village_name)
-	label define R_Cen_village_namel 88888 "Pilot (village)" 99999 "Total", modify
-	label values R_Cen_village_name R_Cen_village_namel
-	
-	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var C_Census  "Submission"
-	label var C_Screened  "Screened"	
-	label var R_Cen_village_name_str "Village"
-	label var Non_R_Cen_consent "Refused"
-	label var Non_R_FU_consent "Refused"
-	label var R_FU_consent "Consented"
-	label var R_Cen_consent "Consented"
-	
-global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{4}{c}{Census}&\multicolumn{2}{c}{Follow up}")
 
 /*----------------------------------------------
 2) Descriptive table
    Census
 ----------------------------------------------*/
 start_from_clean_file_Census
-global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
-		   R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77  ///
+global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 
+		   
+		   
+global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77  ///
 		   R_Cen_a13_water_sec_yn_0 ///
 		   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 ///
 		   R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 ///
@@ -217,12 +195,15 @@ global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
 		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 ///
 		   R_Cen_a16_water_treat_1
 
-local All "Baseline balance among treatment arms"
+local demographics "Baseline balance among treatment arms- Household demographics"
+local primary_water "Baseline balance among treatment arms- Primary water source"
 local LabelAll "MaintableHH"
 local ScaleAll "1"
-local NoteAll "Notes: This table presents the household characteristics from the census. The table is autocreated by 3_Descriptive.do."
+local Notedemographics "Notes: This table presents the household demographics from the census. The table is autocreated by 3_Descriptive.do."
+local Noteprimary_water "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
 
-foreach k in All {
+
+foreach k in demographics primary_water {
 start_from_clean_file_Census
 
 * Mean
@@ -284,7 +265,7 @@ start_from_clean_file_Census
 	}
 	eststo  model8: estpost summarize $`k'
 * esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
-esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Balance_Census.tex", ///
+esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Balance_Census_`k'.tex", ///
 	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "C" "T" "Diff" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
