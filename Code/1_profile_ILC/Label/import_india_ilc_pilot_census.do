@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline Census_WIDE.csv"
 *	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO September 29, 2023 10:23 PM.
+*	Output by SurveyCTO October 1, 2023 10:37 PM.
 
 * initialize Stata
 clear all
@@ -346,7 +346,7 @@ if _N>0 {
 
 	label variable a18_jjm_drinking "A18) Do you use the government provided household tap for drinking?"
 	note a18_jjm_drinking: "A18) Do you use the government provided household tap for drinking?"
-	label define a18_jjm_drinking 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label define a18_jjm_drinking 0 "No" 1 "Yes" 2 "Do not have a government tap connection"
 	label values a18_jjm_drinking a18_jjm_drinking
 
 	label variable a18_reason_nodrink "A18.1) What is the reason for not using this household tap for drinking?"
@@ -1108,7 +1108,7 @@ if _N>0 {
 	}
 
 
-/*
+
 
 	* append old, previously-imported data (if any)
 	cap confirm file "`dtafile'"
@@ -1129,23 +1129,20 @@ if _N>0 {
 		* drop new-data flag
 		drop new_data_row
 	}
-	*/
+	
 	* save data to Stata format
 	save "`dtafile'", replace
 
-	
-}
-
-/*
-
-* show codebook and notes
+	* show codebook and notes
 	codebook
 	notes list
+}
+
 disp
 disp "Finished import of: `csvfile'"
 disp
-*/
-/*
+
+
 * OPTIONAL: LOCALLY-APPLIED STATA CORRECTIONS
 *
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections

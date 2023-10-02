@@ -13,11 +13,15 @@
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
 * Merge follow up and other data sets
+
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 
 *****************
 * Quality check *
 *****************
+***Change date prior to running
+	local date "1stOct2023"
+	
 * There should be no using data
 capture export excel unique_id using "${pilot}Data_quality_`date'.xlsx" if Merge_C_F==2, sheet("Merge_C_F_2") firstrow(var) cell(A1) sheetreplace
 drop if Merge_C_F==2
@@ -45,15 +49,14 @@ forvalues i = 1/12 {
 * Labeling *
 ************
 destring R_Cen_a12_water_source_prim, replace
-	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. provided Community standpipe" 4 "PWS: Manual handpump" 8 "PWS: Private surface well" ///
-	-77 "PWS: Other", modify
+	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. provided Community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 8 "PWS: Private surface well" -77 "PWS: Other", modify
 	label values R_Cen_a12_water_source_prim R_Cen_a12_water_source_priml
 	label define R_Cen_a13_water_sec_ynl 0 "SWS: No" 1 "SWS: Yes", modify
 	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
 	label define R_Cen_a16_water_treatl 0 "WT: No" 1 "WT: Yes", modify
 	label values R_Cen_a16_water_treat R_Cen_a16_water_treatl
-	label define R_Cen_a15_water_sec_freql 1 "Freq :Daily" 2 "Freq : Every 2-3 days in a week" 3 "Freq : Once a week" 4 "Freq : Once every two weeks" ///
-	5 "Freq : Once a month" 6 "Freq :Once every few months" 7 "Freq : Once a year" 8 "Freq :No fixed schedule" 999 "Freq : Don't know", modify
+	label define R_Cen_a15_water_sec_freql 1 "Freq: Daily" 2 "Freq: Every 2-3 days in a week" 3 "Freq: Once a week" 4 "Freq: Once every two weeks" ///
+	5 "Freq: Once a month" 6 "Freq: Once every few months" 7 "Freq: Once a year" 8 "Freq: No fixed schedule" 999 "Freq: Don't know", modify
 	
 
 	label values R_Cen_a15_water_sec_freq R_Cen_a15_water_sec_freql	
@@ -90,7 +93,16 @@ destring R_Cen_a12_water_source_prim, replace
 	label variable R_Cen_a16_water_treat_type__77 "Other"
 	label variable R_Cen_a16_water_treat_type_999 "Don't know"
 
-* Create Dummy
+
+	label var R_Cen_water_treat_kids_type_1 "Filter through cloth/sieve" 
+	label var R_Cen_water_treat_kids_type_2 "Letting water stand" 
+	label var R_Cen_water_treat_kids_type_3 "Boiling" 
+	label var R_Cen_water_treat_kids_type_4 "Adding chlorine/bleaching powder" 
+	label var R_Cen_water_treat_kids_type__77 "Other" 
+	label var R_Cen_water_treat_kids_type_999 "Don't know"
+
+
+* Create new variables
 * -77 to 77
 foreach i in R_Cen_a12_water_source_prim  {
 	replace `i'=77 if `i'==-77
@@ -114,6 +126,43 @@ foreach i in R_Cen_a13_water_sec_yn {
 		label var `v'_`value' "`: label (`v') `value''"
 	}
 	}
+
+
+
+//number of pregnant women
+forvalues i = 1/12 {
+	gen C_pregnant_num_`i'= 1 if R_Cen_a7_pregnant_`i'==1
+}
+	egen C_total_pregnant_hh = rowtotal(C_pregnant_num_*)
+	label var C_total_pregnant_hh "Number of pregnant women" 
+	
+	
+//number of children under 5
+forvalues i = 1/12 {
+	gen C_U5child_`i'= 1 if R_Cen_a6_hhmember_age_`i'<5
+}
+	egen C_total_U5child_hh = rowtotal(C_U5child_*)
+	label var C_total_U5child_hh "Number of U5 children" 
+	
+	
+//Baseline diarrhea incidence for children 
+forvalues i = 1/12 {
+	gen C_diarrhea_U5_`i'= 1 if R_Cen_a29_child_diarr_day_`i'==1 | R_Cen_a29_child_diarr_week_`i'==1 | R_Cen_a29_child_diarr_2week_`i'==1
+}
+	egen C_total_diarrhea_cases_U5 = rowtotal(C_diarrhea_U5_*)
+	
+	label var C_total_pregnant_hh "Total Diarrhea cases-U5" 
+	
+	  
+//Baseline diarrhea incidence for pregnant women 
+forvalues i = 1/12 {
+	gen C_diarrhea_preg_`i'= 1 if R_Cen_a23_wom_diarr_day_`i'==1 | R_Cen_a23_wom_diarr_week_`i'==1 | R_Cen_a23_wom_diarr_2week_`i'==1
+}
+	egen C_total_diarrhea_cases_preg = rowtotal(C_diarrhea_preg_*)
+	
+	label var C_total_diarrhea_cases_preg "Total Diarrhea cases-pregnant women" 
+	
+	
 
 * Save final data in STATA/R
 save "${DataFinal}Final_HH_Odisha.dta", replace
@@ -230,7 +279,7 @@ program define   start_from_clean_file_Census
   
 end
 
-/*
+
 * Follow up
 cap program drop start_from_clean_file_Follow
 program define   start_from_clean_file_Follow
@@ -242,9 +291,9 @@ program define   start_from_clean_file_Follow
   keep if R_FU_consent==1
   
 end
-*/
+
 
 start_from_clean_file_Census
-*start_from_clean_file_Follow
+start_from_clean_file_Follow
 start_from_clean_file_Village
 start_from_clean_file_Population

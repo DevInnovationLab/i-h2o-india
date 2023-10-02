@@ -65,7 +65,9 @@ texsave $Variables using "${Table}Table_Progress.tex", ///
 * Michelle add more variables and enumerators
 //1. Checking number of screened and screened out cases by enumerator
 start_from_clean_file_Population
-global All C_Screened R_Cen_consent R_FU_consent
+global All C_Screened R_Cen_consent R_FU_consent R_Cen_refusal R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration ///
+R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration
+
 local All "Table by enumerator"
 local LabelAll "MainEnum"
 local ScaleAll "1"
@@ -76,16 +78,27 @@ start_from_clean_file_Population
 * Mean
 	eststo  model0:   estpost summarize $`k'
 	eststo  model104: estpost summarize $`k' if R_Cen_enum_name==104
+	eststo  model105: estpost summarize $`k' if R_Cen_enum_name==105
 	eststo  model106: estpost summarize $`k' if R_Cen_enum_name==106
 	eststo  model107: estpost summarize $`k' if R_Cen_enum_name==107
+	eststo  model108: estpost summarize $`k' if R_Cen_enum_name==108
+	eststo  model109: estpost summarize $`k' if R_Cen_enum_name==109
+	eststo  model110: estpost summarize $`k' if R_Cen_enum_name==110
+	eststo  model111: estpost summarize $`k' if R_Cen_enum_name==111
+	eststo  model113: estpost summarize $`k' if R_Cen_enum_name==113
+	eststo  model115: estpost summarize $`k' if R_Cen_enum_name==115
+	eststo  model117: estpost summarize $`k' if R_Cen_enum_name==117
+	eststo  model119: estpost summarize $`k' if R_Cen_enum_name==119
 	** ADD MORE
 		
-esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{Santosh}" "\shortstack[c]{Madhusmita}" "Rekha") ///
-	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+esttab model0 model104 model105 model106 model107 model108 model109 model110 model111 model113 model115 model117 model119 using "${Table}Main_Enum_Census.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{SantoshKumar}" "\shortstack[c]{BibharPankaj}" ///
+	   "\shortstack[c]{MadhusmitaSamal}" "\shortstack[c]{RekhaBehera}" "\shortstack[c]{SanjuktaChichuan}" "\shortstack[c]{SwagatikaBehera}" ///
+	   "\shortstack[c]{SaritaBhatra}" "\shortstack[c]{AbhishekRath}" "\shortstack[c]{ManguluBagh}" "\shortstack[c]{KunaCharan}" ///
+	   "\shortstack[c]{PramodiniGahir}") substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
-				   "Panchat village" "\textbf{Panchat village}" ///
+				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
@@ -95,175 +108,7 @@ esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", /
 }
 
 
-/* PLEASE INCLUDE WHAT YOU WERE THINKING IN ONE TABLE
-	*screened out
-	use `screened_out', clear
-	replace instruction=0 if screen_preg==0 & screen_u5child==0
-	tab enum_name instruction
-	*need to put table in overleaf
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 1: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name instruction, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Screened_Out
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-*/
 
-	*screened
-	use `working', clear
-	tab R_Cen_enum_name R_Cen_instruction
-	*need to put table in overleaf
-	
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 2: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab R_Cen_enum_name R_Cen_instruction, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Screened and interview conducted
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-	*/
-	
-
-//2. Checking number of no-consent cases by enumerator and also the reason for no consent
-	use `no_consent', clear
-	replace no_consent_reason= "Lack of time" if no_consent_reason=="1"
-	replace no_consent_reason= "Topic is not interesting to me" if no_consent_reason=="2"
-	replace no_consent_reason= "Other" if no_consent_reason=="-77"
-	tab enum_name consent
-	tab enum_name no_consent_reason
-	*need to put tables in overleaf
-
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 3: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name consent, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Rejected
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-	
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 4: Rejection reason by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name consent, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Rejected reason
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-*/
-*/
-
-//3. Checking time per section by enumerator
-start_from_clean_file_Census 
-***need to check with data that comes in on Friday because for the data submitted 25th Sept the duration function is not working
-
-//4. % of HHs drinking JJM tap water
-* Make less sense to create figure for one variable: See I added this info in table: Main_Balance_Census.tex (below)
-/*start_from_clean_file_Census
-	gen household_num= 1
-	egen total_hh= total(household_num)
-	display total_hh
-	local total_num_hhs = total_hh
-
-	graph hbar (percent) household_num, over(R_Cen_a18_jjm_drinking, label) blabel(total) /// 
-	ytitle("Percentage of HHs, total number= `total_num_hhs'") ylabel(0 (10) 100,labsize(small)) graphregion(color(white))
-	*graph export JJM_drinking_percentage.png, replace 
-/*
-	putpdf paragraph, halign(center)
-	putpdf text ("Figure 1: Percentage of HHs drinking water from JJM taps") , bold
-	putpdf image JJM_drinking_percentage.png, linebreak width(6) 
-	
-*/	
-
-//5. % of HHs by different uses of JJM water
-start_from_clean_file_Census
-	gen household_num_JJMuses= 1 if R_Cen_a20_jjm_use!=""
-	egen total_hh_JJMuses= total(household_num_JJMuses)
-	local total_num_hhs_JJMuses = total_hh_JJMuses	
-	        
-	label variable R_Cen_a20_jjm_use_1 "Cooking"
-	label variable R_Cen_a20_jjm_use_2 "Washing utensils"
-	label variable R_Cen_a20_jjm_use_3 "Washing clothes"
-	label variable R_Cen_a20_jjm_use_4 "Cleaning the house"
-	label variable R_Cen_a20_jjm_use_5 "Bathing"
-	label variable R_Cen_a20_jjm_use_6 "Drinking water for animals"
-	label variable R_Cen_a20_jjm_use_7 "Irrigation"
-	label variable R_Cen_a20_jjm_use__77 "Other"
-	label variable R_Cen_a20_jjm_use_999 "Don't know"
-	
-	mrgraph hbar R_Cen_a20_jjm_use_1-R_Cen_a20_jjm_use_999, blabel(total) stat(column) /// 
-	ytitle("Percentage of HHs, total number= `total_num_hhs_JJMuses'") ylabel(0 (10) 100,labsize(small)) graphregion(color(white))
-	*graph export JJM_uses.png, replace 
-	
-//6. % of HHs by different primary water sources
-	gen prim_water_source=""
-	
-	//reducing length of labels
-	replace prim_water_source= "JJM tap" if R_Cen_a12_water_source_prim==1
-	replace prim_water_source= "Govt. provided community standpipe" if R_Cen_a12_water_source_prim==2
-	replace prim_water_source= "Manual handpump" if R_Cen_a12_water_source_prim==4
-	replace prim_water_source= "Surface water" if R_Cen_a12_water_source_prim==7
-
-	graph hbar (percent) household_num, over(prim_water_source, label) blabel(total) /// 
-	ytitle("Percentage of HHs, total number= `total_num_hhs'") ylabel(0 (10) 100,labsize(small)) graphregion(color(white))
-	*graph export Primary_water_source.png, replace 
-/*
-	putpdf paragraph, halign(center)
-	putpdf text ("Figure 2: Primary drinking water source") , bold
-	putpdf image Primary_water_source.png, linebreak width(6) 
-*/	
-	
-//7. % of HHs by different secondary water sources
-	gen household_num_secondarywater= 1 if R_Cen_a13_water_sec_yn==1
-	egen total_hh_secondarywater= total(household_num_secondarywater)
-	local total_num_hhs_secwater = total_hh_secondarywater
-	
-	label variable R_Cen_a13_water_source_sec_1 "JJM tap"
-	label variable R_Cen_a13_water_source_sec_2 "Govt. provided community standpipe"
-	label variable R_Cen_a13_water_source_sec_3 "GP/Other community standpipe"
-	label variable R_Cen_a13_water_source_sec_4 "Manual handpump"
-	label variable R_Cen_a13_water_source_sec_5 "Covered dug well"
-	label variable R_Cen_a13_water_source_sec_6 "Uncovered dug well"
-	label variable R_Cen_a13_water_source_sec_7 "Surface water"
-	label variable R_Cen_a13_water_source_sec_8 "Private surface well"
-	label variable R_Cen_a13_water_source_sec__77 "Other"
-
-	
-	mrgraph hbar R_Cen_a13_water_source_sec_1-R_Cen_a13_water_source_sec__77, blabel(total) stat(column) /// 
-	ytitle("Percentage of HHs, total number= `total_num_hhs_secwater'") ylabel(0 (10) 100,labsize(small)) graphregion(color(white))
-	*graph export Secondary_water_source.png, replace 
-
-	/*
-	putpdf paragraph, halign(center)
-	putpdf text ("Figure 3: Secondary drinking water source") , bold
-	putpdf image Secondary_water_source.png, linebreak width(6) 
-*/
-
-//8. % of HHs by different water treatment methods
-	        
-	gen R_Cen_a16_water_treat_type_0= 1 if R_Cen_a16_water_treat==0
-
-	label variable R_Cen_a16_water_treat_type_0 "No treatment"
-	label variable R_Cen_a16_water_treat_type_1 "Filter through cloth/sieve" 
-	label variable R_Cen_a16_water_treat_type_2 "Letting water stand" 
-	label variable R_Cen_a16_water_treat_type_3 "Boiling" 
-	label variable R_Cen_a16_water_treat_type_4 "Adding chlorine/bleaching powder" 
-	label variable R_Cen_a16_water_treat_type__77 "Other"
-	label variable R_Cen_a16_water_treat_type_999 "Don't know"
-
-
-	order R_Cen_a16_water_treat_type_0 R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 ///
-	R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type_999 R_Cen_a16_water_treat_type__77
-	mrgraph hbar R_Cen_a16_water_treat_type_0-R_Cen_a16_water_treat_type__77, blabel(total) stat(column) /// 
-	ytitle("Percentage of HHs, total number= `total_num_hhs'") ylabel(0 (10) 100,labsize(small)) graphregion(color(white))
-	*graph export JJM_uses.png, replace 
-*/
 
 /*----------------------------------------------
 2) Descriptive table
@@ -322,7 +167,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
-				   "Panchat village" "\textbf{Panchat village}" ///
+				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
@@ -331,8 +176,34 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
 
+/*--------------------------------------------------------
+2) Descriptive table: Census (Treatment) Progress table
+----------------------------------------------------------*/
+* Title: Overall statistics of recruitment and program registration
+start_from_clean_file_Population
+expand 2, generate(expand_n)
+replace R_Cen_village_name=99999 if expand_n==1
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent C_Screened, by(R_Cen_village_name)
+	label define R_Cen_village_namel 88888 "Pilot (village)" 99999 "Total", modify
+	label values R_Cen_village_name R_Cen_village_namel
+	
+	decode R_Cen_village_name, gen(R_Cen_village_name_str)
+	label var C_Census  "Submission"
+	label var C_Screened  "Screened"	
+	label var R_Cen_village_name_str "Village"
+	label var Non_R_Cen_consent "Refused"
+	label var Non_R_FU_consent "Refused"
+	label var R_FU_consent "Consented"
+	label var R_Cen_consent "Consented"
+	
+global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
+texsave $Variables using "${Table}Table_Progress.tex", ///
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{4}{c}{Census}&\multicolumn{2}{c}{Follow up}")
+
 /*----------------------------------------------
-2) Descriptive table: Census (Treatment)
+2) Descriptive table
+   Census
 ----------------------------------------------*/
 start_from_clean_file_Census
 global All R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 ///
