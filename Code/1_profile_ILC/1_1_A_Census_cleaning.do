@@ -23,11 +23,19 @@ putpdf paragraph, font("Courier")
 clear all               
 set seed 758235657 // Just in case
 
+
 use "${DataRaw}1_1_Census.dta", clear
+
+
+
+ 
+
 //Renaming vars with prefix R_Cen
 foreach x of var * {
 	rename `x' R_Cen_`x'
 }
+
+
 
 * This variable has to be named consistently across data set
 rename R_Cen_unique_id unique_id_hyphen
@@ -38,7 +46,7 @@ format   unique_id_num %15.0gc
 	1 Formatting dates
 ------------------------------------------------------------------------------*/
 ***Change date prior to running
-	local date "29Sept2023"
+	local date "1stOct2023"
 	
 	
 	*gen date = dofc(starttime)
@@ -46,66 +54,35 @@ format   unique_id_num %15.0gc
 	gen R_Cen_day = day(dofc(R_Cen_starttime))
 	gen R_Cen_month_num = month(dofc(R_Cen_starttime))
 	//to change once survey date is fixed
-	keep if (R_Cen_day>28 & R_Cen_month_num>=9)
+	*keep if (R_Cen_day>28 & R_Cen_month_num>=9)
 	
 	 generate C_starthour = hh(R_Cen_starttime) 
 	 gen C_startmin= mm(R_Cen_starttime)
 	
+	
+
 
 /*------------------------------------------------------------------------------
-	2 Keeping relevant entries
-------------------------------------------------------------------------------*/
-* Akito->Michelle
-* See: 2_1_Final_data.do (We are mostly keeping all the sample and do cleaning, after cleaning we drop sample depending on the need)
-* This "dropping sample and creating data will happen in 2_1_Final_data.do"
-/*/saving tempfile where HHs were screened out
-preserve
-keep if (screen_preg==0 & screen_u5child ==0) 
-tempfile screened_out
-save `screened_out', replace
-restore */
-
-* Akito->Michelle (Please look at Descriptve do file and everything document)
-* Title: Overall statistics of recruitment and program registration
-/*/counting those entries where there was a pregnant woman or child U5
-count if (screen_preg==1 | screen_u5child ==1) 
-//counting those entries where there was a pregnant woman or child U5, but consent was not given
-count if (screen_preg==1 | screen_u5child ==1) & consent==0
-*/
-
-* Same withe line 39: For any dropping data,,,, please do not do here and there. Cleaning do file only do clean,,,, then sample selection happen in "2_1_Final_data.do"
-/*/saving tempfile and dropping those entries where there was a pregnant woman or child U5 but consent was not given
-preserve
-keep if (screen_preg==1 | screen_u5child ==1) & consent==0
-tempfile no_consent
-save `no_consent', replace
-restore
-drop if (screen_preg==1 | screen_u5child ==1) & consent==0
-
-//keeping those entries where there was a pregnant woman or child U5 and consent was obtained
-keep if (screen_preg==1 | screen_u5child ==1)
-
-tempfile working
-save `working', replace
-*/
-
-/*------------------------------------------------------------------------------
-	3 Basic cleaning
+	2 Basic cleaning
 ------------------------------------------------------------------------------*/
 //1. Changing village_name to string
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
 
 //2. dropping irrelevant entries
-drop if R_Cen_village_name==88888
+count if R_Cen_village_name==88888
+tab R_Cen_day if R_Cen_village_name==88888
+drop if  R_Cen_village_name==88888
 
 //3. dropping duplicate case based on field work
 drop if R_Cen_key=="uuid:c906fcad-e822-4de6-a183-f1c36e1fba9f"
 
+//4. Creating variables
+gen R_Cen_refusal=.
+replace R_Cen_refusal=1 if R_Cen_consent==0
 
 
-
-//4. Cleaning the GPS data 
+//5. Cleaning the GPS data 
 // Keeping the most reliable entry of GPS
 
 * Auto
@@ -134,32 +111,32 @@ drop R_Cen_a40_gps_autoaccuracy R_Cen_a40_gps_manualaccuracy R_Cen_a40_gps_handl
 
 //4. Capturing correct section-wise duration
 
-*drop R_Cen_consent_duration R_Cen_intro_duration R_Cen_sectionb_duration //old vars
+drop R_Cen_consent_duration R_Cen_intro_duration R_Cen_sectionb_duration //old vars
 destring R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end, replace
 */
 
-gen C_intro_duration= R_Cen_intro_dur_end
-gen C_consent_duration= R_Cen_consent_dur_end-R_Cen_intro_dur_end
-gen C_sectionB_duration= R_Cen_sectionb_dur_end-R_Cen_consent_dur_end
-gen C_sectionC_duration= R_Cen_sectionc_dur_end-R_Cen_sectionb_dur_end
-gen C_sectionD_duration= R_Cen_sectiond_dur_end-R_Cen_sectionc_dur_end
-gen C_sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
-gen C_sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
-gen C_sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
-gen C_sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
+gen intro_duration= R_Cen_intro_dur_end
+gen consent_duration= R_Cen_consent_dur_end-R_Cen_intro_dur_end
+gen sectionB_duration= R_Cen_sectionb_dur_end-R_Cen_consent_dur_end
+gen sectionC_duration= R_Cen_sectionc_dur_end-R_Cen_sectionb_dur_end
+gen sectionD_duration= R_Cen_sectiond_dur_end-R_Cen_sectionc_dur_end
+gen sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
+gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
+gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
+gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
 
-local duration C_intro_duration C_consent_duration C_sectionB_duration C_sectionC_duration C_sectionD_duration C_sectionE_duration C_sectionF_duration C_sectionG_duration C_sectionH_duration
+local duration intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration
 foreach x of local duration  {
 	replace `x'= `x'/60
 	rename `x' R_Cen_`x'
 }
 
-drop R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
+drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
 */
 /*------------------------------------------------------------------------------
-	4 Quality check
+	3 Quality check
 ------------------------------------------------------------------------------*/
 //1. Making sure that the unique_id is unique
 foreach i in unique_id {
@@ -208,7 +185,7 @@ save `dups', replace
 
 ***** Step 2: For cases that don't get resolved, outsheet an excel file with the duplicate ID cases and send across to Santosh ji for checking with supervisors]
 //submission time to be added Bys unique_id (submissiontime): gen
-keep if C_new1==1 | C_new2==1
+keep if C_new1==1 | C_new2==1 | C_new3==1
  capture export excel unique_id R_Cen_enum_name R_Cen_village_str R_Cen_submissiondate using "${pilot}Data_quality_`date'.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Census") ///
  firstrow(var) cell(A1) sheetreplace
 
@@ -243,10 +220,19 @@ append using `dups_part2', force
 
 
 duplicates report unique_id //final check
-drop unique_id_Unique 
+drop unique_id_Unique unique_id_num 
+destring unique_id, gen(unique_id_num)
+format   unique_id_num %15.0gc
+tempfile main
+save `main', replace
 
-
-
+/*
+clear all
+//Ensuring we have correct observations from all form versions
+import excel "${DataRaw}Baseline Census_WIDE.xlsx", sheet("data") firstrow
+gen unique_id = subinstr(unique_ID, "-", "",.) 
+merge m:1 unique_id using `main'
+*/
 /*
 * Astha: Check if the same HH is interviewed twice
 * 
@@ -261,6 +247,7 @@ duplicates drop unique_id, force
 
 * Change as we finalzie the treatment village
 save "${DataPre}1_1_Census_cleaned.dta", replace
+*use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
 
 ** Drop ID information

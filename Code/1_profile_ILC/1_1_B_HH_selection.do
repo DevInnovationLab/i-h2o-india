@@ -43,10 +43,10 @@ end
 *****************************************
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
 //1. Put the village code of the village for randomization
-    local Village_R 40201 
+    local Village_R 50301 
     keep if R_Cen_village_name==`Village_R'	
 
-keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking
+keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking R_Cen_hamlet_name
 * Keep only the village where you want to conduct the randomization
 global Var_Select S_BLS S_BLWQ 
 
@@ -58,6 +58,10 @@ foreach i in $Var_Select {
 
 * Household selection, all the HH consented are
 keep if R_Cen_a18_jjm_drinking==1 // They drink water from the JJM tap
+//Removing hamlets which have other tap schemes ongoing besides JJM
+gen ineligible= strpos(R_Cen_hamlet_name, "Babu") | strpos(R_Cen_hamlet_name, "Bapu") | strpos(R_Cen_hamlet_name, "bapu")
+keep if ineligible==0
+
 
 ***********************************************************************
 * Step 2: Assign 1 for households selected based on random numbers *
@@ -86,10 +90,9 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 *******************************************************
 * Step 3: Carefully integrate back to the master list *
 *******************************************************
-* You need to understand each line to work on this do file
 * Only the village where we complete the randomization should be included in the merge list
-use "${DataPre}Selected_50501_30 Sep 2023.dta", clear
-append using "${DataPre}Selected_40201_30 Sep 2023.dta"
+use "${DataPre}Selected_50301_ 2 Oct 2023.dta", clear
+*append using "${DataPre}Selected_40201_30 Sep 2023.dta"
 save "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", replace
 
 
@@ -135,10 +138,21 @@ gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 gen Enumerator_Assigned= ""
 
+//Changing labels 
+	label variable ID "Unique ID"
+	label variable R_Cen_block_name "Block name"
+	label variable R_Cen_hamlet_name "Hamlet name"
+	label variable R_Cen_saahi_name "Saahi name"
+	label variable R_Cen_landmark "Landmark"
+	label variable R_Cen_time_availability "Respondent time availability"
+	label variable Enumerator_Assigned "Enumerator Assigned"
+	label variable S_BLWQ "Water Sample collection"
+
+
 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_30 Sep 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_2 Oct 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Date_Random Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_30 Sep 2023_Call Astha.xlsx", sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Date_Random Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_2 Oct 2023_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt

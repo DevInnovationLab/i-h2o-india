@@ -32,7 +32,8 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
 
 * Michelle add more variables and enumerators
 start_from_clean_file_Population
-global All Screened R_Cen_consent R_FU_consent
+global All C_Screened R_Cen_consent R_FU_consent R_Cen_refusal R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration ///
+R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration
 local All "Table by enumerator"
 local LabelAll "MainEnum"
 local ScaleAll "1"
@@ -43,16 +44,27 @@ start_from_clean_file_Population
 * Mean
 	eststo  model0:   estpost summarize $`k'
 	eststo  model104: estpost summarize $`k' if R_Cen_enum_name==104
+	eststo  model105: estpost summarize $`k' if R_Cen_enum_name==105
 	eststo  model106: estpost summarize $`k' if R_Cen_enum_name==106
 	eststo  model107: estpost summarize $`k' if R_Cen_enum_name==107
+	eststo  model108: estpost summarize $`k' if R_Cen_enum_name==108
+	eststo  model109: estpost summarize $`k' if R_Cen_enum_name==109
+	eststo  model110: estpost summarize $`k' if R_Cen_enum_name==110
+	eststo  model111: estpost summarize $`k' if R_Cen_enum_name==111
+	eststo  model113: estpost summarize $`k' if R_Cen_enum_name==113
+	eststo  model115: estpost summarize $`k' if R_Cen_enum_name==115
+	eststo  model117: estpost summarize $`k' if R_Cen_enum_name==117
+	eststo  model119: estpost summarize $`k' if R_Cen_enum_name==119
 	** ADD MORE
 		
-esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{Santosh}" "\shortstack[c]{Madhusmita}" "Rekha") ///
-	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+esttab model0 model104 model105 model106 model107 model108 model109 model110 model111 model113 model115 model117 model119 using "${Table}Main_Enum_Census.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "\shortstack[c]{SantoshKumar}" "\shortstack[c]{BibharPankaj}" ///
+	   "\shortstack[c]{MadhusmitaSamal}" "\shortstack[c]{RekhaBehera}" "\shortstack[c]{SanjuktaChichuan}" "\shortstack[c]{SwagatikaBehera}" ///
+	   "\shortstack[c]{SaritaBhatra}" "\shortstack[c]{AbhishekRath}" "\shortstack[c]{ManguluBagh}" "\shortstack[c]{KunaCharan}" ///
+	   "\shortstack[c]{PramodiniGahir}") substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
-				   "Panchat village" "\textbf{Panchat village}" ///
+				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
@@ -61,69 +73,7 @@ esttab model0 model104 model106 model107 using "${Table}Main_Enum_Census.tex", /
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
 
-/* PLEASE INCLUDE WHAT YOU WERE THINKING IN ONE TABLE
-	*screened out
-	use `screened_out', clear
-	replace instruction=0 if screen_preg==0 & screen_u5child==0
-	tab enum_name instruction
-	*need to put table in overleaf
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 1: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name instruction, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Screened_Out
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-*/
 
-	*screened
-	use `working', clear
-	tab R_Cen_enum_name R_Cen_instruction
-	*need to put table in overleaf
-	
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 2: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab R_Cen_enum_name R_Cen_instruction, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Screened and interview conducted
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-	*/
-	
-
-//2. Checking number of no-consent cases by enumerator and also the reason for no consent
-	use `no_consent', clear
-	replace no_consent_reason= "Lack of time" if no_consent_reason=="1"
-	replace no_consent_reason= "Topic is not interesting to me" if no_consent_reason=="2"
-	replace no_consent_reason= "Other" if no_consent_reason=="-77"
-	tab enum_name consent
-	tab enum_name no_consent_reason
-	*need to put tables in overleaf
-
-	/*
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 3: Number Screened out by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name consent, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Rejected
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-	
-	putpdf paragraph,  font("Courier",14) halign(left)
-    putpdf text ("Table 4: Rejection reason by enumerator"), bold
-    *putpdf table tab1 =  matrix(prim_water_source), rownames colnames, varnames
-	tab enum_name consent, matcell(x)
-	matrix rownames x =  SanjayNaik SusantaKumar  RajibPanda SantoshKumar BibharPankaj MadhusmitaSamal RekhaBehera SanjuktaChichuan SwagatikaBehera ///
-	SaritaBhatra AbhishekRath BinodKumar ManguluBagh PadmanBhatra KunaCharan SushilKumar  JitendraBagh RajeswarDigal PramodiniGahir ManasRanjan  IshadattaPani 
-	matrix colnames x = Rejected reason
-    putpdf table tbl1 = matrix((x/200)*100), rownames colnames width(8)
-*/
-*/
 
 //3. Checking time per section by enumerator
 start_from_clean_file_Census 
@@ -287,7 +237,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
-				   "Panchat village" "\textbf{Panchat village}" ///
+				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
@@ -303,21 +253,21 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 start_from_clean_file_Population
 expand 2, generate(expand_n)
 replace R_Cen_village_name=99999 if expand_n==1
-keep Census Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
-collapse  (sum) Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent Screened, by(R_Cen_village_name)
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent C_Screened, by(R_Cen_village_name)
 	label define R_Cen_village_namel 88888 "Pilot (village)" 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var Census  "Submission"
-	label var Screened  "Screened"	
+	label var C_Census  "Submission"
+	label var C_Screened  "Screened"	
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refused"
 	label var Non_R_FU_consent "Refused"
 	label var R_FU_consent "Consented"
 	label var R_Cen_consent "Consented"
 	
-global Variables R_Cen_village_name_str Census Screened R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
+global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_consent R_FU_consent Non_R_FU_consent
 texsave $Variables using "${Table}Table_Progress.tex", ///
         title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{4}{c}{Census}&\multicolumn{2}{c}{Follow up}")
 
