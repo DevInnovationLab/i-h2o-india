@@ -5,9 +5,7 @@
 *	Inputs:  "Baseline follow up survey_WIDE.csv"
 *	Outputs: "Baseline follow up survey.dta"
 *
-
-*	Output by SurveyCTO September 29, 2023 6:16 PM.
-
+*	Output by SurveyCTO October 2, 2023 1:00 PM.
 
 * initialize Stata
 clear all
@@ -27,12 +25,12 @@ local csvfile "Baseline follow up survey_WIDE.csv"
 local dtafile "Baseline follow up survey.dta"
 local corrfile "Baseline follow up survey_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
-local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 s_blwq r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name info_update enum_name_label duration_locatehh reasons_no_consent no_consent_oth"
-local text_fields3 "duration_consent water_prim_oth primary_water_label liter_estimation_count container_nmbr_* water_treat_type water_treat_when water_treat_when_oth water_stored_freq_oth duration_seca"
-local text_fields4 "tap_supply_freq_oth tap_use tap_use_oth tap_function_reason tap_function_reason_oth tap_use_future_oth duration_secb tap_taste_desc_oth tap_smell_oth tap_color_oth tap_trust_fu tap_trust_oth"
-local text_fields5 "duration_secc collect_resp treat_resp duration_secd unique_id_3_digit_wt stored_bag_source_oth no_stored_bag no_chlorine_stored no_running_bag no_tap_reason duration_sece overall_comment duration_end"
-local text_fields6 "instanceid instancename"
+local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
+local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name info_update enum_name_label duration_locatehh reasons_no_consent no_consent_oth"
+local text_fields3 "duration_consent water_prim_oth primary_water_label liter_estimation_count container_nmbr_* source_container_oth_* water_treat_type water_treat_type_oth water_treat_when water_treat_when_oth"
+local text_fields4 "water_stored_freq_oth duration_seca tap_supply_freq_oth tap_use tap_use_oth tap_function_reason tap_function_reason_oth tap_use_future_oth duration_secb tap_taste_desc_oth tap_smell_oth tap_color_oth"
+local text_fields5 "tap_trust_fu tap_trust_oth duration_secc collect_resp treat_resp duration_secd no_test_reason unique_id_3_digit_wt stored_bag_source_oth no_stored_bag no_chlorine_stored no_running_bag no_tap_reason"
+local text_fields6 "duration_sece overall_comment duration_end instanceid instancename"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -66,9 +64,9 @@ if _N>0 {
 						tempvar tempdtvar
 						rename `dtvar' `tempdtvar'
 						gen double `dtvar'=.
-						cap replace `dtvar'=clock(`tempdtvar',"DMYhms",2025)
+						cap replace `dtvar'=clock(`tempdtvar',"MDYhms",2025)
 						* automatically try without seconds, just in case
-						cap replace `dtvar'=clock(`tempdtvar',"DMYhm",2025) if `dtvar'==. & `tempdtvar'~=""
+						cap replace `dtvar'=clock(`tempdtvar',"MDYhm",2025) if `dtvar'==. & `tempdtvar'~=""
 						format %tc `dtvar'
 						drop `tempdtvar'
 					}
@@ -83,7 +81,7 @@ if _N>0 {
 						tempvar tempdtvar
 						rename `dtvar' `tempdtvar'
 						gen double `dtvar'=.
-						cap replace `dtvar'=date(`tempdtvar',"DMY",2025)
+						cap replace `dtvar'=date(`tempdtvar',"MDY",2025)
 						format %td `dtvar'
 						drop `tempdtvar'
 					}
@@ -147,7 +145,7 @@ if _N>0 {
 	note unique_id_3_check: "Record the last 3 digit"
 
 	label variable noteconf1 "Please confirm the households that you are visiting correspond to the following "
-	note noteconf1: "Please confirm the households that you are visiting correspond to the following information. Village: \${R_Cen_village_name_str} Hamlet: \${R_Cen_hamlet_name} Household head name: \${R_Cen_a10_hhhead} Respondent name from the previous round: \${R_Cen_a1_resp_name} Any male household head (if any): \${R_Cen_a11_oldmale_name} Address: \${R_Cen_address} Landmark: \${R_Cen_landmark} Phone 1: \${R_Cen_a39_phone_name_1} (\${R_Cen_a39_phone_num_1}) Phone 2: \${R_Cen_a39_phone_name_2} (\${R_Cen_a39_phone_num_2})"
+	note noteconf1: "Please confirm the households that you are visiting correspond to the following information. Village: \${R_Cen_village_name_str} Hamlet: \${R_Cen_hamlet_name} Household head name: \${R_Cen_a10_hhhead} Respondent name from the previous round: \${R_Cen_a1_resp_name} Any male household head (if any): \${R_Cen_a11_oldmale_name} Address: \${R_Cen_address} Landmark: \${R_Cen_landmark} Saahi: \${R_Cen_saahi_name} Phone 1: \${R_Cen_a39_phone_name_1} (\${R_Cen_a39_phone_num_1}) Phone 2: \${R_Cen_a39_phone_name_2} (\${R_Cen_a39_phone_num_2})"
 	label define noteconf1 1 "I am visiting the correct household and the information is correct" 2 "I am visiting the correct household but the information needs to be updated" 3 "The household I am visiting does not corresponds to the confirmation info."
 	label values noteconf1 noteconf1
 
@@ -175,7 +173,7 @@ if _N>0 {
 
 	label variable resp_available "Did you find a household to interview?"
 	note resp_available: "Did you find a household to interview?"
-	label define resp_available 1 "Household available for interview and opened the door" 2 "Family has left the house permanently" 3 "This is my first visit: The family is temporarily unavailable but might be avail" 4 "This is my 1st re-visit: The family is temporarily unavailable but might be avai" 5 "This is my 2nd re-visit: The revisit within two days is not possible (e.g. all t" 6 "This is my 2nd re-visit: The family is temporarily unavailable (Please leave the"
+	label define resp_available 1 "Household available for interview and opened the door" 2 "Family has left the house permanently" 3 "This is my first visit: The family is temporarily unavailable but might be avail" 4 "This is my 1st re-visit: The family is temporarily unavailable but might be avai" 5 "This is my 2nd re-visit: The revisit within two days is not possible" 6 "This is my 2nd re-visit: The family is temporarily unavailable (Please leave the"
 	label values resp_available resp_available
 
 	label variable consent "Do I have your permission to proceed with the interview?"
@@ -194,23 +192,21 @@ if _N>0 {
 	label define water_source_prim 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (connected to piped system, through Vasu" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 7 "Uncovered dug well" 8 "Private Surface well" -77 "Other"
 	label values water_source_prim water_source_prim
 
-	label variable water_prim_oth "W1.2) Please specify other"
-	note water_prim_oth: "W1.2) Please specify other"
+	label variable water_prim_oth "W1.1) Please specify other"
+	note water_prim_oth: "W1.1) Please specify other"
 
-	label variable water_sec_yn "W2) In the past month, did your household use any sources of water for drinking "
-	note water_sec_yn: "W2) In the past month, did your household use any sources of water for drinking besides the one you already mentioned?"
+	label variable water_sec_yn "W1.2) In the past month, did your household use any sources of water for drinkin"
+	note water_sec_yn: "W1.2) In the past month, did your household use any sources of water for drinking besides the one you already mentioned?"
 	label define water_sec_yn 1 "Yes" 0 "No" 999 "Don't know"
 	label values water_sec_yn water_sec_yn
 
 	label variable quant "W2) How much of your drinking water in the past one week came from your primary "
 	note quant: "W2) How much of your drinking water in the past one week came from your primary drinking water source: (\${primary_water_label})?"
-
 	label define quant 1 "All of it" 2 "Most of it" 3 "Half of it" 4 "Little of it" 5 "None of it" 999 "Don’t know"
-
 	label values quant quant
 
-	label variable quant_containers "W3) How many containers do you collect drinking water in"
-	note quant_containers: "W3) How many containers do you collect drinking water in"
+	label variable quant_containers "W3) How many containers do you collect drinking water in?"
+	note quant_containers: "W3) How many containers do you collect drinking water in?"
 
 	label variable water_treat "W6) Do you ever do anything to the water from your primary drinking water source"
 	note water_treat: "W6) Do you ever do anything to the water from your primary drinking water source (\${primary_water_label} ) to make it safe before drinking it?"
@@ -224,6 +220,9 @@ if _N>0 {
 
 	label variable water_treat_type "W8) What do you do to the water to make it safe for drinking?"
 	note water_treat_type: "W8) What do you do to the water to make it safe for drinking?"
+
+	label variable water_treat_type_oth "W8.1) Please specify other"
+	note water_treat_type_oth: "W8.1) Please specify other"
 
 	label variable water_treat_when "W9) When do you make the water from your primary drinking water source (\${prima"
 	note water_treat_when: "W9) When do you make the water from your primary drinking water source (\${primary_water_label} ) safe before drinking it?"
@@ -241,7 +240,7 @@ if _N>0 {
 
 	label variable tap_supply_freq "G1) How often is water supplied from the government provided tap?"
 	note tap_supply_freq: "G1) How often is water supplied from the government provided tap?"
-	label define tap_supply_freq 1 "Daily" 2 "Few days in a week" 3 "Once a week" 4 "Few times in a month" 5 "Once a month" 6 "No fixed schedule" -77 "Other" 999 "Don't know" -98 "Refused to answer"
+	label define tap_supply_freq 1 "Daily" 2 "Few days in a week" 3 "Once a week" 4 "Few times in a month" 5 "Once a month" 6 "No fixed schedule" -77 "Other" 999 "Don’t know" -98 "Refused to answer"
 	label values tap_supply_freq tap_supply_freq
 
 	label variable tap_supply_freq_oth "G1.1) Please specify other"
@@ -279,7 +278,7 @@ if _N>0 {
 
 	label variable tap_use_discontinue "G8) Can you provide any reasons for why you would not continue using the governm"
 	note tap_use_discontinue: "G8) Can you provide any reasons for why you would not continue using the government provided household tap in the future?"
-	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -77 "Other" 999 "Don't know"
+	label define tap_use_discontinue 1 "Water supply is not regular" 2 "Water supply is not sufficient" 3 "Water is muddy/ silty" 4 "Water smells or tastes of bleach" -77 "Other" 999 "Don’t know"
 	label values tap_use_discontinue tap_use_discontinue
 
 	label variable tap_use_future_oth "G8.1) Please specify other"
@@ -287,12 +286,12 @@ if _N>0 {
 
 	label variable tap_taste_satisfied "C2) How satisfied are you with the taste of water from the government provided h"
 	note tap_taste_satisfied: "C2) How satisfied are you with the taste of water from the government provided household tap?"
-	label define tap_taste_satisfied 1 "Very satisfied" 2 "Satisfied" 3 "Neither satisfied nor dissatisfied" 4 "Dissatisfied" 5 "Very dissatisfied" 999 "Don't know"
+	label define tap_taste_satisfied 1 "Very satisfied" 2 "Satisfied" 3 "Neither satisfied nor dissatisfied" 4 "Dissatisfied" 5 "Very dissatisfied" 999 "Don’t know"
 	label values tap_taste_satisfied tap_taste_satisfied
 
 	label variable tap_taste_desc "C3) How would you describe the taste of the water from the government provided h"
 	note tap_taste_desc: "C3) How would you describe the taste of the water from the government provided household tap?"
-	label define tap_taste_desc 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" 999 "Don't know" -77 "Other"
+	label define tap_taste_desc 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" 999 "Don’t know" -77 "Other"
 	label values tap_taste_desc tap_taste_desc
 
 	label variable tap_taste_desc_oth "C3.1) Please specify other"
@@ -300,7 +299,7 @@ if _N>0 {
 
 	label variable tap_smell "C4) How would you describe the smell of the water from the government provided h"
 	note tap_smell: "C4) How would you describe the smell of the water from the government provided household tap?"
-	label define tap_smell 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" 999 "Don't know" -77 "Other"
+	label define tap_smell 1 "Good" 2 "Medicine or chemical" 3 "Metal" 4 "Salty" 5 "Bleach/chlorine (includes WaterGuard)" 999 "Don’t know" -77 "Other"
 	label values tap_smell tap_smell
 
 	label variable tap_smell_oth "C4.1) Please specify other"
@@ -308,7 +307,7 @@ if _N>0 {
 
 	label variable tap_color "C5) How do you find the color or look of the water from the government provided "
 	note tap_color: "C5) How do you find the color or look of the water from the government provided household tap?"
-	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" 999 "Don't know" -77 "Other"
+	label define tap_color 1 "No problems with the color or look" 2 "Muddy/ sandy water" 3 "Yellow-ish or reddish water (from iron)" 999 "Don’t know" -77 "Other"
 	label values tap_color tap_color
 
 	label variable tap_color_oth "C5.1) Please specify other"
@@ -330,8 +329,8 @@ if _N>0 {
 	label define chlorine_yesno 1 "Yes" 0 "No" 999 "Don't know"
 	label values chlorine_yesno chlorine_yesno
 
-	label variable chlorine_drank_yesno "C8) Have you ever drank water treated with chlorine?"
-	note chlorine_drank_yesno: "C8) Have you ever drank water treated with chlorine?"
+	label variable chlorine_drank_yesno "C8) Have you ever drunk water treated with chlorine?"
+	note chlorine_drank_yesno: "C8) Have you ever drunk water treated with chlorine?"
 	label define chlorine_drank_yesno 1 "Yes" 0 "No" 999 "Don't know"
 	label values chlorine_drank_yesno chlorine_drank_yesno
 
@@ -383,6 +382,14 @@ if _N>0 {
 
 	label variable unique_id_3_wt "Record the last 3 digit"
 	note unique_id_3_wt: "Record the last 3 digit"
+
+	label variable water_qual_test "A0) Which water quality tests are you able to conduct?"
+	note water_qual_test: "A0) Which water quality tests are you able to conduct?"
+	label define water_qual_test 0 "No test" 1 "Free and total chlorine only" 2 "Sample collection and free/total chlorine"
+	label values water_qual_test water_qual_test
+
+	label variable no_test_reason "A0.1) Reason for NO TEST"
+	note no_test_reason: "A0.1) Reason for NO TEST"
 
 	label variable wq_stored_bag "A1) Are you able to collect a water sample from the stored water for bag?"
 	note wq_stored_bag: "A1) Are you able to collect a water sample from the stored water for bag?"
@@ -486,9 +493,16 @@ if _N>0 {
 	}
 
 	capture {
+		foreach rgvar of varlist source_container_oth_* {
+			label variable `rgvar' "W5.1) Please specify other"
+			note `rgvar': "W5.1) Please specify other"
+		}
+	}
+
+	capture {
 		foreach rgvar of varlist time_container_* {
-			label variable `rgvar' "W5.1) How many times do you fill this container in a day?"
-			note `rgvar': "W5.1) How many times do you fill this container in a day?"
+			label variable `rgvar' "W5.2) How many times do you fill this container in a day?"
+			note `rgvar': "W5.2) How many times do you fill this container in a day?"
 		}
 	}
 
@@ -502,7 +516,7 @@ if _N>0 {
 		gen new_data_row=1
 		
 		* pull in old data
-		append using "`dtafile'", force
+		append using "`dtafile'"
 		
 		* drop duplicates in favor of old, previously-imported data if overwrite_old_data is 0
 		* (alternatively drop in favor of new data if overwrite_old_data is 1)
@@ -573,9 +587,9 @@ if _rc==0 {
 					cap unab dtvarignore : `dtvar'
 					if _rc==0 {
 						gen origvalue=value
-						replace value=string(clock(value,"DMYhms",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
+						replace value=string(clock(value,"MDYhms",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
 						* allow for cases where seconds haven't been specified
-						replace value=string(clock(origvalue,"DMYhm",2025),"%25.0g") if strmatch(fieldname,"`dtvar'") & value=="." & origvalue~="."
+						replace value=string(clock(origvalue,"MDYhm",2025),"%25.0g") if strmatch(fieldname,"`dtvar'") & value=="." & origvalue~="."
 						drop origvalue
 					}
 				}
@@ -585,7 +599,7 @@ if _rc==0 {
 					* skip fields that aren't yet in the data
 					cap unab dtvarignore : `dtvar'
 					if _rc==0 {
-						replace value=string(clock(value,"DMY",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
+						replace value=string(clock(value,"MDY",2025),"%25.0g") if strmatch(fieldname,"`dtvar'")
 					}
 				}
 			}
