@@ -1,0 +1,241 @@
+---
+title: "Code for Descriptive Stats"
+author: "Astha Vohra"
+date: "2023-10-01"
+output: html_document
+---
+```{r}
+# install the packages
+#install.packages("googledrive", "googlesheets4", "readxl", "dplyr", "lubridate", "haven", "expss", "stargazer")
+
+# load the libraries
+library(readxl) 
+library(googledrive)
+library(googlesheets4)
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(lubridate)
+library(haven)
+library(expss)
+library(stargazer)
+library(tidyverse)
+
+```
+
+
+```{r, setup, include=FALSE}
+# setting user path
+   
+
+user_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user==""){
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == ""){
+    path = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = user_path())
+
+# setting github directory
+github_path <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user==""){
+    github = ""
+  } 
+  else if (user == "") {
+    github = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    github = getwd()
+  }
+  
+  stopifnot(file.exists(github))
+  return(github)
+}
+
+# setting github directory
+overleaf <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    overleaf = "/Users/asthavohra/Dropbox/Apps/Overleaf/Everything document -ILC/Table/"
+  } 
+  else if (user==""){
+    overleaf = ""
+  } 
+  else if (user == "") {
+    overleaf = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    overleaf = getwd()
+  }
+  
+  stopifnot(file.exists(overleaf))
+  return(overleaf)
+}
+```
+
+```{r load stata clean file for descriptive stats}
+df.temp <- read_dta(paste0(user_path(),"2_deidentified/1_2_Followup_cleaned.dta" ))
+```
+
+```{r assign variable labels to data frame}
+temp.labels <- lapply(df.temp , var_lab)
+
+#create a 
+df.label <- as.data.frame(t(as.data.frame(do.call(cbind, temp.labels)))) 
+df.label<- tibble::rownames_to_column(df.label) 
+df.label <- df.label %>% rename(variable = rowname, label = V1)  
+auto_generated_labels <- c(df.label$variable)
+df.label.manual <- read_xlsx(paste0(user_path(),"4_other/R_code_HH_Survey_labels.xlsx" ))
+
+df.var <- as.data.frame(names(df.temp)) #List of variables in the data
+
+# assign labels to variable that were generated
+df.label.manual <- df.label.manual %>% mutate(new_var = ifelse(Variable %in% auto_generated_labels, 0,1)) %>% 
+  filter(new_var == 1) %>% select(-new_var) %>% rename(variable = Variable, label = Label)
+
+df.label <- rbind(df.label, df.label.manual)
+# create a function that assigns the label to appropriate variable
+
+```
+
+```{r checks}
+
+# drop containers that were never filled 
+
+# create variable batteries : 
+#numeric vars
+
+#logical vars 
+
+#string vars
+
+# 1. Count of missing values sorted by cases higher than 5 
+
+df.temp.consent <- df.temp[which(df.temp$R_FU_consent==1) ,]
+
+missing_values <- as.data.frame(sapply(df.temp.consent, function(x) sum(is.na(x))))%>% rename(   "count" = "sapply(df.temp.consent, function(x) sum(is.na(x)))") %>% filter(count != 0)
+missing_values <- tibble::rownames_to_column(missing_values) 
+# merge variable name to variable label using df.label
+missing_values <- missing_values %>% rename(variable = rowname)
+missing_values <- merge(missing_values, df.label , by = "variable")
+#output to tex 
+ stargazer::
+  
+# 2. Don't Knows   
+
+
+#output to tex 
+ stargazer::  
+# 3. Check if follow_up preload selected E.coli HH are the ones actually being tested for E.coli? 
+   
+   
+#output to tex 
+ stargazer::   
+   
+   
+#4. 
+   
+```
+
+
+```{r checks: replacement, found hh, consent, target progress}
+
+
+# For target progress, follow Akito's table
+submissions <- df.temp %>% select(R_FU_r_cen_village_name_str) %>%
+  group_by(R_FU_r_cen_village_name_str) %>% mutate(Submission=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_FU_r_cen_village_name_str)
+
+resp_available <- df.temp %>%  filter(R_FU_resp_available == 1 & R_FU_replacement == 0 ) %>% 
+  select(R_FU_r_cen_village_name_str) %>%
+  group_by(R_FU_r_cen_village_name_str) %>% mutate("Original Respondent" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_FU_r_cen_village_name_str)
+
+consented <- df.temp.consent %>% select(R_FU_r_cen_village_name_str) %>%
+  group_by(R_FU_r_cen_village_name_str) %>% mutate(Consented=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_FU_r_cen_village_name_str)
+
+refused <- df.temp %>% filter(R_FU_consent != 1) %>% select(R_FU_r_cen_village_name_str) %>%
+  group_by(R_FU_r_cen_village_name_str) %>% mutate(Refused=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_FU_r_cen_village_name_str)
+
+ replacements <- df.temp %>%  filter( R_FU_replacement == 1 ) %>% 
+  select(R_FU_r_cen_village_name_str) %>%
+  group_by(R_FU_r_cen_village_name_str) %>% mutate(Replacements=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_FU_r_cen_village_name_str)
+
+df.progress <- left_join(submissions,resp_available, ) %>% left_join(replacements) %>% 
+  left_join(consented) %>% left_join(refused)  %>% 
+  rename(Village = R_FU_r_cen_village_name_str)
+df.progress[is.na(df.progress)]<-0
+
+Total <- df.progress %>% summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
+Total$Village <- "Total"
+df.progress<- rbind(df.progress, Total)
+
+#output to tex 
+ stargazer(df.progress, summary=F, title= "Overall Progress: Baseline HH Survey",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"/Table_Progress_HH_Survey.tex"))
+
+ 
+```
+
+
+```{r checks : enumerator level}
+
+# 1. Total count of missing values by enumerators
+
+
+missing_enum <- df.temp.consent %>%
+  group_by(R_FU_enum_name) %>%                                     # group by enumerator_id 
+  summarise_each(funs(count(is.na(.)))) 
+
+
+#output to tex 
+ stargazer::
+   
+   
+   
+
+```
+
+```{r descriptive stats - duration}
+
+
+
+```
+
+```{r descriptive stats - water quality test}
+
+
+
+```
+
+
+

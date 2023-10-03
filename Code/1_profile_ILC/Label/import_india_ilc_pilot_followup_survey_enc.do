@@ -494,6 +494,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist source_container_oth_* {
+			
 			label variable `rgvar' "W5.1) Please specify other"
 			note `rgvar': "W5.1) Please specify other"
 		}
