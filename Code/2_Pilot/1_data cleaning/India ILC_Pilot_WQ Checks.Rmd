@@ -1,0 +1,90 @@
+---
+title: "India ILC -- WQ Data Checks"
+author: "Jeremy Lowe"
+date: "2023-10-01"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+
+```
+
+```{r package loading}
+
+library(rsurveycto)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(experiment)
+
+
+```
+
+
+```{r dataset loading}
+
+#from Box
+
+#Jeremy's file path
+bl <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Baseline follow up survey_WIDE.csv")
+
+
+```
+
+```{r quick data cleaning}
+
+#Filtering out test data from training, based on village IDs
+unique(bl$unique_id_1)
+
+bl <- bl%>%
+  filter(!(unique_id_1 == 88888 |
+           unique_id_1 == 99999))
+
+
+#Assigning more meaninful variable names
+bl <- bl%>%
+  rename(fc_stored = wq_chlorine_storedfc)%>%
+  rename(tc_stored = wq_chlorine_storedtc)%>%
+  rename(fc_tap = wq_tap_fc)%>%
+  rename(tc_tap = wq_tap_tc)
+  
+
+
+```
+
+
+```{r Data check -- Chlorine test data}
+
+###Displaying chlorine test data for each village
+#Arranging data so chlorine test data is in one column
+chlorine <- bl%>%
+  pivot_longer(cols = c(fc_tap, fc_stored, tc_tap, tc_stored), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
+
+#Removing NAs from no respondent being available
+chlorine <- chlorine%>%
+  filter(is.na(chlorine_concentration) == FALSE)
+
+p1 <- chlorine%>%
+  ggplot() +
+  geom_point(aes(x = chlorine_test_type, y = chlorine_concentration)) +
+  facet_wrap(~ R_Cen_village_name_str) + 
+  labs(x = "Chlorine Test", y = "Chlorine Concentration (mg/L)") +
+  theme_bw()
+
+p1
+
+
+#Selecting for data that are > 0.10 mg/L
+chlorine_check <- chlorine%>%
+  filter(chlorine_concentration > 0.10)%>%
+  dplyr::select(unique_id, unique_id_2, R_Cen_village_name_str, chlorine_test_type, chlorine_concentration)
+
+
+```
+
