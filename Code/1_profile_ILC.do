@@ -107,8 +107,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	set scheme s2color
 	
 	* Set initial configurations to be able to run R script in Stata
-	*net from http://www.stata.com/statausers/packages
-    *net install rscript
+    * ssc install rscript
 	
 /*------------------------------------------------------------------------------
 	4 Run code
