@@ -130,11 +130,8 @@ foreach i in R_Cen_a13_water_sec_yn {
 
 
 //number of pregnant women
-forvalues i = 1/12 {
-	gen C_pregnant_num_`i'= 1 if R_Cen_a7_pregnant_`i'==1
-}
-	egen C_total_pregnant_hh = rowtotal(C_pregnant_num_*)
-	label var C_total_pregnant_hh "Number of pregnant women" 
+egen C_total_pregnant_hh = rowtotal(R_Cen_a7_pregnant_*)
+label var C_total_pregnant_hh "Number of pregnant women" 
 	
 	
 //number of children under 5
@@ -145,22 +142,64 @@ forvalues i = 1/12 {
 	label var C_total_U5child_hh "Number of U5 children" 
 	
 	
+	
+	
 //Baseline diarrhea incidence for children 
-forvalues i = 1/12 {
-	gen C_diarrhea_U5_`i'= 1 if R_Cen_a29_child_diarr_day_`i'==1 | R_Cen_a29_child_diarr_week_`i'==1 | R_Cen_a29_child_diarr_2week_`i'==1
-}
-	egen C_total_diarrhea_cases_U5 = rowtotal(C_diarrhea_U5_*)
-	
-	label var C_total_pregnant_hh "Total Diarrhea cases-U5" 
-	
+reshape long R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ C_U5child_, i(unique_id) j(num)
+
+gen diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) & C_total_U5child_hh>0
+gen diarrhea_prev_child_1week= 1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1) & C_total_U5child_hh>0
+
+
+egen total_childrenu5= total(C_U5child_) if C_total_U5child_hh>0
+egen total_diarrheacases_U5_2weeks= total(diarrhea_prev_child_2weeks) if C_total_U5child_hh>0
+egen total_diarrheacases_U5_1week= total(diarrhea_prev_child_1week) if C_total_U5child_hh>0
+gen diarrhea_child_perc_2weeks= total_diarrheacases_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
+gen diarrhea_child_perc_1week= total_diarrheacases_U5_1week/total_childrenu5 if C_total_U5child_hh>0
+drop C_U5child_ R_Cen_a29_child_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ diarrhea_prev_child_2weeks diarrhea_prev_child_1week
+
+reshape wide total_childrenu5 total_diarrheacases_U5_2weeks total_diarrheacases_U5_1week diarrhea_child_perc_2weeks diarrhea_child_perc_1week, i(unique_id) j(num)
+
+egen sum_diarrhea_child_1week = rowtotal(diarrhea_child_perc_1week*)
+gen avg_diarrhea_child_1week = sum_diarrhea_child_1week/12
+
+egen sum_diarrhea_child_2weeks = rowtotal(diarrhea_child_perc_2weeks*)
+gen avg_diarrhea_child_2weeks = sum_diarrhea_child_2weeks/12
+
+
+drop diarrhea_child_perc_1week* diarrhea_child_perc_2weeks* 
+
+label var avg_diarrhea_child_2weeks "Diarrhea Prevalence in the last 2 weeks-U5" 
+label var avg_diarrhea_child_1week "Diarrhea Prevalence in the last week-U5" 
+	  
 	  
 //Baseline diarrhea incidence for pregnant women 
-forvalues i = 1/12 {
-	gen C_diarrhea_preg_`i'= 1 if R_Cen_a23_wom_diarr_day_`i'==1 | R_Cen_a23_wom_diarr_week_`i'==1 | R_Cen_a23_wom_diarr_2week_`i'==1
-}
-	egen C_total_diarrhea_cases_preg = rowtotal(C_diarrhea_preg_*)
-	
-	label var C_total_diarrhea_cases_preg "Total Diarrhea cases-pregnant women" 
+reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a7_pregnant_, i(unique_id) j(num)
+
+gen diarrhea_prev_woman_2weeks=1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1 | R_Cen_a23_wom_diarr_2week_==1) & C_total_pregnant_hh>0
+gen diarrhea_prev_woman_1week= 1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1) & C_total_pregnant_hh>0
+
+
+egen total_pregwoman= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
+egen total_diarrhea_preg_2weeks= total(diarrhea_prev_woman_2weeks) if C_total_pregnant_hh>0
+egen total_diarrhea_preg_1week= total(diarrhea_prev_woman_1week) if C_total_pregnant_hh>0
+gen diarrhea_woman_perc_2weeks= total_diarrhea_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
+gen diarrhea_woman_perc_1week= total_diarrhea_preg_1week/total_pregwoman if C_total_pregnant_hh>0
+drop R_Cen_a7_pregnant_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ diarrhea_prev_woman_2weeks diarrhea_prev_woman_1week
+
+reshape wide total_pregwoman total_diarrhea_preg_2weeks total_diarrhea_preg_1week diarrhea_woman_perc_2weeks diarrhea_woman_perc_1week, i(unique_id) j(num)
+
+egen sum_diarrhea_preg_1week = rowtotal(diarrhea_woman_perc_1week*)
+gen avg_diarrhea_preg_1week = sum_diarrhea_preg_1week/12
+
+egen sum_diarrhea_preg_2weeks = rowtotal(diarrhea_woman_perc_2weeks*)
+gen avg_diarrhea_preg_2weeks = sum_diarrhea_preg_2weeks/12
+
+
+drop diarrhea_woman_perc_1week* diarrhea_woman_perc_2weeks* 
+
+label var avg_diarrhea_preg_2weeks "Diarrhea Prevalence in the last 2 weeks-preg women" 
+label var avg_diarrhea_preg_1week "Diarrhea Prevalence in the last week-preg women" 
 	
 	
 
@@ -175,7 +214,7 @@ keep if R_Cen_consent==1
 	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501
 	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
 
-save "${DataFinal}Final_HH_Odisha_consented.dta", replace
+
 
 /* Village shape file with geo code
 use "${Data_map}phdb.dta",clear
@@ -214,9 +253,9 @@ export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstro
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use  "${DataPre}1_1_Census_cleaned.dta", clear
 gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent)
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh)
 
 drop if R_Cen_village_name==88888
 * Temporal treatment status
@@ -273,7 +312,7 @@ cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
 
-  use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
+  use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
   label var R_Cen_a2_hhmember_count "Household size" 
   
