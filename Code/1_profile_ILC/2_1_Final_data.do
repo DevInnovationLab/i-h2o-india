@@ -50,6 +50,7 @@ forvalues i = 1/12 {
 }
 
 
+
 gen     C_Screened=0
 replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 
@@ -58,6 +59,7 @@ foreach i in R_Cen_consent R_FU_consent R_Cen_instruction {
 	recode Non_`i' 0=1 1=0	
 }
 
+save  "${DataPre}1_1_Census_cleaned.dta", replace
 ************
 * Labeling *
 ************
@@ -117,6 +119,7 @@ destring R_Cen_a12_water_source_prim, replace
 	rename R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type99
 	label var R_Cen_water_treat_kids_type77 "Other" 
 	label var R_Cen_water_treat_kids_type99 "Don't know"
+	
 	
 	label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
@@ -192,7 +195,6 @@ gen loosestool_child_1week= 1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_chil
 
 *generating new vars using both vars for diarrhea
 egen total_childrenu5= total(C_U5child_) if C_total_U5child_hh>0
-bys R_Cen_village_name: egen U5_village= total(C_U5child_) if C_total_U5child_hh>0
 egen total_diarrheacases_U5_2weeks= total(diarrhea_prev_child_2weeks) if C_total_U5child_hh>0
 egen total_diarrheacases_U5_1week= total(diarrhea_prev_child_1week) if C_total_U5child_hh>0
 gen diarrhea_child_perc_2weeks= total_diarrheacases_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
@@ -208,7 +210,7 @@ gen loosestool_child_perc_1week= total_loosestool_U5_1week/total_childrenu5 if C
 drop C_U5child_ R_Cen_a29_child_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ diarrhea_prev_child_2weeks diarrhea_prev_child_1week R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ loosestool_child_2weeks loosestool_child_1week
 
 *reshaping the data back to wide
-reshape wide total_childrenu5 U5_village total_diarrheacases_U5_2weeks total_diarrheacases_U5_1week diarrhea_child_perc_2weeks diarrhea_child_perc_1week total_loosestool_U5_2weeks total_loosestool_U5_1week loosestool_child_perc_2weeks loosestool_child_perc_1week, i(unique_id) j(num)
+reshape wide total_childrenu5  total_diarrheacases_U5_2weeks total_diarrheacases_U5_1week diarrhea_child_perc_2weeks diarrhea_child_perc_1week total_loosestool_U5_2weeks total_loosestool_U5_1week loosestool_child_perc_2weeks loosestool_child_perc_1week, i(unique_id) j(num)
 
 * final vars creation for use later
 egen sum_diarrhea_child_1week = rowtotal(diarrhea_child_perc_1week*)
@@ -231,7 +233,6 @@ label var avg_loosestool_child_1week "Loose stool- U5 (1 week)"
 label var avg_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
 label var C_total_U5child_hh "Average U5 children"
 label var total_childrenu51 "Total U5 children"
-label var U5_village1 "Total U5 children (village-wise)"
 
 	  
 //Baseline diarrhea incidence for pregnant women 
@@ -248,7 +249,6 @@ gen loosestool_woman_1week= 1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_st
 
 *generating new vars using both vars for diarrhea
 egen total_pregwoman= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
-bys R_Cen_village_name: egen preg_woman_village= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
 egen total_diarrhea_preg_2weeks= total(diarrhea_prev_woman_2weeks) if C_total_pregnant_hh>0
 egen total_diarrhea_preg_1week= total(diarrhea_prev_woman_1week) if C_total_pregnant_hh>0
 gen diarrhea_woman_perc_2weeks= total_diarrhea_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
@@ -263,7 +263,7 @@ gen loosestool_woman_perc_1week= total_loosestool_preg_1week/total_pregwoman if 
 drop R_Cen_a7_pregnant_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ diarrhea_prev_woman_2weeks diarrhea_prev_woman_1week R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ loosestool_woman_2weeks loosestool_woman_1week
 
 *reshaping the data back to wide
-reshape wide total_pregwoman preg_woman_village total_diarrhea_preg_2weeks total_diarrhea_preg_1week diarrhea_woman_perc_2weeks diarrhea_woman_perc_1week total_loosestool_preg_2weeks total_loosestool_preg_1week loosestool_woman_perc_2weeks loosestool_woman_perc_1week, i(unique_id) j(num)
+reshape wide total_pregwoman total_diarrhea_preg_2weeks total_diarrhea_preg_1week diarrhea_woman_perc_2weeks diarrhea_woman_perc_1week total_loosestool_preg_2weeks total_loosestool_preg_1week loosestool_woman_perc_2weeks loosestool_woman_perc_1week, i(unique_id) j(num)
 
 * final vars creation for use later
 egen sum_diarrhea_preg_1week = rowtotal(diarrhea_woman_perc_1week*)
@@ -286,7 +286,6 @@ label var avg_diarrhea_preg_1week "Diarrhea- Preg women (1 week)"
 label var avg_loosestool_preg_1week "Loose stool- Preg women (1 week)" 
 label var C_total_pregnant_hh "Average pregnant women"	
 label var total_pregwoman1 "Total pregnant women"
-label var preg_woman_village1 "Total pregnant women (village-wise)"
 
 
 * Save final data in STATA/R
@@ -341,13 +340,14 @@ program define   start_from_clean_file_Population
   * Open clean file
 use  "${DataPre}1_1_Census_cleaned.dta", clear
 gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh avg_loosestool_preg_1week avg_loosestool_preg_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks C_Screened Non_R_Cen_instruction Non_R_Cen_consent)
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh avg_loosestool_preg_1week avg_loosestool_preg_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks)
 
 drop if R_Cen_village_name==88888
 * Temporal treatment status
 	gen     Treat_V=.
 	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==10101
 	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==50201
+	
 
 recode Merge_C_F 1=0 3=1
 
