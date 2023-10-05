@@ -23,7 +23,6 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
        topf("${Table}top.tex") botf("${Table}bot.tex")
 */
 
-
 /*----------------------------------------------
 * 1) Progress table *
 ----------------------------------------------*/
@@ -40,7 +39,9 @@ replace C_Census_T=1 if C_Census==1 & Treat_V==1
 keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T, by(R_Cen_village_name)
-	label define R_Cen_village_namel 10101 "Asada (T)" 40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 50301 "Karlakana (C)" 50501 "Nathma (C)" 50201 "Barijhola (C)"  99999 "Total", modify
+	label define R_Cen_village_namel 10101 "Asada (T)" ///
+	                                       40201 "Bichikote (T)" 40202 "Gudiabandh (T)" ///
+	                                       50201 "Barijhola (C)" 50301 "Karlakana (C)" 50402 "Kuljing (T)" 50501 "Nathma (C)"  99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -72,9 +73,6 @@ global All1 C_Screened R_Cen_consent R_FU_consent Non_R_Cen_consent
 	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused for census"
 
-	
-	
-	
 //Team 1- 104, 105, 106, 107, 108	
 local All1 "Team 1- Table by enumerator"
 local LabelAll1 "MainEnum"
@@ -92,8 +90,6 @@ start_from_clean_file_Population
 	eststo  model108: estpost summarize $`k' if R_Cen_enum_name==108
 	eststo  model109: estpost summarize $`k' if R_Cen_enum_name==109
 	
-
-
 	** ADD MORE
 esttab model0 model104 model105 model106 model107 model108 model109 using "${Table}Main_Enum_Census_1.tex", ///
 	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Santosh\\Kumar}" "\shortstack[c]{Bibhar\\Pankaj}" ///
@@ -176,8 +172,6 @@ start_from_clean_file_Population
 	eststo  model107: estpost summarize $`k' if R_Cen_enum_name==107
 	eststo  model108: estpost summarize $`k' if R_Cen_enum_name==108
 	eststo  model109: estpost summarize $`k' if R_Cen_enum_name==109
-	
-
 
 	** ADD MORE
 		
@@ -304,9 +298,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
    Census
 ----------------------------------------------*/
 start_from_clean_file_Census
-*  avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh avg_loosestool_preg_1week avg_loosestool_preg_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks
-global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 
-* total_childrenu51 total_pregwoman1 C_total_pregnant_hh C_total_U5child_hh
+global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2  C_total_U5child_hh C_total_pregnant_hh
 		   
 global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 
 		   
@@ -417,7 +409,10 @@ esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "$
 * Child level stats
 * Akito -> Michelle:
 * Please run this with shape file data: N for start_from_clean_file_Census is the number of HH, the one for diarrhea has to be child level (you have to save different final dataset)
-global baseline_diarrhea C_diarrhea_prev_child_2weeks C_diarrhea_prev_child_1week
+global baseline_diarrhea C_diarrhea_prev_child_2weeks C_diarrhea_prev_child_1week ///
+                         C_loosestool_child_1week     C_loosestool_child_2weeks ///
+						 C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks
+
 local Notebaseline_diarrhea "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
 local baseline_diarrhea "Baseline balance among treatment arms- Baseline Diarrhea Incidence"
 
@@ -502,24 +497,6 @@ esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "$
 2) Descriptive table: Census (Village)
 ----------------------------------------------*/
 start_from_clean_file_Census
-global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 C_total_pregnant_hh C_total_U5child_hh
-
-		   
-		   
-global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 
-		   
-global secondary_water R_Cen_a13_water_sec_yn_0 ///
-  R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 
-  
-global treat_water R_Cen_a16_water_treat_0 R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 ///
-		   R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type__77 R_Cen_a16_water_treat_type_999 
-		   
-global treat_water_kids R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type77 R_Cen_water_treat_kids_type99
-           
-		   
-global jjm_uses C_Cen_a18_jjm_drinking ///
-		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 
-
 local demographics "Baseline characteristics across villages- Household demographics"
 local primary_water "Baseline characteristics across villages- Primary water source"
 local secondary_water "Baseline characteristics across villages- Secondary water source"

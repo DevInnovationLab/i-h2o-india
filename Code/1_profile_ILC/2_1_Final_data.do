@@ -17,6 +17,7 @@
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
+
 *****************
 * Quality check *
 *****************
@@ -105,14 +106,14 @@ replace C_Cen_a18_jjm_drinking=. if C_Cen_a18_jjm_drinking==2
 forvalues i = 1/17 {
 	gen C_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
 }
-egen C_total_pregnant_hh = rowtotal(C_total_pregnant_*)
+egen      C_total_pregnant_hh = rowtotal(C_total_pregnant_*)
 label var C_total_pregnant_hh "Number of pregnant women" 
 	
 //number of children under 5
 forvalues i = 1/17 {
 	gen C_U5child_`i'= 1 if R_Cen_a6_hhmember_age_`i'<5
 }
-	egen C_total_U5child_hh = rowtotal(C_U5child_*)
+	egen      C_total_U5child_hh = rowtotal(C_U5child_*)	
 	label var C_total_U5child_hh "Number of U5 children" 
 	label variable R_Cen_a2_hhmember_count "Household size" 
   	label variable R_Cen_a20_jjm_use_1 "Cooking"
@@ -224,12 +225,10 @@ merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(
 drop if R_Cen_village_name==88888
 * Temporal treatment status
 	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==10101
-	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==50201
+	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==50402
+	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 
 	
-
 recode Merge_C_F 1=0 3=1
-
 
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
@@ -309,22 +308,41 @@ end
 cap program drop start_from_clean_file_ChildLevel
 program define   start_from_clean_file_ChildLevel
   * Open clean file
-  start_from_clean_file_Census  
-keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_village_name
-reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_, i(unique_id) j(num)
+start_from_clean_file_Census  
+keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_village_name R_Cen_a31_child_stool*
+reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ ///
+         R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_, i(unique_id) j(num)
 * Drop the case where there is no children
 drop if R_Cen_a29_child_diarr_day_==. & R_Cen_a29_child_diarr_week_==. & R_Cen_a29_child_diarr_2week_==.
 * Data quality: Michelle (sometimes they fill the child child diarrhea info although C_total_U5child_hh=0?)
 drop if C_total_U5child_hh==0
 
 * Creating diarrhea vars
-gen     C_diarrhea_prev_child_2weeks=0
-replace C_diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) 
 gen     C_diarrhea_prev_child_1week=0
 replace C_diarrhea_prev_child_1week=1  if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1)
+gen     C_diarrhea_prev_child_2weeks=0
+replace C_diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) 
 
-label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)" 
+*Using loose & watery stool vars
+gen     C_loosestool_child_1week=0
+replace C_loosestool_child_1week=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1) 
+gen     C_loosestool_child_2weeks=0
+replace C_loosestool_child_2weeks=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1 | R_Cen_a31_child_stool_2week_==1)
+
+*generating new vars using both vars for diarrhea
+gen    C_diarrhea_comb_U5_1week=0
+replace C_diarrhea_comb_U5_1week=1 if C_diarrhea_prev_child_1week==1 | C_loosestool_child_1week==1
+
+gen    C_diarrhea_comb_U5_2weeks=0
+replace C_diarrhea_comb_U5_2weeks=1 if C_diarrhea_prev_child_2weeks==1 | C_loosestool_child_2weeks==1
+
 label var C_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
+label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)" 
+label var C_loosestool_child_1week "Loose stool- U5 (1 week)" 
+label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+
+label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
+label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
 /*
 
@@ -334,23 +352,6 @@ reshape long R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_ch
 *Using diarrhea vars
 gen diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) & C_total_U5child_hh>0
 gen diarrhea_prev_child_1week= 1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1) & C_total_U5child_hh>0
-
-*Using loose & watery stool vars
-gen loosestool_child_2weeks=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1 | R_Cen_a31_child_stool_2week_==1) & C_total_U5child_hh>0
-gen loosestool_child_1week= 1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1) & C_total_U5child_hh>0
-
-*generating new vars using both vars for diarrhea
-egen total_childrenu5= total(C_U5child_) if C_total_U5child_hh>0
-egen total_diarrheacases_U5_2weeks= total(diarrhea_prev_child_2weeks) if C_total_U5child_hh>0
-egen total_diarrheacases_U5_1week= total(diarrhea_prev_child_1week) if C_total_U5child_hh>0
-gen diarrhea_child_perc_2weeks= total_diarrheacases_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
-gen diarrhea_child_perc_1week= total_diarrheacases_U5_1week/total_childrenu5 if C_total_U5child_hh>0
-
-
-egen total_loosestool_U5_2weeks= total(loosestool_child_2weeks) if C_total_U5child_hh>0
-egen total_loosestool_U5_1week= total(loosestool_child_1week) if C_total_U5child_hh>0
-gen loosestool_child_perc_2weeks= total_loosestool_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
-gen loosestool_child_perc_1week= total_loosestool_U5_1week/total_childrenu5 if C_total_U5child_hh>0
 
 * dropping irrelevant vars
 drop C_U5child_ R_Cen_a29_child_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ diarrhea_prev_child_2weeks diarrhea_prev_child_1week R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ loosestool_child_2weeks loosestool_child_1week
@@ -363,7 +364,6 @@ egen sum_diarrhea_child_1week = rowtotal(diarrhea_child_perc_1week*)
 gen avg_diarrhea_child_1week = sum_diarrhea_child_1week/18
 egen sum_loosestool_child_1week = rowtotal(loosestool_child_perc_1week*)
 gen avg_loosestool_child_1week = sum_loosestool_child_1week/18
-
 
 egen sum_diarrhea_child_2weeks = rowtotal(diarrhea_child_perc_2weeks*)
 gen avg_diarrhea_child_2weeks = sum_diarrhea_child_2weeks/18
@@ -419,12 +419,13 @@ gen avg_loosestool_preg_2weeks = sum_loosestool_preg_2weeks/18
 
 drop diarrhea_woman_perc_1week* diarrhea_woman_perc_2weeks* loosestool_woman_perc_1week* loosestool_woman_perc_2weeks*
 
+label var C_total_pregnant_hh "Average pregnant women"	
+label var total_pregwoman1 "Total pregnant women"
 label var avg_diarrhea_preg_2weeks "Diarrhea- Preg women (2 weeks)" 
 label var avg_loosestool_preg_2weeks "Loose stool- Preg women (2 weeks)" 
 label var avg_diarrhea_preg_1week "Diarrhea- Preg women (1 week)" 
 label var avg_loosestool_preg_1week "Loose stool- Preg women (1 week)" 
-label var C_total_pregnant_hh "Average pregnant women"	
-label var total_pregwoman1 "Total pregnant women"
+
 */
 
 end
