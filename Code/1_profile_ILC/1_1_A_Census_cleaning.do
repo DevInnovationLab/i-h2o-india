@@ -29,7 +29,7 @@ use "${DataRaw}1_1_Census.dta", clear
 
 
  
-
+drop consented1child_followup5child_h
 //Renaming vars with prefix R_Cen
 foreach x of var * {
 	rename `x' R_Cen_`x'
@@ -46,7 +46,7 @@ format   unique_id_num %15.0gc
 	1 Formatting dates
 ------------------------------------------------------------------------------*/
 ***Change date prior to running
-	local date "1stOct2023"
+	local date "5Oct2023"
 	
 	*gen date = dofc(starttime)
 	*format date %td
@@ -125,9 +125,15 @@ gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
 gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
 gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
 
-local duration intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration
+local duration intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration R_Cen_survey_duration
 foreach x of local duration  {
 	replace `x'= `x'/60
+}
+
+
+local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration 
+
+foreach x of local duration2  {
 	rename `x' R_Cen_`x'
 }
 
@@ -166,8 +172,18 @@ Case 3 can exist due to data entry issues. This will be fixed below
 preserve
 keep if unique_id_Unique!=1 //for ease of observation and analysis
 duplicates report unique_id R_Cen_a1_resp_name
+
+
+//keeping instance for IDs where consent was obtained
+replace R_Cen_consent= 0 if R_Cen_consent==.
+bys unique_id (R_Cen_consent): gen C_dup_by_consent= _n if R_Cen_consent[_n]!=R_Cen_consent[_n+1]
+br unique_id_hyphen R_Cen_consent C_dup_by_consent
+drop if R_Cen_consent==0 & C_dup_by_consent[_n]== 1 
+
 //sorting and marking duplicate number by submission time 
-bys unique_id (R_Cen_starttime): gen C_dup_tag= _n
+bys unique_id (R_Cen_starttime): gen C_dup_tag= _n if R_Cen_consent==0
+
+
 
 
 //Case 1-
@@ -185,28 +201,35 @@ save `dups', replace
 ***** Step 2: For cases that don't get resolved, outsheet an excel file with the duplicate ID cases and send across to Santosh ji for checking with supervisors]
 //submission time to be added Bys unique_id (submissiontime): gen
 keep if C_new1==1 | C_new2==1 | C_new3==1
- capture export excel unique_id R_Cen_enum_name R_Cen_village_str R_Cen_submissiondate using "${pilot}Data_quality_`date'.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Census") ///
+ capture export excel unique_id R_Cen_enum_name R_Cen_village_str R_Cen_submissiondate using "${pilot}Data_quality.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Census") ///
  firstrow(var) cell(A1) sheetreplace
 
 
 
-***** Step 3: Creating new IDs for obvious duplicates; keeping the first ID based on the starttime and changing the IDs of the remaining
+***** Step 3: Creating new IDs for obvious duplicates; keeping the first ID based on the starttime and consent and changing the IDs of the remaining
+
 use `dups', clear
-keep if C_dup_tag==1
+keep if C_dup_by_consent==2 & R_Cen_consent==1
 tempfile dups_part1
 save `dups_part1', replace
+
+use `dups', clear
+keep if C_dup_tag==1
+tempfile dups_part2
+save `dups_part2', replace
 
 
 //Using sequential numbers starting from 500 for remaining duplicate ID cases because we wouldn't encounter so many pregnant women/children U5 in a village
 use `dups', clear
-keep if C_dup_tag>1
+keep if C_dup_tag>1 & R_Cen_consent!=1
 bys unique_id :gen C_seq=_n
 replace R_Cen_hh_code= R_Cen_hh_code+ C_seq + 500
 egen unique_id_new= concat (R_Cen_village_name R_Cen_enum_code R_Cen_hh_code)
 replace unique_id= unique_id_new 
 
-tempfile dups_part2
-save `dups_part2', replace
+tempfile dups_part3
+save `dups_part3', replace
+
 
 restore
 
@@ -215,6 +238,7 @@ use `working', clear
 drop if unique_id_Unique!=1
 append using `dups_part1', force
 append using `dups_part2', force
+append using `dups_part3', force
 //also append file that comes corrected from the field
 
 duplicates report unique_id //final check

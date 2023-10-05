@@ -11,9 +11,9 @@
 ** In this do file: 
 	* This do file exports.....
 	
-use "${DataFinal}Final_HH_Odisha.dta", clear
+use "${DataPre}1_1_Census_cleaned.dta", clear
 ***Change date prior to running
-local date "29Sept2023"
+local date "5Oct2023"
 
 /*--------------------------------------- Census quality check ---------------------------------------*/
 
@@ -48,7 +48,7 @@ br R_Cen_a1_resp_name R_Cen_a3_hhmember_name_1 R_Cen_enum_name if R_Cen_a1_resp_
 	count if R_Cen_a1_resp_name!=R_Cen_a3_hhmember_name_1 & no_change!=1
 
 	
-//3. Checking if primary water source is not repeated as secondary water source
+//2. Checking if primary water source is not repeated as secondary water source
 gen prim_sec_same=.
 forvalues i = 1/8 {
 	count if R_Cen_a12_water_source_prim==`i' & R_Cen_a13_water_source_sec_`i'==1
@@ -59,7 +59,7 @@ preserve
 keep if prim_sec_same== 1
 keep unique_id R_Cen_enum_name_label R_Cen_a12_water_source_prim R_Cen_a13_water_source_sec_* prim_sec_same
 order unique_id R_Cen_enum_name_label R_Cen_a12_water_source_prim R_Cen_a13_water_source_sec_* prim_sec_same
-export excel using "${pilot}Data_quality_`date'.xlsx" if prim_sec_same==1, sheet("prim_sec_source") firstrow(var) sheetreplace
+export excel using "${pilot}Data_quality.xlsx" if prim_sec_same==1, sheet("prim_sec_source") firstrow(var) sheetreplace
 restore
 
 
