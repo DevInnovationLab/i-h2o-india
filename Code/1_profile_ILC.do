@@ -116,8 +116,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 ------------------------------------------------------------------------------*/
 * Search function
 	/* 
-local string ABC.dta
-	cd "${github}code/1_Implimentation"
+local string 1_1_Census_cleaned
+	cd "${Do_pilot}"
 	find, match(`string') show zero
 */ 
 	

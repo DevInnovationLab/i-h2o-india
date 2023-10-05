@@ -6,7 +6,9 @@ output: html_document
 ---
 ```{r}
 # install the packages
-#install.packages("googledrive", "googlesheets4", "readxl", "dplyr", "lubridate", "haven", "expss", "stargazer", "Hmisc")
+# install.packages("googledrive", "googlesheets4", "readxl", "dplyr", "lubridate", "haven", "expss", "stargazer", "Hmisc")
+
+# install.packages("Hmisc")
 
 # load the libraries
 library(readxl) 
@@ -39,8 +41,8 @@ user_path <- function() {
   if (user == "asthavohra") { 
     path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
   } 
-  else if (user==""){
-    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
   } 
   else if (user == ""){
     path = ""
@@ -63,8 +65,8 @@ github_path <- function() {
   if (user == "asthavohra") {
     github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
-  else if (user==""){
-    github = ""
+  else if (user=="akitokamei"){
+    github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "") {
     github = ""
@@ -84,8 +86,8 @@ overleaf <- function() {
   if (user == "asthavohra") {
     overleaf = "/Users/asthavohra/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
-  else if (user==""){
-    overleaf = ""
+  else if (user=="akitokamei"){
+    overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "") {
     overleaf = ""

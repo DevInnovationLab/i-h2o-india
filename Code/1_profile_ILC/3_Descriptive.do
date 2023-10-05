@@ -95,12 +95,10 @@ start_from_clean_file_Population
 
 
 	** ADD MORE
-		
 esttab model0 model104 model105 model106 model107 model108 model109 using "${Table}Main_Enum_Census_1.tex", ///
 	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Santosh\\Kumar}" "\shortstack[c]{Bibhar\\Pankaj}" ///
 	   "\shortstack[c]{Madhusmita\\Samal}" "\shortstack[c]{Rekha\\Behera}" ///
 	   "\shortstack[c]{Sanjukta\\Chichuan}" "\shortstack[c]{Swagatika\\Behera}") substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&     _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
@@ -134,7 +132,6 @@ esttab model0 model110 model111 model113 model115 model117 model119 using "${Tab
 	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{Sarita\\Bhatra}" "\shortstack[c]{Abhishek\\Rath}" ///
 	   "\shortstack[c]{Mangulu\\Bagh}" "\shortstack[c]{Kuna\\Charan}" ///
 	   "\shortstack[c]{Jitendra\\Bagh}" "\shortstack[c]{Pramodini\\Gahir}")  substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
@@ -307,9 +304,9 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
    Census
 ----------------------------------------------*/
 start_from_clean_file_Census
-global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 total_childrenu51 total_pregwoman1 C_total_pregnant_hh C_total_U5child_hh
-
-		   
+*  avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh avg_loosestool_preg_1week avg_loosestool_preg_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks
+global demographics R_Cen_a2_hhmember_count R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 
+* total_childrenu51 total_pregwoman1 C_total_pregnant_hh C_total_U5child_hh
 		   
 global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 
 		   
@@ -321,20 +318,15 @@ global treat_water R_Cen_a16_water_treat_0 R_Cen_a16_water_treat_type_1 R_Cen_a1
 		   
 global treat_water_kids R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type77 R_Cen_water_treat_kids_type99
            
-		   
-global jjm_uses R_Cen_a18_jjm_drinking ///
+global jjm_uses C_Cen_a18_jjm_drinking ///
 		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 
 		   
-global baseline_diarrhea avg_diarrhea_child_1week avg_diarrhea_child_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_loosestool_preg_1week avg_loosestool_preg_2weeks
-		   
-
 local demographics "Baseline balance among treatment arms- Household demographics"
 local primary_water "Baseline balance among treatment arms- Primary water source"
 local secondary_water "Baseline balance among treatment arms- Secondary water source"
 local treat_water "Baseline balance among treatment arms- Water treatment methods"
 local treat_water_kids "Baseline balance among treatment arms- Water treatment methods for U5 children"
 local jjm_uses "Baseline balance among treatment arms- JJM water uses"
-local baseline_diarrhea "Baseline balance among treatment arms- Baseline Diarrhea Incidence"
 
 
 local LabelAll "MaintableHH"
@@ -345,9 +337,8 @@ local Notesecondary_water "Notes: This table presents the primary water source r
 local Notetreat_water "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
 local Notetreat_water_kids "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
 local Notejjm_uses "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
-local Notebaseline_diarrhea "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
 
-foreach k in demographics primary_water secondary_water treat_water treat_water_kids jjm_uses baseline_diarrhea {
+foreach k in demographics primary_water secondary_water treat_water treat_water_kids jjm_uses {
 start_from_clean_file_Census
 
 * Mean
@@ -408,7 +399,6 @@ start_from_clean_file_Census
 	replace `i'=m_`i'
 	}
 	eststo  model8: estpost summarize $`k'
-* esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
 esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Balance_Census_`k'.tex", ///
 	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average/Total}" "C" "T" "Diff" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
@@ -424,6 +414,88 @@ esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "$
 	   title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
 
+* Child level stats
+* Akito -> Michelle:
+* Please run this with shape file data: N for start_from_clean_file_Census is the number of HH, the one for diarrhea has to be child level (you have to save different final dataset)
+global baseline_diarrhea C_diarrhea_prev_child_2weeks C_diarrhea_prev_child_1week
+local Notebaseline_diarrhea "Notes: This table presents the primary water source reported in the census. The table is autocreated by 3_Descriptive.do."
+local baseline_diarrhea "Baseline balance among treatment arms- Baseline Diarrhea Incidence"
+
+foreach k in baseline_diarrhea {
+start_from_clean_file_ChildLevel
+
+* Mean
+	eststo  model0: estpost summarize $`k'
+* Diff
+	eststo  model1: estpost summarize $`k' if Treat_V==0
+	eststo  model2: estpost summarize $`k' if Treat_V==1
+	
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
+	replace `i'=_b[1.Treat_V]
+	}
+	eststo  model3: estpost summarize $`k'
+
+	* Significance
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=99996 if p_1> 0.1
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model4: estpost summarize $`k'
+	
+	* P-value
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(R_Cen_village_name)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=p_1
+	}
+	eststo  model5: estpost summarize $`k'
+
+* Min
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	egen m_`i'=min(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model6: estpost summarize $`k'
+* Max
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	egen m_`i'=max(`i')
+	replace `i'=m_`i'
+	}
+	eststo model7: estpost summarize $`k'
+* Missing 
+start_from_clean_file_ChildLevel
+	foreach i in $`k' {
+	egen `i'_M=rowmiss(`i')
+	egen m_`i'=sum(`i'_M)
+	replace `i'=m_`i'
+	}
+	eststo  model8: estpost summarize $`k'
+esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Balance_Census_`k'.tex", ///
+	   replace label cell("mean (fmt(3) label(_))") mtitles("\shortstack[c]{Average/Total}" "C" "T" "Diff" "Sig" "P-value" "Min" "Max" "Missing") ///
+	   substitute( ".000" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("``k''" \label{`Label`k''}) note("`Note`k''") 
+}
 
 
 /*----------------------------------------------
@@ -445,10 +517,8 @@ global treat_water R_Cen_a16_water_treat_0 R_Cen_a16_water_treat_type_1 R_Cen_a1
 global treat_water_kids R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type77 R_Cen_water_treat_kids_type99
            
 		   
-global jjm_uses R_Cen_a18_jjm_drinking ///
+global jjm_uses C_Cen_a18_jjm_drinking ///
 		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 
-		   
-		   
 
 local demographics "Baseline characteristics across villages- Household demographics"
 local primary_water "Baseline characteristics across villages- Primary water source"
@@ -481,8 +551,7 @@ start_from_clean_file_Census
 	eststo  model4: estpost summarize $`k' if R_Cen_village_name==40202
 	eststo  model5: estpost summarize $`k' if R_Cen_village_name==50201
 	
-* esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Census.tex",
-esttab model0  model1  model2 model3 model4 model5  using "${Table}Main_Village_Census_`k'.tex", ///
+esttab model0  model1  model2 model3 model4 model5 using "${Table}Main_Village_Census_`k'.tex", ///
 	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Bichikote" "Karlakana" "Nathma" "Gudiabandh" "Barijhola" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _\\" "" ///
@@ -496,7 +565,6 @@ esttab model0  model1  model2 model3 model4 model5  using "${Table}Main_Village_
 				   ) ///
 	    title("``k''" \label{`Label`k''}) note("`Note`k''") 
 }
-
 
 /*----------------------------------------------
 3) Map

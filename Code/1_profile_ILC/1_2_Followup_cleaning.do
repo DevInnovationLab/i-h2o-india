@@ -22,11 +22,10 @@ capture drop consented1burden_of_water_collec consented1chlorination_perceptio c
 
 drop r_cen_a1_resp_name  r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_a11_oldmale_name	
 
-
 foreach x of var * { 
 	rename `x' R_FU_`x' 
 } 
-
+drop R_FU_unique_id_1_check R_FU_unique_id_3_check R_FU_unique_id_2_check
 
 * Variable cuts across will not have prefix
 * R_FU_hh_code
@@ -164,17 +163,14 @@ bys `i': gen `i'_Unique=_N
 }
 capture export excel R_FU_sample_ID_stored_ID_stored unique_id_num using "${pilot}Data_quality.xlsx" if R_FU_sample_ID_stored_Unique!=1, sheet("Dup_sample_ID_stored") firstrow(var) cell(A1) sheetreplace
 
-
-
 * sample ID duplicates for running water sample
 foreach i in R_FU_sample_ID_tap {
 bys `i': gen `i'_Unique=_N
 }
 capture export excel R_FU_sample_ID_tap unique_id_num using "${pilot}Data_quality.xlsx" if R_FU_sample_ID_tap_Unique!=1, sheet("Dup_sample_ID_tap") firstrow(var) cell(A1) sheetreplace
 
+* Akito->Astha This code I added should be removed, but please properly ensure that the unique ID is unique at the end of the code. 
+duplicates drop unique_id_num, force
 
 * Create a variable for cases when Water Quality test didn't happen
 save "${DataDeid}1_2_Followup_cleaned.dta", replace
-
-
-
