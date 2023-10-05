@@ -25,7 +25,8 @@ save "${DataRaw}1. Contact details.dta", replace
 
 /* Ranodmized once
 * Update the location of the Nathma
-* import excel using "${DataOther}India ILC_Pilot_Rayagada Village Tracking.xlsx", first clear
+* 
+import excel using "${DataOther}India ILC_Pilot_Rayagada Village Tracking.xlsx", first clear
 drop if Block==""
 keep Block Selected Village village_IDinternal Pointgeolocationlat1 Pointgeolocationlon1 Panchatvillage BlockCode
 destring BlockCode, replace
@@ -59,9 +60,6 @@ drop if village_IDinternal==""
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear
-replace Pointgeolocationlat1=19.15765 if village_IDinternal=="50501"
-replace Pointgeolocationlon1=83.36311 if village_IDinternal=="50501"
-
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta"
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", nogen
 rename village_IDinternal village
