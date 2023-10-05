@@ -58,10 +58,11 @@ foreach i in $Var_Select {
 
 * Household selection, all the HH consented are
 keep if R_Cen_a18_jjm_drinking==1 // They drink water from the JJM tap
+/*
 //Removing hamlets which have other tap schemes ongoing besides JJM
 gen ineligible= strpos(R_Cen_hamlet_name, "Babu") | strpos(R_Cen_hamlet_name, "Bapu") | strpos(R_Cen_hamlet_name, "bapu")
 keep if ineligible==0
-
+*/
 
 ***********************************************************************
 * Step 2: Assign 1 for households selected based on random numbers *

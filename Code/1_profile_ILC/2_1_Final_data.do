@@ -10,22 +10,26 @@
 *=========================================================================*
 ** In this do file: 
 	* This do file exports.....
+	
+use "${DataDeid}1_2_Followup_cleaned.dta", clear
+duplicates drop unique_id_num, force
+tempfile followup_clean
+save `followup_clean', replace
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
 * Merge follow up and other data sets
 
-merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
+merge 1:1 unique_id_num using `followup_clean',gen(Merge_C_F)
 
 *****************
 * Quality check *
 *****************
-***Change date prior to running
-	local date "1stOct2023"
-	
-* There should be no using data
-capture export excel unique_id using "${pilot}Data_quality_`date'.xlsx" if Merge_C_F==2, sheet("Merge_C_F_2") firstrow(var) cell(A1) sheetreplace
-drop if Merge_C_F==2
 
+/*	
+* There should be no using data
+capture export excel unique_id using "${pilot}Data_quality.xlsx" if Merge_C_F==2, sheet("Merge_C_F_2") firstrow(var) cell(A1) sheetreplace
+drop if Merge_C_F==2
+*/
 
 //4. Checking inconsistencies in age calculator
 /*Note: For ages where the age of child is not equal to dob-calculated age, replace the dob-calculated age with a rounded value
@@ -45,15 +49,24 @@ forvalues i = 1/12 {
 	replace R_Cen_a6_hhmember_age_`i'=R_Cen_a5_autoage_`i' if R_Cen_a6_hhmember_age_`i'!=R_Cen_a5_autoage_`i' & R_Cen_correct_age_`i'==1
 }
 
+
+gen     C_Screened=0
+replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+
+foreach i in R_Cen_consent R_FU_consent R_Cen_instruction {
+	gen    Non_`i'=`i'
+	recode Non_`i' 0=1 1=0	
+}
+
 ************
 * Labeling *
 ************
 destring R_Cen_a12_water_source_prim, replace
-	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. provided Community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 8 "PWS: Private surface well" -77 "PWS: Other", modify
+	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 7 "PWS: Surface water" 8 "PWS: Private surface well" 77 "PWS: Other", modify
 	label values R_Cen_a12_water_source_prim R_Cen_a12_water_source_priml
-	label define R_Cen_a13_water_sec_ynl 0 "SWS: No" 1 "SWS: Yes", modify
+	label define R_Cen_a13_water_sec_ynl 0 "SWS: No secondary water source" 1 "SWS: Yes", modify
 	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
-	label define R_Cen_a16_water_treatl 0 "WT: No" 1 "WT: Yes", modify
+	label define R_Cen_a16_water_treatl 0 "WT: No water treatment" 1 "WT: Yes", modify
 	label values R_Cen_a16_water_treat R_Cen_a16_water_treatl
 	label define R_Cen_a15_water_sec_freql 1 "Freq: Daily" 2 "Freq: Every 2-3 days in a week" 3 "Freq: Once a week" 4 "Freq: Once every two weeks" ///
 	5 "Freq: Once a month" 6 "Freq: Once every few months" 7 "Freq: Once a year" 8 "Freq: No fixed schedule" 999 "Freq: Don't know", modify
@@ -86,6 +99,7 @@ destring R_Cen_a12_water_source_prim, replace
 	label variable R_Cen_a13_water_source_sec_8 "Private surface well"
 	label variable R_Cen_a13_water_source_sec__77 "Other"
 
+
 	label variable R_Cen_a16_water_treat_type_1 "Filter through cloth/sieve" 
 	label variable R_Cen_a16_water_treat_type_2 "Letting water stand" 
 	label variable R_Cen_a16_water_treat_type_3 "Boiling" 
@@ -94,12 +108,30 @@ destring R_Cen_a12_water_source_prim, replace
 	label variable R_Cen_a16_water_treat_type_999 "Don't know"
 
 
+
 	label var R_Cen_water_treat_kids_type_1 "Filter through cloth/sieve" 
 	label var R_Cen_water_treat_kids_type_2 "Letting water stand" 
 	label var R_Cen_water_treat_kids_type_3 "Boiling" 
-	label var R_Cen_water_treat_kids_type_4 "Adding chlorine/bleaching powder" 
-	label var R_Cen_water_treat_kids_type__77 "Other" 
-	label var R_Cen_water_treat_kids_type_999 "Don't know"
+	label var R_Cen_water_treat_kids_type_4 "Adding chlorine/bleaching powder"
+	rename R_Cen_water_treat_kids_type__77 R_Cen_water_treat_kids_type77
+	rename R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type99
+	label var R_Cen_water_treat_kids_type77 "Other" 
+	label var R_Cen_water_treat_kids_type99 "Don't know"
+	
+	label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var R_Cen_survey_duration "Survey duration"
+	label var R_Cen_intro_duration "Intro duration"
+	label var R_Cen_consent_duration "Consent duration"
+	label var R_Cen_sectionB_duration "HH demographics duration"
+	label var R_Cen_sectionC_duration "Water section duration"
+	label var R_Cen_sectionD_duration "JJM tap section duration"
+	label var R_Cen_sectionE_duration "Resp. health section duration"
+	label var R_Cen_sectionF_duration "Child health section duration"
+	label var R_Cen_sectionG_duration "Assets section duration"
+	label var R_Cen_sectionH_duration "Concluding section duration"
 
 
 * Create new variables
@@ -130,39 +162,132 @@ foreach i in R_Cen_a13_water_sec_yn {
 
 
 //number of pregnant women
-forvalues i = 1/12 {
-	gen C_pregnant_num_`i'= 1 if R_Cen_a7_pregnant_`i'==1
+forvalues i = 1/17 {
+	gen C_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
 }
-	egen C_total_pregnant_hh = rowtotal(C_pregnant_num_*)
-	label var C_total_pregnant_hh "Number of pregnant women" 
+egen C_total_pregnant_hh = rowtotal(C_total_pregnant_*)
+label var C_total_pregnant_hh "Number of pregnant women" 
 	
 	
 //number of children under 5
-forvalues i = 1/12 {
+forvalues i = 1/17 {
 	gen C_U5child_`i'= 1 if R_Cen_a6_hhmember_age_`i'<5
 }
 	egen C_total_U5child_hh = rowtotal(C_U5child_*)
 	label var C_total_U5child_hh "Number of U5 children" 
 	
 	
+	
+	
 //Baseline diarrhea incidence for children 
-forvalues i = 1/12 {
-	gen C_diarrhea_U5_`i'= 1 if R_Cen_a29_child_diarr_day_`i'==1 | R_Cen_a29_child_diarr_week_`i'==1 | R_Cen_a29_child_diarr_2week_`i'==1
-}
-	egen C_total_diarrhea_cases_U5 = rowtotal(C_diarrhea_U5_*)
-	
-	label var C_total_pregnant_hh "Total Diarrhea cases-U5" 
-	
+reshape long R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ C_U5child_, i(unique_id) j(num)
+
+*Using diarrhea vars
+gen diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) & C_total_U5child_hh>0
+gen diarrhea_prev_child_1week= 1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1) & C_total_U5child_hh>0
+
+*Using loose & watery stool vars
+gen loosestool_child_2weeks=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1 | R_Cen_a31_child_stool_2week_==1) & C_total_U5child_hh>0
+gen loosestool_child_1week= 1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1) & C_total_U5child_hh>0
+
+*generating new vars using both vars for diarrhea
+egen total_childrenu5= total(C_U5child_) if C_total_U5child_hh>0
+bys R_Cen_village_name: egen U5_village= total(C_U5child_) if C_total_U5child_hh>0
+egen total_diarrheacases_U5_2weeks= total(diarrhea_prev_child_2weeks) if C_total_U5child_hh>0
+egen total_diarrheacases_U5_1week= total(diarrhea_prev_child_1week) if C_total_U5child_hh>0
+gen diarrhea_child_perc_2weeks= total_diarrheacases_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
+gen diarrhea_child_perc_1week= total_diarrheacases_U5_1week/total_childrenu5 if C_total_U5child_hh>0
+
+
+egen total_loosestool_U5_2weeks= total(loosestool_child_2weeks) if C_total_U5child_hh>0
+egen total_loosestool_U5_1week= total(loosestool_child_1week) if C_total_U5child_hh>0
+gen loosestool_child_perc_2weeks= total_loosestool_U5_2weeks/total_childrenu5 if C_total_U5child_hh>0
+gen loosestool_child_perc_1week= total_loosestool_U5_1week/total_childrenu5 if C_total_U5child_hh>0
+
+* dropping irrelevant vars
+drop C_U5child_ R_Cen_a29_child_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ diarrhea_prev_child_2weeks diarrhea_prev_child_1week R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ loosestool_child_2weeks loosestool_child_1week
+
+*reshaping the data back to wide
+reshape wide total_childrenu5 U5_village total_diarrheacases_U5_2weeks total_diarrheacases_U5_1week diarrhea_child_perc_2weeks diarrhea_child_perc_1week total_loosestool_U5_2weeks total_loosestool_U5_1week loosestool_child_perc_2weeks loosestool_child_perc_1week, i(unique_id) j(num)
+
+* final vars creation for use later
+egen sum_diarrhea_child_1week = rowtotal(diarrhea_child_perc_1week*)
+gen avg_diarrhea_child_1week = sum_diarrhea_child_1week/18
+egen sum_loosestool_child_1week = rowtotal(loosestool_child_perc_1week*)
+gen avg_loosestool_child_1week = sum_loosestool_child_1week/18
+
+
+egen sum_diarrhea_child_2weeks = rowtotal(diarrhea_child_perc_2weeks*)
+gen avg_diarrhea_child_2weeks = sum_diarrhea_child_2weeks/18
+egen sum_loosestool_child_2weeks = rowtotal(loosestool_child_perc_2weeks*)
+gen avg_loosestool_child_2weeks = sum_loosestool_child_2weeks/18
+
+
+drop diarrhea_child_perc_1week* diarrhea_child_perc_2weeks* loosestool_child_perc_1week* loosestool_child_perc_2weeks*
+
+label var avg_diarrhea_child_2weeks "Diarrhea- U5 (2 weeks)" 
+label var avg_diarrhea_child_1week "Diarrhea- U5 (1 week)" 
+label var avg_loosestool_child_1week "Loose stool- U5 (1 week)" 
+label var avg_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+label var C_total_U5child_hh "Average U5 children"
+label var total_childrenu51 "Total U5 children"
+label var U5_village1 "Total U5 children (village-wise)"
+
 	  
 //Baseline diarrhea incidence for pregnant women 
-forvalues i = 1/12 {
-	gen C_diarrhea_preg_`i'= 1 if R_Cen_a23_wom_diarr_day_`i'==1 | R_Cen_a23_wom_diarr_week_`i'==1 | R_Cen_a23_wom_diarr_2week_`i'==1
-}
-	egen C_total_diarrhea_cases_preg = rowtotal(C_diarrhea_preg_*)
-	
-	label var C_total_diarrhea_cases_preg "Total Diarrhea cases-pregnant women" 
-	
-	
+reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a7_pregnant_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_, i(unique_id) j(num)
+
+*Using diarrhea vars
+gen diarrhea_prev_woman_2weeks=1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1 | R_Cen_a23_wom_diarr_2week_==1) & C_total_pregnant_hh>0
+gen diarrhea_prev_woman_1week= 1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1) & C_total_pregnant_hh>0
+
+
+*Using loose & watery stool vars
+gen loosestool_woman_2weeks=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1 | R_Cen_a25_wom_stool_2week_==1) & C_total_pregnant_hh>0
+gen loosestool_woman_1week= 1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1) & C_total_pregnant_hh>0
+
+*generating new vars using both vars for diarrhea
+egen total_pregwoman= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
+bys R_Cen_village_name: egen preg_woman_village= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
+egen total_diarrhea_preg_2weeks= total(diarrhea_prev_woman_2weeks) if C_total_pregnant_hh>0
+egen total_diarrhea_preg_1week= total(diarrhea_prev_woman_1week) if C_total_pregnant_hh>0
+gen diarrhea_woman_perc_2weeks= total_diarrhea_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
+gen diarrhea_woman_perc_1week= total_diarrhea_preg_1week/total_pregwoman if C_total_pregnant_hh>0
+
+egen total_loosestool_preg_2weeks= total(loosestool_woman_2weeks) if C_total_pregnant_hh>0
+egen total_loosestool_preg_1week= total(loosestool_woman_1week) if C_total_pregnant_hh>0
+gen loosestool_woman_perc_2weeks= total_loosestool_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
+gen loosestool_woman_perc_1week= total_loosestool_preg_1week/total_pregwoman if C_total_pregnant_hh>0
+
+* dropping irrelevant vars
+drop R_Cen_a7_pregnant_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ diarrhea_prev_woman_2weeks diarrhea_prev_woman_1week R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ loosestool_woman_2weeks loosestool_woman_1week
+
+*reshaping the data back to wide
+reshape wide total_pregwoman preg_woman_village total_diarrhea_preg_2weeks total_diarrhea_preg_1week diarrhea_woman_perc_2weeks diarrhea_woman_perc_1week total_loosestool_preg_2weeks total_loosestool_preg_1week loosestool_woman_perc_2weeks loosestool_woman_perc_1week, i(unique_id) j(num)
+
+* final vars creation for use later
+egen sum_diarrhea_preg_1week = rowtotal(diarrhea_woman_perc_1week*)
+gen avg_diarrhea_preg_1week = sum_diarrhea_preg_1week/18
+egen sum_diarrhea_preg_2weeks = rowtotal(diarrhea_woman_perc_2weeks*)
+gen avg_diarrhea_preg_2weeks = sum_diarrhea_preg_2weeks/18
+
+egen sum_loosestool_preg_1week = rowtotal(loosestool_woman_perc_1week*)
+gen avg_loosestool_preg_1week = sum_loosestool_preg_1week/18
+egen sum_loosestool_preg_2weeks = rowtotal(loosestool_woman_perc_2weeks*)
+gen avg_loosestool_preg_2weeks = sum_loosestool_preg_2weeks/18
+
+
+
+drop diarrhea_woman_perc_1week* diarrhea_woman_perc_2weeks* loosestool_woman_perc_1week* loosestool_woman_perc_2weeks*
+
+label var avg_diarrhea_preg_2weeks "Diarrhea- Preg women (2 weeks)" 
+label var avg_loosestool_preg_2weeks "Loose stool- Preg women (2 weeks)" 
+label var avg_diarrhea_preg_1week "Diarrhea- Preg women (1 week)" 
+label var avg_loosestool_preg_1week "Loose stool- Preg women (1 week)" 
+label var C_total_pregnant_hh "Average pregnant women"	
+label var total_pregwoman1 "Total pregnant women"
+label var preg_woman_village1 "Total pregnant women (village-wise)"
+
 
 * Save final data in STATA/R
 save "${DataFinal}Final_HH_Odisha.dta", replace
@@ -175,7 +300,7 @@ keep if R_Cen_consent==1
 	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501
 	save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
 
-save "${DataFinal}Final_HH_Odisha_consented.dta", replace
+
 
 /* Village shape file with geo code
 use "${Data_map}phdb.dta",clear
@@ -214,24 +339,33 @@ export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstro
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use  "${DataPre}1_1_Census_cleaned.dta", clear
 gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent)
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) keepusing(unique_id Merge_C_F R_FU_consent avg_diarrhea_preg_1week avg_diarrhea_preg_2weeks avg_diarrhea_child_1week avg_diarrhea_child_2weeks C_total_pregnant_hh C_total_U5child_hh avg_loosestool_preg_1week avg_loosestool_preg_2weeks avg_loosestool_child_1week avg_loosestool_child_2weeks C_Screened Non_R_Cen_instruction Non_R_Cen_consent)
 
 drop if R_Cen_village_name==88888
 * Temporal treatment status
 	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==40201
-	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501
-
-gen     C_Screened=0
-replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==10101
+	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==50201
 
 recode Merge_C_F 1=0 3=1
-foreach i in R_Cen_consent R_FU_consent R_Cen_instruction {
-	gen    Non_`i'=`i'
-	recode Non_`i' 0=1 1=0	
-}
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var R_Cen_survey_duration "Survey duration"
+	label var R_Cen_intro_duration "Intro duration"
+	label var R_Cen_consent_duration "Consent duration"
+	label var R_Cen_sectionB_duration "HH demographics duration"
+	label var R_Cen_sectionC_duration "Water section duration"
+	label var R_Cen_sectionD_duration "JJM tap section duration"
+	label var R_Cen_sectionE_duration "Resp. health section duration"
+	label var R_Cen_sectionF_duration "Child health section duration"
+	label var R_Cen_sectionG_duration "Assets section duration"
+	label var R_Cen_sectionH_duration "Concluding section duration"
+
 
 end
 
@@ -273,7 +407,7 @@ cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
 
-  use                       "${DataFinal}Final_HH_Odisha_consented.dta", clear
+  use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
   label var R_Cen_a2_hhmember_count "Household size" 
   

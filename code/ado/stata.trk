@@ -1,5 +1,4 @@
-
-* 00000023
+* 000000033
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -638,4 +637,29 @@ f m/mrgraph.ado
 f m/mrgraph.hlp
 f _/_mrsvmat.ado
 f _/_mrsvmat.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N rscript.pkg
+D  4 Oct 2023
+U 3
+d 'RSCRIPT': module to call an R script from Stata
+d 
+d   rscript calls the R script filename.R from Stata. It displays
+d the R output (and errors, if applicable) in the Stata console.
+d 
+d KW: R
+d KW: programming
+d 
+d Requires: Stata version 12
+d 
+d Distribution-Date: 20230603
+d 
+d Author: David Molitor, University of Illinois
+d Support: email  dmolitor@@illinois.edu
+d 
+d Author: Julian Reif , University of Illinois
+d Support: email  jreif@@illinois.edu
+d 
+f r/rscript.ado
+f r/rscript.sthlp
 e
