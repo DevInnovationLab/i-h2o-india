@@ -86,10 +86,8 @@ chlorine_check <- chlorine%>%
   filter(chlorine_concentration > 0.10)%>%
   dplyr::select(unique_id, unique_id_2, R_Cen_village_name_str, chlorine_test_type, chlorine_concentration)
 
+
 #Creating table
-chlorine_check%>%
-  stargazer()
-  
 chlorine_check%>%
   kbl(
     #col.names = linebreak(column_names, align = "l"),
@@ -103,6 +101,10 @@ chlorine_check%>%
   column_spec(1, bold = TRUE)%>%
   column_spec(2, width = "75px")
 
+#Creating table
+#stargazer(chlorine_check)
+  
+
+
 
 ```
-
