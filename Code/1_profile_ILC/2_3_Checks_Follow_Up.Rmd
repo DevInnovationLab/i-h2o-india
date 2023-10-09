@@ -135,8 +135,7 @@ df.label <- rbind(df.label, df.label.manual)
 
 ```{r checks - full}
 
-# drop containers that were never filled 
-
+df.temp.consent <- df.temp[which(df.temp$R_FU_consent==1) ,]
 # create variable batteries : 
 #numeric vars
 num_var <- names(select_if(df.temp.consent, is.numeric))
@@ -151,7 +150,6 @@ char_var <- names(df.temp.consent %>%
 
 # 1. Count of missing values sorted by cases higher than 5 
 
-df.temp.consent <- df.temp[which(df.temp$R_FU_consent==1) ,]
 
 missing_values <- as.data.frame(sapply(df.temp.consent, function(x) sum(is.na(x))))%>% rename(   "count" = "sapply(df.temp.consent, function(x) sum(is.na(x)))") %>% filter(count != 0)
 missing_values <- tibble::rownames_to_column(missing_values) 
@@ -203,11 +201,11 @@ submissions <- df.temp %>% select(R_FU_r_cen_village_name_str) %>%
 
 resp_available <- df.temp %>%  filter(R_FU_resp_available == 1 & R_FU_replacement == 0 ) %>% 
   select(R_FU_r_cen_village_name_str) %>%
-  group_by(R_FU_r_cen_village_name_str) %>% mutate("Original \ Respondent \ Found" =n()) %>% ungroup()  %>% unique() %>% 
+  group_by(R_FU_r_cen_village_name_str) %>% mutate("OG Found" =n()) %>% ungroup()  %>% unique() %>% 
   arrange(R_FU_r_cen_village_name_str)
 resp_notavailable <- df.temp %>%  filter(R_FU_resp_available != 1  ) %>% 
   select(R_FU_r_cen_village_name_str) %>%
-  group_by(R_FU_r_cen_village_name_str) %>% mutate("Respondent \ NOT Found" =n()) %>% ungroup()  %>% unique() %>% 
+  group_by(R_FU_r_cen_village_name_str) %>% mutate("NOT Found" =n()) %>% ungroup()  %>% unique() %>% 
   arrange(R_FU_r_cen_village_name_str)
 
 consented <- df.temp  %>% filter(R_FU_consent == 1) %>% select(R_FU_r_cen_village_name_str) %>%
@@ -236,7 +234,6 @@ df.progress<- rbind(df.progress, Total)
  stargazer(df.progress, summary=F, title= "Overall Progress: Baseline HH Survey",float=F,rownames = F,
            covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Progress_HH_Survey.tex"))
 
- 
 ```
 ```{r}
 #create a date variable
@@ -325,11 +322,14 @@ secE_dur_enum <- df.temp.consent %>% mutate(FU_secE_dur_min  = ifelse(FU_secE_du
 df.duration.enum <- left_join(resp_hh_location_dur_enum,consent_dur_enum) %>% left_join(secA_dur_enum) %>% 
  left_join(secB_dur_enum) %>% 
    left_join(secC_dur_enum) %>% 
-   left_join(secC_dur_enum) %>% 
+   left_join(secC_dur_enum) %>%
+  left_join(secD_dur_enum) %>%
    left_join(secE_dur_enum) 
 df.duration.enum <- df.duration.enum %>% rename(Enumerator = R_FU_enum_name_label )
-stargazer(df.duration.enum, summary=F, title= "Duraction by section Baseline HH Survey by enumerator",float=F,rownames = F,
-           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Duration_enum_HH_Survey.tex"))
+star.out <- stargazer(df.duration.enum, summary=F, title= "Duraction by section Baseline HH Survey by enumerator",float=F,rownames = F,covariate.labels=NULL)
+star.out <- sub("cccccccc", "{l p{2cm} *{8}{p{1cm}}}")
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Duration_enum_HH_Survey.tex"))
+
 
 #3. Count of Dont Know by enumerators 
 
@@ -445,7 +445,7 @@ df.wash <- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,
   var_lab(df.wash$R_FU_water_source_prim) = "Primary drinking water source?"
 val_lab(df.wash$R_FU_water_source_prim) = num_lab("
             1 Government provided household Taps (supply paani)
-            2 Government provided community standpipe (connected to piped system, through Vasudha tank)    
+            2 Government provided community standpipe    
             3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
             4	Manual handpump
             5	Covered dug well
@@ -512,69 +512,87 @@ df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>%
                                                    "Is the water stored currently in the house treated?", Var1)))))) %>%
   rename(Question = Var1) %>% mutate(Prop = round(Prop, 2))
 
-stargazer(df.append, summary=F, title= "WASH Section Summary",float=F,rownames = F,
-           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Wash_HH_Survey.tex"))
+star.out <- stargazer(df.append, summary=F, title= "WASH Section Summary",float=F,rownames = F,
+           covariate.labels=NULL)
 
+star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
+
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Wash_HH_Survey.tex"))
+ 
+
+
+#what treatment? 
+     
+df.treat <- df.temp.consent %>% filter(R_FU_water_treat == 1| R_FU_water_stored == 1) %>% select(R_FU_water_treat,R_FU_water_stored, R_FU_water_treat_type)
+df.treat$R_FU_water_treat_type <- ordered(df.treat$R_FU_water_treat_type,
+                                          levels = c(1,2,3,4, -77),
+                                          labels = c("Filter the water through a cloth or sieve", 
+                                                     "Let the water stand for some time ", 
+                                                     "Boil the water", 
+                                                     "Add chlorine/ bleaching powder", 
+                                                     "Other"))
+
+
+freq_tab <- table(df.treat$R_FU_water_treat_type)
+     prop_tab <- as.data.frame(prop(freq_tab))
+     prop_tab <- prop_tab %>% rename(Prop = Freq)
+     df.stat <- merge(freq_tab, prop_tab) 
+
+df.stat$Prop <- round(proportions(df.stat$Freq), 2)
+df.stat <- df.stat %>% rename("Type of treatment" = Var1)
+stargazer(df.stat, summary=F, title= "WASH Section Summary",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_treat_HH_Survey.tex"))
+         
 ```
 
 
-```{r descriptive sec B wash access}
-df.tap<- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,  R_FU_quant, R_FU_water_treat, R_FU_water_stored)
+```{r descriptive sec B tap }
+df.tap<- df.temp.consent %>% select(R_FU_tap_supply_freq, R_FU_tap_function, R_FU_tap_use_future)
 #assign labels for each
 
-  var_lab(df.wash$R_FU_water_source_prim) = "Primary drinking water source?"
-val_lab(df.wash$R_FU_water_source_prim) = num_lab("
-            1 Government provided household Taps (supply paani)
-            2 Government provided community standpipe (connected to piped system, through Vasudha tank)    
-            3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
-            4	Manual handpump
-            5	Covered dug well
-            6	Directly fetched by surface water
-            7	Uncovered dug well
-            8	Private Surface well    
+  var_lab(df.tap$R_FU_tap_supply_freq) = "How often is water supplied from government taps?"
+  val_lab(df.tap$R_FU_tap_supply_freq) = num_lab("
+            1	Daily
+            2	Few days in a week
+            3	Once a week 
+            4	Few times in a month
+            5	Once a month
+            6	No fixed schedule
+            -77	Other
+            999	Don’t know
+            -98	Refused to answer    
             ")
-
-var_lab(df.wash$R_FU_water_sec_yn) = "Any other source of drinking water?"
-val_lab(df.wash$R_FU_water_sec_yn) = num_lab("
-            1 Yes
-            2 No
-            999 Don't Know
+ var_lab(df.tap$R_FU_tap_function) = "In the last two weeks, have you not been able to collect water from taps?"
+  val_lab(df.tap$R_FU_tap_function) = num_lab("
+           1 Yes
+           2 No
+           999 Don't Know    
             ")
-var_lab(df.wash$R_FU_quant) = "How much drinking water came from primary water source?"
-val_lab(df.wash$R_FU_quant) = num_lab("
-            1	All of it
-            2	Most of it
-            3	Half of it
-            4	Little of it
-            5	None of it
-            ")
-var_lab(df.wash$R_FU_water_treat) = "Is primary drinking water source treated?"
-val_lab(df.wash$R_FU_water_treat) = num_lab("
-            1 Yes
-            2 No
-            999 Don't Know
-            ")
-
-var_lab(df.wash$R_FU_water_stored) = "Is the water stored currently in the house treated?"
-val_lab(df.wash$R_FU_water_stored) = num_lab("
-            1 Yes
-            2 No
-            999 Don't Know
-            ")
-
+  
+  
+  var_lab(df.tap$R_FU_tap_use_future) = "How likely to use/continue the government tap for drinking?"
+  val_lab(df.tap$R_FU_tap_use_future) = num_lab("
+           1	Very likely
+           2	Somewhat likely
+           3	Neither likely nor unlikely
+           4	Somewhat Unlikely
+           5	Very unlikely
+            ") 
+ 
+  
 df.append <- as.data.frame(matrix(NA, ncol = 3)) 
 df.append_var <- as.data.frame(matrix(NA, ncol = 3))  
 
 colnames(df.append) <- c('Var1', 'Freq', 'Prop')
 colnames(df.append_var) <- c('Var1', 'Freq', 'Prop')
 
-var_names <- names(df.wash)
+var_names <- names(df.tap)
 for (i in var_names){
      
      df.append_var$Var1 <- i
     df.append <-  rbind(df.append,df.append_var)
-     freq_tab <- as.data.frame(table(df.wash[,i]))
-     prop_tab <- as.data.frame(prop(table(df.wash[,i])))
+     freq_tab <- as.data.frame(table(df.tap[,i]))
+     prop_tab <- as.data.frame(prop(table(df.tap[,i])))
      prop_tab <- prop_tab %>% rename(Prop = Freq)
      freq_tab[,1] <- as.character(freq_tab[,1])
      
@@ -584,15 +602,184 @@ for (i in var_names){
      df.append <- rbind(df.append, df.stat)
 }
 df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>% 
-  mutate(Var1 = ifelse(Var1 == "R_FU_water_source_prim", "Primary drinking water source?", 
-                       ifelse(Var1 == "R_FU_water_sec_yn","Any other source of drinking water?", 
-                              ifelse(Var1 == "R_FU_quant", "How much drinking water came from primary water source?", 
-                                     ifelse(Var1 == "R_FU_water_treat", "Is primary drinking water source treated?", 
-                                            ifelse(Var1 == "R_FU_water_stored", 
-                                                   "Is the water stored currently in the house treated?", Var1)))))) %>%
+  mutate(Var1 = ifelse(Var1 == "R_FU_tap_supply_freq", "How often is water supplied from government taps?", 
+                       ifelse(Var1 == "R_FU_tap_function",
+                              "In the last two weeks, have you not been able to collect water from taps?", 
+                                     ifelse(Var1 == "R_FU_tap_use_future", 
+                                            "How likely to use/continue the government tap for drinking?", 
+                                        Var1)))) %>%
   rename(Question = Var1) %>% mutate(Prop = round(Prop, 2))
 
-stargazer(df.append, summary=F, title= "WASH Section Summary",float=F,rownames = F,
+
+
+
+stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
+           covariate.labels=NULL)
+star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
+
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Tap_HH_Survey.tex"))
+ 
+
+```
+
+
+```{r descriptive sec C chlorine perceptions }
+df.cl<- df.temp.consent %>% select(R_FU_tap_taste_satisfied, R_FU_tap_taste_desc,  R_FU_tap_smell, R_FU_tap_color, 
+                                   R_FU_tap_trust)
+#assign labels for each
+ var_lab(df.cl$R_FU_tap_taste_satisfied) = "How satisfied are you with the taste of water from government taps?"
+  val_lab(df.cl$R_FU_tap_taste_satisfied) = num_lab("
+            1	Very satisfied
+            2	Satisfied
+            3	Neither satisfied nor dissatisfied
+            4	Dissatisfied
+            5	Very dissatisfied
+            999	Don’t know    
+            ")
+ var_lab(df.cl$R_FU_tap_taste_desc) = "Describe the taste of water from government taps"
+  val_lab(df.cl$R_FU_tap_taste_desc) = num_lab("
+            1	Good
+            2	Medicine or chemical
+            3	Metal
+            4	Salty
+            5	Bleach/chlorine
+            999	Don’t know
+            -77	Other    
+            ") 
+var_lab(df.cl$R_FU_tap_smell) = "Describe the smell of water from government taps"
+  val_lab(df.cl$R_FU_tap_smell) = num_lab("
+            1	Good
+            2	Medicine or chemical
+            3	Metal
+            4	Salty
+            5	Bleach/chlorine
+            999	Don’t know
+            -77	Other    
+            ")   
+var_lab(df.cl$R_FU_tap_color) = "Describe the color of water from government taps"
+  val_lab(df.cl$R_FU_tap_color) = num_lab("
+            1	No problems with the color or look
+            2	Muddy/ sandy water
+            3	Yellow-ish or reddish water (from iron)
+            999	Don’t know
+            -77	Other    
+            ")   
+  var_lab(df.cl$R_FU_tap_trust) = "How confident are you in the water from government taps?"
+  val_lab(df.cl$R_FU_tap_trust) = num_lab("
+            1	Very confident
+            2	Somewhat confident
+            3	Neither confident or not confident
+            4	Somewhat not confident
+            5	Not confident at all    
+            ")   
+  
+
+
+df.append <- as.data.frame(matrix(NA, ncol = 3)) 
+df.append_var <- as.data.frame(matrix(NA, ncol = 3))  
+
+colnames(df.append) <- c('Var1', 'Freq', 'Prop')
+colnames(df.append_var) <- c('Var1', 'Freq', 'Prop')
+
+var_names <- names(df.cl)
+for (i in var_names){
+     
+     df.append_var$Var1 <- i
+    df.append <-  rbind(df.append,df.append_var)
+     freq_tab <- as.data.frame(table(df.cl[,i]))
+     prop_tab <- as.data.frame(prop(table(df.cl[,i])))
+     prop_tab <- prop_tab %>% rename(Prop = Freq)
+     freq_tab[,1] <- as.character(freq_tab[,1])
+     
+     df.stat <- merge(freq_tab, prop_tab) 
+     colnames(df.stat) <- c("Var1", "Freq", "Prop")
+    
+     df.append <- rbind(df.append, df.stat)
+}
+df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>% 
+  mutate(Var1 = ifelse(Var1 == "R_FU_tap_taste_satisfied", "How satisfied are you with the taste of water from government taps?", 
+                       ifelse(Var1 == "R_FU_tap_taste_desc",
+                              "Describe the taste of water from government taps", 
+                                     ifelse(Var1 == "R_FU_tap_smell_desc", 
+                                            "Describe the smell of water from government taps",
+                                            ifelse(Var1 == "R_FU_tap_color_desc",
+                                                   "Describe the color of water from government taps", 
+                                                   ifelse(Var1 == "R_FU_tap_trust",
+                                                   "How confident are you in the water from government taps?", 
+                                                   Var1)))))) %>%
+  rename(Question = Var1) %>% mutate(Prop = round(Prop, 2))
+
+
+
+stargazer(df.append, summary=F, title= "Chlorine Perceptions Section Summary",float=F,rownames = F,
+           covariate.labels=NULL)
+star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}c{2cm}c{2cm}", star.out) 
+
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_HH_Survey.tex"))
+ 
+
+#Create a table on chlorine experience with treatment and drinking chlorinated water:
+
+df.cl.exp<- df.temp.consent %>% select( R_FU_chlorine_yesno, R_FU_chlorine_drank_yesno )
+var_lab(df.cl.exp$R_FU_chlorine_yesno) = "Have you ever used chlorine as a method for treating drinking water?"
+  val_lab(df.cl.exp$R_FU_chlorine_yesno) = num_lab("
+           1 Yes
+           2 No
+           999 Don't Know     
+            ")
+
+var_lab(df.cl.exp$R_FU_chlorine_drank_yesno) = "Have you ever drunk water treated with chlorine?"
+  val_lab(df.cl.exp$R_FU_chlorine_drank_yesno) = num_lab("
+           1 Yes
+           2 No
+           999 Don't Know     
+            ")
+  
+df.exp <- as.data.frame(matrix(NA, ncol = 3)) 
+df.exp_var <- as.data.frame(matrix(NA, ncol = 3))  
+
+colnames(df.exp) <- c('Var1', 'Freq', 'Prop')
+colnames(df.exp_var) <- c('Var1', 'Freq', 'Prop')
+
+var_names <- names(df.cl.exp)
+for (i in var_names){
+     
+     df.exp_var$Var1 <- i
+    df.exp <-  rbind(df.exp,df.exp_var)
+     freq_tab <- as.data.frame(table(df.cl.exp[,i]))
+     prop_tab <- as.data.frame(prop(table(df.cl.exp[,i])))
+     prop_tab <- prop_tab %>% rename(Prop = Freq)
+     freq_tab[,1] <- as.character(freq_tab[,1])
+     
+     df.stat.exp <- merge(freq_tab, prop_tab) 
+     colnames(df.stat.exp) <- c("Var1", "Freq", "Prop")
+    
+     df.exp <- rbind(df.exp, df.stat.exp)
+}
+df.exp <- df.exp %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>% 
+  mutate(Var1 = ifelse(Var1 == "R_FU_chlorine_yesno", "Have you ever used chlorine as a method for treating drinking water?", 
+                       ifelse(Var1 == "R_FU_chlorine_drank_yesno",
+                              "Have you ever drunk water treated with chlorine?", 
+                                                   Var1))) %>%
+  rename(Question = Var1) %>% mutate(Prop = round(Prop, 2))
+
+
+stargazer(df.exp, summary=F, title= "Chlorine Experience Summary",float=F,rownames = F,
+           covariate.labels=NULL)
+star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}}", star.out) 
+
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_Exp_HH_Survey.tex"))
+ 
+```
+
+
+```{r descriptive sec D burden of water treat }
+df.burden<- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,  R_FU_quant, R_FU_water_treat, R_FU_water_stored)
+#assign labels for each
+
+
+stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
            covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Wash_HH_Survey.tex"))
 
 ```
+

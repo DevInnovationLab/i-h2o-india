@@ -11,8 +11,6 @@
 ** In this do file: 
 	* This do file exports.....
 
-
-
 *=========================== PROGRAM ==============================================*
 putpdf begin
 putpdf paragraph, font("Courier",20) halign(center)
@@ -25,9 +23,6 @@ set seed 758235657 // Just in case
 
 
 use "${DataRaw}1_1_Census.dta", clear
-
-
-
  
 drop consented1child_followup5child_h
 //Renaming vars with prefix R_Cen
@@ -188,9 +183,6 @@ drop if R_Cen_consent==0 & C_dup_by_consent[_n]== 1
 //sorting and marking duplicate number by submission time 
 bys unique_id (R_Cen_starttime): gen C_dup_tag= _n if R_Cen_consent==0
 
-
-
-
 //Case 1-
 gen C_new1= 1 if unique_id[_n]==unique_id[_n+1] & R_Cen_a1_resp_name[_n]!=R_Cen_a1_resp_name[_n+1] & R_Cen_a1_resp_name[_n]==""
 
@@ -208,8 +200,6 @@ save `dups', replace
 keep if C_new1==1 | C_new2==1 | C_new3==1
  capture export excel unique_id R_Cen_enum_name R_Cen_village_str R_Cen_submissiondate using "${pilot}Data_quality.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Census") ///
  firstrow(var) cell(A1) sheetreplace
-
-
 
 ***** Step 3: Creating new IDs for obvious duplicates; keeping the first ID based on the starttime and consent and changing the IDs of the remaining
 
