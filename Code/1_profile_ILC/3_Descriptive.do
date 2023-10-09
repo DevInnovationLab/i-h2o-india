@@ -40,8 +40,9 @@ keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction 
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T, by(R_Cen_village_name)
 	label define R_Cen_village_namel 10101 "Asada (T)" ///
-	                                       40201 "Bichikote (T)" 40202 "Gudiabandh (T)" ///
-	                                       50201 "Barijhola (C)" 50301 "Karlakana (C)" 50402 "Kuljing (T)" 50501 "Nathma (C)"  99999 "Total", modify
+	                                       40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
+										   50101 "Dangalodi (T)" 50401 "Birnarayanpur (T)" ///
+	                                       50201 "Barijhola (C)" 50301 "Karlakana (C)"  50402 "Kuljing (T)" 50501 "Nathma (C)"  99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -58,7 +59,7 @@ collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C
 	
 global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
 texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do. Akito to do: Show the stats by T and C to ensure attrition does not differ.") replace varlabels frag location(htbp) headerlines("&\multicolumn{5}{c}{Census}&\multicolumn{2}{c}{By assignment}")
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{5}{c}{Census}&\multicolumn{2}{c}{By assignment}")
 
 /*----------------------------------------------
 2) Descriptive table: Enumerator level

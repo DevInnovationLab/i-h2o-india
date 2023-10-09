@@ -108,7 +108,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	* Set initial configurations to be able to run R script in Stata
 	*net from http://www.stata.com/statausers/packages
-    ssc install rscript
+    * ssc install rscript
 
 	
 /*------------------------------------------------------------------------------
