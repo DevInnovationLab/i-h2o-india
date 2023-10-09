@@ -175,9 +175,11 @@ save "${DataFinal}Final_HH_Odisha.dta", replace
 keep if R_Cen_consent==1
   
 * Temporal treatment status
-	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==50402
-	replace Treat_V=0 if R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==40202 | R_Cen_village_name==50201
+rename R_Cen_village_name village
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V)
+drop if _merge==2
+drop _merge
+rename village R_Cen_village_name
 save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
 
 /* Village shape file with geo code
