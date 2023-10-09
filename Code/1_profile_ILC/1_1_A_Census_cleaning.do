@@ -76,6 +76,11 @@ drop if  R_Cen_village_name==88888
 //3. dropping duplicate case based on field work
 drop if R_Cen_key=="uuid:c906fcad-e822-4de6-a183-f1c36e1fba9f"
 
+br if unique_id_hyphen=="20201-108-036"
+replace unique_id_hyphen="20201-108-037" if R_Cen_key=="uuid:c648052b-4ed8-4f5d-b160-7d373bf11fd4"
+replace unique_id = subinstr(unique_id_hyphen, "-", "",.) 
+
+
 //4. Creating variables
 gen R_Cen_refusal=.
 replace R_Cen_refusal=1 if R_Cen_consent==0

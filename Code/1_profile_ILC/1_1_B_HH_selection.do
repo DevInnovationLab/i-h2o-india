@@ -43,7 +43,7 @@ end
 *****************************************
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
 //1. Put the village code of the village for randomization
-    local Village_R 50101 
+    local Village_R 50401 
     keep if R_Cen_village_name==`Village_R'	
 
 keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking R_Cen_hamlet_name
@@ -92,7 +92,7 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 * Step 3: Carefully integrate back to the master list *
 *******************************************************
 * Only the village where we complete the randomization should be included in the merge list
-use "${DataPre}Selected_50101_ 7 Oct 2023.dta", clear
+use "${DataPre}Selected_50401_ 9 Oct 2023.dta", clear
 *append using "${DataPre}Selected_40201_30 Sep 2023.dta"
 save "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", replace
 
@@ -154,7 +154,7 @@ gen Enumerator_Assigned= ""
 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_7 Oct 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_9 Oct 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Date_Random Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_7 Oct 2023_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_9 Oct 2023_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
