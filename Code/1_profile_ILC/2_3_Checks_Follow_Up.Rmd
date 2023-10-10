@@ -258,8 +258,8 @@ tab[is.na(tab)] <- 0
 tab <- tab %>% rename(Village = R_FU_r_cen_village_name_str)
 print(tab)
 
-xtab<-xtable(tab, caption= "Distribution of Surveys by Date and Village")
-print(xtab,file= paste0(overleaf(), "Table/Table_survey_by_date_village.tex"),append=T,table.placement = "h", caption.placement="bottom", hline.after=seq(from=-1,to=nrow(xtab),by=1))
+stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_date_village.tex"), summary=F, float=F,rownames = F,
+           covariate.labels=NULL)
 
 ```
 
@@ -278,8 +278,8 @@ tab[is.na(tab)] <- 0
 tab <- tab %>% rename(Village = R_FU_r_cen_village_name_str, Enumerator =R_FU_enum_name_label  )
 print(tab)
 
-xtab<-xtable(tab, caption= "Distribution of Surveys by Enumerator, Date and Village")
-print(xtab,file= paste0(overleaf(), "Table/Table_survey_by_enum_date_village.tex"),append=T,table.placement = "h", caption.placement="bottom", hline.after=seq(from=-1,to=nrow(xtab),by=1))
+stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_enum_date_village.tex"), summary=F, float=F,rownames = F,
+           covariate.labels=NULL)
 
 ```
 
@@ -300,36 +300,54 @@ missing_enum <- df.temp.consent %>% select(R_FU_enum_name_label, num_var) %>%
    
 resp_hh_location_dur_enum <- df.temp.consent %>%
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Locating Respondent" = round(mean(FU_locatehh_dur_min),2)) %>% ungroup()
+ dplyr:: summarise("Locating Respondent" = round(mean(FU_locatehh_dur_min),1)) %>% ungroup()
 consent_dur_enum <- df.temp.consent %>%
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Consent" = round(mean(FU_consent_dur_min),2)) %>% ungroup()
+ dplyr:: summarise("Consent" = round(mean(FU_consent_dur_min),1)) %>% ungroup()
 secA_dur_enum <- df.temp.consent %>% 
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Sec A: WASH Access" = round(mean(FU_secA_dur_min),2)) %>% ungroup()
+ dplyr:: summarise("Sec A" = round(mean(FU_secA_dur_min),1)) %>% ungroup()
 secB_dur_enum <- df.temp.consent %>% 
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Sec B: Government Tap" = round(mean(FU_secB_dur_min),2))  %>% ungroup()
+ dplyr:: summarise("Sec B" = round(mean(FU_secB_dur_min),1))  %>% ungroup()
 secC_dur_enum <- df.temp.consent %>% 
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Sec C: Chlorination Perceptions" = round(mean(FU_secC_dur_min),2))%>% ungroup()
+ dplyr:: summarise("Sec C" = round(mean(FU_secC_dur_min),1))%>% ungroup()
 secD_dur_enum <- df.temp.consent %>% 
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Sec D: Burden" = round(mean(FU_secD_dur_min),2))  %>% ungroup()
-secE_dur_enum <- df.temp.consent %>% mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
+ dplyr:: summarise("Sec D" = round(mean(FU_secD_dur_min),1))  %>% ungroup()
+total_dur_enum <- df.temp.consent %>% 
   group_by(R_FU_enum_name_label) %>%
- dplyr:: summarise("Sec E: Water Quality Testing"= round(mean(FU_secE_dur_min, na.rm = T),2))  %>% ungroup()
+ dplyr:: summarise("Overall" = round(mean(R_FU_duration_end/60),1))  %>% ungroup()
+
 df.duration.enum <- left_join(resp_hh_location_dur_enum,consent_dur_enum) %>% left_join(secA_dur_enum) %>% 
  left_join(secB_dur_enum) %>% 
    left_join(secC_dur_enum) %>% 
    left_join(secC_dur_enum) %>%
   left_join(secD_dur_enum) %>%
-   left_join(secE_dur_enum) 
+   left_join(total_dur_enum) 
 df.duration.enum <- df.duration.enum %>% rename(Enumerator = R_FU_enum_name_label )
 star.out <- stargazer(df.duration.enum, summary=F, title= "Duraction by section Baseline HH Survey by enumerator",float=F,rownames = F,covariate.labels=NULL)
-star.out <- sub("cccccccc", "{l p{2cm} *{8}{p{1cm}}}")
+star.out <- sub("cccccccc", "lccccccc", star.out)
 starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Duration_enum_HH_Survey.tex"))
 
+
+# Duration of water quality testing by type of test
+secE_cl_dur_enum <- df.temp.consent %>%  filter(R_FU_water_qual_test == 1) %>% 
+  mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
+  group_by(R_FU_enum_name_label) %>%
+ dplyr:: summarise("Chlorine Testing"= round(mean(FU_secE_dur_min, na.rm = T),1))  %>% ungroup()
+
+secE_both_dur_enum <- df.temp.consent %>%  filter(R_FU_water_qual_test == 2) %>% 
+  mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
+  group_by(R_FU_enum_name_label) %>%
+ dplyr:: summarise("Both Testing"= round(mean(FU_secE_dur_min, na.rm = T),1))  %>% ungroup()
+
+df.duration.wq.enum <- left_join(secE_cl_dur_enum,secE_both_dur_enum) 
+df.duration.wq.enum <- df.duration.wq.enum %>% rename(Enumerator = R_FU_enum_name_label )
+star.out <- stargazer(df.duration.wq.enum, summary=F, title= "Duraction by WQ Test Baseline HH Survey by enumerator",float=F,rownames = F,covariate.labels=NULL)
+star.out <- sub("ccc", "lcc", star.out)
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Duration_WQ_enum_HH_Survey.tex"))
 
 #3. Count of Dont Know by enumerators 
 
@@ -346,34 +364,55 @@ stargazer(df.dk.enum, summary=F, title= "Count of DK by enumerator",float=F,rown
 ```
 
 ```{r descriptive stats - duration}
-resp_hh_location_dur <- df.temp.consent %>%
- dplyr:: summarise(mean = mean(FU_locatehh_dur_min), min = min(FU_locatehh_dur_min), max = max(FU_locatehh_dur_min))  %>%
-  mutate(variable = "Locating HH")
-consent_dur <- df.temp.consent %>% 
- dplyr:: summarise(mean = mean(FU_consent_dur_min), min = min(FU_consent_dur_min), max = max(FU_consent_dur_min) ) %>%
-  mutate(variable = "Consent")
-secA_dur <- df.temp.consent %>% 
- dplyr:: summarise(mean = mean(FU_secA_dur_min), min = min(FU_secA_dur_min), max = max(FU_secA_dur_min) ) %>%
-  mutate(variable = "Sec A: WASH Access")
-secB_dur <- df.temp.consent %>% 
- dplyr:: summarise(mean = mean(FU_secB_dur_min), min = min(FU_secB_dur_min), max = max(FU_secB_dur_min) ) %>%
-  mutate(variable = "Sec B: Government Tap")
-secC_dur <- df.temp.consent %>% 
- dplyr:: summarise(mean = mean(FU_secC_dur_min), min = min(FU_secC_dur_min), max = max(FU_secC_dur_min) ) %>%
-  mutate(variable = "Sec C: Chlorination Perceptions")
-secD_dur <- df.temp.consent %>% 
- dplyr:: summarise(mean = mean(FU_secD_dur_min), min = min(FU_secD_dur_min), max = max(FU_secD_dur_min) ) %>%
-  mutate(variable = "Sec D: Burden")
-secE_dur <- df.temp.consent %>% mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
- dplyr:: summarise(mean = mean(FU_secE_dur_min, na.rm = T), min = min(FU_secE_dur_min,  na.rm = T), max = max(FU_secE_dur_min,  na.rm = T) ) %>%
-  mutate(variable = "Sec E: Water Quality Testing")
 
-df.duration <- bind_rows(resp_hh_location_dur,consent_dur, secA_dur,secB_dur, secC_dur, secD_dur, secE_dur)
+
+resp_hh_location_dur <- df.temp.consent %>% filter(FU_locatehh_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_locatehh_dur_min),1), min = round(min(FU_locatehh_dur_min),1), max = round(max(FU_locatehh_dur_min),1))  %>%
+  mutate(variable = "Locating HH")
+consent_dur <- df.temp.consent %>%  filter(FU_consent_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_consent_dur_min),1), min = round(min(FU_consent_dur_min),1), max = round(max(FU_consent_dur_min),1) ) %>%
+  mutate(variable = "Consent")
+secA_dur <- df.temp.consent %>% filter(FU_secA_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_secA_dur_min),1), min = round(min(FU_secA_dur_min),1), max = round(max(FU_secA_dur_min),1) ) %>%
+  mutate(variable = "Sec A: WASH Access")
+secB_dur <- df.temp.consent %>% filter(FU_secB_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_secB_dur_min),1), min = round(min(FU_secB_dur_min),1), max = round(max(FU_secB_dur_min),1) ) %>%
+  mutate(variable = "Sec B: Government Tap")
+secC_dur <- df.temp.consent %>% filter(FU_secC_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_secC_dur_min),1), min = round(min(FU_secC_dur_min),1), max = round(max(FU_secC_dur_min),1) ) %>%
+  mutate(variable = "Sec C: Chlorination Perceptions")
+secD_dur <- df.temp.consent %>% filter(FU_secD_dur_min > 0) %>%
+ dplyr:: summarise(mean = round(mean(FU_secD_dur_min),1), min = round(min(FU_secD_dur_min),1), max = round(max(FU_secD_dur_min),1) ) %>%
+  mutate(variable = "Sec D: Burden")
+
+overall_mean <- df.temp.consent %>% filter(R_FU_duration_end > 0) %>%
+ dplyr:: summarise(mean = round(mean(R_FU_duration_end/60),1), min = round(min(R_FU_duration_end/60),1), max = round(max(R_FU_duration_end/60),1) ) %>%
+  mutate(variable = "Overall")
+
+df.duration <- bind_rows(resp_hh_location_dur,consent_dur, secA_dur,secB_dur, secC_dur, secD_dur, overall_mean)
 
 df.duration <- df.duration %>% select(variable , mean, min, max) %>% mutate(mean = round(mean, 3), min = round(min, 3), max = round(max, 3)) %>%   rename("Duration\ Section" = variable, "Mean \ (in mins)" = mean, "Min \ (in mins)" = min, "Max \ (in mins)" = max ) 
 stargazer(df.duration, summary=F, title= "Duraction by section Baseline HH Survey",float=F,rownames = F,
            covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Duration_HH_Survey.tex"))
 
+
+
+# Section on Water Quality Testing, separate duration by whether sample was collected or not? 
+
+secE_dur_chlorine <- df.temp.consent %>% filter(R_FU_water_qual_test == 1) %>% 
+  mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
+ dplyr:: summarise(mean = round(mean(FU_secE_dur_min, na.rm = T),1), min = round(min(FU_secE_dur_min,  na.rm = T),1), max = round(max(FU_secE_dur_min,  na.rm = T),1) ) %>%
+  mutate(variable = "Chlorine Testing")
+secE_dur_both <- df.temp.consent %>% filter(R_FU_water_qual_test == 2) %>% 
+  mutate(FU_secE_dur_min  = ifelse(FU_secE_dur_min<0 , NA, FU_secE_dur_min)) %>% 
+ dplyr:: summarise(mean = round(mean(FU_secE_dur_min, na.rm = T),1), min = round(min(FU_secE_dur_min,  na.rm = T),1), max = round(max(FU_secE_dur_min,  na.rm = T),1) ) %>%
+  mutate(variable = "Both Testing")
+
+df.duration.wq <- bind_rows(secE_dur_chlorine,secE_dur_both)
+
+df.duration.wq <- df.duration.wq %>% select(variable , mean, min, max) %>% mutate(mean = round(mean, 3), min = round(min, 3), max = round(max, 3)) %>%   rename("Duration\ Section" = variable, "Mean \ (in mins)" = mean, "Min \ (in mins)" = min, "Max \ (in mins)" = max ) 
+stargazer(df.duration.wq, summary=F, title= "Duraction for Water Quality Test -  Baseline HH Survey",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Duration_WQ_HH_Survey.tex"))
 
 ```
 
@@ -400,10 +439,10 @@ p1 <- ggplot(data =chlorine) + geom_point(aes(x = chlorine_test_type, y = chlori
 ggplot2::ggsave( paste0(overleaf(),"Figure/Chlorine-concentration-village.png"), p1,  width = 21, height= 13,dpi=200)
 
 #Selecting for data that are > 0.10 mg/L
-chlorine_check <- chlorine%>%
-  filter(chlorine_concentration > 0.10)%>%
+chlorine_c <- chlorine%>%
+  filter(chlorine_concentration > 0.10)%>% 
   dplyr::select(unique_id_num, R_FU_enum_name_label, R_FU_r_cen_village_name_str, chlorine_test_type, chlorine_concentration)
-chlorine_check <- chlorine_check %>%  
+chlorine_c <- chlorine_c %>%   
   mutate(chlorine_test_type = ifelse(chlorine_test_type == "R_FU_tc_tap", "TCl-Running",
                                      ifelse(chlorine_test_type == "R_FU_fc_tap", "FCl-Running",
                                             ifelse(chlorine_test_type == "R_FU_tc_stored", "TCl-Stored", 
@@ -412,9 +451,15 @@ chlorine_check <- chlorine_check %>%
   rename("Unique HH ID" =unique_id_num , Enumerator = R_FU_enum_name_label , 
          Village = R_FU_r_cen_village_name_str, "Test Type" = chlorine_test_type , 
          Concentration =  chlorine_concentration ) 
-stargazer(chlorine_check, summary=F, title= "Chlorine reading greater than 0.10",float=F,rownames = F,
-           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Chlorine_high_HH_Survey.tex"))
 
+#Frequency of cases above 0.1 by enumerator
+chlorine_check <- chlorine%>%
+  filter(chlorine_concentration > 0.10)%>% 
+  dplyr::select(R_FU_enum_name_label) %>% 
+  group_by(R_FU_enum_name_label) %>% 
+  mutate(Case_above_0.1 = n()) %>% ungroup()  %>% unique() 
+stargazer(chlorine_check, summary=F, title= "Count of Chlorine reading greater than 0.10",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Chlorine_high_HH_Survey.tex"))
 
 
 # Displaying chlorine test data for each village
@@ -437,6 +482,64 @@ ggplot2::ggsave( paste0(overleaf(),"Figure/Chlorine-concentration.png"), p2,  wi
 
 
 ```
+
+
+```{r descriptive stats - sample collection}
+
+bl <- df.temp.consent
+ 
+###Displaying chlorine test data for each village
+#Arranging data so chlorine test data is in one column
+df.sample <- bl%>%
+  pivot_longer(cols = c("R_FU_wq_stored_bag", "R_FU_wq_running_bag"), values_to = "yes_no", names_to = "sample_type")
+
+#Removing NAs from no respondent being available
+df.sample <- df.sample%>%
+  filter(is.na(yes_no) == FALSE) %>% dplyr::select(R_FU_enum_name_label, R_FU_r_cen_village_name_str, sample_type, yes_no)
+
+#Frequency of sample collection
+df.count.stored <- df.sample%>% filter(sample_type == "R_FU_wq_stored_bag") %>%
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str,  "Count-Stored Water" = Count_of_Sample ) %>% 
+  unique()
+df.count.running <- df.sample%>% filter(sample_type == "R_FU_wq_running_bag") %>%
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str, "Count-Running Water" = Count_of_Sample ) %>% 
+  unique()
+
+df.count <- left_join(df.count.stored, df.count.running)
+stargazer(df.count, summary=F, title= "Count of Sample collection",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_sample_HH_Survey.tex"))
+
+
+#Frequency of sample collection by enumerator
+df.sample.stored.enum <- df.sample%>% filter(sample_type == "R_FU_wq_stored_bag") %>% 
+  group_by(R_FU_enum_name_label, sample_type) %>% 
+  mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
+  dplyr::select(R_FU_enum_name_label, Count_of_Sample) %>% 
+  rename(Enumerator = R_FU_enum_name_label, "Count-Stored Water" = Count_of_Sample ) %>% 
+  unique() 
+
+df.sample.running.enum <- df.sample%>% filter(sample_type == "R_FU_wq_running_bag") %>% 
+  group_by(R_FU_enum_name_label, sample_type) %>% 
+  mutate(Count_of_Sample = n()) %>% ungroup()  %>%
+  dplyr::select(R_FU_enum_name_label, Count_of_Sample) %>% 
+  rename(Enumerator = R_FU_enum_name_label, "Count-Running Water" = Count_of_Sample ) %>% 
+  unique()
+df.sample.enum <- left_join(df.sample.stored.enum, df.sample.running.enum)
+stargazer(df.sample.enum, summary=F, title= "Count of Sample collection by enum",float=F,rownames = F,
+           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_sample_enum_HH_Survey.tex"))
+
+
+
+
+
+```
+
 
 ```{r descriptive sec A wash access}
 df.wash <- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,  R_FU_quant, R_FU_water_treat, R_FU_water_stored)
