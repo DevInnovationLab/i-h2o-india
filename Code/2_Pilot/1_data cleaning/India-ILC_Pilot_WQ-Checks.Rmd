@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = FALSE, include = TRUE)
 
 ```
 
-```{r package loading}
+```{r package loading, include=FALSE}
 
 library(rsurveycto)
 library(httr)
@@ -23,6 +23,9 @@ library(kableExtra)
 library(readxl)
 library(experiment)
 library(stargazer)
+library(readxl)
+library(haven)
+
 
 
 ```
@@ -33,7 +36,11 @@ library(stargazer)
 #from Box
 
 #Jeremy's file path
-bl <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Baseline follow up survey_WIDE.csv")
+bl_raw <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Baseline follow up survey_WIDE.csv")
+
+bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_2_Followup_cleaned.dta")
+
+idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 
 
 ```
@@ -41,19 +48,28 @@ bl <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Baseli
 ```{r quick data cleaning}
 
 #Filtering out test data from training, based on village IDs
-unique(bl$unique_id_1)
-
+unique(bl$R_FU_unique_id_1)
 bl <- bl%>%
-  filter(!(unique_id_1 == 88888 |
-           unique_id_1 == 99999))
+  filter(!(R_FU_unique_id_1 == 88888 |
+           R_FU_unique_id_1 == 99999))#Clean data doesn't require this step
 
 
-#Assigning more meaninful variable names
+#Selecting bl data key variables for WQ testing
 bl <- bl%>%
-  rename(fc_stored = wq_chlorine_storedfc)%>%
-  rename(tc_stored = wq_chlorine_storedtc)%>%
-  rename(fc_tap = wq_tap_fc)%>%
-  rename(tc_tap = wq_tap_tc)
+  dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num, R_FU_r_cen_village_name_str, R_FU_consent, R_FU_water_source_prim, R_FU_primary_water_label, R_FU_water_qual_test, R_FU_wq_stored_bag, R_FU_stored_bag_source, R_FU_sample_ID_stored, R_FU_bag_ID_stored, R_FU_fc_stored, R_FU_tc_stored, R_FU_sample_ID_tap, R_FU_bag_ID_tap, R_FU_fc_tap, R_FU_tc_tap, R_FU_instancename)
+
+#Assigning more meaningful variable names
+bl <- bl%>%
+  rename_all(~stringr::str_replace(.,"R_FU_",""))
+  #Other way:
+  #rename(fc_stored = R_FU_fc_stored)%>%
+  #rename(tc_stored = R_FU_tc_stored)%>%
+  #rename(fc_tap = R_FU_fc_tap)%>%
+  #rename(tc_tap = R_FU_tc_tap)%>%
+  #rename(sample_ID_stored = R_FU_sample_ID_stored)
+
+#Pivoting dataset to be longer for pairing IDEXX data to sample IDs
+bl_idexx
   
 
 
