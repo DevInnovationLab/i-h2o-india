@@ -36,45 +36,149 @@ replace C_Census_C=1 if C_Census==1 & Treat_V==0
 gen     C_Census_T=0
 replace C_Census_T=1 if C_Census==1 & Treat_V==1
 
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T Non_C_Screened
 *  R_FU_consent Non_R_FU_consent
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T, by(R_Cen_village_name)
-	label define R_Cen_village_namel 10101 "Asada (T)" ///
-	                                       40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
-										   50101 "Dangalodi (T)" 50401 "Birnarayanpur (T)" ///
-	                                       50201 "Barijhola (C)" 50301 "Karlakana (C)"  50402 "Kuljing (T)" 50501 "Nathma (C)"  99999 "Total", modify
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T Non_C_Screened, by(R_Cen_village_name)
+	label define R_Cen_village_namel  ///
+	      30101 "Badaalubadi (T)" 40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
+		 50101 "Dangalodi (T)" 50402 "Kuljing (T)" 50401 "Birnarayanpur (C)" ///
+	     50201 "Barijhola (C)" 50301 "Karlakana (C)"   50501 "Nathma (C)"  99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var C_Census  "Submission"
-	label var C_Screened  "Screened"	
+	label var C_Census  "Tot approached"
+	label var C_Screened  "Screened"
+	label var Non_C_Screened "Screened out"
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refused"
 	label var Non_R_Cen_instruction "No eligible resp"
+	
 	* label var Non_R_FU_consent "Refused"
 	* label var R_FU_consent "Consented"
 	label var R_Cen_consent "Consented"
 	label var C_Census_C "Control"
 	label var C_Census_T "Treatment"
 	
-global Variables R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_instruction Non_R_Cen_consent C_Census_C C_Census_T
+global Variables R_Cen_village_name_str C_Census Non_C_Screened C_Screened R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
 texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{5}{c}{Census}&\multicolumn{2}{c}{By assignment}")
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{6}{c}{Census}&\multicolumn{2}{c}{By assignment}")
 
 /*----------------------------------------------
 2) Descriptive table: Enumerator level
 ----------------------------------------------*/
 * Michelle add more variables and enumerators
 //1. Checking number of screened and screened out cases by enumerator
-start_from_clean_file_Population
 
-global All1 C_Screened R_Cen_consent R_FU_consent Non_R_Cen_consent 
+start_from_clean_file_Population
+global One C_Screened R_Cen_consent Non_R_Cen_consent 
+
+global Two R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration ///
+R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration
 	label var C_Screened  "Screened for census"
 	label variable R_Cen_consent "Census consent"
-	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused for census"
+	label var R_Cen_survey_duration "Survey duration"
+	label var R_Cen_intro_duration "Intro duration"
+	label var R_Cen_consent_duration "Consent duration"
+	label var R_Cen_sectionB_duration "HH demographics duration"
+	label var R_Cen_sectionC_duration "Water section duration"
+	label var R_Cen_sectionD_duration "JJM tap section duration"
+	label var R_Cen_sectionE_duration "Resp. health section duration"
+	label var R_Cen_sectionF_duration "Child health section duration"
+	label var R_Cen_sectionG_duration "Assets section duration"
+	label var R_Cen_sectionH_duration "Concluding section duration"
+	
+	
+//Overall
+
+local One "Overall productivity"
+local Two "Duration"
+
+local NoteOne "Notes: This table presents the overall productivity stats. The table is autocreated by 3_Descriptive.do."
+
+local NoteTwo "Notes: This table presents the overall productivity stats. The table is autocreated by 3_Descriptive.do. The duration figures are reported in minutes"
+
+
+foreach k in One {
+start_from_clean_file_Population
+* Mean
+	eststo  model0: estpost summarize $`k'
+
+*Min
+start_from_clean_file_Population
+foreach i in $`k'  {
+egen m_`i'=min(`i')
+replace `i'=m_`i'
+	eststo  model1: estpost summarize $`k'
+}
+
+* Max
+start_from_clean_file_Population
+foreach i in $`k'  {
+egen m_`i'=max(`i')
+replace `i'=m_`i'
+	eststo model2: estpost summarize $`k'
+}
+	
+	esttab model0  model1  model2  using "${Table}Average_overall_productivity_`k'.tex", ///
+	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Total}"  "Minimum" "Maximum") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("``k''" \label{`Label`k''}) note("`Note`k''") 
+}
+
+
+foreach k in Two {
+start_from_clean_file_Population
+* Mean
+	eststo  model0: estpost summarize $`k'
+
+*Min
+start_from_clean_file_Population
+	foreach i in $`k' {
+	egen m_`i'=min(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model1: estpost summarize $`k'
+
+* Max
+	start_from_clean_file_Population
+	foreach i in $`k' {
+	egen m_`i'=max(`i')
+	replace `i'=m_`i'
+	}
+	eststo model2: estpost summarize $`k'
+	
+	
+	esttab model0  model1  model2  using "${Table}Average_overall_productivity_`k'.tex", ///
+	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Average}"  "Minimum" "Maximum") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("``k''" \label{`Label`k''}) note("`Note`k''")
+}
+
+
+
 
 //Team 1- 104, 105, 106, 107, 108	
+start_from_clean_file_Population
+global All1 C_Screened R_Cen_consent Non_R_Cen_consent
 local All1 "Team 1- Table by enumerator"
 local LabelAll1 "MainEnum"
 local ScaleAll1 "1"

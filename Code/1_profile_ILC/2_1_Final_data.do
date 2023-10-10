@@ -46,31 +46,19 @@ forvalues i = 1/12 {
 	replace R_Cen_a6_hhmember_age_`i'=R_Cen_a5_autoage_`i' if R_Cen_a6_hhmember_age_`i'!=R_Cen_a5_autoage_`i' & R_Cen_correct_age_`i'==1
 }
 
-gen     C_Screened=0
-replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 
-foreach i in R_Cen_consent R_FU_consent R_Cen_instruction {
+
+foreach i in R_FU_consent {
 	gen    Non_`i'=`i'
 	recode Non_`i' 0=1 1=0	
 }
 
-* save  "${DataPre}1_1_Census_cleaned.dta", replace
-************
-* Labeling *
-************
-destring R_Cen_a12_water_source_prim, replace
-	label define R_Cen_a12_water_source_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 7 "PWS: Surface water" 8 "PWS: Private surface well" 77 "PWS: Other", modify
-	label values R_Cen_a12_water_source_prim R_Cen_a12_water_source_priml
-	label define R_Cen_a13_water_sec_ynl 0 "SWS: No secondary water source" 1 "SWS: Yes", modify
-	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
-	label define R_Cen_a16_water_treatl 0 "WT: No water treatment" 1 "WT: Yes", modify
-	label values R_Cen_a16_water_treat R_Cen_a16_water_treatl
-	label define R_Cen_a15_water_sec_freql 1 "Freq: Daily" 2 "Freq: Every 2-3 days in a week" 3 "Freq: Once a week" 4 "Freq: Once every two weeks" ///
-	5 "Freq: Once a month" 6 "Freq: Once every few months" 7 "Freq: Once a year" 8 "Freq: No fixed schedule" 999 "Freq: Don't know", modify
-	
-	label values R_Cen_a15_water_sec_freq R_Cen_a15_water_sec_freql	
-	
-* Create new variables
+
+
+************************************
+*  Create new variables *
+************************************
+
 * -77 to 77
 foreach i in R_Cen_a12_water_source_prim  {
 	replace `i'=77 if `i'==-77
@@ -112,8 +100,26 @@ label var C_total_pregnant_hh "Number of pregnant women"
 //number of children under 5
 forvalues i = 1/17 {
 	gen C_U5child_`i'= 1 if R_Cen_a6_hhmember_age_`i'<5
+
 }
-	egen      C_total_U5child_hh = rowtotal(C_U5child_*)	
+egen      C_total_U5child_hh = rowtotal(C_U5child_*)
+
+
+************
+* Labeling *
+************
+destring R_Cen_a12_ws_prim, replace
+	label define R_Cen_a12_ws_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 7 "PWS: Surface water" 8 "PWS: Private surface well" 77 "PWS: Other", modify
+	label values R_Cen_a12_ws_prim R_Cen_a12_ws_priml
+	label define R_Cen_a13_water_sec_ynl 0 "SWS: No secondary water source" 1 "SWS: Yes", modify
+	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
+	label define R_Cen_a16_water_treatl 0 "WT: No water treatment" 1 "WT: Yes", modify
+	label values R_Cen_a16_water_treat R_Cen_a16_water_treatl
+	label define R_Cen_a15_water_sec_freql 1 "Freq: Daily" 2 "Freq: Every 2-3 days in a week" 3 "Freq: Once a week" 4 "Freq: Once every two weeks" ///
+	5 "Freq: Once a month" 6 "Freq: Once every few months" 7 "Freq: Once a year" 8 "Freq: No fixed schedule" 999 "Freq: Don't know", modify
+	
+	label values R_Cen_a15_water_sec_freq R_Cen_a15_water_sec_freql	
+
 	label var C_total_U5child_hh "Number of U5 children" 
 	label variable R_Cen_a2_hhmember_count "Household size" 
   	label variable R_Cen_a20_jjm_use_1 "Cooking"
@@ -159,7 +165,51 @@ forvalues i = 1/17 {
 	label variable R_Cen_consent "Census consent"
 	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused"
-	label var R_Cen_survey_duration "Survey duration"
+	
+
+*******************************************
+* Capturing correct section-wise duration
+*******************************************
+local duration R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end 
+
+foreach x of local duration  {
+	replace `x'= `x'/60 if R_Cen_consent==1
+	replace `x'= . if R_Cen_consent!=1 | R_Cen_screen_preg==0 | R_Cen_screen_u5child==0
+	
+}
+
+replace R_Cen_sectione_dur_end= . if C_total_pregnant_hh==0
+replace R_Cen_sectionf_dur_end= . if C_total_U5child_hh==0
+
+
+
+gen intro_duration= R_Cen_intro_dur_end
+gen consent_duration= R_Cen_consent_dur_end-R_Cen_intro_dur_end
+gen sectionB_duration= R_Cen_sectionb_dur_end-R_Cen_consent_dur_end
+gen sectionC_duration= R_Cen_sectionc_dur_end-R_Cen_sectionb_dur_end
+gen sectionD_duration= R_Cen_sectiond_dur_end-R_Cen_sectionc_dur_end
+gen sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
+gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
+gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
+gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
+egen survey_time= rowtotal(intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration)
+
+
+
+local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration survey_time
+
+foreach x of local duration2 {
+replace `x'=. if consent_duration==0
+replace `x'=. if sectionH_duration<0
+
+}
+
+foreach x of local duration2  {
+	rename `x' R_Cen_`x'
+}
+
+	
+	label var R_Cen_survey_time "Survey duration"
 	label var R_Cen_intro_duration "Intro duration"
 	label var R_Cen_consent_duration "Consent duration"
 	label var R_Cen_sectionB_duration "HH demographics duration"
@@ -222,13 +272,13 @@ program define   start_from_clean_file_Population
 use  "${DataPre}1_1_Census_cleaned.dta", clear
 gen     C_Census=1
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent C_Screened Non_R_Cen_instruction Non_R_Cen_consent)
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration)
 
 drop if R_Cen_village_name==88888
 * Temporal treatment status
 	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==50402
-	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 
+	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==50402 | R_Cen_village_name==20201 | R_Cen_village_name==50101| R_Cen_village_name==30101
+	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==50401
 	
 recode Merge_C_F 1=0 3=1
 

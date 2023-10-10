@@ -53,6 +53,8 @@ format   unique_id_num %15.0gc
 	 generate C_starthour = hh(R_Cen_starttime) 
 	 gen C_startmin= mm(R_Cen_starttime)
 	
+	gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
+	
 	
 
 
@@ -67,18 +69,16 @@ br R_Cen_village_name R_Cen_village_str
 count if R_Cen_village_name==88888
 tab R_Cen_day if R_Cen_village_name==88888
 drop if  R_Cen_village_name==88888
+drop if R_Cen_village_name==10101
 
-//3. dropping duplicate case based on field work
+//3. dropping duplicate case based on field team feedback
+*Note: the below duplicate is dropped because first the enumerator wrongly screened this HH out of the sample because of language issues. The supervisor later covered this case again
 drop if R_Cen_key=="uuid:c906fcad-e822-4de6-a183-f1c36e1fba9f"
 
+*Note: the below duplicate case is resolved such that 2 cases with the same HH number 36 do not exist. 
 br if unique_id_hyphen=="20201-108-036"
 replace unique_id_hyphen="20201-108-037" if R_Cen_key=="uuid:c648052b-4ed8-4f5d-b160-7d373bf11fd4"
 replace unique_id = subinstr(unique_id_hyphen, "-", "",.) 
-
-
-//4. Creating variables
-gen R_Cen_refusal=.
-replace R_Cen_refusal=1 if R_Cen_consent==0
 
 
 //5. Cleaning the GPS data 
@@ -113,32 +113,11 @@ drop R_Cen_a40_gps_autoaccuracy R_Cen_a40_gps_manualaccuracy R_Cen_a40_gps_handl
 drop R_Cen_consent_duration R_Cen_intro_duration R_Cen_sectionb_duration //old vars
 destring R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end, replace
-*/
-
-gen intro_duration= R_Cen_intro_dur_end
-gen consent_duration= R_Cen_consent_dur_end-R_Cen_intro_dur_end
-gen sectionB_duration= R_Cen_sectionb_dur_end-R_Cen_consent_dur_end
-gen sectionC_duration= R_Cen_sectionc_dur_end-R_Cen_sectionb_dur_end
-gen sectionD_duration= R_Cen_sectiond_dur_end-R_Cen_sectionc_dur_end
-gen sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
-gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
-gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
-gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
-
-local duration intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration R_Cen_survey_duration
-foreach x of local duration  {
-	replace `x'= `x'/60
-}
 
 
-local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration 
 
-foreach x of local duration2  {
-	rename `x' R_Cen_`x'
-}
-
-drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
-R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
+*drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
+*R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
 */
 /*------------------------------------------------------------------------------
 	3 Quality check
@@ -245,6 +224,10 @@ destring unique_id, gen(unique_id_num)
 format   unique_id_num %15.0gc 
 gen unique_id_hyphen = substr(unique_id, 1,5) + "-"+ substr(unique_id, 6,3) + "-"+ substr(unique_id, 9,3)
 
+replace R_Cen_consent=. if R_Cen_screen_u5child==0 & R_Cen_screen_preg==0
+replace R_Cen_consent=. if R_Cen_screen_u5child==. & R_Cen_screen_preg==.
+*replace R_Cen_instruction= 1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+
 tempfile main
 save `main', replace
 
@@ -266,6 +249,17 @@ merge m:1 unique_id using `main'
 * Discussion point: Agree what to do when we have duplicate
 duplicates drop unique_id, force
 */
+
+
+*******Final variable creation for clean data
+
+gen     C_Screened=0
+replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+
+foreach i in R_Cen_consent R_Cen_instruction C_Screened {
+	gen    Non_`i'=`i'
+	recode Non_`i' 0=1 1=0	
+}
 
 * Change as we finalzie the treatment village
 save "${DataPre}1_1_Census_cleaned.dta", replace
