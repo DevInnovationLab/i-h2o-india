@@ -20,7 +20,7 @@ capture drop consented1burden_of_water_collec consented1chlorination_perceptio c
 
 ** Drop ID information
 
-drop r_cen_a1_resp_name  r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_a11_oldmale_name	
+drop r_cen_a1_resp_name  r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_a11_oldmale_name r_cen_address r_cen_saahi_name
 
 foreach x of var * { 
 	rename `x' R_FU_`x' 
@@ -91,7 +91,7 @@ foreach x of local duration  {
 	rename `x' `x'_min
 }
 
-drop R_FU_duration_locatehh R_FU_duration_consent R_FU_duration_seca R_FU_duration_secb R_FU_duration_secc R_FU_duration_secd R_FU_duration_sece R_FU_duration_end
+drop R_FU_duration_locatehh R_FU_duration_consent R_FU_duration_seca R_FU_duration_secb R_FU_duration_secc R_FU_duration_secd R_FU_duration_sece 
 
 	
 gen FU_duration_min = FU_locatehh_dur_min + FU_consent_dur_min + FU_secA_dur_min + FU_secB_dur_min + FU_secC_dur_min +  FU_secD_dur_min +  FU_secE_dur_min + FU_end_dur_min
@@ -131,12 +131,37 @@ gen FU_duration_min = FU_locatehh_dur_min + FU_consent_dur_min + FU_secA_dur_min
 foreach i in unique_id_num {
 bys `i': gen `i'_Unique=_N
 }
-capture export excel unique_id_num using "${pilot}Data_quality.xlsx" if unique_id_Unique!=1, sheet("Dup_ID_Follow") firstrow(var) cell(A1) sheetreplace
-*drop if unique_id_num_Unique!=1
-*drop unique_id_num_Unique
 
+* On investigating the duplicates, found that Unique ID 40201111013 was the Orginal HH , it wasn't found, so replaced with  HHID 40201111012. However the entry for these IDs have not been entered correctly, i.e. In the entry for Unique ID, it should be 40201111012 (instead of 40201111013) and the entry for replacement ID, is should be 40201111013 (instead of 40201111012)
+ replace  unique_id_num = 40201111012 if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_replacement_id_1 = 40201 if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_replacement_id_2 = 111 if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_replacement_id_3 = 13 if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+
+ * Also correcting the other prefills based on the Unique ID
+ replace  R_FU_unique_id_1 = 40201 if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_unique_id_2 = 111  if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_unique_id_3 = 12  if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_unique_id_3_digit = "12"  if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_r_cen_landmark = "Besides field infront of broken house"  if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+ replace  R_FU_r_cen_hamlet_name = "Adivasi sahi"  if R_FU_key == "uuid:9a5a1f67-a32e-4263-b37e-fee325c5e86d" & unique_id_num_Unique != 1
+
+ 
+* This was an incomplete duplicate, so dropping this. 
+ 
+ drop if R_FU_key == "uuid:10f77f5c-022f-4bf2-a701-ee5fb0c26624" & unique_id_num_Unique != 1
+ 
+ foreach i in unique_id_num {
+bys `i': gen `i'_NUnique=_N
+}
+capture export excel unique_id_num using "${pilot}Data_quality.xlsx" if unique_id_num_NUnique!=1, sheet("Dup_ID_Follow") firstrow(var) cell(A1) sheetreplace
+* keep only complete cases
+ 
+ 
+ 
 * In case of replacement households, check if the OG id is not the same as the unique_id
-  egen replace_id = concat(R_FU_replacement_id_1 R_FU_replacement_id_2 R_FU_replacement_id_3)
+  gen str3 FU_replacement_id_3  = string(R_FU_replacement_id_3, "%03.0f")
+  egen replace_id = concat(R_FU_replacement_id_1 R_FU_replacement_id_2 FU_replacement_id_3)
   destring replace_id, replace force
   gen replace_og_id_err = 0 
   replace replace_og_id_err = 1 if replace_id == unique_id_num
