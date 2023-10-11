@@ -40,8 +40,6 @@ format   unique_id_num %15.0gc
 /*------------------------------------------------------------------------------
 	1 Formatting dates
 ------------------------------------------------------------------------------*/
-***Change date prior to running
-	local date "5Oct2023"
 	
 	*gen date = dofc(starttime)
 	*format date %td
@@ -62,8 +60,14 @@ format   unique_id_num %15.0gc
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
 //1. Changing village_name to string
+recode R_Cen_village_name 30101=50601
+recode R_Cen_gp_name 301=506
+*label define R_Cen_village_namel 50601 "Baadalubadi"
+	*label values R_Cen_village_name R_Cen_village_namel
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
+replace R_Cen_village_str= "Badaalubadi" if R_Cen_village_name==50601
+
 
 //2. dropping irrelevant entries
 count if R_Cen_village_name==88888
@@ -253,8 +257,14 @@ duplicates drop unique_id, force
 
 *******Final variable creation for clean data
 
-gen     C_Screened=0
+gen C_HH_not_available=0
+replace C_HH_not_available=1 if R_Cen_resp_available!=1
+
+gen     C_Screened=.
 replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+replace C_Screened=0 if R_Cen_resp_available==1 & C_Screened!=1
+
+
 
 foreach i in R_Cen_consent R_Cen_instruction C_Screened {
 	gen    Non_`i'=`i'

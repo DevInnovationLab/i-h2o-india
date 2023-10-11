@@ -36,17 +36,18 @@ replace C_Census_C=1 if C_Census==1 & Treat_V==0
 gen     C_Census_T=0
 replace C_Census_T=1 if C_Census==1 & Treat_V==1
 
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T Non_C_Screened
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Census_C C_Census_T Non_C_Screened
 *  R_FU_consent Non_R_FU_consent
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T Non_C_Screened, by(R_Cen_village_name)
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened C_Census_C C_Census_T Non_C_Screened, by(R_Cen_village_name)
 	label define R_Cen_village_namel  ///
-	      30101 "Badaalubadi (T)" 40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
+	      50601 "Badaalubadi (T)" 40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
 		 50101 "Dangalodi (T)" 50402 "Kuljing (T)" 50401 "Birnarayanpur (C)" ///
 	     50201 "Barijhola (C)" 50301 "Karlakana (C)"   50501 "Nathma (C)"  99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
-	label var C_Census  "Tot approached"
+	label var C_Census  "Total approached"
+	label var C_HH_not_available "Resp not available"
 	label var C_Screened  "Screened"
 	label var Non_C_Screened "Screened out"
 	label var R_Cen_village_name_str "Village"
@@ -59,7 +60,7 @@ collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C
 	label var C_Census_C "Control"
 	label var C_Census_T "Treatment"
 	
-global Variables R_Cen_village_name_str C_Census Non_C_Screened C_Screened R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
+global Variables R_Cen_village_name_str C_Census C_HH_not_available Non_C_Screened C_Screened R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
 texsave $Variables using "${Table}Table_Progress.tex", ///
         title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{6}{c}{Census}&\multicolumn{2}{c}{By assignment}")
 
