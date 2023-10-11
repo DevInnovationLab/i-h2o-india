@@ -174,13 +174,13 @@ local duration R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R
 
 foreach x of local duration  {
 	replace `x'= `x'/60 if R_Cen_consent==1
-	replace `x'= . if R_Cen_consent!=1 | R_Cen_screen_preg==0 | R_Cen_screen_u5child==0
+	replace `x'= . if R_Cen_consent!=1 
 	
 }
 
+
 replace R_Cen_sectione_dur_end= . if C_total_pregnant_hh==0
 replace R_Cen_sectionf_dur_end= . if C_total_U5child_hh==0
-
 
 
 gen intro_duration= R_Cen_intro_dur_end
@@ -192,17 +192,15 @@ gen sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
 gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
 gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
 gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
+
 egen survey_time= rowtotal(intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration)
 
 
+replace consent_duration=. if consent_duration==0
+replace sectionH_duration=. if sectionH_duration<0
+
 
 local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration survey_time
-
-foreach x of local duration2 {
-replace `x'=. if consent_duration==0
-replace `x'=. if sectionH_duration<0
-
-}
 
 foreach x of local duration2  {
 	rename `x' R_Cen_`x'
