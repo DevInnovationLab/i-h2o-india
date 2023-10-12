@@ -55,13 +55,14 @@ format   unique_id_num %15.0gc
 	
 	gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
 	
-	
-
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
 //1. Changing village_name to string
+label define R_Cen_village_namel 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 50601 "Badaalubadi" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 88888 "Pilot", modify
+	label values R_Cen_village_name R_Cen_village_namel
+
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
 
@@ -113,8 +114,6 @@ drop R_Cen_a40_gps_autoaccuracy R_Cen_a40_gps_manualaccuracy R_Cen_a40_gps_handl
 drop R_Cen_consent_duration R_Cen_intro_duration R_Cen_sectionb_duration //old vars
 destring R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end, replace
-
-
 
 *drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 *R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
@@ -252,7 +251,6 @@ duplicates drop unique_id, force
 
 
 *******Final variable creation for clean data
-
 gen     C_Screened=0
 replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 

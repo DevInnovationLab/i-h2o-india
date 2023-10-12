@@ -36,13 +36,16 @@ replace C_Census_C=1 if C_Census==1 & Treat_V==0
 gen     C_Census_T=0
 replace C_Census_T=1 if C_Census==1 & Treat_V==1
 
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T Non_C_Screened
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T Non_C_Screened R_Cen_screen_preg
 *  R_FU_consent Non_R_FU_consent
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T Non_C_Screened, by(R_Cen_village_name)
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_Screened C_Census_C C_Census_T Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
 	label define R_Cen_village_namel  ///
-	      30101 "Badaalubadi (T)" 40201 "Bichikote (T)" 40202 "Gudiabandh (T)" 20201 "Jaltar (T)"  ///
-		 50101 "Dangalodi (T)" 50402 "Kuljing (T)" 50401 "Birnarayanpur (C)" ///
-	     50201 "Barijhola (C)" 50301 "Karlakana (C)"   50501 "Nathma (C)"  99999 "Total", modify
+	     20201 "Jaltar (Gunu)"  /// 
+	     30101 "Badaalubadi (Koln)" 30602 "Mukundpur (Koln)" ///
+		 40201 "Bichikote (Padm)" 40202 "Gudiabandh (Padm)" ///
+		 50101 "Dangalodi (Raya-T)" 50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"  50401 "Birnarayanpur (Raya-T)"  ///
+		 50402 "Kuljing (Raya-T)"   50501 "Nathma (Raya-C)" 50601 "Badaalubadi (Raya-T)" ///
+		 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -52,6 +55,7 @@ collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refused"
 	label var Non_R_Cen_instruction "No eligible resp"
+	label var R_Cen_screen_preg "(HH with preg)"
 	
 	* label var Non_R_FU_consent "Refused"
 	* label var R_FU_consent "Consented"
@@ -59,9 +63,9 @@ collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C
 	label var C_Census_C "Control"
 	label var C_Census_T "Treatment"
 	
-global Variables R_Cen_village_name_str C_Census Non_C_Screened C_Screened R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
+global Variables R_Cen_village_name_str C_Census Non_C_Screened C_Screened R_Cen_screen_preg R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
 texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{6}{c}{Census}&\multicolumn{2}{c}{By assignment}")
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{7}{c}{Census}&\multicolumn{2}{c}{By assignment}")
 
 /*----------------------------------------------
 2) Descriptive table: Enumerator level
@@ -159,7 +163,7 @@ start_from_clean_file_Population
 	
 	
 	esttab model0  model1  model2  using "${Table}Average_overall_productivity_`k'.tex", ///
-	   replace label cell("count (fmt(2) label(_))") mtitles("\shortstack[c]{Average}"  "Minimum" "Maximum") ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}"  "Minimum" "Maximum") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
@@ -332,14 +336,14 @@ esttab model0 model110 model111 model113 model115 model117 model119 using "${Tab
 
 
 /*----------------------------------------------
-2) Descriptive table
-Village level
+2) Descriptive table: Village level (Across)
 ----------------------------------------------*/
 global All BlockCode_1 BlockCode_2 BlockCode_3 BlockCode_4 BlockCode_5 Panchatvillage ///
            V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
-		   km_block
+		   km_block ///
+		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking
 
-local All "Pre-survey balance among treatment arms by village"
+local All "Balance among treatment arms by village (Across all the sample)"
 local LabelAll "MainVillage"
 local ScaleAll "1"
 local NoteAll "Notes: This table presents the village level stats. The table is autocreated by 3_Descriptive.do."
@@ -387,7 +391,8 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   mtitles("\shortstack[c]{Total}" "\shortstack[c]{Control}" "\shortstack[c]{Treat}" "Diff" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
-				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{Block}} \\ \hline BLOCK: Gudari" ///
+				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{From Admin Data}} \\ \hline \multicolumn{4}{l}{\textbf{Block}} \\ BLOCK: Gudari" ///
+				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census}} \\\hline Total approached (Total HH in the village)" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
@@ -395,6 +400,84 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
+}
+
+/*----------------------------------------------
+2) Descriptive table: Village level (village level)
+----------------------------------------------*/
+foreach b in 5 {
+	
+global All BlockCode_`b' Panchatvillage ///
+           V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
+		   km_block ///
+		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking
+
+local All`b' "Pre-survey balance among treatment arms by village (Rayagada)"
+local LabelAll "MainVillage"
+local ScaleAll "1"
+local NoteAll "Notes: This table presents the village level stats. The table is autocreated by 3_Descriptive.do."
+
+foreach k in All {
+start_from_clean_file_Village
+keep if BlockCode_`b'==1
+
+* Mean
+	eststo model0: estpost summarize $`k'
+	eststo model1: estpost summarize $`k' if Treat_V==0
+	eststo model2: estpost summarize $`k' if Treat_V==1
+	
+* Diff
+start_from_clean_file_Village
+keep if BlockCode_`b'==1
+
+	foreach i in $`k' {
+	reg `i' i.Treat_V
+	replace `i'=_b[1.Treat_V]
+	}
+	eststo  model4: estpost summarize $`k'
+
+* Significance
+start_from_clean_file_Village
+keep if BlockCode_`b'==1
+
+	foreach i in $`k' {
+	reg `i' i.Treat_V
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=99996 if p_1> 0.1
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model5: estpost summarize $`k'
+	
+	* P-value
+start_from_clean_file_Village
+keep if BlockCode_`b'==1
+
+	foreach i in $`k' {
+	reg `i' i.Treat_V
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=p_1
+	}
+	eststo  model6: estpost summarize $`k'
+	
+esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Village_Block`b'.tex", replace ///
+	   cell("mean (fmt(2) label(_))") ///
+	   mtitles("\shortstack[c]{Total}" "\shortstack[c]{Control}" "\shortstack[c]{Treat}" "Diff" "Sig" "P-value") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{From Admin Data}} \\\hline \multicolumn{4}{l}{\textbf{Block}} \\ BLOCK: Gudari" ///
+				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census}} \\\hline Total approached" ///
+				   "Panchayat village" "\textbf{Panchayat village}" ///
+				   "Number of HH in the village (admin)" "\textbf{Number of HH in the village}" ///
+				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k'`b''" \label{`Label`k''}) note("`Note`k''") 
+}
 }
 
 
@@ -698,8 +781,9 @@ gen Map_ID=.
 replace Map_ID=40201  if _ID==428438
 replace Map_ID=50301  if _ID==428011
 replace Map_ID=50501  if _ID==428157
-   
-foreach i in 40201 50301 50501 {
+
+*  40201 50301 50501   
+foreach i in {
 spmap using "${Data_map}phxy" if  Map_ID==`i', id(_ID) ///
       point(x(R_Cen_a40_gps_longitude) y(R_Cen_a40_gps_latitude) select(keep if R_Cen_village_name==`i') legenda(on) fcolor(Rainbow) by(Type) size(1 2))
 graph export "${Figure}Map_`i'.eps", replace  
