@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline Census_WIDE.csv"
 *	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO October 1, 2023 10:37 PM.
+*	Output by SurveyCTO October 11, 2023 8:13 PM.
 
 * initialize Stata
 clear all
@@ -135,17 +135,17 @@ if _N>0 {
 
 	label variable block_name "Enumerator to fill up: Block Name"
 	note block_name: "Enumerator to fill up: Block Name"
-	label define block_name 1 "Gudari" 2 "Gunupur" 3 "Kolnara" 4 "Padmapur" 5 "Rayagada" 888 "Pilot"
+	label define block_name 1 "Gudari" 2 "Gunupur" 3 "Kolnara" 4 "Padmapur" 5 "Rayagada"
 	label values block_name block_name
 
 	label variable gp_name "Enumerator to fill up: Gram Panchayat Name"
 	note gp_name: "Enumerator to fill up: Gram Panchayat Name"
-	label define gp_name 101 "Asada" 102 "Khariguda" 201 "G Gurumunda" 202 "Jaltar" 301 "Badaalubadi" 302 "BK Padar" 303 "Dunduli" 305 "Kolnara" 306 "Mukundpur" 401 "Derigam" 402 "Gudiabandh" 403 "Kamapadara" 404 "Naira" 501 "Dangalodi" 502 "Halua" 503 "Karlakana" 504 "Kothapeta" 505 "Tadma" 888 "Pilot"
+	label define gp_name 101 "Asada" 102 "Khariguda" 201 "G Gurumunda" 202 "Jaltar" 302 "BK Padar" 303 "Dunduli" 305 "Kolnara" 306 "Mukundpur" 401 "Derigam" 402 "Gudiabandh" 403 "Kamapadara" 404 "Naira" 501 "Dangalodi" 502 "Halua" 503 "Karlakana" 504 "Kothapeta" 505 "Tadma" 506 "Badaalubadi"
 	label values gp_name gp_name
 
 	label variable village_name "Enumerator to fill up: Village Name"
 	note village_name: "Enumerator to fill up: Village Name"
-	label define village_name 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 30101 "Badaalubadi" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 88888 "Pilot"
+	label define village_name 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 50601 "Badaalubadi"
 	label values village_name village_name
 
 	label variable hamlet_name "Enumerator to fill up: Hamlet Name"
@@ -1141,7 +1141,6 @@ if _N>0 {
 disp
 disp "Finished import of: `csvfile'"
 disp
-
 
 * OPTIONAL: LOCALLY-APPLIED STATA CORRECTIONS
 *

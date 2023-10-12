@@ -40,8 +40,6 @@ format   unique_id_num %15.0gc
 /*------------------------------------------------------------------------------
 	1 Formatting dates
 ------------------------------------------------------------------------------*/
-***Change date prior to running
-	local date "5Oct2023"
 	
 	*gen date = dofc(starttime)
 	*format date %td
@@ -60,11 +58,15 @@ format   unique_id_num %15.0gc
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
 //1. Changing village_name to string
-label define R_Cen_village_namel 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 50601 "Badaalubadi" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 88888 "Pilot", modify
-	label values R_Cen_village_name R_Cen_village_namel
+recode R_Cen_village_name 30101=50601
+recode R_Cen_gp_name 301=506
+*label define R_Cen_village_namel 50601 "Baadalubadi"
+*label values R_Cen_village_name R_Cen_village_namel
 
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
+replace R_Cen_village_str= "Badaalubadi" if R_Cen_village_name==50601
+
 
 //2. dropping irrelevant entries
 count if R_Cen_village_name==88888
@@ -227,8 +229,6 @@ replace R_Cen_consent=. if R_Cen_screen_u5child==0 & R_Cen_screen_preg==0
 replace R_Cen_consent=. if R_Cen_screen_u5child==. & R_Cen_screen_preg==.
 *replace R_Cen_instruction= 1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 
-tempfile main
-save `main', replace
 
 /*
 clear all
@@ -251,15 +251,46 @@ duplicates drop unique_id, force
 
 
 *******Final variable creation for clean data
-gen     C_Screened=0
+
+gen      C_HH_not_available=0
+replace C_HH_not_available=1 if R_Cen_resp_available!=1
+gen     C_Screened=.
 replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
+replace C_Screened=0 if R_Cen_resp_available==1 & C_Screened!=1
 
 foreach i in R_Cen_consent R_Cen_instruction C_Screened {
 	gen    Non_`i'=`i'
 	recode Non_`i' 0=1 1=0	
 }
 
-* Change as we finalzie the treatment village
+tempfile main
+save `main', replace
+
+
+
+//correcting dates using raw data
+clear
+import delimited using "${DataRaw}Baseline Census_WIDE.csv"
+duplicates drop unique_id, force
+keep submissiondate starttime unique_id
+rename unique_id unique_id_hyphen
+gen unique_id = subinstr(unique_id_hyphen, "-", "",.) 
+merge 1:1 unique_id using `main'
+
+drop if _merge==1
+
+//Formatting dates
+	split starttime, parse("")
+	drop starttime2
+	gen month= substr(starttime1, 1, 2)
+	replace month="9" if month=="9/"
+	gen day_of_month= substr(starttime1, 3, 3)
+	replace day_of_month = subinstr(day_of_month, "/", "", .)
+
+	replace month= "Oct" if month=="10"
+	replace month= "Sept" if month=="9"
+	gen month_day= day_of_month + " " + month + " " + "2023"
+
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
