@@ -12,11 +12,12 @@
 	* This do file exports.....
 	
 use "${DataPre}1_1_Census_cleaned.dta", clear
+drop _merge
 ***Change date prior to running
-local date "5Oct2023"
+
 
 /*--------------------------------------- Census quality check ---------------------------------------*/
-
+/*
 //1. Checking if respondent is the first member of the household in the roster 
 
 count if R_Cen_a1_resp_name!=R_Cen_a3_hhmember_name_1
@@ -38,6 +39,7 @@ br R_Cen_a1_resp_name R_Cen_a3_hhmember_name_1 R_Cen_enum_name if R_Cen_a1_resp_
 
 	restore 
 
+	
 	* Fuzzy matching and then Manually fixing the remaining cases
 	use `resp_names', clear
 	merge 1:1 unique_id_num using "${DataPre}1_1_Census_cleaned_consented.dta"
@@ -47,7 +49,7 @@ br R_Cen_a1_resp_name R_Cen_a3_hhmember_name_1 R_Cen_enum_name if R_Cen_a1_resp_
 	replace R_Cen_a1_resp_name=R_Cen_a3_hhmember_name_1 if (R_Cen_a1_resp_name!=R_Cen_a3_hhmember_name_1 & no_change!=1)
 	count if R_Cen_a1_resp_name!=R_Cen_a3_hhmember_name_1 & no_change!=1
 
-	
+	*/
 //2. Checking if primary water source is not repeated as secondary water source
 gen prim_sec_same=.
 forvalues i = 1/8 {
@@ -63,6 +65,25 @@ export excel using "${pilot}Data_quality.xlsx" if prim_sec_same==1, sheet("prim_
 restore
 
 
+//3. Checking if consent time is too low and for which enumerators
+start_from_clean_file_Population
+sum R_Cen_consent_duration
+local consent_time `r(mean)'
+keep if R_Cen_consent_duration< `consent_time'
+keep unique_id R_Cen_village_str R_Cen_enum_name R_Cen_consent_duration
+export excel using "${pilot}Data_quality.xlsx", sheet("Consent time low") firstrow(var) sheetreplace
 
 
-* High frequnecy chekc
+//4. Checking if date recorded is wrong
+start_from_clean_file_Population
+
+gen date= dofc(R_Cen_starttime)
+format date %td
+
+keep if month_day=="  2023"
+keep unique_id R_Cen_village_str date R_Cen_enum_name
+
+export excel using "${pilot}Data_quality.xlsx", sheet("Dates to check") firstrow(var) sheetreplace
+
+
+
