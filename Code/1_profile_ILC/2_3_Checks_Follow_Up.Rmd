@@ -648,6 +648,31 @@ stargazer(df.stat, summary=F, title= "WASH Section Summary",float=F,rownames = F
          
 ```
 
+```{r for archi - give hh_ids and name of enums who report diff primary water source than government taps}
+df.wash.not.prim <- df.temp.consent %>% filter(R_FU_water_source_prim != 1) %>% 
+  select(R_FU_enum_name_label, R_FU_r_cen_village_name_str, unique_id_num, R_FU_water_source_prim )  %>%
+  rename( Enumerator = R_FU_enum_name_label, Village  = R_FU_r_cen_village_name_str, HH_ID = unique_id_num, 
+          Primary_Water_Source = R_FU_water_source_prim) %>% 
+  mutate(Primary_Water_Source = ifelse(Primary_Water_Source == 2,"Government provided community standpipe",
+                                       ifelse(Primary_Water_Source == 3, "Gram Panchayat/Other Community Standpipe", 
+                                              ifelse(Primary_Water_Source == 4,"Manual handpump", 
+                                                     ifelse(Primary_Water_Source == 5, "Covered dug well", 
+                                                            ifelse(Primary_Water_Source == 6, 
+                                                                   "Directly fetched by surface water", 
+                                                                   ifelse(Primary_Water_Source == 7, 
+                                                                          "Uncovered dug well", 
+                                                                          ifelse(Primary_Water_Source == 8, 
+                                                                                 "Private Surface well", 
+                                                                                 Primary_Water_Source))))))))
+
+
+star.out <- stargazer(df.wash.not.prim, summary=F, title= "",float=F,rownames = F,
+           covariate.labels=NULL)
+star.out <- sub(" cccc"," lccc", star.out) 
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_NOT_Govt_tap_HH_Survey.tex"))
+
+```
+
 
 ```{r descriptive sec B tap }
 df.tap<- df.temp.consent %>% select(R_FU_tap_supply_freq, R_FU_tap_function, R_FU_tap_use_future)
@@ -716,7 +741,7 @@ df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>%
 
 
 
-stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
+star.out <- stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
            covariate.labels=NULL)
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
@@ -803,9 +828,9 @@ df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>%
   mutate(Var1 = ifelse(Var1 == "R_FU_tap_taste_satisfied", "How satisfied are you with the taste of water from government taps?", 
                        ifelse(Var1 == "R_FU_tap_taste_desc",
                               "Describe the taste of water from government taps", 
-                                     ifelse(Var1 == "R_FU_tap_smell_desc", 
+                                     ifelse(Var1 == "R_FU_tap_smell", 
                                             "Describe the smell of water from government taps",
-                                            ifelse(Var1 == "R_FU_tap_color_desc",
+                                            ifelse(Var1 == "R_FU_tap_color",
                                                    "Describe the color of water from government taps", 
                                                    ifelse(Var1 == "R_FU_tap_trust",
                                                    "How confident are you in the water from government taps?", 
@@ -814,7 +839,7 @@ df.append <- df.append %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>%
 
 
 
-stargazer(df.append, summary=F, title= "Chlorine Perceptions Section Summary",float=F,rownames = F,
+star.out <- stargazer(df.append, summary=F, title= "Chlorine Perceptions Section Summary",float=F,rownames = F,
            covariate.labels=NULL)
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
@@ -867,9 +892,9 @@ df.exp <- df.exp %>% mutate(Var1 = ifelse(Var1 == "0", "No", Var1)) %>%
   rename(Question = Var1) %>% mutate(Prop = round(Prop, 2))
 
 
-stargazer(df.exp, summary=F, title= "Chlorine Experience Summary",float=F,rownames = F,
+star.out <- stargazer(df.exp, summary=F, title= "Chlorine Experience Summary",float=F,rownames = F,
            covariate.labels=NULL)
-star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}}", star.out) 
+star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}", star.out) 
 
 starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_Exp_HH_Survey.tex"))
  
@@ -877,12 +902,12 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlo
 
 
 ```{r descriptive sec D burden of water treat }
-df.burden<- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,  R_FU_quant, R_FU_water_treat, R_FU_water_stored)
+#df.burden<- df.temp.consent %>% select(R_FU_water_source_prim, R_FU_water_sec_yn,  R_FU_quant, R_FU_water_treat, R_FU_water_stored)
 #assign labels for each
 
 
-stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
-           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Wash_HH_Survey.tex"))
+#stargazer(df.append, summary=F, title= "Tap Section Summary",float=F,rownames = F,
+          # covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Wash_HH_Survey.tex"))
 
 ```
 

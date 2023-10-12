@@ -163,6 +163,7 @@ do "${Do_pilot}2_1_Final_data.do"
 * (2.2) High frequency checks
 * Who: Astha/Michelle
 do "${Do_pilot}2_2_Checks.do"
+do "${Do_pilot}2_3_Checks_Follow_Up.do"
 
 * (3) Descriptive stats
 * Who: All
