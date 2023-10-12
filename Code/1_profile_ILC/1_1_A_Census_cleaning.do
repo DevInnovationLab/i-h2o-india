@@ -232,8 +232,6 @@ replace R_Cen_consent=. if R_Cen_screen_u5child==0 & R_Cen_screen_preg==0
 replace R_Cen_consent=. if R_Cen_screen_u5child==. & R_Cen_screen_preg==.
 *replace R_Cen_instruction= 1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 
-tempfile main
-save `main', replace
 
 /*
 clear all
@@ -271,7 +269,34 @@ foreach i in R_Cen_consent R_Cen_instruction C_Screened {
 	recode Non_`i' 0=1 1=0	
 }
 
-* Change as we finalzie the treatment village
+tempfile main
+save `main', replace
+
+
+
+//correcting dates using raw data
+clear
+import delimited using "${DataRaw}Baseline Census_WIDE.csv"
+duplicates drop unique_id, force
+keep submissiondate starttime unique_id
+rename unique_id unique_id_hyphen
+gen unique_id = subinstr(unique_id_hyphen, "-", "",.) 
+merge 1:1 unique_id using `main'
+
+drop if _merge==1
+
+//Formatting dates
+	split starttime, parse("")
+	drop starttime2
+	gen month= substr(starttime1, 1, 2)
+	replace month="9" if month=="9/"
+	gen day_of_month= substr(starttime1, 3, 3)
+	replace day_of_month = subinstr(day_of_month, "/", "", .)
+
+	replace month= "Oct" if month=="10"
+	replace month= "Sept" if month=="9"
+	gen month_day= day_of_month + " " + month + " " + "2023"
+
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace

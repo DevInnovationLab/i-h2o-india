@@ -16,6 +16,7 @@
 * N=HH with the Census consented
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
+drop _merge
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 
 *****************
@@ -134,7 +135,9 @@ destring R_Cen_a12_ws_prim, replace
 	
 	label variable R_Cen_a18_jjm_drinking "Drink JJM water (Do not use this variable)"
 	label variable C_Cen_a18_jjm_drinking "Drink JJM water"
-   
+	
+	
+    label var R_Cen_a13_water_sec_yn_0 "No secondary source"
     label variable R_Cen_a13_ws_sec_1 "JJM tap"
 	label variable R_Cen_a13_ws_sec_2 "Govt. provided community standpipe"
 	label variable R_Cen_a13_ws_sec_3 "GP/Other community standpipe"
@@ -144,7 +147,18 @@ destring R_Cen_a12_ws_prim, replace
 	label variable R_Cen_a13_ws_sec_7 "Surface water"
 	label variable R_Cen_a13_ws_sec_8 "Private surface well"
 	label variable R_Cen_a13_ws_sec__77 "Other"
+	
+	label var R_Cen_a12_ws_prim_1 "JJM tap" 
+	label var R_Cen_a12_ws_prim_2 "Govt. provided community standpipe"
+	label var R_Cen_a12_ws_prim_3 "GP/Other community standpipe"
+	label var R_Cen_a12_ws_prim_4 "Manual handpump"
+	label var R_Cen_a12_ws_prim_5 "Covered dug well"
+	label var R_Cen_a12_ws_prim_6 "Uncovered dug well"
+	label var R_Cen_a12_ws_prim_7 "Surface water"
+	label var R_Cen_a12_ws_prim_8 "Private surface well" 
+	label var R_Cen_a12_ws_prim_77 "Other"
 
+	label var R_Cen_a16_water_treat_0 "No water treatment"
 	label variable R_Cen_a16_water_treat_type_1 "Filter through cloth/sieve" 
 	label variable R_Cen_a16_water_treat_type_2 "Letting water stand" 
 	label variable R_Cen_a16_water_treat_type_3 "Boiling" 
@@ -193,16 +207,23 @@ gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
 gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
 gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
 
-egen survey_time= rowtotal(intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration)
-
 
 replace consent_duration=. if consent_duration==0
 replace sectionH_duration=. if sectionH_duration<0
-
-
-local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration survey_time
+local duration2 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration
 
 foreach x of local duration2  {
+	sum `x'
+	replace `x'=. if `x'<0
+	sum `x'
+}
+
+egen survey_time= rowtotal(intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration)
+
+
+local duration3 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration survey_time
+
+foreach x of local duration3  {
 	rename `x' R_Cen_`x'
 }
 
@@ -270,21 +291,23 @@ program define   start_from_clean_file_Population
 use  "${DataPre}1_1_Census_cleaned.dta", clear
 gen     C_Census=1
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration)
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim)
 
 drop if R_Cen_village_name==88888
 * Temporal treatment status
 	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==40201 | R_Cen_village_name==40202 | R_Cen_village_name==50402 | R_Cen_village_name==20201 | R_Cen_village_name==50101| R_Cen_village_name==30101
-	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 | R_Cen_village_name==50401
+	replace Treat_V=1 if R_Cen_village_name==50101 | R_Cen_village_name==50401 | R_Cen_village_name==50402 | R_Cen_village_name==50601 
+	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 
 	
 recode Merge_C_F 1=0 3=1
+
 
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
 	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused"
-	label var R_Cen_survey_duration "Survey duration"
+	label var C_HH_not_available "Respondent not available"
+	label var R_Cen_survey_time "Survey duration"
 	label var R_Cen_intro_duration "Intro duration"
 	label var R_Cen_consent_duration "Consent duration"
 	label var R_Cen_sectionB_duration "HH demographics duration"
@@ -347,7 +370,7 @@ program define   start_from_clean_file_Preglevel
   * Open clean file
   start_from_clean_file_Census
   
-keep R_Cen_a29_wom_diarr*  unique_id* C_total_U5child_hh
+keep R_Cen_a29_wom_diarr*  unique_id* C_total_pregnant_hh
 reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_, i(unique_id) j(num)
 * Drop missing
 end
