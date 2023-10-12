@@ -328,7 +328,7 @@ label var R_Cen_a18_jjm_drinking "Drink JJM percent"
 drop if Selected=="Backup"
 
 * Labeling
-destring village V_Num_HH, replace
+destring village V_Num_HH BlockCode, replace
 label var V_Num_HH "Number of HH in the village"
 label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
 label values BlockCode BlockCodel

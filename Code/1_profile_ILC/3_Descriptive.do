@@ -31,14 +31,10 @@ start_from_clean_file_Population
 expand 2, generate(expand_n)
 replace R_Cen_village_name=99999 if expand_n==1
 
-gen     C_Census_C=0
-replace C_Census_C=1 if C_Census==1 & Treat_V==0
-gen     C_Census_T=0
-replace C_Census_T=1 if C_Census==1 & Treat_V==1
 
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Census_C C_Census_T Non_C_Screened R_Cen_screen_preg
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available Non_C_Screened R_Cen_screen_preg
 *  R_FU_consent Non_R_FU_consent
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened C_Census_C C_Census_T Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
 	label define R_Cen_village_namel  ///
 	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm)" 40202 "Gudiabandh (Padm)" 20201 "Jaltar (Gunu)"  ///
 		 50101 "Dangalodi (Raya-T)" 50402 "Kuljing (Raya-T)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln)" ///
@@ -54,17 +50,16 @@ collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refuse"
 	label var Non_R_Cen_instruction "No eligible resp"
-	label var R_Cen_screen_preg "(HH with preg)"
+	label var R_Cen_screen_preg "HH with preg"
 	
 	* label var Non_R_FU_consent "Refused"
 	* label var R_FU_consent "Consented"
 	label var R_Cen_consent "Consent given"
-	label var C_Census_C "Control"
-	label var C_Census_T "Treatment"
+
 	
-global Variables R_Cen_village_name_str C_Census C_HH_not_available Non_C_Screened C_Screened R_Cen_screen_preg R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction C_Census_C C_Census_T
+global Variables R_Cen_village_name_str C_Census C_HH_not_available Non_C_Screened C_Screened R_Cen_screen_preg R_Cen_consent  Non_R_Cen_consent Non_R_Cen_instruction 
 texsave $Variables using "${Table}Table_Progress.tex", ///
-        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Census}&\multicolumn{2}{c}{By assignment}")
+        title("Overall Progress") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Census}")
 
 		
 /*----------------------------------------------
@@ -89,7 +84,7 @@ gen refused_perc= (Non_R_Cen_consent/C_Screened)*100
 
 local vars_rd consent_of_screen_perc not_available_perc Non_Screened_perc screened_perc refused_perc
 foreach x of local vars_rd {
-	gen `x'_rd= round(`x', 0.01)
+	gen `x'_rd= round(`x', 0.1)
 }
 
 
