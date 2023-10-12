@@ -53,8 +53,6 @@ format   unique_id_num %15.0gc
 	
 	gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
 	
-	
-
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
@@ -63,7 +61,8 @@ format   unique_id_num %15.0gc
 recode R_Cen_village_name 30101=50601
 recode R_Cen_gp_name 301=506
 *label define R_Cen_village_namel 50601 "Baadalubadi"
-	*label values R_Cen_village_name R_Cen_village_namel
+*label values R_Cen_village_name R_Cen_village_namel
+
 decode R_Cen_village_name, gen (R_Cen_village_str)
 br R_Cen_village_name R_Cen_village_str
 replace R_Cen_village_str= "Badaalubadi" if R_Cen_village_name==50601
@@ -117,8 +116,6 @@ drop R_Cen_a40_gps_autoaccuracy R_Cen_a40_gps_manualaccuracy R_Cen_a40_gps_handl
 drop R_Cen_consent_duration R_Cen_intro_duration R_Cen_sectionb_duration //old vars
 destring R_Cen_survey_duration R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end, replace
-
-
 
 *drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 *R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
@@ -255,14 +252,11 @@ duplicates drop unique_id, force
 
 *******Final variable creation for clean data
 
-gen C_HH_not_available=0
+gen      C_HH_not_available=0
 replace C_HH_not_available=1 if R_Cen_resp_available!=1
-
 gen     C_Screened=.
 replace C_Screened=1 if R_Cen_screen_u5child==1 | R_Cen_screen_preg==1
 replace C_Screened=0 if R_Cen_resp_available==1 & C_Screened!=1
-
-
 
 foreach i in R_Cen_consent R_Cen_instruction C_Screened {
 	gen    Non_`i'=`i'

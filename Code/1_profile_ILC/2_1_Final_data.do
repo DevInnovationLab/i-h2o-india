@@ -54,8 +54,6 @@ foreach i in R_FU_consent {
 	recode Non_`i' 0=1 1=0	
 }
 
-
-
 ************************************
 *  Create new variables *
 ************************************
@@ -196,7 +194,6 @@ foreach x of local duration  {
 replace R_Cen_sectione_dur_end= . if C_total_pregnant_hh==0
 replace R_Cen_sectionf_dur_end= . if C_total_U5child_hh==0
 
-
 gen intro_duration= R_Cen_intro_dur_end
 gen consent_duration= R_Cen_consent_dur_end-R_Cen_intro_dur_end
 gen sectionB_duration= R_Cen_sectionb_dur_end-R_Cen_consent_dur_end
@@ -206,7 +203,6 @@ gen sectionE_duration= R_Cen_sectione_dur_end-R_Cen_sectiond_dur_end
 gen sectionF_duration= R_Cen_sectionf_dur_end-R_Cen_sectione_dur_end
 gen sectionG_duration= R_Cen_sectiong_dur_end-R_Cen_sectionf_dur_end
 gen sectionH_duration= R_Cen_sectionh_dur_end-R_Cen_sectiong_dur_end
-
 
 replace consent_duration=. if consent_duration==0
 replace sectionH_duration=. if sectionH_duration<0
@@ -220,14 +216,12 @@ foreach x of local duration2  {
 
 egen survey_time= rowtotal(intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration)
 
-
 local duration3 intro_duration consent_duration sectionB_duration sectionC_duration sectionD_duration sectionE_duration sectionF_duration sectionG_duration sectionH_duration survey_time
 
 foreach x of local duration3  {
 	rename `x' R_Cen_`x'
 }
 
-	
 	label var R_Cen_survey_time "Survey duration"
 	label var R_Cen_intro_duration "Intro duration"
 	label var R_Cen_consent_duration "Consent duration"
@@ -289,18 +283,11 @@ cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
 use  "${DataPre}1_1_Census_cleaned.dta", clear
+replace R_Cen_village_name=50601 if R_Cen_village_name==30101
 gen     C_Census=1
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim)
-
-drop if R_Cen_village_name==88888
-* Temporal treatment status
-	gen     Treat_V=.
-	replace Treat_V=1 if R_Cen_village_name==50101 | R_Cen_village_name==50401 | R_Cen_village_name==50402 | R_Cen_village_name==50601 
-	replace Treat_V=0 if R_Cen_village_name==50201 | R_Cen_village_name==50301 | R_Cen_village_name==50501 
-	
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
-
 
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
@@ -322,10 +309,21 @@ end
 
 cap program drop start_from_clean_file_Village
 program define   start_from_clean_file_Village
+
+start_from_clean_file_Population
+collapse R_Cen_a18_jjm_drinking (sum) C_Census R_Cen_consent, by(R_Cen_village_name)
+rename R_Cen_village_name village
+save "${DataFinal}Final_Population_Village.dta", replace
+
   * Open clean file
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
+merge 1:1 village using "${DataFinal}Final_Population_Village.dta", gen(Merge_Village_Pop)
 egen km_block=rowmin(km_Rayagada km_Kolnara km_Gunupur km_Gudari km_Padmapur) 
 label var km_block "Distance to closest block HQ (km)"
+
+label var C_Census  "Total HH"
+label var R_Cen_consent "Census consented (HH with Preg+U5)"
+label var R_Cen_a18_jjm_drinking "Drink JJM percent"
 
 drop if Selected=="Backup"
 

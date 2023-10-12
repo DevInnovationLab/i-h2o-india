@@ -62,6 +62,7 @@ save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta"
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", nogen
+* replace village_IDinternal="50601" if village_IDinternal=="30101"
 rename village_IDinternal village
 rename HHchoicecriteria V_Num_HH
 destring village, replace
