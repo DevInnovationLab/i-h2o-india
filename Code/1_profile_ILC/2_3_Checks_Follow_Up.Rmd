@@ -1,8 +1,7 @@
 ---
-title: "Code for Descriptive Stats"
-author: "Astha Vohra"
-date: "2023-10-01"
-output: html_document
+#title: "Code for Descriptive Stats"
+#author: "Astha Vohra"
+#date: "2023-10-01"
 ---
 ```{r}
 # install the packages

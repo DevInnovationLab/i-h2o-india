@@ -21,7 +21,6 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
-#library(xtable)
 
 #------------------------ setting user path ----------------------------------------#
 

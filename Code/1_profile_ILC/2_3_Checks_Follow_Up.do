@@ -20,4 +20,4 @@
 * Step 1: Uploaded in google sheet
 ***********************************************************************
 
-rscript using "${Do_pilot}2_3_Checks_Follow_Up.Rmd" 
+rscript using "${Do_pilot}2_3_Checks_Follow_Up.R" 
