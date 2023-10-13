@@ -42,7 +42,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	else if c(username) == "akitokamei" {		
 		global box 		"/Users/akitokamei/Box Sync/India Water project/"
-		global github	"/Users/akitokamei/Dropbox/Mac/Documents/GitHub/i-h2o-india/"
+		global github	"/Users/akitokamei/Library/Mobile Documents/com~apple~CloudDocs/Desktop/GitHub/i-h2o-india/"
 		global Overleaf "/Users/akitokamei/Dropbox/Apps/Overleaf"
 		
 	}

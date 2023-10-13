@@ -23,13 +23,13 @@ do   "${Do_lab}1_0_1_label_w.do"
 save "${DataRaw}1. Contact details.dta", replace
 }
 
-/* Ranodmized once
-* Update the location of the Nathma
-* 
+/* Ranodmized once (among those 20 villages)!
 import excel using "${DataOther}India ILC_Pilot_Rayagada Village Tracking.xlsx", first clear
 drop if Block==""
 keep Block Selected Village village_IDinternal Pointgeolocationlat1 Pointgeolocationlon1 Panchatvillage BlockCode
 destring BlockCode, replace
+sort village_IDinternal
+* randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage) misfits(missing) setseed(75823)
 randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage) misfits(global) setseed(75823)
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta", replace
 */
@@ -62,7 +62,6 @@ save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta"
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", nogen
-* replace village_IDinternal="50601" if village_IDinternal=="30101"
 rename village_IDinternal village
 rename HHchoicecriteria V_Num_HH
 destring village, replace
@@ -74,7 +73,7 @@ use "${DataRaw}90_Village_Geo.dta", clear
 *************************
 * Cleaning the GPS data: Keeping the most reliable entry of GPS
 *************************
-split a40_gps_manual, p(" ") destring
+split   a40_gps_manual, p(" ") destring
 replace gps_manuallatitude=a40_gps_manual1 if gps_manuallatitude==.
 replace gps_manuallongitude=a40_gps_manual2 if gps_manuallongitude==.
 replace gps_manualaltitude=a40_gps_manual3 if gps_manualaltitude==.
