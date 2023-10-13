@@ -36,10 +36,13 @@ keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
 	label define R_Cen_village_namel  ///
-	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm)" 40202 "Gudiabandh (Padm)" 20201 "Jaltar (Gunu)"  ///
-		 50101 "Dangalodi (Raya-T)" 50402 "Kuljing (Raya-T)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln)" ///
-	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-C)"  99999 "Total", modify
-       
+		 20201 "Jaltar (Gunu-C)"  ///
+		 30602 "Mukundpur (Koln_T)" ///
+		 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm_C)" ///
+		 50101 "Dangalodi (Raya-C)" 50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 50402 "Kuljing (Raya-C)" ///
+	     50501 "Nathma (Raya-T)" 50601 "Badaalubadi (Raya-T)" ///
+         60101 "Badabangi (Rama-T)" ///
+		 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -86,14 +89,14 @@ local vars_rd consent_of_screen_perc not_available_perc Non_Screened_perc screen
 foreach x of local vars_rd {
 	gen `x'_rd= round(`x', 0.1)
 }
-
-
-
-
 	label define R_Cen_village_namel  ///
-	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm)" 40202 "Gudiabandh (Padm)" 20201 "Jaltar (Gunu)"  ///
-		 50101 "Dangalodi (Raya-T)" 50402 "Kuljing (Raya-T)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln)" ///
-	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-C)"  99999 "Total", modify
+		 20201 "Jaltar (Gunu-C)"  ///
+		 30602 "Mukundpur (Koln_T)" ///
+		 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm_C)" ///
+		 50101 "Dangalodi (Raya-C)" 50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 50402 "Kuljing (Raya-C)" ///
+	     50501 "Nathma (Raya-T)" 50601 "Badaalubadi (Raya-T)" ///
+         60101 "Badabangi (Rama-T)" ///
+		 99999 "Total", modify
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -417,18 +420,16 @@ global Variables R_Cen_enum_name_str total_surveys_by_enum daily_avg_productivit
 texsave $Variables using "${Table}Daily average Productivity_census_by_enumerator.tex", ///
         title("Daily average Productivity for census,by enumerator") replace varlabels frag location(htbp) 
 
-*/
-
 /*----------------------------------------------
 2) Descriptive table: Village level (Across)
 ----------------------------------------------*/
-global All BlockCode_1 BlockCode_2 BlockCode_3 BlockCode_4 BlockCode_5 Panchatvillage ///
+global All BlockCode_1 BlockCode_2 BlockCode_3 BlockCode_4 BlockCode_5 BlockCode_6 ///
+           Panchatvillage ///
            V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
-		   km_block ///
-		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking
+		   km_block
 
 local All "Balance among treatment arms by village (Across all the sample)"
-local LabelAll "MainVillage"
+local LabelAll "VillageBalance"
 local ScaleAll "1"
 local NoteAll "Notes: This table presents the village level stats. The table is autocreated by 3_Descriptive.do."
 
@@ -476,7 +477,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{From Admin Data}} \\ \hline \multicolumn{4}{l}{\textbf{Block}} \\ BLOCK: Gudari" ///
-				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census}} \\\hline Total approached (Total HH in the village)" ///
+				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census (among collected so far)}} \\\hline Total approached (Total HH in the village)" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///
@@ -489,6 +490,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 /*----------------------------------------------
 2) Descriptive table: Village level (village level)
 ----------------------------------------------*/
+* foreach b in 1 3 4 5 {
 foreach b in 5 {
 	
 global All BlockCode_`b' Panchatvillage ///
@@ -496,7 +498,10 @@ global All BlockCode_`b' Panchatvillage ///
 		   km_block ///
 		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking
 
-local All`b' "Pre-survey balance among treatment arms by village (Rayagada)"
+local All1 "Pre-survey balance among treatment arms by village (Gudari)"
+local All3 "Pre-survey balance among treatment arms by village (Kolnara)"
+local All4 "Pre-survey balance among treatment arms by village (Padmapur)"
+local All5 "Pre-survey balance among treatment arms by village (Rayagada)"
 local LabelAll "MainVillage"
 local ScaleAll "1"
 local NoteAll "Notes: This table presents the village level stats. The table is autocreated by 3_Descriptive.do."
@@ -553,7 +558,7 @@ esttab model0 model1 model2 model4 model5 model6 using "${Table}Main_Balance_Vil
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "BLOCK: Gudari" "\multicolumn{4}{l}{\textbf{From Admin Data}} \\\hline \multicolumn{4}{l}{\textbf{Block}} \\ BLOCK: Gudari" ///
-				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census}} \\\hline Total approached" ///
+				   "Total HH" "\multicolumn{4}{l}{\textbf{From Baseline Census (among collected so far)}} \\\hline Total approached" ///
 				   "Panchayat village" "\textbf{Panchayat village}" ///
 				   "Number of HH in the village (admin)" "\textbf{Number of HH in the village}" ///
 				   "BLOCK:" "~~~" "VSize:" "~~~"  ///

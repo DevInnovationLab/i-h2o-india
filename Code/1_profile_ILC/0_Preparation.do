@@ -30,7 +30,8 @@ keep Block Selected Village village_IDinternal Pointgeolocationlat1 Pointgeoloca
 destring BlockCode, replace
 sort village_IDinternal
 * randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage) misfits(missing) setseed(75823)
-randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage) misfits(global) setseed(75823)
+* randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode)                misfits(global)  setseed(75823)
+randtreat if Selected=="Selected", generate(Treat_V) replace strata(BlockCode Panchatvillage)   misfits(global)  setseed(75823)
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta", replace
 */
 
