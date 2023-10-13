@@ -283,6 +283,7 @@ cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
 use  "${DataPre}1_1_Census_cleaned.dta", clear
+replace R_Cen_village_name=60101 if R_Cen_village_name==20101
 replace R_Cen_village_name=50601 if R_Cen_village_name==30101
 gen     C_Census=1
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
@@ -313,6 +314,7 @@ program define   start_from_clean_file_Village
 start_from_clean_file_Population
 collapse R_Cen_a18_jjm_drinking (sum) C_Census R_Cen_consent, by(R_Cen_village_name)
 rename R_Cen_village_name village
+replace village=60101 if village==20101
 save "${DataFinal}Final_Population_Village.dta", replace
 
   * Open clean file
@@ -330,11 +332,12 @@ drop if Selected=="Backup"
 * Labeling
 destring village V_Num_HH BlockCode, replace
 label var V_Num_HH "Number of HH in the village"
-label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" 4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada", modify
+label define BlockCodel 1 "BLOCK: Gudari"2 "BLOCK: Gunupur" 3 "BLOCK: Kolnara" ///
+                        4 "BLOCK: Padmapur" 5 "BLOCK: Rayagada" 6 "BLOCK: Ramanaguda ", modify
 label values BlockCode BlockCodel
 
 xtile  V_Num_HH_Categ = V_Num_HH, nq(3)
-label define V_Num_HH_Categl 1 "VSize: Small"2 "VSize: Meduium" 3 "VSize: Large", modify
+label define V_Num_HH_Categl 1 "VSize: Small (67-140 HH)"2 "VSize: Meduium (160-262 HH)" 3 "VSize: Large (280-380 HH)", modify
 label values V_Num_HH_Categ V_Num_HH_Categl
 
 * Create Dummy
