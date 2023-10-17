@@ -46,7 +46,7 @@ format   unique_id_num %15.0gc
 	gen R_Cen_day = day(dofc(R_Cen_starttime))
 	gen R_Cen_month_num = month(dofc(R_Cen_starttime))
 	//to change once survey date is fixed
-	*keep if (R_Cen_day>28 & R_Cen_month_num>=9)
+	drop if (R_Cen_day==23 & R_Cen_month_num==9)
 	
 	 generate C_starthour = hh(R_Cen_starttime) 
 	 gen C_startmin= mm(R_Cen_starttime)
@@ -72,7 +72,7 @@ replace R_Cen_village_str= "Badaalubadi" if R_Cen_village_name==50601
 count if R_Cen_village_name==88888
 tab R_Cen_day if R_Cen_village_name==88888
 drop if  R_Cen_village_name==88888
-drop if R_Cen_village_name==10101
+*drop if R_Cen_village_name==10101
 
 //3. dropping duplicate case based on field team feedback
 *Note: the below duplicate is dropped because first the enumerator wrongly screened this HH out of the sample because of language issues. The supervisor later covered this case again
@@ -267,7 +267,7 @@ tempfile main
 save `main', replace
 
 
-
+/*
 //correcting dates using raw data
 clear
 import delimited using "${DataRaw}Baseline Census_WIDE.csv"
@@ -290,6 +290,7 @@ drop if _merge==1
 	replace month= "Oct" if month=="10"
 	replace month= "Sept" if month=="9"
 	gen month_day= day_of_month + " " + month + " " + "2023"
+*/
 
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear

@@ -12,7 +12,7 @@
 	* This do file exports.....
 	
 use "${DataPre}1_1_Census_cleaned.dta", clear
-drop _merge
+
 ***Change date prior to running
 
 
@@ -73,7 +73,7 @@ keep if R_Cen_consent_duration< `consent_time'
 keep unique_id R_Cen_village_str R_Cen_enum_name R_Cen_consent_duration
 export excel using "${pilot}Data_quality.xlsx", sheet("Consent time low") firstrow(var) sheetreplace
 
-
+/*
 //4. Checking if date recorded is wrong
 start_from_clean_file_Population
 
@@ -84,6 +84,32 @@ keep if month_day=="  2023"
 keep unique_id R_Cen_village_str date R_Cen_enum_name
 
 export excel using "${pilot}Data_quality.xlsx", sheet("Dates to check") firstrow(var) sheetreplace
+*/
+
+//4. Checking reason for unavailable respondents village-wise
+start_from_clean_file_Population
+gen date= dofc(R_Cen_starttime)
+format date %td
+
+keep if R_Cen_resp_available!=1
+keep unique_id R_Cen_village_str R_Cen_resp_available R_Cen_enum_name R_Cen_a41_end_comments
+sort R_Cen_resp_available
+export excel using "${pilot}Data_quality.xlsx", sheet("Census unavailable") firstrow(var) sheetreplace
+
+
+//5. Checking reason for refusals village-wise
+start_from_clean_file_Population
+gen date= dofc(R_Cen_starttime)
+format date %td
+
+keep if Non_R_Cen_consent==1
+label define R_Cen_no_consent_reasonl 1 "Lack of time" 2 "Topic not interesting to me" -77 "Other"
+destring R_Cen_no_consent_reason, replace
+label values R_Cen_no_consent_reason R_Cen_no_consent_reasonl
+
+keep unique_id date R_Cen_village_str R_Cen_no_consent_reason R_Cen_no_consent_comment R_Cen_enum_name
+sort R_Cen_no_consent_reason
+export excel using "${pilot}Data_quality.xlsx", sheet("Census refused") firstrow(var) sheetreplace
 
 
 
