@@ -16,7 +16,6 @@
 * N=HH with the Census consented
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
-drop _merge
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 
 *****************
@@ -37,17 +36,17 @@ Then check if age matches dob-calculated age; in most cases it will match except
 */
 
 
-forvalues i = 1/12 {
+forvalues i = 1/17 {
 	destring R_Cen_a5_autoage_`i', replace
 	count if R_Cen_a6_hhmember_age_`i'!= R_Cen_a5_autoage_`i' & R_Cen_a5_autoage_`i'!=.
 	replace R_Cen_a5_autoage_`i'= ceil(R_Cen_a5_autoage_`i')
 	count if R_Cen_a6_hhmember_age_`i'!= R_Cen_a5_autoage_`i' & R_Cen_a5_autoage_`i'!=.
 	replace R_Cen_a6_hhmember_age_`i' = R_Cen_a6_u1age_`i'/12 if R_Cen_a6_u1age_`i'!=. & R_Cen_unit_age_`i'==1
 	replace R_Cen_a6_hhmember_age_`i' = R_Cen_a6_u1age_`i'/365 if R_Cen_a6_u1age_`i'!=. & R_Cen_unit_age_`i'==2
-	replace R_Cen_a6_hhmember_age_`i'=R_Cen_a5_autoage_`i' if R_Cen_a6_hhmember_age_`i'!=R_Cen_a5_autoage_`i' & R_Cen_correct_age_`i'==1
+	
 }
 
-
+*replace R_Cen_a6_hhmember_age_`i'=R_Cen_a5_autoage_`i' if R_Cen_a6_hhmember_age_`i'!=R_Cen_a5_autoage_`i' & R_Cen_correct_age_`i'==1
 
 foreach i in R_FU_consent {
 	gen    Non_`i'=`i'
@@ -370,9 +369,11 @@ cap program drop start_from_clean_file_Preglevel
 program define   start_from_clean_file_Preglevel
   * Open clean file
   start_from_clean_file_Census
+  drop if R_Cen_village_name==30301| R_Cen_village_name==30501
+  destring R_Cen_a5_autoage_13 R_Cen_a5_autoage_14 R_Cen_a5_autoage_15 R_Cen_a5_autoage_16 R_Cen_a5_autoage_17, replace
   
-keep R_Cen_a29_wom_diarr*  unique_id* C_total_pregnant_hh
-reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_, i(unique_id) j(num)
+keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
+reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
 * Drop missing
 end
 
