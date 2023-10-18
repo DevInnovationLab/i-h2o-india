@@ -42,6 +42,7 @@ bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidenti
 
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 
+abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
 
 ```
 
@@ -84,6 +85,8 @@ bl_idexx <- bl%>%
 #combining idexx results to survey results
 bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
 idexx <- left_join(idexx, bl_idexx, by = "sample_ID")
+abr$sample_ID <- as.character(abr$sample_ID)
+abr <- left_join(abr, bl_idexx, by = "sample_ID")
 
 #Dropping lab blanks and field blanks
 idexx <- idexx%>%
@@ -93,6 +96,10 @@ idexx <- idexx%>%
 
 #creating new variable to tell the sample type
 idexx$sample_type <- idexx$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "sample_ID_stored",
+             "Tap" = "sample_ID_tap")
+abr$sample_type <- abr$sample_type%>%
   factor()%>%
   fct_recode("Stored" = "sample_ID_stored",
              "Tap" = "sample_ID_tap")
@@ -108,6 +115,18 @@ idexx <- idexx%>%
          ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
          ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))
 
+abr <- abr%>%
+  mutate(cf_95lo = quantify_95lo(y_large, y_small, "qt-2000"),
+         cf_mpn  = quantify_mpn(y_large, y_small, "qt-2000"),
+         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))
+
+abr <- abr%>%
+  mutate(ec_95lo = quantify_95lo(f_large, f_small, "qt-2000"),
+         ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
+         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))
+
+
+
 
 #Adding presence/absence data
 idexx <- idexx%>%
@@ -120,8 +139,22 @@ idexx <- idexx%>%
     ec_mpn > 0 ~ 'Presence',
     ec_mpn == 0 ~ 'Absence'))
 
+abr <- abr%>%
+  mutate(cf_pa = case_when(
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+abr <- abr%>%
+  mutate(ec_pa = case_when(
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
 #log transforming data
 idexx <- idexx%>%
+  mutate(ec_log = log(ec_mpn, base = 10))%>%
+  mutate(cf_log = log(cf_mpn, base = 10))
+
+abr <- abr%>%
   mutate(ec_log = log(ec_mpn, base = 10))%>%
   mutate(cf_log = log(cf_mpn, base = 10))
 
@@ -243,5 +276,35 @@ p3
 
 
 ```
+
+
+
+```{r ABR IDEXX Desc Stats}
+
+p4 <- ggplot(data = abr) + 
+  geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Village", 
+       y = "log(MPN E. coli/100 mL)",
+       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
+  theme_bw()
+
+p4
+
+
+p5 <- ggplot(data = abr) + 
+  geom_bar(aes(y = ec_pa, fill = village))+
+  labs(x = "Village", 
+       y = "log(MPN E. coli/100 mL)",
+       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
+  theme_bw()
+p5
+
+
+
+```
+
 
 
