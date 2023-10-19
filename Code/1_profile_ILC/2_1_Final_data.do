@@ -289,6 +289,8 @@ merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(
           keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
 
+drop if  R_Cen_village_name==30501
+
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
 	label variable R_FU_consent "HH survey consent"
@@ -360,6 +362,7 @@ program define   start_from_clean_file_Census
 
   use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
+  drop if  R_Cen_village_name==30501
   label var R_Cen_a2_hhmember_count "Household size" 
   
 end

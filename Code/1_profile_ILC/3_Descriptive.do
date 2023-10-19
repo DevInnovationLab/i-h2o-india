@@ -35,14 +35,12 @@ replace R_Cen_village_name=99999 if expand_n==1
 keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available Non_C_Screened R_Cen_screen_preg
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
-	label define R_Cen_village_namel  ///
-		 20201 "Jaltar (Gunu-C)"  ///
-		 30602 "Mukundpur (Koln_T)" ///
-		 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm_C)" ///
-		 50101 "Dangalodi (Raya-C)" 50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 50402 "Kuljing (Raya-C)" ///
-	     50501 "Nathma (Raya-T)" 50601 "Badaalubadi (Raya-T)" ///
-         60101 "Badabangi (Rama-T)" ///
-		 99999 "Total", modify
+
+	label define R_Cen_village_namel 10101 "Asada (Guda-T)" 20101 "Badabangi (Rama-T)"  ///
+	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  ///
+		 50101 "Dangalodi (Raya-C)" 50402 "Kuljing (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln-T)" 30301 "Tandipur (Koln-T)" ///
+	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)"  99999 "Total", modify
+       
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -89,14 +87,13 @@ local vars_rd consent_of_screen_perc not_available_perc Non_Screened_perc screen
 foreach x of local vars_rd {
 	gen `x'_rd= round(`x', 0.1)
 }
-	label define R_Cen_village_namel  ///
-		 20201 "Jaltar (Gunu-C)"  ///
-		 30602 "Mukundpur (Koln_T)" ///
-		 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm_C)" ///
-		 50101 "Dangalodi (Raya-C)" 50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 50402 "Kuljing (Raya-C)" ///
-	     50501 "Nathma (Raya-T)" 50601 "Badaalubadi (Raya-T)" ///
-         60101 "Badabangi (Rama-T)" ///
-		 99999 "Total", modify
+
+
+		label define R_Cen_village_namel 10101 "Asada (Guda-T)" 20101 "Badabangi (Rama-T)"  ///
+	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  ///
+		 50101 "Dangalodi (Raya-C)" 50402 "Kuljing (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln-T)" 30301 "Tandipur (Koln-T)" ///
+	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)"  99999 "Total", modify
+
 	label values R_Cen_village_name R_Cen_village_namel
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -128,23 +125,23 @@ texsave $Variables using "${Table}Table_Progress_2.tex", ///
 ----------------------------------------------*/
 * Title: Overall statistics of recruitment and program registration
 start_from_clean_file_Population
-/*
+
 gen work_day = dofc(R_Cen_starttime)
 format work_day %td
-*/
-keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available Non_C_Screened month_day 
-label define R_Cen_village_namel  ///
+
+keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available Non_C_Screened work_day 
+	label define R_Cen_village_namel 10101 "Asada" 20101 "Badabangi"  ///
 	      50601 "Badaalubadi" 40201 "Bichikote" 40202 "Gudiabandh" 20201 "Jaltar"  ///
-		 50101 "Dangalodi" 50402 "Kuljing" 50401 "Birnarayanpur" 30602 "Mukundpur" ///
-	     50201 "Barijhola" 50301 "Karlakana"   50501 "Nathma" , modify
+		 50101 "Dangalodi" 50402 "Kuljing" 50401 "Birnarayanpur" 30602 "Mukundpur" 30301 "Tandipur" ///
+	     50201 "Barijhola" 50301 "Karlakana"   50501 "Nathma"  99999 "Total", modify
 		 
 		 label values R_Cen_village_name R_Cen_village_namel
 		 
 		 
 
-collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened, by(R_Cen_village_name month_day)
+collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened, by(R_Cen_village_name work_day)
 
-drop if month_day=="  2023"
+*drop if month_day=="  2023"
 	
 	
 	decode R_Cen_village_name, gen(R_Cen_village_name_str)
@@ -155,13 +152,13 @@ drop if month_day=="  2023"
 	label var R_Cen_village_name_str "Village"
 	label var Non_R_Cen_consent "Refuse"
 	label var Non_R_Cen_instruction "No eligible resp"
-	label var month_day "Date"
+	label var work_day "Date"
 	
 	* label var Non_R_FU_consent "Refused"
 	* label var R_FU_consent "Consented"
 	label var R_Cen_consent "Consent given"
 
-global Variables month_day R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_consent 
+global Variables work_day R_Cen_village_name_str C_Census C_Screened R_Cen_consent Non_R_Cen_consent 
 texsave $Variables using "${Table}Table_Progress_3.tex", ///
         title("Overall Progress- Datewise for villages") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) 
 
@@ -799,18 +796,21 @@ start_from_clean_file_Census
 * Mean
 	eststo  model0: estpost summarize $`k'
 * Sub-category
-	eststo  model1: estpost summarize $`k' if R_Cen_village_name==20201
-	eststo  model2: estpost summarize $`k' if R_Cen_village_name==30602
-	eststo  model3: estpost summarize $`k' if R_Cen_village_name==40201
-	eststo  model4: estpost summarize $`k' if R_Cen_village_name==40202
-	eststo  model5: estpost summarize $`k' if R_Cen_village_name==50101
-	eststo  model6: estpost summarize $`k' if R_Cen_village_name==50201
+	eststo  model1: estpost summarize $`k' if R_Cen_village_name==10101
+	eststo  model2: estpost summarize $`k' if R_Cen_village_name==20101
+	eststo  model3: estpost summarize $`k' if R_Cen_village_name==50601
+	eststo  model4: estpost summarize $`k' if R_Cen_village_name==50401
+	eststo  model5: estpost summarize $`k' if R_Cen_village_name==50501
+	eststo  model6: estpost summarize $`k' if R_Cen_village_name==30301
+	eststo  model7: estpost summarize $`k' if R_Cen_village_name==30602
+	eststo  model8: estpost summarize $`k' if R_Cen_village_name==40201
+
 	
 	
-esttab model0  model1  model2 model3 model4 model5 model6 using "${Table}Main_Village_Census_`k'_Group1.tex", ///
-	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Jaltar" "Mukundpur" "Bichikote" "Gudiabandh" "Dangalodi" "Barijhola" "Sig" "P-value" "Min" "Max" "Missing") ///
+esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Village_Census_`k'_Group1.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Asada" "Badabangi" "Badaalubadi" "Birnarayanpur" "Nathma" "Tandipur" "Mukundpur" "Bichikote" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+	               "&           _&           _&           _&           _&           _&           _&   _&     _&         _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
 				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
@@ -819,7 +819,7 @@ esttab model0  model1  model2 model3 model4 model5 model6 using "${Table}Main_Vi
 				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
-	    title("``k''- (Group 1 villages)" \label{`Label`k''}) note("`Note`k''") 
+	    title("``k''- (Treatment villages)" \label{`Label`k''}) note("`Note`k''") 
 }
 
 
@@ -829,14 +829,15 @@ start_from_clean_file_Census
 * Mean
 	eststo  model0: estpost summarize $`k'
 * Sub-category
-	eststo  model7: estpost summarize $`k' if R_Cen_village_name==50301
-	eststo  model8: estpost summarize $`k' if R_Cen_village_name==50401
-	eststo  model9: estpost summarize $`k' if R_Cen_village_name==50402
-	eststo  model10: estpost summarize $`k' if R_Cen_village_name==50501
-	eststo  model11: estpost summarize $`k' if R_Cen_village_name==50601
+	eststo  model9: estpost summarize $`k' if R_Cen_village_name==20201
+	eststo  model10: estpost summarize $`k' if R_Cen_village_name==40202
+	eststo  model11: estpost summarize $`k' if R_Cen_village_name==50101
+	eststo  model12: estpost summarize $`k' if R_Cen_village_name==50301
+	eststo  model13: estpost summarize $`k' if R_Cen_village_name==50402
+	eststo  model14: estpost summarize $`k' if R_Cen_village_name==50201
 	
-esttab model0  model7  model8 model9 model10 model11 using "${Table}Main_Village_Census_`k'_Group2.tex", ///
-	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Karlakana" "Birnarayanpur" "Kuljing" "Nathma" "Badaalubadi" "Sig" "P-value" "Min" "Max" "Missing") ///
+esttab model0 model9 model10 model11 model12 model13 model14 using "${Table}Main_Village_Census_`k'_Group2.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Jaltar" "Gudiabandh" "Dangalodi" "Karlakana" "Kuljing" "Barijhola" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
@@ -847,7 +848,7 @@ esttab model0  model7  model8 model9 model10 model11 using "${Table}Main_Village
 				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
-	    title("``k''- (Group 2 villages)" \label{`Label`k''}) note("`Note`k''") 
+	    title("``k''- (Control villages)" \label{`Label`k''}) note("`Note`k''") 
 }
 
 /*----------------------------------------------
