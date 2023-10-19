@@ -14,8 +14,7 @@
 	(2) Also exports tracking sheets for supervisors for backchecks ------ */
 
 *------------------------------------------------------------------- -------------------------------------------------------------------*
-
-
+set seed 75824
 
 ***************************************************
 * Step 1: Cleaning  *
@@ -72,38 +71,57 @@ replace ten_perc_per_enum= round(ten_perc_per_enum)
 sort strata Merge_C_F
 bys strata: gen strata_random_hhsurvey= runiform(0,1) if Merge_C_F==1	
 bys strata: gen strata_random_census= runiform(0,1) if Merge_C_F==0
-sort strata Merge_C_F
 
 
-//Oversampling IDs that appear in census and HH survey
-gen selected_hhsurvey= 1 if strata_random_hhsurvey<=0.2
-bys R_Cen_enum_name: egen total_select_hhsurvey= total(selected_hhsurvey)
+//Sampling 60% of census-only and 40% of HHsurvey observations for each enumerator
+gen census_only_perc_byenum= 0.6* ten_perc_per_enum
+gen hhsurvey_perc_byenum= 0.4* ten_perc_per_enum
+replace census_only_perc_byenum = round(census_only_perc_byenum)
+replace hhsurvey_perc_byenum= round(hhsurvey_perc_byenum)
 
 
-//number of surveys left in 10% BCs will be sampled from census_only IDs
-gen diff= ten_perc_per_enum-total_select_hhsurvey
-bys R_Cen_enum_name: generate selected_onlycensus = _n <= diff if Merge_C_F==0 & strata_random_census!=.
-
+//selecting observations based on sampling criteria
+sort strata strata_random_hhsurvey
+bys R_Cen_enum_name: generate selected_hhsurvey = _n <= hhsurvey_perc_byenum 
+sort strata strata_random_census
+bys R_Cen_enum_name: generate selected_onlycensus = _n <= census_only_perc_byenum 
 
 //Final selection variable
 gen selected= 1 if selected_hhsurvey==1 | selected_onlycensus==1
 tab R_Cen_enum_name selected
 
 
-//generating replacements for those selected for BC survey- all from HH survey
-bys R_Cen_enum_name: generate selected_replacementBC = (_N - _n) <= ten_perc_per_enum if selected!=1 
+//generating replacements for those selected for BC survey
+gsort  strata -strata_random_hhsurvey 
+bys R_Cen_enum_name: generate selected_hhsurvey_repl = _n <= hhsurvey_perc_byenum  
 
+gsort  strata -strata_random_census 
+bys R_Cen_enum_name: generate selected_onlycensus_repl = _n <= census_only_perc_byenum 
+
+gen selected_replacementBC= 1 if selected_hhsurvey_repl==1 | selected_onlycensus_repl==1
 
 keep if selected==1 | selected_replacementBC==1
 tempfile selected_for_BC
 save `selected_for_BC', replace
 
 
+//also adding IDs that need to be checked for data quality
+start_from_clean_file_Population
+keep if unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+gen data_quality_check=1
+tempfile data_quality_ID
+save `data_quality_ID', replace
+
 ***********************************************************************
 * Step 3: Generating preload list for BC survey *
 ***********************************************************************
+use `selected_for_BC', clear
+append using `data_quality_ID'
+tempfile working
+save `working', replace
+
 start_from_clean_file_Population
-merge 1:1 unique_id using `selected_for_BC', gen(merge_BC_select)
+merge 1:1 unique_id using `working', gen(merge_BC_select)
 keep if merge_BC_select==3
 
 //Cleaning the name of the household head
@@ -151,4 +169,7 @@ export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_name_str R_
 
 sort R_Cen_village_name_str R_Cen_enum_name_label  
 export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark using "${pilot}Supervisor_BC_Tracker_19 Oct 2023_Replacement list.xlsx" if selected_replacementBC==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+
+sort R_Cen_village_name_str R_Cen_enum_name_label  
+export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   using "${pilot}Supervisor_data quality_Tracker_19 Oct 2023.xlsx" if data_quality_check==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
