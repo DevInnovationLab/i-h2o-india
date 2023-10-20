@@ -493,7 +493,7 @@ foreach b in 5 {
 global All BlockCode_`b' Panchatvillage ///
            V_Num_HH V_Num_HH_Categ_1 V_Num_HH_Categ_2 V_Num_HH_Categ_3 ///
 		   km_block ///
-		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking
+		   C_Census R_Cen_consent R_Cen_a18_jjm_drinking Prim_JJM
 
 local All1 "Pre-survey balance among treatment arms by village (Gudari)"
 local All3 "Pre-survey balance among treatment arms by village (Kolnara)"

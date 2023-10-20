@@ -71,7 +71,8 @@ foreach i in R_Cen_a13_water_sec_yn R_Cen_a18_jjm_drinking {
 		rename R_Cen_a13_water_source_sec_`i' R_Cen_a13_ws_sec_`i'
 	}
 	
-	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_ws_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq {
+	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_ws_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq ///
+ {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -313,7 +314,11 @@ cap program drop start_from_clean_file_Village
 program define   start_from_clean_file_Village
 
 start_from_clean_file_Population
-collapse R_Cen_a18_jjm_drinking (sum) C_Census R_Cen_consent, by(R_Cen_village_name)
+gen     Prim_JJM=0
+replace Prim_JJM=1 if R_Cen_a12_ws_prim==1
+replace Prim_JJM=. if R_Cen_a12_ws_prim==.
+
+collapse R_Cen_a18_jjm_drinking Prim_JJM (sum) C_Census R_Cen_consent, by(R_Cen_village_name)
 rename R_Cen_village_name village
 replace village=60101 if village==20101
 save "${DataFinal}Final_Population_Village.dta", replace
