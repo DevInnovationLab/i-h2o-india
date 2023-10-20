@@ -120,6 +120,33 @@ R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_secti
 *drop R_Cen_intro_dur_end R_Cen_consent_dur_end R_Cen_sectionb_dur_end R_Cen_sectionc_dur_end ///
 *R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_sectiong_dur_end R_Cen_sectionh_dur_end
 */
+
+
+//5. Cleaning the names of pregnant women in the data
+local i = 1
+local pregwoman R_Cen_pregwoman_1 R_Cen_pregwoman_2 R_Cen_pregwoman_3 R_Cen_pregwoman_4 R_Cen_pregwoman_5 ///
+ R_Cen_pregwoman_6 R_Cen_pregwoman_7 R_Cen_pregwoman_8 R_Cen_pregwoman_9 R_Cen_pregwoman_10 R_Cen_pregwoman_11 ///
+ R_Cen_pregwoman_12 R_Cen_pregwoman_13 R_Cen_pregwoman_14 R_Cen_pregwoman_15 R_Cen_pregwoman_16 R_Cen_pregwoman_17 
+   
+foreach x of  local pregwoman {
+	replace `x' = "" if R_Cen_a7_pregnant_`i' != 1
+    local ++i
+}
+
+//6. Cleaning the names of children under 5 in the data
+local i = 1
+local childU5 R_Cen_u5child_1 R_Cen_u5child_2 R_Cen_u5child_3 R_Cen_u5child_4 R_Cen_u5child_5 ///
+ R_Cen_u5child_6 R_Cen_u5child_7 R_Cen_u5child_8 R_Cen_u5child_9 R_Cen_u5child_10 R_Cen_u5child_11 ///
+ R_Cen_u5child_12 R_Cen_u5child_13 R_Cen_u5child_14 R_Cen_u5child_15 R_Cen_u5child_16 R_Cen_u5child_17  
+   
+   
+    
+foreach x of  local childU5 {
+	destring R_Cen_a6_hhmember_age_`i', gen(C_hhmember_age_`i')
+	replace `x' = "" if R_Cen_a6_hhmember_age_`i' >= 5
+    local ++i
+}
+
 /*------------------------------------------------------------------------------
 	3 Quality check
 ------------------------------------------------------------------------------*/
