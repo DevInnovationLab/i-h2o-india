@@ -168,7 +168,7 @@ do "${Do_pilot}2_3_Checks_Follow_Up.do"
 * (3) Descriptive stats
 * Who: All
 do "${Do_pilot}3_Descriptive.do"
-do "${Do_pilot}3_2_Descriptive_Follow_Up.R"
+do "${Do_pilot}3_2_Descriptive_Follow_Up.do"
 * (4) Analysis
 * Who: All
 do "${Do_pilot}4_Analysis.do"
