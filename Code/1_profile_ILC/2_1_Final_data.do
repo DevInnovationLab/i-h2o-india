@@ -428,7 +428,6 @@ label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)"
 label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
 /*
-
 *Baseline diarrhea incidence for children 
 reshape long R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ C_U5child_, i(unique_id) j(num)
 
