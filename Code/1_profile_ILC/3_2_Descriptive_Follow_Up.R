@@ -158,9 +158,30 @@ chlorine <- bl%>%
   pivot_longer(cols = c(R_FU_fc_tap, R_FU_fc_stored, R_FU_tc_tap, R_FU_tc_stored), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
 #Removing NAs from no respondent being available
 chlorine <- chlorine%>%
-  filter(is.na(chlorine_concentration) == FALSE)
-p2 <- ggplot(data =chlorine) + geom_point(aes(x = chlorine_test_type, y = chlorine_concentration), size = 5) +
-  labs(x = "Chlorine Test", y = "Chlorine Concentration (mg/L)") +
+  filter(is.na(chlorine_concentration) == FALSE) %>% 
+  group_by(chlorine_test_type) %>% 
+  mutate(mean_cl = mean(chlorine_concentration, na.rm  = T), 
+         min_cl = min(chlorine_concentration, na.rm  = T), 
+         max_cl = max(chlorine_concentration, na.rm  = T),
+         perc_25 = quantile(chlorine_concentration, 0.25), 
+         perc_50 = quantile(chlorine_concentration, 0.5), 
+         perc_75 = quantile(chlorine_concentration, 0.75)) %>% 
+  ungroup()
+
+chlorine_stats  <- chlorine %>% select(chlorine_test_type, mean_cl, min_cl, perc_25, perc_50, perc_75, max_cl) %>% unique() %>%
+  mutate(chlorine_test_type = ifelse(chlorine_test_type == "R_FU_fc_tap", "Running- Free Cl", ifelse(
+    chlorine_test_type == "R_FU_fc_stored", "Stored- Free Cl", ifelse(
+      chlorine_test_type == "R_FU_tc_tap", "Running- Total Cl", ifelse(
+        chlorine_test_type == "R_FU_tc_stored", "Stored- Total Cl", chlorine_test_type ))))) %>%
+  rename("Test Type" = chlorine_test_type,"Mean" = mean_cl, "Min" =  min_cl,  "Q1" = perc_25,  "Q2" = perc_50, "Q3" =perc_75,  "Max" =max_cl ) 
+  
+stargazer(chlorine_stats, summary=F, title= "",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_chlorine_stats_HH_Survey.tex"))
+
+p2 <- ggplot(data =chlorine) + geom_point(aes(x = chlorine_test_type, y = chlorine_concentration), size = 3) +
+  labs(x = "Chlorine Test", y = "Chlorine Concentration (mg/L)")  + 
+  geom_errorbar(aes(x = chlorine_test_type, y = chlorine_concentration, ymin = mean_cl - 1.96*sd(chlorine_concentration)/sqrt(length(chlorine_concentration)),
+                    ymax = mean_cl + 1.96*sd(chlorine_concentration)/sqrt(length(chlorine_concentration))), width = 0.2, linewidth = 0.8, color = "red") + 
   theme_bw() +  scale_x_discrete(labels=c("FCl - Stored" , "FCl - Running", "TCl - Stored", "TCl - Running")) +
   theme(axis.title.y = element_text(size = 32), axis.title.x = element_text(size = 32), 
         axis.text.x =  element_text(size = 32, face="bold"), axis.text.y =  element_text(size = 30, face="bold")) 
