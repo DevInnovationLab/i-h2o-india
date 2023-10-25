@@ -14,7 +14,7 @@
 	(2) Also exports tracking sheets for supervisors for backchecks ------ */
 
 *------------------------------------------------------------------- -------------------------------------------------------------------*
-set seed 75824
+
 
 ***************************************************
 * Step 1: Cleaning  *
@@ -68,9 +68,10 @@ gen ten_perc_per_enum= 0.1*total
 replace ten_perc_per_enum= round(ten_perc_per_enum)
 
 //Randomly generating numbers that are assigned to obervations
-sort strata Merge_C_F
-bys strata: gen strata_random_hhsurvey= runiform(0,1) if Merge_C_F==1	
-bys strata: gen strata_random_census= runiform(0,1) if Merge_C_F==0
+sort strata Merge_C_F unique_id
+set seed 75824
+bys strata (unique_id): gen strata_random_hhsurvey= runiform(0,1) if Merge_C_F==1	
+bys strata (unique_id): gen strata_random_census= runiform(0,1) if Merge_C_F==0
 
 
 //Sampling 60% of census-only and 40% of HHsurvey observations for each enumerator

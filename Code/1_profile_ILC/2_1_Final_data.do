@@ -290,7 +290,7 @@ merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(
           keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
 
-drop if  R_Cen_village_name==30501
+
 
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
@@ -367,7 +367,7 @@ program define   start_from_clean_file_Census
 
   use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
-  drop if  R_Cen_village_name==30501
+
   label var R_Cen_a2_hhmember_count "Household size" 
   
 end
@@ -377,7 +377,6 @@ cap program drop start_from_clean_file_Preglevel
 program define   start_from_clean_file_Preglevel
   * Open clean file
   start_from_clean_file_Census
-  drop if R_Cen_village_name==30301| R_Cen_village_name==30501
   destring R_Cen_a5_autoage_13 R_Cen_a5_autoage_14 R_Cen_a5_autoage_15 R_Cen_a5_autoage_16 R_Cen_a5_autoage_17, replace
   
 keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
@@ -427,89 +426,7 @@ label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)"
 label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
 label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
-/*
 
-*Baseline diarrhea incidence for children 
-reshape long R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ C_U5child_, i(unique_id) j(num)
-
-*Using diarrhea vars
-gen diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) & C_total_U5child_hh>0
-gen diarrhea_prev_child_1week= 1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1) & C_total_U5child_hh>0
-
-* dropping irrelevant vars
-drop C_U5child_ R_Cen_a29_child_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ diarrhea_prev_child_2weeks diarrhea_prev_child_1week R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ loosestool_child_2weeks loosestool_child_1week
-
-*reshaping the data back to wide
-reshape wide total_childrenu5  total_diarrheacases_U5_2weeks total_diarrheacases_U5_1week diarrhea_child_perc_2weeks diarrhea_child_perc_1week total_loosestool_U5_2weeks total_loosestool_U5_1week loosestool_child_perc_2weeks loosestool_child_perc_1week, i(unique_id) j(num)
-
-* final vars creation for use later
-egen sum_diarrhea_child_1week = rowtotal(diarrhea_child_perc_1week*)
-gen avg_diarrhea_child_1week = sum_diarrhea_child_1week/18
-egen sum_loosestool_child_1week = rowtotal(loosestool_child_perc_1week*)
-gen avg_loosestool_child_1week = sum_loosestool_child_1week/18
-
-egen sum_diarrhea_child_2weeks = rowtotal(diarrhea_child_perc_2weeks*)
-gen avg_diarrhea_child_2weeks = sum_diarrhea_child_2weeks/18
-egen sum_loosestool_child_2weeks = rowtotal(loosestool_child_perc_2weeks*)
-gen avg_loosestool_child_2weeks = sum_loosestool_child_2weeks/18
-
-drop diarrhea_child_perc_1week* diarrhea_child_perc_2weeks* loosestool_child_perc_1week* loosestool_child_perc_2weeks*
-
-label var avg_loosestool_child_1week "Loose stool- U5 (1 week)" 
-label var avg_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
-label var C_total_U5child_hh "Average U5 children"
-label var total_childrenu51 "Total U5 children"
-
-//Baseline diarrhea incidence for pregnant women 
-reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a7_pregnant_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_, i(unique_id) j(num)
-
-*Using diarrhea vars
-gen diarrhea_prev_woman_2weeks=1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1 | R_Cen_a23_wom_diarr_2week_==1) & C_total_pregnant_hh>0
-gen diarrhea_prev_woman_1week= 1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1) & C_total_pregnant_hh>0
-
-*Using loose & watery stool vars
-gen loosestool_woman_2weeks=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1 | R_Cen_a25_wom_stool_2week_==1) & C_total_pregnant_hh>0
-gen loosestool_woman_1week= 1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1) & C_total_pregnant_hh>0
-
-*generating new vars using both vars for diarrhea
-egen total_pregwoman= total(R_Cen_a7_pregnant_) if C_total_pregnant_hh>0
-egen total_diarrhea_preg_2weeks= total(diarrhea_prev_woman_2weeks) if C_total_pregnant_hh>0
-egen total_diarrhea_preg_1week= total(diarrhea_prev_woman_1week) if C_total_pregnant_hh>0
-gen diarrhea_woman_perc_2weeks= total_diarrhea_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
-gen diarrhea_woman_perc_1week= total_diarrhea_preg_1week/total_pregwoman if C_total_pregnant_hh>0
-
-egen total_loosestool_preg_2weeks= total(loosestool_woman_2weeks) if C_total_pregnant_hh>0
-egen total_loosestool_preg_1week= total(loosestool_woman_1week) if C_total_pregnant_hh>0
-gen loosestool_woman_perc_2weeks= total_loosestool_preg_2weeks/total_pregwoman if C_total_pregnant_hh>0
-gen loosestool_woman_perc_1week= total_loosestool_preg_1week/total_pregwoman if C_total_pregnant_hh>0
-
-* dropping irrelevant vars
-drop R_Cen_a7_pregnant_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ diarrhea_prev_woman_2weeks diarrhea_prev_woman_1week R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ loosestool_woman_2weeks loosestool_woman_1week
-
-*reshaping the data back to wide
-reshape wide total_pregwoman total_diarrhea_preg_2weeks total_diarrhea_preg_1week diarrhea_woman_perc_2weeks diarrhea_woman_perc_1week total_loosestool_preg_2weeks total_loosestool_preg_1week loosestool_woman_perc_2weeks loosestool_woman_perc_1week, i(unique_id) j(num)
-
-* final vars creation for use later
-egen sum_diarrhea_preg_1week = rowtotal(diarrhea_woman_perc_1week*)
-gen avg_diarrhea_preg_1week = sum_diarrhea_preg_1week/18
-egen sum_diarrhea_preg_2weeks = rowtotal(diarrhea_woman_perc_2weeks*)
-gen avg_diarrhea_preg_2weeks = sum_diarrhea_preg_2weeks/18
-
-egen sum_loosestool_preg_1week = rowtotal(loosestool_woman_perc_1week*)
-gen avg_loosestool_preg_1week = sum_loosestool_preg_1week/18
-egen sum_loosestool_preg_2weeks = rowtotal(loosestool_woman_perc_2weeks*)
-gen avg_loosestool_preg_2weeks = sum_loosestool_preg_2weeks/18
-
-drop diarrhea_woman_perc_1week* diarrhea_woman_perc_2weeks* loosestool_woman_perc_1week* loosestool_woman_perc_2weeks*
-
-label var C_total_pregnant_hh "Average pregnant women"	
-label var total_pregwoman1 "Total pregnant women"
-label var avg_diarrhea_preg_2weeks "Diarrhea- Preg women (2 weeks)" 
-label var avg_loosestool_preg_2weeks "Loose stool- Preg women (2 weeks)" 
-label var avg_diarrhea_preg_1week "Diarrhea- Preg women (1 week)" 
-label var avg_loosestool_preg_1week "Loose stool- Preg women (1 week)" 
-
-*/
 
 end
 

@@ -112,4 +112,22 @@ sort R_Cen_no_consent_reason
 export excel using "${pilot}Data_quality.xlsx", sheet("Census refused") firstrow(var) sheetreplace
 
 
+//6. Checking reason for primary and secondary water source not being JJM but people drinking JJM water
+use "${DataPre}1_1_Census_cleaned.dta", clear
+gen date= dofc(R_Cen_starttime)
+format date %td
+tab R_Cen_village_name if R_Cen_a12_water_source_prim!=1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1
+keep if R_Cen_a12_water_source_prim!=1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1
 
+keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_prim R_Cen_a18_jjm_drinking R_Cen_a13_water_sec_yn R_Cen_a13_water_source_sec
+export excel using "${pilot}Data_quality.xlsx", sheet("JJM_drink_noprimsec") firstrow(var) sheetreplace
+
+
+//7. Checking if "Other" primary water source can be clubbed in one of the existing categories 
+use "${DataPre}1_1_Census_cleaned.dta", clear
+gen date= dofc(R_Cen_starttime)
+format date %td
+tab R_Cen_a12_prim_source_oth if R_Cen_a12_water_source_prim== -77 
+keep if R_Cen_a12_water_source_prim== -77 
+keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth 
+export excel using "${pilot}Data_quality.xlsx", sheet("Other prim source") firstrow(var) sheetreplace
