@@ -108,7 +108,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	* Set initial configurations to be able to run R script in Stata
 	*net from http://www.stata.com/statausers/packages
-    ssc install rscript
+    *ssc install rscript
 
 	
 /*------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 ------------------------------------------------------------------------------*/
 * Search function
 	/* 
-local string 1_1_Census_cleaned
+local string pregwoman
 	cd "${Do_pilot}"
 	find, match(`string') show zero
 */ 
