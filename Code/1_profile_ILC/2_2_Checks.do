@@ -62,7 +62,10 @@ keep if prim_sec_same== 1
 keep unique_id R_Cen_enum_name_label R_Cen_a12_water_source_prim R_Cen_a13_water_source_sec_* prim_sec_same
 order unique_id R_Cen_enum_name_label R_Cen_a12_water_source_prim R_Cen_a13_water_source_sec_* prim_sec_same
 export excel using "${pilot}Data_quality.xlsx" if prim_sec_same==1, sheet("prim_sec_source") firstrow(var) sheetreplace
+
+
 restore
+
 
 
 //3. Checking if consent time is too low and for which enumerators
@@ -131,3 +134,13 @@ tab R_Cen_a12_prim_source_oth if R_Cen_a12_water_source_prim== -77
 keep if R_Cen_a12_water_source_prim== -77 
 keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth 
 export excel using "${pilot}Data_quality.xlsx", sheet("Other prim source") firstrow(var) sheetreplace
+
+use "${DataPre}1_1_Census_cleaned.dta", clear
+keep if R_Cen_a12_water_source_prim == -77 | unique_id == "50201115019" | unique_id == "50201109027" | /// 
+unique_id == "50501109021" | /// 
+unique_id == "50501109022" | unique_id == "50501115003" | unique_id == "40202111022" | unique_id == "40202113033"| ///
+unique_id == "40202113049"
+tostring R_Cen_village_name, gen(R_Cen_village_name_str)
+keep unique_id R_Cen_enum_name_label R_Cen_landmark R_Cen_address R_Cen_saahi_name R_Cen_a1_resp_name R_Cen_a10_hhhead R_Cen_a39_phone_name_1 R_Cen_a39_phone_name_2 R_Cen_village_name_str R_Cen_a11_oldmale_name R_Cen_hamlet_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth 
+export excel using "${DataPre}DataQuality_preload.xlsx" ,  firstrow(var) sheetreplace
+
