@@ -160,12 +160,12 @@ chlorine <- bl%>%
 chlorine <- chlorine%>%
   filter(is.na(chlorine_concentration) == FALSE) %>% 
   group_by(chlorine_test_type) %>% 
-  mutate(mean_cl = mean(chlorine_concentration, na.rm  = T), 
-         min_cl = min(chlorine_concentration, na.rm  = T), 
-         max_cl = max(chlorine_concentration, na.rm  = T),
-         perc_25 = quantile(chlorine_concentration, 0.25), 
-         perc_50 = quantile(chlorine_concentration, 0.5), 
-         perc_75 = quantile(chlorine_concentration, 0.75)) %>% 
+  mutate(mean_cl = round(mean(chlorine_concentration, na.rm  = T), digits = 2), 
+         min_cl = round(min(chlorine_concentration, na.rm  = T),digits = 2), 
+         max_cl = round(max(chlorine_concentration, na.rm  = T), digits = 2),
+         perc_25 = round(quantile(chlorine_concentration, 0.25),digits = 2), 
+         perc_50 = round(quantile(chlorine_concentration, 0.5),digits = 2), 
+         perc_75 = round(quantile(chlorine_concentration, 0.75),digits = 2)) %>% 
   ungroup()
 
 chlorine_stats  <- chlorine %>% select(chlorine_test_type, mean_cl, min_cl, perc_25, perc_50, perc_75, max_cl) %>% unique() %>%
@@ -174,6 +174,7 @@ chlorine_stats  <- chlorine %>% select(chlorine_test_type, mean_cl, min_cl, perc
       chlorine_test_type == "R_FU_tc_tap", "Running- Total Cl", ifelse(
         chlorine_test_type == "R_FU_tc_stored", "Stored- Total Cl", chlorine_test_type ))))) %>%
   rename("Test Type" = chlorine_test_type,"Mean" = mean_cl, "Min" =  min_cl,  "Q1" = perc_25,  "Q2" = perc_50, "Q3" =perc_75,  "Max" =max_cl ) 
+chlorine_stats <- as.data.table(chlorine_stats)
   
 stargazer(chlorine_stats, summary=F, title= "",float=F,rownames = F,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_chlorine_stats_HH_Survey.tex"))

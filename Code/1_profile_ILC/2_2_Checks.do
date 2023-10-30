@@ -136,7 +136,7 @@ keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_pri
 export excel using "${pilot}Data_quality.xlsx", sheet("Other prim source") firstrow(var) sheetreplace
 
 use "${DataPre}1_1_Census_cleaned.dta", clear
-keep if R_Cen_a12_water_source_prim == -77 | unique_id == "50201115019" | unique_id == "50201109027" | /// 
+keep if R_Cen_a12_water_source_prim == -77 | (R_Cen_a12_water_source_prim != 1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1) | unique_id == "50201115019" | unique_id == "50201109027" | /// 
 unique_id == "50501109021" | /// 
 unique_id == "50501109022" | unique_id == "50501115003" | unique_id == "40202111022" | unique_id == "40202113033"| ///
 unique_id == "40202113049"

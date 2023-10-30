@@ -328,6 +328,43 @@ stargazer(df.sample.enum, summary=F, title= "Count of Sample collection by enum"
           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_sample_enum_HH_Survey.tex"))
 
 
+df.chlorine <- bl%>%
+  pivot_longer(cols = c("R_FU_fc_stored", "R_FU_fc_tap", "R_FU_tc_stored", "R_FU_tc_tap"), values_to = "yes_no", names_to = "sample_type")
+#Frequency of sample collection by enumerator
+df.chlorine.vil.fc.stored <- df.chlorine%>% filter(sample_type == "R_FU_fc_stored") %>% 
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = sum(!is.na(yes_no))) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str, "Count-FCl Stored" = Count_of_Sample ) %>% 
+  unique() 
+
+df.chlorine.vil.tc.stored <- df.chlorine%>% filter(sample_type == "R_FU_tc_stored") %>% 
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = sum(!is.na(yes_no))) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str, "Count-TCl Stored" = Count_of_Sample ) %>% 
+  unique() 
+
+df.chlorine.vil.fc.tap <- df.chlorine%>% filter(sample_type == "R_FU_fc_tap") %>% 
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = sum(!is.na(yes_no))) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str, "Count-FCl Running" = Count_of_Sample ) %>% 
+  unique() 
+
+df.chlorine.vil.tc.tap <- df.chlorine%>% filter(sample_type == "R_FU_tc_tap") %>%
+  group_by(R_FU_r_cen_village_name_str, sample_type) %>% 
+  mutate(Count_of_Sample = sum(!is.na(yes_no))) %>% ungroup()  %>% 
+  dplyr::select(R_FU_r_cen_village_name_str, Count_of_Sample) %>% 
+  rename(Village = R_FU_r_cen_village_name_str, "Count-TCl Running" = Count_of_Sample ) %>% 
+  unique() 
+
+df.chlorine.vil <-  left_join(df.chlorine.vil.fc.stored, df.chlorine.vil.tc.stored) 
+df.chlorine.vil <-  left_join(df.chlorine.vil, df.chlorine.vil.fc.tap) 
+df.chlorine.vil <-  left_join(df.chlorine.vil, df.chlorine.vil.tc.tap) 
+
+stargazer(df.chlorine.vil, summary=F, title= "Count of  Chlorine Tests by village",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_chlorine_village_HH_Survey.tex"))
 
 #------------------------  Overall checks ------------------------  
 
