@@ -120,7 +120,7 @@ use "${DataPre}1_1_Census_cleaned.dta", clear
 gen date= dofc(R_Cen_starttime)
 format date %td
 tab R_Cen_village_name if R_Cen_a12_water_source_prim!=1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1
-keep if R_Cen_a12_water_source_prim!=1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1
+keep if (R_Cen_a12_water_source_prim!=1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1) | (R_Cen_a12_water_source_prim == 2 & R_Cen_a18_jjm_drinking==0) | (R_Cen_a12_water_source_prim == 3 & R_Cen_a18_jjm_drinking==1)
 
 keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_prim R_Cen_a18_jjm_drinking R_Cen_a13_water_sec_yn R_Cen_a13_water_source_sec
 export excel using "${pilot}Data_quality.xlsx", sheet("JJM_drink_noprimsec") firstrow(var) sheetreplace
@@ -135,12 +135,54 @@ keep if R_Cen_a12_water_source_prim== -77
 keep unique_id date R_Cen_village_str R_Cen_enum_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth 
 export excel using "${pilot}Data_quality.xlsx", sheet("Other prim source") firstrow(var) sheetreplace
 
+//generating preload
 use "${DataPre}1_1_Census_cleaned.dta", clear
-keep if R_Cen_a12_water_source_prim == -77 | (R_Cen_a12_water_source_prim != 1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1) | unique_id == "50201115019" | unique_id == "50201109027" | /// 
+keep if R_Cen_a12_water_source_prim == -77 | (R_Cen_a12_water_source_prim == 2 & R_Cen_a18_jjm_drinking==0) | (R_Cen_a12_water_source_prim ==3 & R_Cen_a18_jjm_drinking==1) | (R_Cen_a12_water_source_prim != 1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1) | unique_id == "50201115019" | unique_id == "50201109027" | /// 
 unique_id == "50501109021" | /// 
 unique_id == "50501109022" | unique_id == "50501115003" | unique_id == "40202111022" | unique_id == "40202113033"| ///
 unique_id == "40202113049"
-tostring R_Cen_village_name, gen(R_Cen_village_name_str)
-keep unique_id R_Cen_enum_name_label R_Cen_landmark R_Cen_address R_Cen_saahi_name R_Cen_a1_resp_name R_Cen_a10_hhhead R_Cen_a39_phone_name_1 R_Cen_a39_phone_name_2 R_Cen_village_name_str R_Cen_a11_oldmale_name R_Cen_hamlet_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth 
-export excel using "${DataPre}DataQuality_preload.xlsx" ,  firstrow(var) sheetreplace
+*tostring R_Cen_village_name, gen(R_Cen_village_name_str)
 
+keep unique_id R_Cen_village_str R_Cen_enum_name_label R_Cen_landmark R_Cen_address R_Cen_saahi_name R_Cen_a1_resp_name R_Cen_a10_hhhead R_Cen_a39_phone_name_1 R_Cen_a39_phone_name_2 R_Cen_a11_oldmale_name R_Cen_hamlet_name R_Cen_a12_water_source_prim R_Cen_a12_prim_source_oth R_Cen_a13_water_sec_yn R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 R_Cen_a13_water_source_sec__77 R_Cen_a13_water_sec_oth
+
+    label variable R_Cen_a13_water_source_sec_1 "Sec-source-JJM tap"
+	label variable R_Cen_a13_water_source_sec_2 "Sec-source-Govt. provided community standpipe"
+	label variable R_Cen_a13_water_source_sec_3 "Sec-source-GP/Other community standpipe"
+	label variable R_Cen_a13_water_source_sec_4 "Sec-source-Manual handpump"
+	label variable R_Cen_a13_water_source_sec_5 "Sec-source-Covered dug well"
+	label variable R_Cen_a13_water_source_sec_6 "Sec-source-Uncovered dug well"
+	label variable R_Cen_a13_water_source_sec_7 "Sec-source-Surface water"
+	label variable R_Cen_a13_water_source_sec_8 "Sec-source-Private surface well"
+	label variable R_Cen_a13_water_source_sec__77 "Sec-source-Other"
+	label var R_Cen_village_str "Village"
+	label var R_Cen_a12_water_source_prim "Primary drinking water source"
+	label var R_Cen_a12_prim_source_oth "Other prim source-name"
+	label var R_Cen_landmark "Landmark"
+	label var R_Cen_enum_name_label "Enumerator name"
+	label var R_Cen_address "Address"
+	label var R_Cen_saahi_name "Saahi"
+	label var R_Cen_a11_oldmale_name "Old male name"
+	label var R_Cen_a10_hhhead "Household head name"
+	label var R_Cen_a1_resp_name "Respondent name"
+	label var R_Cen_hamlet_name "Hamlet name"
+	label var R_Cen_a39_phone_name_1 "Phone no. 1"
+	label var R_Cen_a39_phone_name_2 "Phone no. 2"
+	label var R_Cen_a13_water_sec_yn "Secondary source_yes_no"
+	label var R_Cen_a13_water_sec_oth "Other sec source-name" 
+	
+export excel using "${DataPre}DataQuality_preload.xlsx" ,  firstrow(varlabels) sheetreplace
+
+
+// Adding enumerator names to Archi's Backcheck allotment sheet
+clear all
+import excel "${pilot}/BC_IDs for allotment.xls", sheet("Sheet1") firstrow allstring
+drop if R_Cen_village_name_str==""
+tempfile BC_IDs
+save `BC_IDs', replace
+
+use "${DataPre}1_1_Census_cleaned.dta"
+keep unique_id R_Cen_enum_name R_Cen_enum_code
+merge 1:1 unique_id using `BC_IDs'
+keep if _merge==3
+
+export excel using "${pilot}/BC_IDs for allotment.xls", firstrow(var) cell(A1) sheetreplace

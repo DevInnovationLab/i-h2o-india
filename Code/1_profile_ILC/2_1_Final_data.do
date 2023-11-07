@@ -62,8 +62,13 @@ foreach i in R_Cen_a12_water_source_prim  {
 	replace `i'=77 if `i'==-77
 }
 * -99 to 99
-foreach i in R_Cen_a13_water_sec_yn R_Cen_a18_jjm_drinking {
+foreach i in R_Cen_a13_water_sec_yn R_Cen_a18_jjm_drinking R_Cen_a17_water_treat_kids {
 	replace `i'=99 if `i'==-99
+}
+
+* -98 to 98
+foreach i in R_Cen_a17_water_treat_kids {
+	replace `i'=98 if `i'==-98
 }
 	rename R_Cen_a12_water_source_prim R_Cen_a12_ws_prim
 	
@@ -71,7 +76,7 @@ foreach i in R_Cen_a13_water_sec_yn R_Cen_a18_jjm_drinking {
 		rename R_Cen_a13_water_source_sec_`i' R_Cen_a13_ws_sec_`i'
 	}
 	
-	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_ws_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq ///
+	foreach v in R_Cen_a10_hhhead_gender R_Cen_a12_ws_prim R_Cen_a16_water_treat R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq R_Cen_a17_water_treat_kids ///
  {
 	levelsof `v'
 	foreach value in `r(levels)' {
@@ -136,15 +141,15 @@ destring R_Cen_a12_ws_prim, replace
 	
 	
     label var R_Cen_a13_water_sec_yn_0 "No secondary source"
-    label variable R_Cen_a13_ws_sec_1 "JJM tap"
-	label variable R_Cen_a13_ws_sec_2 "Govt. provided community standpipe"
-	label variable R_Cen_a13_ws_sec_3 "GP/Other community standpipe"
-	label variable R_Cen_a13_ws_sec_4 "Manual handpump"
-	label variable R_Cen_a13_ws_sec_5 "Covered dug well"
-	label variable R_Cen_a13_ws_sec_6 "Uncovered dug well"
-	label variable R_Cen_a13_ws_sec_7 "Surface water"
-	label variable R_Cen_a13_ws_sec_8 "Private surface well"
-	label variable R_Cen_a13_ws_sec__77 "Other"
+    label variable R_Cen_a13_ws_sec_1 "Sec-source-JJM tap"
+	label variable R_Cen_a13_ws_sec_2 "Sec-source-Govt. provided community standpipe"
+	label variable R_Cen_a13_ws_sec_3 "Sec-source-GP/Other community standpipe"
+	label variable R_Cen_a13_ws_sec_4 "Sec-source-Manual handpump"
+	label variable R_Cen_a13_ws_sec_5 "Sec-source-Covered dug well"
+	label variable R_Cen_a13_ws_sec_6 "Sec-source-Uncovered dug well"
+	label variable R_Cen_a13_ws_sec_7 "Sec-source-Surface water"
+	label variable R_Cen_a13_ws_sec_8 "Sec-source-Private surface well"
+	label variable R_Cen_a13_ws_sec__77 "Sec-source-Other"
 	
 	label var R_Cen_a12_ws_prim_1 "JJM tap" 
 	label var R_Cen_a12_ws_prim_2 "Govt. provided community standpipe"
@@ -164,6 +169,7 @@ destring R_Cen_a12_ws_prim, replace
 	label variable R_Cen_a16_water_treat_type__77 "Other"
 	label variable R_Cen_a16_water_treat_type_999 "Don't know"
 
+	label var R_Cen_a17_water_treat_kids_0 "No water treatment"
 	label var R_Cen_water_treat_kids_type_1 "Filter through cloth/sieve" 
 	label var R_Cen_water_treat_kids_type_2 "Letting water stand" 
 	label var R_Cen_water_treat_kids_type_3 "Boiling" 
