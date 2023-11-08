@@ -68,6 +68,13 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global Overleaf "/Users/asthavohra/Dropbox/Apps/Overleaf"
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
+		else if c(username) == "archigupta" {		
+		global box 		"/Users/Archi Gupta/Box/India Water project/"
+		global github	"/Users/Archi Gupta/Documents/GitHub/i-h2o-india/"
+		global Overleaf "/Users/Archi Gupta/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
+	}
+
 	global code		     "${github}Code"
 	
 	* Box 
