@@ -5,7 +5,7 @@
 *	Inputs:  "ILC_Data_Quality_survey_WIDE.csv"
 *	Outputs: "ILC_Data_Quality_survey.dta"
 *
-*	Output by SurveyCTO October 31, 2023 5:18 PM.
+*	Output by SurveyCTO November 8, 2023 8:24 AM.
 
 * initialize Stata
 clear all
@@ -25,7 +25,9 @@ local csvfile "ILC_Data_Quality_survey_WIDE.csv"
 local dtafile "ILC_Data_Quality_survey.dta"
 local corrfile "ILC_Data_Quality_survey_corrections.csv"
 local note_fields1 ""
-local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id a7_resp_name a12_prim_source_oth primary_water_label a13_water_source_sec a13_water_sec_oth a41_end_comments instanceid"
+local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
+local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_str r_cen_hamlet_name r_cen_a11_oldmale_name info_update a7_resp_name a10_hhhead a11_oldmale_name a12_prim_source_oth primary_water_label"
+local text_fields3 "a13_water_source_sec a13_water_sec_oth a41_end_comments instanceid"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -144,8 +146,27 @@ if _N>0 {
 	label variable unique_id_3_check "Record the last 3 digit"
 	note unique_id_3_check: "Record the last 3 digit"
 
+	label variable noteconf1 "Please confirm the households that you are visiting correspond to the following "
+	note noteconf1: "Please confirm the households that you are visiting correspond to the following information. Village: \${R_Cen_village_str} Hamlet: \${R_Cen_hamlet_name} Household head name: \${R_Cen_a10_hhhead} Respondent name from the previous round: \${R_Cen_a1_resp_name} Any male household head (if any): \${R_Cen_a11_oldmale_name} Address: \${R_Cen_address} Landmark: \${R_Cen_landmark} Saahi: \${R_Cen_saahi_name} Phone 1: \${R_Cen_a39_phone_name_1} (\${R_Cen_a39_phone_num_1}) Phone 2: \${R_Cen_a39_phone_name_2} (\${R_Cen_a39_phone_num_2})"
+	label define noteconf1 1 "I am visiting the correct household and the information is correct" 2 "I am visiting the correct household but the information needs to be updated" 3 "The household I am visiting does not corresponds to the confirmation info."
+	label values noteconf1 noteconf1
+
+	label variable info_update "Please describe the information need to be updated here."
+	note info_update: "Please describe the information need to be updated here."
+
 	label variable a7_resp_name "A7) What is your name?"
 	note a7_resp_name: "A7) What is your name?"
+
+	label variable a10_hhhead "A10) What is the name of the head of household? (Household head can be either ma"
+	note a10_hhhead: "A10) What is the name of the head of household? (Household head can be either male or female)"
+
+	label variable a11_oldmale "A11) Is there an older male in the household?"
+	note a11_oldmale: "A11) Is there an older male in the household?"
+	label define a11_oldmale 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+	label values a11_oldmale a11_oldmale
+
+	label variable a11_oldmale_name "A11.1) What is their name?"
+	note a11_oldmale_name: "A11.1) What is their name?"
 
 	label variable a12_water_source_prim "A12) In the past month, which water source did your household primarily use for "
 	note a12_water_source_prim: "A12) In the past month, which water source did your household primarily use for drinking?"
