@@ -274,9 +274,14 @@ gen_binary_rounds <- function(nV, MDEdia, nJ, clus_sd, p_diar, nrounds, indiv_sd
   
   # store!
   runframe$diarh_count[i]   <- list(vil_frame_unique$diarrhea_count)
+  runframe$vilid[i]         <- list(vil_frame_unique$vilid) # added 23-11-13
   runframe$perc_ever_tr[i]  <- mean(vil_frame_unique$diarrhea_ever[vil_frame_unique$tr == 1])
   runframe$perc_ever_ctr[i] <- mean(vil_frame_unique$diarrhea_ever[vil_frame_unique$tr == 0])
   runframe$uniquechild[i]   <- nrow(vil_frame_unique) # or just nV*nJ
+  
+  # 23-11-13 info for WW - comment this out for the runs after, slows down
+  obj <- lme4::glmer(diarrhea_count ~ 0 + (1|vilid), data = vil_frame_unique, family = binomial(link = "logit"))
+  runframe$glmerREsd[i] <- as.data.frame(lme4::VarCorr(obj))$sdcor
   
   return(runframe)
 }
@@ -290,8 +295,8 @@ indiv_sd <- .1
 clus_sd <- .425
 nrounds <- 1
 nruns <- 1000
-store <- bind_rows(
-  lapply(rep(200, nruns), function(nvil)
+store <- bind_rows( # first argument of rep is the number of clusters
+  lapply(rep(20, nruns), function(nvil)
     gen_binary_rounds(nvil, nJ = 50, p_diar = p_diar, MDEdia = MDEdia, nrounds = nrounds, indiv_sd = indiv_sd, indiv_ar = indiv_ar, clus_sd = clus_sd))
   )
 # checks
@@ -302,6 +307,8 @@ store$ICC |> mean()
 store$cor12 |> mean()
 store$cor23 |> mean()
 store$rho_est |> mean()
+
+store$glmerREsd |> summary()
 
 mean(abs(store$tstat) > 1.96) # power
 mean(abs(store$tstat1) > 1.96) # power
@@ -337,6 +344,14 @@ clusterPower::cpa.binary(nsubjects = 50,
                          tol = .Machine$double.eps^.5)
 
 # sum of series formula to simplistic: nclusters 230
+
+# CHECKS for WW 2023 NOVEMBER 13th
+# df <- data.frame(vilid = store[1, ]$vilid,
+#                  diarh = store[1, ]$diarh_count)
+# names(df) <- c("vilid", "diarh")
+# obj <- lme4::glmer(diarh ~ 0 + (1|vilid), data = df, family = binomial(link = "logit"))
+# obj |> summary()
+# lme4::VarCorr(obj)[1,2]
 
 # ---------------------------------------------------------------------------------
 # NOW START THE MULTILAYERED runs

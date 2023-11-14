@@ -19,6 +19,8 @@ knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FAL
 library(tidyverse)
 library(DILmisc) # color stuff is now in there - no need to copy over the defining code anymroe
 
+# the simulation results come out of the file "power_odisha_diarrhea_runs_noAR1.R"
+
 # DIL_colors <- c(
 #   `red`        = "#8B0021",
 #   `yellow`     = "#FAA61A",
