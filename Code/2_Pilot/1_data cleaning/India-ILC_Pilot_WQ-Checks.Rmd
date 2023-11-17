@@ -40,7 +40,7 @@ bl_raw <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Ba
 
 bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_2_Followup_cleaned.dta")
 
-census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha.dta")
+census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
 
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 

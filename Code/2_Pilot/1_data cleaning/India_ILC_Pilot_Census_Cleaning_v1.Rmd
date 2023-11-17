@@ -1,0 +1,56 @@
+---
+title: "India-ILC-Pilot-Census-v1"
+author: "Jeremy Lowe"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE)
+
+```
+
+```{r package loading, include=FALSE}
+
+library(rsurveycto)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(experiment)
+library(stargazer)
+library(readxl)
+library(haven)
+
+
+
+```
+
+
+```{r dataset loading}
+
+#from Box
+
+#Jeremy's file path
+cs <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
+
+village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
+
+```
+
+```{r Selecting key variables}
+
+cs <- cs%>%
+  dplyr::select(R_Cen_district_name, R_Cen_block_name, R_Cen_gp_name, R_Cen_village_name, R_Cen_village_str, R_Cen_hamlet_name, R_Cen_saahi_name, R_Cen_enum_code, R_Cen_hh_code, R_Cen_hh_repeat_code, R_Cen_hh_code_format, R_Cen_resp_available, R_Cen_screen_u5child, R_Cen_screen_preg, R_Cen_visit_num, R_Cen_consent, R_Cen_a2_hhmember_count, R_Cen_num_adultsabove12, R_Cen_num_childbelow12, R_Cen_num_femaleabove12, R_Cen_a10_hhhead_gender, R_Cen_a12_ws_prim, R_Cen_a12_ws_prim_77, R_Cen_a12_prim_source_oth, R_Cen_a13_water_sec_yn, R_Cen_a13_water_sec_yn_99, R_Cen_a13_water_sec_oth, R_Cen_a14_sec_source_reason, R_Cen_a14_sec_source_reason_1, R_Cen_a14_sec_source_reason_2, R_Cen_a14_sec_source_reason_3, R_Cen_a14_sec_source_reason_4, R_Cen_a14_sec_source_reason_5, R_Cen_a14_sec_source_reason_6, R_Cen_a14_sec_source_reason_7, R_Cen_a14_sec_source_reason__77, R_Cen_a14_sec_source_reason_999, R_Cen_sec_source_reason_oth, R_Cen_a15_water_sec_freq, R_Cen_a15_water_sec_freq_999, R_Cen_a15_water_sec_freq_oth, R_Cen_a16_water_treat, R_Cen_a16_water_treat_type, R_Cen_a16_water_treat_type_1,R_Cen_a16_water_treat_type_2,R_Cen_a16_water_treat_type_3, R_Cen_a16_water_treat_type_4, R_Cen_a16_water_treat_type__77, R_Cen_a16_water_treat_type_999, R_Cen_a16_water_treat_freq, R_Cen_a16_stored_treat_freq, R_Cen_a16_stored_treat, R_Cen_a17_water_source_kids, R_Cen_a17_water_treat_kids, R_Cen_a17_treat_kids_freq, R_Cen_water_treat_kids_type, R_Cen_water_treat_kids_type_1, R_Cen_water_treat_kids_type_2, R_Cen_water_treat_kids_type_3, R_Cen_water_treat_kids_type_4, R_Cen_water_treat_kids_type77, R_Cen_water_treat_kids_type99, R_Cen_a18_jjm_drinking, R_Cen_a18_reason_nodrink, R_Cen_a19_jjm_stored, R_Cen_a20_jjm_use, R_Cen_a20_jjm_use_1, R_Cen_a20_jjm_use_2, R_Cen_a20_jjm_use_3, R_Cen_a20_jjm_use_4, R_Cen_a20_jjm_use_5, R_Cen_a20_jjm_use_6, R_Cen_a20_jjm_use_7, R_Cen_a20_jjm_use__77, R_Cen_a20_jjm_use_999, R_Cen_pregnant_followup_count,
+                R_Cen_a36_castename, R_Cen_a37_caste, R_Cen_instancename, R_Cen_starttime,
+                unique_id, unique_id_num)
+
+
+
+
+```
+
