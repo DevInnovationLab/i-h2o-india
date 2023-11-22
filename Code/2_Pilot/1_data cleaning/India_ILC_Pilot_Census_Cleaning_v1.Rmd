@@ -49,7 +49,7 @@ cs <- cs%>%
                 R_Cen_a36_castename, R_Cen_a37_caste, R_Cen_instancename, R_Cen_starttime,
                 unique_id, unique_id_num, Treat_V,C_total_U5child_hh, C_total_pregnant_hh, R_Cen_a33_ac, R_Cen_a33_bicycle, R_Cen_a33_bwtv, R_Cen_a33_car, R_Cen_a33_cart, R_Cen_a33_chair, R_Cen_a33_colourtv, R_Cen_a33_computer, R_Cen_a33_cotbed)
 
-
+#write_csv(cs, "G:/My Drive/Fall 2023/PBHLTH245/project/India_ILC_Census_Full.dta")
 
 ```
 
