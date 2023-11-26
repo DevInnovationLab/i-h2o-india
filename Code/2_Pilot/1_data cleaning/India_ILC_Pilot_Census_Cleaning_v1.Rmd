@@ -45,11 +45,63 @@ village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Dat
 ```{r Selecting key variables}
 
 cs <- cs%>%
-  dplyr::select(R_Cen_district_name, R_Cen_block_name, R_Cen_gp_name, R_Cen_village_name, R_Cen_village_str, R_Cen_hamlet_name, R_Cen_saahi_name, R_Cen_enum_code, R_Cen_hh_code, R_Cen_hh_repeat_code, R_Cen_hh_code_format, R_Cen_resp_available, R_Cen_screen_u5child, R_Cen_screen_preg, R_Cen_visit_num, R_Cen_consent, R_Cen_a2_hhmember_count, R_Cen_num_adultsabove12, R_Cen_num_childbelow12, R_Cen_num_femaleabove12, R_Cen_a10_hhhead_gender, R_Cen_a12_ws_prim, R_Cen_a12_ws_prim_77, R_Cen_a12_prim_source_oth, R_Cen_a13_water_sec_yn, R_Cen_a13_water_sec_yn_99, R_Cen_a13_water_sec_oth, R_Cen_a14_sec_source_reason, R_Cen_a14_sec_source_reason_1, R_Cen_a14_sec_source_reason_2, R_Cen_a14_sec_source_reason_3, R_Cen_a14_sec_source_reason_4, R_Cen_a14_sec_source_reason_5, R_Cen_a14_sec_source_reason_6, R_Cen_a14_sec_source_reason_7, R_Cen_a14_sec_source_reason__77, R_Cen_a14_sec_source_reason_999, R_Cen_sec_source_reason_oth, R_Cen_a15_water_sec_freq, R_Cen_a15_water_sec_freq_999, R_Cen_a15_water_sec_freq_oth, R_Cen_a16_water_treat, R_Cen_a16_water_treat_type, R_Cen_a16_water_treat_type_1,R_Cen_a16_water_treat_type_2,R_Cen_a16_water_treat_type_3, R_Cen_a16_water_treat_type_4, R_Cen_a16_water_treat_type__77, R_Cen_a16_water_treat_type_999, R_Cen_a16_water_treat_freq, R_Cen_a16_stored_treat_freq, R_Cen_a16_stored_treat, R_Cen_a17_water_source_kids, R_Cen_a17_water_treat_kids, R_Cen_a17_treat_kids_freq, R_Cen_water_treat_kids_type, R_Cen_water_treat_kids_type_1, R_Cen_water_treat_kids_type_2, R_Cen_water_treat_kids_type_3, R_Cen_water_treat_kids_type_4, R_Cen_water_treat_kids_type77, R_Cen_water_treat_kids_type99, R_Cen_a18_jjm_drinking, R_Cen_a18_reason_nodrink, R_Cen_a19_jjm_stored, R_Cen_a20_jjm_use, R_Cen_a20_jjm_use_1, R_Cen_a20_jjm_use_2, R_Cen_a20_jjm_use_3, R_Cen_a20_jjm_use_4, R_Cen_a20_jjm_use_5, R_Cen_a20_jjm_use_6, R_Cen_a20_jjm_use_7, R_Cen_a20_jjm_use__77, R_Cen_a20_jjm_use_999, R_Cen_pregnant_followup_count,
+  dplyr::select(R_Cen_district_name, R_Cen_block_name, R_Cen_gp_name, R_Cen_village_name, R_Cen_village_str, R_Cen_hamlet_name, R_Cen_saahi_name, R_Cen_enum_code, R_Cen_hh_code, R_Cen_hh_repeat_code, R_Cen_hh_code_format, R_Cen_resp_available, R_Cen_screen_u5child, R_Cen_screen_preg, R_Cen_visit_num, R_Cen_consent, R_Cen_a2_hhmember_count, R_Cen_num_adultsabove12, R_Cen_num_childbelow12, R_Cen_num_femaleabove12, R_Cen_a10_hhhead_gender, R_Cen_a12_ws_prim, R_Cen_a12_ws_prim_77, R_Cen_a12_prim_source_oth, R_Cen_a13_water_sec_yn, R_Cen_a13_water_sec_yn_99, R_Cen_a13_water_sec_oth, R_Cen_a13_water_source_sec, R_Cen_a13_ws_sec_1, R_Cen_a13_ws_sec_3, R_Cen_a13_ws_sec_4, R_Cen_a13_ws_sec_8, R_Cen_a14_sec_source_reason, R_Cen_a14_sec_source_reason_1, R_Cen_a14_sec_source_reason_2, R_Cen_a14_sec_source_reason_3, R_Cen_a14_sec_source_reason_4, R_Cen_a14_sec_source_reason_5, R_Cen_a14_sec_source_reason_6, R_Cen_a14_sec_source_reason_7, R_Cen_a14_sec_source_reason__77, R_Cen_a14_sec_source_reason_999, R_Cen_sec_source_reason_oth, R_Cen_a15_water_sec_freq, R_Cen_a15_water_sec_freq_999, R_Cen_a15_water_sec_freq_oth, R_Cen_a16_water_treat, R_Cen_a16_water_treat_type, R_Cen_a16_water_treat_type_1,R_Cen_a16_water_treat_type_2,R_Cen_a16_water_treat_type_3, R_Cen_a16_water_treat_type_4, R_Cen_a16_water_treat_type__77, R_Cen_a16_water_treat_type_999, R_Cen_a16_water_treat_freq, R_Cen_a16_stored_treat_freq, R_Cen_a16_stored_treat, R_Cen_a17_water_source_kids, R_Cen_a17_water_treat_kids, R_Cen_a17_treat_kids_freq, R_Cen_water_treat_kids_type, R_Cen_water_treat_kids_type_1, R_Cen_water_treat_kids_type_2, R_Cen_water_treat_kids_type_3, R_Cen_water_treat_kids_type_4, R_Cen_water_treat_kids_type77, R_Cen_water_treat_kids_type99, R_Cen_a18_jjm_drinking, R_Cen_a18_reason_nodrink, R_Cen_a19_jjm_stored, R_Cen_a20_jjm_use, R_Cen_a20_jjm_use_1, R_Cen_a20_jjm_use_2, R_Cen_a20_jjm_use_3, R_Cen_a20_jjm_use_4, R_Cen_a20_jjm_use_5, R_Cen_a20_jjm_use_6, R_Cen_a20_jjm_use_7, R_Cen_a20_jjm_use__77, R_Cen_a20_jjm_use_999, R_Cen_pregnant_followup_count,
                 R_Cen_a36_castename, R_Cen_a37_caste, R_Cen_instancename, R_Cen_starttime,
                 unique_id, unique_id_num, Treat_V,C_total_U5child_hh, C_total_pregnant_hh, R_Cen_a33_ac, R_Cen_a33_bicycle, R_Cen_a33_bwtv, R_Cen_a33_car, R_Cen_a33_cart, R_Cen_a33_chair, R_Cen_a33_colourtv, R_Cen_a33_computer, R_Cen_a33_cotbed)
 
-#write_csv(cs, "G:/My Drive/Fall 2023/PBHLTH245/project/India_ILC_Census_Full.dta")
+
+colnames(cs) <- c("district", "block", "gp", "village", "village_name", "hamlet", "saahi", "enum_id", "hh_id", "hh_id_repeat", "hh_id_formatted", "resp_available", "screen_u5_child","screen_preg", "visit_num", "consent", "hh_member_count", "hh_adults_above12", "hh_child_under12", "hh_female_above12", "hh_head_gender", "ws_prim", "ws_prim_other", "ws_prim_other_label", "ws_secondary", "ws_secondary_dk", "ws_secondary_other", "ws_secondary_type", "ws_secondary_jjm", "ws_secondary_community", "ws_secondary_handpump", "ws_secondary_privatewell", "ws_secondary_reason", "ws_secondary_reason_1", "ws_secondary_reason_2", "ws_secondary_reason_3", "ws_secondary_reason_4", "ws_secondary_reason_5", "ws_secondary_reason_6", "ws_secondary_reason_7", "ws_secondary_reason_other", "ws_secondary_reason_dk", "ws_secondary_reason_other_label", "ws_secondary_freq", "ws_secondary_freq_other", "ws_secondary_freq_other_label", "ws_treat", "ws_treat_type", "ws_treat_filter", "ws_treat_sedimentation", "ws_treat_boil", "ws_treat_chlorine", "ws_treat_other", "ws_treat_dk", "ws_treat_freq", "ws_stored_treat_freq", "ws_stored_treat", "ws_prim_child", "ws_treat_child", "ws_treat_freq_child", "ws_treat_type_child", "ws_treat_filter_child", "ws_treat_sed_child", "ws_treat_boil_child", "ws_treat_chlorine_child", "ws_treat_other_child", "ws_treat_dk_child", "jjm", "jjm_reason", "jjm_stored", "jjm_use", "jjm_use_cooking", "jjm_use_wash_utensils", "jjm_use_wash_chlothes", "jjm_use_clean", "jjm_use_bath", "jjm_use_animals", "jjm_use_agri", "jjm_use_other", "jjm_use_dk", "hh_pregnant_count",
+                  "caste_name", "caste", "instance_name", "start_time",
+                "unique_id", "unique_id_num", "treatment", "u5_child_count", "pregnant_count", "ac", "bicycle", "bw_tv", "car", "cart", "chair", "colour_tv", "computer", "cotbed")
 
 ```
+
+```{r Tidying variables}
+
+cs$district <- cs$district%>%
+  factor()%>%
+  fct_recode("Rayagada" = "11")
+
+cs$block <- cs$block%>%
+  factor()%>%
+  fct_recode("Gudari" = "1",
+             "Gunupur" = "2",
+             "Kolnara" = "3",
+             "Padmapur" = "4",
+             "Rayagada" = "5")
+
+cs$ws_prim <- cs$ws_prim%>%
+  factor()%>%
+  fct_recode("jjm_tap" = "1",
+             "jjm_tap_community" = "2",
+             "community_tap" = "3",
+             "handpump" = "4",
+             "covered_dug_well" = "5",
+             "uncovered_dug_well" = "6",
+             "surface_water" = "7",
+             "private_well" = "8",
+             "other" = "77")
+
+
+cs$caste <- cs$caste%>%
+  factor()%>%
+  fct_recode("Scheduled caste" = "1",
+             "Scheduled tribe" = "2",
+             "Other backward caste" = "3",
+             "None of the above" = "4",
+             "Don't know" = "999")
+
+
+```
+
+
+```{r write csv}
+
+
+#write_csv(cs, "G:/My Drive/Fall 2023/PBHLTH245/project/India_ILC_Census_Full.dta")
+
+
+```
+
+
 
