@@ -21,11 +21,11 @@ drop  if unique_id == 10101110016 & enum_name == 107 & r_cen_a1_resp_name == "Pa
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
-list dup unique_id if dup_HHID > 0
+list unique_id if dup_HHID > 0
 
 
 
-cd "C:\Users\Archi Gupta\Box\Data\New folder"
+cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
 
 
 
@@ -79,7 +79,7 @@ list unique_id enum_name if unique_id == `id' & screen_u5child == 1 & r_cen_u5ch
 
 br screen_u5child unique_id r_cen_u5child_* if unique_id == 10201108019
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\BC_cleaned data.dta", replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_cleaned data.dta", replace
 
 rename enum_name BC_name
 
@@ -89,7 +89,7 @@ rename a10_hhhead BC_hhhead
 
 keep unique_id BC_surveydate BC_name BC_respondent_name BC_hhhead interviewed_before who_interviwed_before
 	
-save "C:\Users\Archi Gupta\Box\Data\New folder\BC_edited_data.dta", replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_edited_data.dta", replace
 
 *************importing census data**********************
 
@@ -104,11 +104,11 @@ drop unique_id
 rename unique_id_num unique_id
 	
 keep unique_id enum_name a1_resp_name a10_hhhead block_name village_name
-save "C:\Users\Archi Gupta\Box\Data\New folder\census_edited_data.dta", replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\census_edited_data.dta", replace
 
 	
 ***********Merging census data with BC data******************
-merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\New folder\BC_edited_data.dta"
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_edited_data.dta"
 
 //aG: at this point once get the whole data find values which are unmatched 
 
@@ -118,7 +118,7 @@ merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\New folder\BC_edited_da
 
 clear all
 
-use "C:\Users\Archi Gupta\Box\Data\New folder\BC_cleaned data.dta"
+use "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_cleaned data.dta"
 
 rename enum_name BC_name
 
@@ -140,8 +140,8 @@ global t1vars a2_hhmember_count screen_u5child screen_preg  a10_hhhead a10_hhhea
 global t2vars a18_jjm_drinking a16_stored_treat a16_water_treat_type a16_water_treat_freq a16_stored_treat_freq water_prim_source_kids a17_water_treat_kids water_treat_kids_type a17_treat_kids_freq a33_cotbed a33_electricfan a33_colourtv a33_mobile a33_internet a33_motorcycle
 
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\BC data for bc stats.dta", replace
-global bcer_data("C:\Users\Archi Gupta\Box\Data\New folder\BC data for bc stats.dta", replace)
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC data for bc stats.dta", replace
+global bcer_data("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC data for bc stats.dta", replace)
 
 
 clear 
@@ -157,16 +157,16 @@ rename unique_id_num unique_id
 
 global id unique_id
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\Census date for bc stats.dta", replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census date for bc stats.dta", replace
 
-global original ("C:\Users\Archi Gupta\Box\Data\New folder\Census date for bc stats.dta")
+global original ("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census date for bc stats.dta")
 
 clear 
 //BC stats
-cd "C:\Users\Archi Gupta\Box\Data\New folder"
+cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
  set matsize 600
  set emptycells drop
-bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\New folder\Census date for bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\New folder\BC data for bc stats.dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(BC_name)  keepsurvey(submissiondate)  showid(30) showall full replace 
+bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census date for bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC data for bc stats.dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(BC_name)  keepsurvey(submissiondate)  showid(30) showall full replace 
 *t2vars($t2vars) t3vars($t3vars)	  
  	/*t2vars(`t2vars') signrank(`signrank') */ 
 	/* 3vars(`t3vars') ttest(`ttest') */ 
@@ -182,7 +182,7 @@ matrix list `i'
 
 //AG: You firstly need to display the stored results in order to export it
 
-putexcel set "C:\Users\Archi Gupta\Box\Data\New folder\output.xlsx", sheet("Sheet1") replace
+putexcel set "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\output.xlsx", sheet("Sheet1") replace
 putexcel A1 = "Error rate enum wise type 1 variables"
 putexcel A2 = matrix(r(enum1))
 putexcel set output, modify sheet(error rate1)
@@ -205,8 +205,6 @@ putexcel A1 = "T-test results"
 putexcel A2 = matrix(r(ttest2))
 putexcel set output, modify sheet(ttest)
 
-texsave $Variables using "${Table}Table_Progress_3.tex", ///
-        title("Overall Progress- Datewise for villages") footnote("Notes: This table presents the overall progress. The table is autocreated by 3_Descriptive.do.") replace varlabels frag location(htbp) 
 
 
 

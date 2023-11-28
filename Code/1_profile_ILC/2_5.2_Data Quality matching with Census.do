@@ -35,9 +35,9 @@ drop r_cen_*
 
 rename enum_name DQ_name
 rename a7_resp_name a1_resp_name
-tostring a11_oldmale_name, gen(a11_oldmale_name_)
-drop a11_oldmale_name
-rename a11_oldmale_name_ a11_oldmale_name
+*tostring a11_oldmale_name, gen(a11_oldmale_name_)
+*drop a11_oldmale_name
+*rename a11_oldmale_name_ a11_oldmale_name
 
 global id unique_id
 
@@ -46,7 +46,7 @@ global t1vars a1_resp_name a10_hhhead a11_oldmale_name a12_water_source_prim a13
 
 global t2vars a18_jjm_drinking
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\census and DQ merge(main).dta", replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\census and DQ merge(main).dta", replace
 
 
 
@@ -61,19 +61,31 @@ renpfix R_Cen_ //removing R_cen prefix
 drop unique_id
 rename unique_id_num unique_id
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\Census data for DQ bc stats.dta", replace
+tostring a10_hhhead, gen(a10_hhhead_)
+drop a10_hhhead
+rename a10_hhhead_ a10_hhhead
+
+
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census data for DQ bc stats.dta", replace
+
+
 	
 keep unique_id enum_name a1_resp_name a10_hhhead block_name village_name
-merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\New folder\census and DQ merge(main).dta"
+ds enum_name a1_resp_name a10_hhhead block_name village_name
+foreach var of varlist `r(varlist)' {
+	rename `var' R_Cen_`var'
+}
+
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\census and DQ merge(main).dta"
 
 
 
 clear 
 //BC stats
-cd "C:\Users\Archi Gupta\Box\Data\New folder"
+cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
  set matsize 600
  set emptycells drop
-bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\New folder\Census data for DQ bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\New folder\census and DQ merge(main).dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(DQ_name)  keepsurvey(submissiondate) keepbc(change_primary_source)  showid(30) lower trim showall full filename(Data_quality_diffs.csv) replace 
+bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census data for DQ bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\census and DQ merge(main).dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(DQ_name)  keepsurvey(submissiondate) keepbc(change_primary_source)  showid(30) lower trim showall full filename(Data_quality_diffs.csv) replace 
 *t2vars($t2vars) t3vars($t3vars)	  
  	/*t2vars(`t2vars') signrank(`signrank') */ 
 	/* 3vars(`t3vars') ttest(`ttest') */ 
@@ -82,6 +94,37 @@ bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\New folder\Census data for DQ
 
 	
 return list
+
+
+foreach i in r(enum1) r(enum2) r(backchecker1) r(backchecker2) r(var1) r(var2) r(ttest2){
+matrix list `i'
+}
+
+//AG: You firstly need to display the stored results in order to export it
+
+putexcel set "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Data_quality_output.xlsx", sheet("Sheet1") replace
+putexcel A1 = "Error rate enum wise type 1 variables"
+putexcel A2 = matrix(r(enum1))
+putexcel set Data_quality_output, modify sheet(error rate1)
+putexcel A1 = "Error rate enum wise type 2 variables"
+putexcel A2 = matrix(r(enum2))
+putexcel set Data_quality_output, modify sheet(error rate2)
+putexcel A1 = "Error rate type 1 variables for BC"
+putexcel A2 = matrix(r(backchecker1))
+putexcel set Data_quality_output, modify sheet(error rate3)
+putexcel A1 = "Error rate type 2 variables for BC"
+putexcel A2 = matrix(r(backchecker2))
+putexcel set Data_quality_output, modify sheet(error rate4)
+putexcel A1 = "Error rate type 1 variables"
+putexcel A2 = matrix(r(var1))
+putexcel set Data_quality_output, modify sheet(error rate5)
+putexcel A1 = "Error rate type 2 variables"
+putexcel A2 = matrix(r(var2))
+putexcel set Data_quality_output, modify sheet(error rate6)
+putexcel A1 = "T-test results"
+putexcel A2 = matrix(r(ttest2))
+putexcel set Data_quality_output, modify sheet(ttest)
+
 
 
 

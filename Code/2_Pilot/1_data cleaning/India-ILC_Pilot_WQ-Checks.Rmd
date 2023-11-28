@@ -40,30 +40,55 @@ bl_raw <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Ba
 
 bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_2_Followup_cleaned.dta")
 
+census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
+
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 
 abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
+
+village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
 ```
 
 ```{r data cleaning, include=FALSE}
 
+###GENERAL DATA CLEANING##################################################
 #Filtering out test data from training, based on village IDs
 unique(bl$R_FU_unique_id_1)
 bl <- bl%>%
   filter(!(R_FU_unique_id_1 == 88888 |
-           R_FU_unique_id_1 == 99999))#Clean data doesn't require this step
+           R_FU_unique_id_1 == 99999)) # Clean data doesn't require this step
 
 
 #Selecting bl data key variables for WQ testing
 bl <- bl%>%
-  dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num, R_FU_r_cen_village_name_str, R_FU_consent, R_FU_water_source_prim, R_FU_primary_water_label, R_FU_water_qual_test, R_FU_wq_stored_bag, R_FU_stored_bag_source, R_FU_sample_ID_stored, R_FU_bag_ID_stored, R_FU_fc_stored, R_FU_tc_stored, R_FU_sample_ID_tap, R_FU_bag_ID_tap, R_FU_fc_tap, R_FU_tc_tap, R_FU_instancename)
+  dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num, R_FU_r_cen_village_name_str, R_FU_consent, R_FU_water_source_prim, R_FU_primary_water_label, R_FU_water_qual_test, R_FU_wq_stored_bag, R_FU_stored_bag_source, R_FU_sample_ID_stored, R_FU_bag_ID_stored, R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again, R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again, R_FU_sample_ID_tap, R_FU_bag_ID_tap, R_FU_fc_tap, R_FU_wq_tap_fc_again, R_FU_tc_tap, R_FU_wq_tap_tc_again, R_FU_instancename)
 
 #Assigning more meaningful variable names
 bl <- bl%>%
   rename_all(~stringr::str_replace(.,"R_FU_",""))%>%
   rename(village = "r_cen_village_name_str")%>%
-  rename(unique_id = "unique_id_num")
+  rename(village_ID = "unique_id_1")%>%
+  rename(unique_id = "unique_id_num")%>%
+  rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
+  rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
+  rename(fc_tap_2 = "wq_tap_fc_again")%>%
+  rename(tc_tap_2 = "wq_tap_tc_again")
+
+#Pairing village information
+bl$village_ID <- as.character(bl$village_ID)
+bl <- left_join(bl, village_details, by = "village_ID")
+
+xx <- bl%>%
+  filter(is.na(block) == TRUE)
+
+#Filtering out Bada Alubadi village since it has been replaced
+bl <- bl%>%
+  filter(!(village == "Badaalubadi"))
+
+#Filtering out HHs that did not consent
+bl <- bl%>%
+  filter(is.na(consent) == FALSE)
   
 #Other way:
   #rename(fc_stored = R_FU_fc_stored)%>%
@@ -79,20 +104,55 @@ for(i in (1:length(bl$unique_id))){
   }
 }
 
+
+#Averaging chlorine data across two tests
+bl <- bl%>%
+  mutate(fc_stored_avg = rowMeans(dplyr::select(bl, starts_with("fc_stored")), na.rm = TRUE))%>%
+  mutate(fc_tap_avg = rowMeans(dplyr::select(bl, starts_with("fc_tap")), na.rm = TRUE))%>%
+  mutate(tc_stored_avg = rowMeans(dplyr::select(bl, starts_with("tc_stored")), na.rm = TRUE))%>%
+  mutate(tc_tap_avg = rowMeans(dplyr::select(bl, starts_with("tc_tap")), na.rm = TRUE))
+  
+bl$fc_stored_avg <- round(bl$fc_stored_avg, digits = 3)
+bl$fc_tap_avg <- round(bl$fc_tap_avg, digits = 3)
+bl$tc_stored_avg <- round(bl$tc_stored_avg, digits = 3)
+bl$tc_tap_avg <- round(bl$tc_tap_avg, digits = 3)
+
+  
+
+```
+
+
+```{r data cleaning - idexx, include = FALSE}
+
+
+#PREPARING IDEXX DATA##########################################################
 #Pivoting dataset to be longer for pairing IDEXX data to sample IDs
 bl_idexx <- bl%>%
   pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
-#combining idexx results to survey results
-bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
-idexx <- left_join(idexx, bl_idexx, by = "sample_ID")
-abr$sample_ID <- as.character(abr$sample_ID)
-abr <- left_join(abr, bl_idexx, by = "sample_ID")
 
-#Dropping lab blanks and field blanks
+#Noting duplicate samples
+idexx <- idexx%>%
+  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
+  replace_na(duplicate, value = 0)
+
+#Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
   filter(sample_ID != "Lab Blank",
-         sample_ID != "Field Blank")
-  
+         sample_ID != "Field Blank")%>%
+  filter(duplicate < 1)
+
+#Checking IDs which do not match between survey data and lab data
+idexx_ids <- idexx$sample_ID
+bl_sample_ids <- bl_idexx$sample_ID
+idexx_id_check <- idexx%>%
+  filter(!(sample_ID %in% bl_sample_ids))
+
+#combining idexx results to survey results
+bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
+idexx <- inner_join(idexx, bl_idexx, by = "sample_ID")
+abr$sample_ID <- as.character(abr$sample_ID)
+abr <- inner_join(abr, bl_idexx, by = "sample_ID")
+
 
 #creating new variable to tell the sample type
 idexx$sample_type <- idexx$sample_type%>%
@@ -163,12 +223,13 @@ abr <- abr%>%
 ```
 
 
+
 ```{r Chlorine Data Desc Stats}
 
 ###Displaying chlorine test data for each village
 #Arranging data so chlorine test data is in one column
 chlorine <- bl%>%
-  pivot_longer(cols = c(fc_tap, fc_stored, tc_tap, tc_stored), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
+  pivot_longer(cols = c(fc_tap_avg, fc_stored_avg, tc_tap_avg, tc_stored_avg), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
 
 #Removing NAs from no respondent being available
 chlorine <- chlorine%>%
@@ -177,7 +238,13 @@ chlorine <- chlorine%>%
 p1 <- chlorine%>%
   ggplot() +
   geom_point(aes(x = chlorine_test_type, y = chlorine_concentration)) +
-  facet_wrap(~ village) + 
+    geom_hline(yintercept=0.14, linetype="dashed", color = "red") + 
+  annotate("text", x = 1.5, y = .25, size = 2, color = "red",
+           label = "Detection Limit = 0.14 mg/L") +
+  facet_wrap(~ block) + 
+  scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0),
+                     limits = c(0, 2.0),
+                     expand = c(0,0)) +
   labs(x = "Chlorine Test", y = "Chlorine Concentration (mg/L)") +
   theme_bw()
 
@@ -186,9 +253,11 @@ p1
 
 #Selecting for data that are > 0.10 mg/L
 chlorine_check <- chlorine%>%
-  filter(chlorine_concentration > 0.10)%>%
+  filter(chlorine_concentration > 0.14)%>%
   dplyr::select(unique_id, unique_id_2, village, chlorine_test_type, chlorine_concentration)
 
+#Writing csv
+#write_csv(chlorine_check, "C:/Users/jerem/Box/India Water project/2_Pilot/Data Checks/baseline_survey/20231108_chlorine_data_check.csv")
 
 #Creating table
 chlorine_check%>%
@@ -268,10 +337,43 @@ p3 <- ggplot(data = idexx) +
                      expand = c(0,0))+
   labs(x = "Village", 
        y = "log(MPN E. coli/100 mL)",
-       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
-  theme_bw()
+       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 136)")+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p3
+
+
+
+#Plotting IDEXX E. coli data by sample type
+p4 <- ggplot(data = idexx) + 
+  geom_boxplot(aes(x = sample_type, y = ec_log)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = "log(MPN E. coli/100 mL)",
+       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 136)")+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p4
+
+
+#Plotting IDEXX E. coli data per village
+p5 <- ggplot(data = idexx) + 
+  geom_boxplot(aes(x = block, y = ec_log, fill = sample_type)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Block", 
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       fill = "Sample Type",
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 144)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p5
 
 
 
