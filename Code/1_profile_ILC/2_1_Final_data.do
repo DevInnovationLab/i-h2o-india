@@ -87,6 +87,37 @@ foreach i in R_Cen_a17_water_treat_kids {
 	}
 	}
 	
+	
+   
+ 
+replace R_Cen_a18_jjm_drinking= 2 if R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth== "Paipe connection heinai" | R_Cen_a18_water_treat_oth== "Paip connection nahi" | R_Cen_a18_water_treat_oth=="No government supply tap water" | R_Cen_a18_water_treat_oth== "No direct supply water tap" | R_Cen_a18_water_treat_oth== "No government supply tap water for household" | R_Cen_a18_water_treat_oth== "Government doesn't provide house hold tap water" | R_Cen_a18_water_treat_oth== "Tap pani lagi nahi" | R_Cen_a18_water_treat_oth== "Tap aasi nahi" |R_Cen_a18_water_treat_oth== "FHTC Tap Not contacting this house hold." |  R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | R_Cen_a18_water_treat_oth== "Tap connection dia heini" | R_Cen_a18_water_treat_oth== "Tape connection nahi" | R_Cen_a18_water_treat_oth== "Respondent doesn't have personal household Tap water connection provided by government" | R_Cen_a18_water_treat_oth== "Government don't supply house hold taps" | R_Cen_a18_water_treat_oth== "No government supply tap water"| R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Tape conektion nahi"| R_Cen_a18_water_treat_oth== "Tap Nehni Mila" | R_Cen_a18_water_treat_oth== "Gharme government tap nehni laga hai" |R_Cen_a18_water_treat_oth== "No supply govt tap water in this Home" |R_Cen_a18_water_treat_oth==  "Tap pani tanka gharaku dia hoi nahi"
+
+replace R_Cen_a18_reason_nodrink__77=. if R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth== "Paipe connection heinai" | R_Cen_a18_water_treat_oth== "Paip connection nahi" | R_Cen_a18_water_treat_oth=="No government supply tap water" | R_Cen_a18_water_treat_oth== "No direct supply water tap" | R_Cen_a18_water_treat_oth== "No government supply tap water for household" | R_Cen_a18_water_treat_oth== "Government doesn't provide house hold tap water" | R_Cen_a18_water_treat_oth== "Tap pani lagi nahi" | R_Cen_a18_water_treat_oth== "Tap aasi nahi" |R_Cen_a18_water_treat_oth== "FHTC Tap Not contacting this house hold." |  R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | R_Cen_a18_water_treat_oth== "Tap connection dia heini" | R_Cen_a18_water_treat_oth== "Tape connection nahi" | R_Cen_a18_water_treat_oth== "Respondent doesn't have personal household Tap water connection provided by government" | R_Cen_a18_water_treat_oth== "Government don't supply house hold taps" | R_Cen_a18_water_treat_oth== "No government supply tap water"| R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Tape conektion nahi"| R_Cen_a18_water_treat_oth== "Tap Nehni Mila" | R_Cen_a18_water_treat_oth== "Gharme government tap nehni laga hai" |R_Cen_a18_water_treat_oth== "No supply govt tap water in this Home" |R_Cen_a18_water_treat_oth==  "Tap pani tanka gharaku dia hoi nahi"
+
+replace R_Cen_a18_water_treat_oth="" if R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth== "Paipe connection heinai" | R_Cen_a18_water_treat_oth== "Paip connection nahi" | R_Cen_a18_water_treat_oth=="No government supply tap water" | R_Cen_a18_water_treat_oth== "No direct supply water tap" | R_Cen_a18_water_treat_oth== "No government supply tap water for household" | R_Cen_a18_water_treat_oth== "Government doesn't provide house hold tap water" | R_Cen_a18_water_treat_oth== "Tap pani lagi nahi" | R_Cen_a18_water_treat_oth== "Tap aasi nahi" |R_Cen_a18_water_treat_oth== "FHTC Tap Not contacting this house hold." |  R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | R_Cen_a18_water_treat_oth== "Tap connection dia heini" | R_Cen_a18_water_treat_oth== "Tape connection nahi" | R_Cen_a18_water_treat_oth== "Respondent doesn't have personal household Tap water connection provided by government" | R_Cen_a18_water_treat_oth== "Government don't supply house hold taps" | R_Cen_a18_water_treat_oth== "No government supply tap water"| R_Cen_a18_water_treat_oth== "Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Tape conektion nahi"| R_Cen_a18_water_treat_oth== "Tap Nehni Mila" | R_Cen_a18_water_treat_oth== "Gharme government tap nehni laga hai" |R_Cen_a18_water_treat_oth== "No supply govt tap water in this Home" |R_Cen_a18_water_treat_oth==  "Tap pani tanka gharaku dia hoi nahi"
+
+tempfile revised
+save `revised', replace
+
+preserve
+use `revised', clear
+keep if R_Cen_a18_water_treat_oth!=""
+gen English_translation= ""
+export excel unique_id R_Cen_a18_water_treat_oth English_translation using "${pilot}Odia comments to be translated.xlsx", sheet("Reasons for not drinking JJM") ///
+ firstrow(var) cell(A1) sheetreplace
+restore
+
+
+levelsof R_Cen_a18_jjm_drinking
+	foreach value in `r(levels)' {
+		gen     R_Cen_a18_jjm_drink_`value'=0
+		replace R_Cen_a18_jjm_drink_`value'=1 if R_Cen_a18_jjm_drinking==`value'
+		replace R_Cen_a18_jjm_drink_`value'=. if R_Cen_a18_jjm_drinking==.
+		label var R_Cen_a18_jjm_drink_`value' ": label (R_Cen_a18_jjm_drink) `value"
+	}
+	
+
+	
 * Replacing missing value
 gen     C_Cen_a18_jjm_drinking=R_Cen_a18_jjm_drinking
 * Do not know
@@ -113,7 +144,7 @@ egen      C_total_U5child_hh = rowtotal(C_U5child_*)
 * Labeling *
 ************
 destring R_Cen_a12_ws_prim, replace
-	label define R_Cen_a12_ws_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 7 "PWS: Surface water" 8 "PWS: Private surface well" 77 "PWS: Other", modify
+	label define R_Cen_a12_ws_priml 1 "PWS: JJM Taps" 2 "PWS: Govt. community standpipe" 3 "PWS: GP/Other community standpipe" 4 "PWS: Manual handpump" 5 "PWS: Covered dug well" 7 "PWS: Surface water" 8 "PWS: Private surface well" 77 "PWS: Other", modify
 	label values R_Cen_a12_ws_prim R_Cen_a12_ws_priml
 	label define R_Cen_a13_water_sec_ynl 0 "SWS: No secondary water source" 1 "SWS: Yes", modify
 	label values R_Cen_a13_water_sec_yn R_Cen_a13_water_sec_ynl
@@ -141,15 +172,15 @@ destring R_Cen_a12_ws_prim, replace
 	
 	
     label var R_Cen_a13_water_sec_yn_0 "No secondary source"
-    label variable R_Cen_a13_ws_sec_1 "Sec-source-JJM tap"
-	label variable R_Cen_a13_ws_sec_2 "Sec-source-Govt. provided community standpipe"
-	label variable R_Cen_a13_ws_sec_3 "Sec-source-GP/Other community standpipe"
-	label variable R_Cen_a13_ws_sec_4 "Sec-source-Manual handpump"
-	label variable R_Cen_a13_ws_sec_5 "Sec-source-Covered dug well"
-	label variable R_Cen_a13_ws_sec_6 "Sec-source-Uncovered dug well"
-	label variable R_Cen_a13_ws_sec_7 "Sec-source-Surface water"
-	label variable R_Cen_a13_ws_sec_8 "Sec-source-Private surface well"
-	label variable R_Cen_a13_ws_sec__77 "Sec-source-Other"
+    label variable R_Cen_a13_ws_sec_1 "JJM tap"
+	label variable R_Cen_a13_ws_sec_2 "Govt. provided community standpipe"
+	label variable R_Cen_a13_ws_sec_3 "GP/Other community standpipe"
+	label variable R_Cen_a13_ws_sec_4 "Manual handpump"
+	label variable R_Cen_a13_ws_sec_5 "Covered dug well"
+	label variable R_Cen_a13_ws_sec_6 "Uncovered dug well"
+	label variable R_Cen_a13_ws_sec_7 "Surface water"
+	label variable R_Cen_a13_ws_sec_8 "Private surface well"
+	label variable R_Cen_a13_ws_sec__77 "Other"
 	
 	label var R_Cen_a12_ws_prim_1 "JJM tap" 
 	label var R_Cen_a12_ws_prim_2 "Govt. provided community standpipe"
@@ -183,6 +214,15 @@ destring R_Cen_a12_ws_prim, replace
 	label variable R_Cen_consent "Census consent"
 	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused"
+	
+	label variable R_Cen_a18_reason_nodrink_1 "JJM tap broken" 
+	label variable R_Cen_a18_reason_nodrink_2 "JJM tap doesn't give adequate water"
+	label variable R_Cen_a18_reason_nodrink_3 "JJM tap supplies water intermittently" 
+	label variable R_Cen_a18_reason_nodrink_4 "JJM tap water is muddy or smelly" 
+	label variable R_Cen_a18_reason_nodrink_999 "Don't know"
+	label variable R_Cen_a18_reason_nodrink__77 "Other"
+	label variable R_Cen_a18_jjm_drink_0 "Does not drink JJM water"
+	label variable R_Cen_a18_jjm_drink_2 "Does not have a JJM tap"
 	
 
 *******************************************
@@ -313,6 +353,8 @@ label var C_Screened  "Screened"
 	label var R_Cen_sectionF_duration "Child health section duration"
 	label var R_Cen_sectionG_duration "Assets section duration"
 	label var R_Cen_sectionH_duration "Concluding section duration"
+	
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601 
 
 end
 
@@ -373,6 +415,7 @@ program define   start_from_clean_file_Census
 
   use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
+  drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601
 
   label var R_Cen_a2_hhmember_count "Household size" 
   
@@ -385,25 +428,71 @@ program define   start_from_clean_file_Preglevel
   start_from_clean_file_Census
   destring R_Cen_a5_autoage_13 R_Cen_a5_autoage_14 R_Cen_a5_autoage_15 R_Cen_a5_autoage_16 R_Cen_a5_autoage_17, replace
   
-keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
-reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
+keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* R_Cen_a4_hhmember_gender_*
+reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a4_hhmember_gender_ , i(unique_id) j(num)
 * Drop missing
 end
 
 
+
+/*use for supporting Witold's calculations when needed-
+//number and avg pregnant women per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.
+collapse (sum) count_1, by (R_Cen_village_name)
+br
+sum count_1
+
+number and avg pregnant women+children <6m per village
+start_from_clean_file_Preglevel
+gen count_1=1 if (R_Cen_a6_hhmember_age_<1 & R_Cen_a6_u1age_<6 & R_Cen_unit_age_==1) | R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.
+collapse (sum) count_1, by (R_Cen_village_name)
+
+number and avg pregnant women+children <1year per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<1
+collapse (sum) count_1, by (R_Cen_village_name)
+sum count_1
+
+number and avg pregnant women+children <2years per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<2
+collapse (sum) count_1, by (R_Cen_village_name)
+sum count_1
+
+number and avg pregnant women+children <3years per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<3
+collapse (sum) count_1, by (R_Cen_village_name)
+sum count_1
+
+number and avg pregnant women+children <4years per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<4
+collapse (sum) count_1, by (R_Cen_village_name)
+sum count_1
+
+number and avg pregnant women+children <5years per village
+start_from_clean_file_Preglevel
+gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<5
+collapse (sum) count_1, by (R_Cen_village_name)
+sum count_1
+
+*/
 
 * Sample size=Number of HH
 cap program drop start_from_clean_file_ChildLevel
 program define   start_from_clean_file_ChildLevel
   * Open clean file
 start_from_clean_file_Census  
-keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_village_name R_Cen_a31_child_stool*
+keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_village_name R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
 reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ ///
-         R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_, i(unique_id) j(num)
+         R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
 * Drop the case where there is no children
 drop if R_Cen_a29_child_diarr_day_==. & R_Cen_a29_child_diarr_week_==. & R_Cen_a29_child_diarr_2week_==.
 * Data quality: Michelle (sometimes they fill the child child diarrhea info although C_total_U5child_hh=0?)
 drop if C_total_U5child_hh==0
+
 
 * Creating diarrhea vars
 gen     C_diarrhea_prev_child_1week=0
@@ -437,6 +526,49 @@ label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)"
 end
 
 
+cap program drop start_from_clean_file_PregDiarr
+program define   start_from_clean_file_PregDiarr
+  * Open clean file
+start_from_clean_file_Census  
+keep R_Cen_a23_wom_diarr*  unique_id* C_total_pregnant_hh R_Cen_village_name R_Cen_a25_wom_stool*
+reshape long R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a25_wom_stool_24h_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_, i(unique_id) j(num)
+* Drop the case where there is no preg women
+drop if R_Cen_a23_wom_diarr_day_==. & R_Cen_a23_wom_diarr_week_==. & R_Cen_a23_wom_diarr_2week_==.
+
+drop if C_total_pregnant_hh==0
+
+* Creating diarrhea vars
+gen     C_diarrhea_prev_wom_1week=0
+replace C_diarrhea_prev_wom_1week=1  if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1)
+gen     C_diarrhea_prev_wom_2weeks=0
+replace C_diarrhea_prev_wom_2weeks=1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1 | R_Cen_a23_wom_diarr_2week_==1)
+
+*Using loose & watery stool vars
+gen     C_loosestool_wom_1week=0
+replace C_loosestool_wom_1week=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1) 
+gen     C_loosestool_wom_2weeks=0
+replace C_loosestool_wom_2weeks=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1 | R_Cen_a25_wom_stool_2week_==1)
+
+*generating new vars using both vars for diarrhea
+gen    C_diarrhea_comb_wom_1week=0
+replace C_diarrhea_comb_wom_1week=1 if C_diarrhea_prev_wom_1week==1 | C_loosestool_wom_1week==1
+
+gen    C_diarrhea_comb_wom_2weeks=0
+replace C_diarrhea_comb_wom_2weeks=1 if C_diarrhea_prev_wom_2weeks==1 | C_loosestool_wom_2weeks==1
+
+label var C_diarrhea_prev_wom_1week "Diarrhea- preg woman (1 week)" 
+label var C_diarrhea_prev_wom_2weeks "Diarrhea- preg woman (2 weeks)" 
+label var C_loosestool_wom_1week "Loose stool- preg woman (1 week)" 
+label var C_loosestool_wom_2weeks "Loose stool- preg woman (2 weeks)" 
+
+label var C_diarrhea_comb_wom_1week "Diarrhea/Loose- preg woman (1 week)" 
+label var C_diarrhea_comb_wom_2weeks "Diarrhea/Loose- preg woman (2 weeks)" 
+
+
+
+end
+
+
 * Follow up
 cap program drop start_from_clean_file_Follow
 program define   start_from_clean_file_Follow
@@ -453,4 +585,5 @@ start_from_clean_file_Census
 start_from_clean_file_Follow
 start_from_clean_file_Village
 start_from_clean_file_Population
+start_from_clean_file_PregDiarr
 start_from_clean_file_ChildLevel

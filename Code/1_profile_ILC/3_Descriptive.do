@@ -36,10 +36,10 @@ keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_
 *  R_FU_consent Non_R_FU_consent
 collapse  (sum) C_Census R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available C_Screened Non_C_Screened R_Cen_screen_preg, by(R_Cen_village_name)
 
-	label define R_Cen_village_namel 10101 "Asada (Guda-T)" 20101 "Badabangi (Rama-T)"  ///
-	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  ///
+	label define R_Cen_village_namel 10101 "Asada (Guda-T)" 60101 "Badabangi (Rama-T)"  10201 "Sanagortha (Guda- C)" 30202 "BK Padar (Koln-C)" ///
+	      30701 "Gopi Kankubadi (Koln-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  30501 "Bhujbal (Koln-C)" ///
 		 50101 "Dangalodi (Raya-C)" 50402 "Kuljing (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln-T)" 30301 "Tandipur (Koln-T)" ///
-	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)"  99999 "Total", modify
+	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)" 40401 "Naira (Padm-T)"  40101 "Karnapadu (Padm-T)" 99999 "Total", modify
        
 	label values R_Cen_village_name R_Cen_village_namel
 	
@@ -89,10 +89,10 @@ foreach x of local vars_rd {
 }
 
 
-		label define R_Cen_village_namel 10101 "Asada (Guda-T)" 20101 "Badabangi (Rama-T)"  ///
-	      50601 "Badaalubadi (Raya-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  ///
+		label define R_Cen_village_namel 10101 "Asada (Guda-T)" 60101 "Badabangi (Rama-T)"  10201 "Sanagortha (Guda- C)" 30202 "BK Padar (Koln-C)" ///
+	      30701 "Gopi Kankubadi (Koln-T)" 40201 "Bichikote (Padm-T)" 40202 "Gudiabandh (Padm-C)" 20201 "Jaltar (Gunu-C)"  30501 "Bhujbal (Koln-C)" ///
 		 50101 "Dangalodi (Raya-C)" 50402 "Kuljing (Raya-C)" 50401 "Birnarayanpur (Raya-T)" 30602 "Mukundpur (Koln-T)" 30301 "Tandipur (Koln-T)" ///
-	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)"  99999 "Total", modify
+	     50201 "Barijhola (Raya-C)" 50301 "Karlakana (Raya-C)"   50501 "Nathma (Raya-T)" 40401 "Naira (Padm-T)" 40101 "Karnapadu (Padm-T)" 99999 "Total", modify
 
 	label values R_Cen_village_name R_Cen_village_namel
 	
@@ -130,10 +130,10 @@ gen work_day = dofc(R_Cen_starttime)
 format work_day %td
 
 keep C_Census C_Screened R_Cen_village_name R_Cen_consent Non_R_Cen_consent Non_R_Cen_instruction C_HH_not_available Non_C_Screened work_day 
-	label define R_Cen_village_namel 10101 "Asada" 20101 "Badabangi"  ///
-	      50601 "Badaalubadi" 40201 "Bichikote" 40202 "Gudiabandh" 20201 "Jaltar"  ///
+	label define R_Cen_village_namel 10101 "Asada" 60101 "Badabangi"  10201 "Sanagortha" 30202 "BK Padar" ///
+	      30701 "Gopi Kankubadi" 40201 "Bichikote" 40202 "Gudiabandh" 20201 "Jaltar"  30501 "Bhujbal" ///
 		 50101 "Dangalodi" 50402 "Kuljing" 50401 "Birnarayanpur" 30602 "Mukundpur" 30301 "Tandipur" ///
-	     50201 "Barijhola" 50301 "Karlakana"   50501 "Nathma"  99999 "Total", modify
+	     50201 "Barijhola" 50301 "Karlakana"   50501 "Nathma" 40401 "Naira" 40101 "Karnapadu" 99999 "Total", modify
 		 
 		 label values R_Cen_village_name R_Cen_village_namel
 		 
@@ -582,7 +582,7 @@ global secondary_water R_Cen_a13_water_sec_yn_0 ///
 global treat_water R_Cen_a16_water_treat_0 R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 ///
 		   R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type__77 R_Cen_a16_water_treat_type_999 
 		   
-global treat_water_kids R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type77 R_Cen_water_treat_kids_type99
+global treat_water_kids R_Cen_a17_water_treat_kids_0 R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type77 R_Cen_water_treat_kids_type99
            
 global jjm_uses C_Cen_a18_jjm_drinking ///
 		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 
@@ -683,7 +683,7 @@ esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "$
 * Child level stats
 * Akito -> Michelle:
 * Please run this with shape file data: N for start_from_clean_file_Census is the number of HH, the one for diarrhea has to be child level (you have to save different final dataset)
-global baseline_diarrhea C_diarrhea_prev_child_2weeks C_diarrhea_prev_child_1week ///
+global baseline_diarrhea C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
                          C_loosestool_child_1week     C_loosestool_child_2weeks ///
 						 C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks
 
@@ -798,19 +798,21 @@ start_from_clean_file_Census
 * Sub-category
 	eststo  model1: estpost summarize $`k' if R_Cen_village_name==10101
 	eststo  model2: estpost summarize $`k' if R_Cen_village_name==20101
-	eststo  model3: estpost summarize $`k' if R_Cen_village_name==50601
+	eststo  model3: estpost summarize $`k' if R_Cen_village_name==30701
 	eststo  model4: estpost summarize $`k' if R_Cen_village_name==50401
 	eststo  model5: estpost summarize $`k' if R_Cen_village_name==50501
 	eststo  model6: estpost summarize $`k' if R_Cen_village_name==30301
 	eststo  model7: estpost summarize $`k' if R_Cen_village_name==30602
 	eststo  model8: estpost summarize $`k' if R_Cen_village_name==40201
+	eststo  model9: estpost summarize $`k' if R_Cen_village_name==40401
+	eststo  model18: estpost summarize $`k' if R_Cen_village_name==40101
 
 	
 	
-esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Village_Census_`k'_Group1.tex", ///
-	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Asada" "Badabangi" "Badaalubadi" "Birnarayanpur" "Nathma" "Tandipur" "Mukundpur" "Bichikote" "Sig" "P-value" "Min" "Max" "Missing") ///
+esttab model0  model1  model2 model3 model4 model5 model6 model7 model8 model9 model18 using "${Table}Main_Village_Census_`k'_Group1.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Asada" "Badabangi" "Gopi Kankubadi" "Birnarayanpur" "Nathma" "Tandipur" "Mukundpur" "Bichikote" "Naira" "Karnapadu" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _&   _&     _&         _\\" "" ///
+	               "&           _&           _&           _&           _&           _&           _&   _&     _&   _&  _&     _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
 				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
@@ -835,11 +837,14 @@ start_from_clean_file_Census
 	eststo  model12: estpost summarize $`k' if R_Cen_village_name==50301
 	eststo  model13: estpost summarize $`k' if R_Cen_village_name==50402
 	eststo  model14: estpost summarize $`k' if R_Cen_village_name==50201
+	eststo  model15: estpost summarize $`k' if R_Cen_village_name==30501
+	eststo  model16: estpost summarize $`k' if R_Cen_village_name==30202
+	eststo  model17: estpost summarize $`k' if R_Cen_village_name==10201
 	
-esttab model0 model9 model10 model11 model12 model13 model14 using "${Table}Main_Village_Census_`k'_Group2.tex", ///
-	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Jaltar" "Gudiabandh" "Dangalodi" "Karlakana" "Kuljing" "Barijhola" "Sig" "P-value" "Min" "Max" "Missing") ///
+esttab model0 model9 model10 model11 model12 model13 model14 model15 model16 model17 using "${Table}Main_Village_Census_`k'_Group2.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("Total" "Jaltar" "Gudiabandh" "Dangalodi" "Karlakana" "Kuljing" "Barijhola" "Bhujbal" "BK Padar"  "Sanagortha" "Sig" "P-value" "Min" "Max" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+	               "&           _&           _&           _&           _&           _&           _&      _&    _&   _&     _\\" "" ///
 				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
 				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
 				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
@@ -849,7 +854,10 @@ esttab model0 model9 model10 model11 model12 model13 model14 using "${Table}Main
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	    title("``k''- (Control villages)" \label{`Label`k''}) note("`Note`k''") 
+	
 }
+
+
 
 /*----------------------------------------------
 3) Map

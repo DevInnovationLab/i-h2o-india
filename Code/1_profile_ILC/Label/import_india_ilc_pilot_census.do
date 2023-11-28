@@ -5,7 +5,7 @@
 *	Inputs:  "Baseline Census_WIDE.csv"
 *	Outputs: "Baseline Census.dta"
 *
-*	Output by SurveyCTO October 11, 2023 8:13 PM.
+*	Output by SurveyCTO November 16, 2023 2:50 PM.
 
 * initialize Stata
 clear all
@@ -140,12 +140,12 @@ if _N>0 {
 
 	label variable gp_name "Enumerator to fill up: Gram Panchayat Name"
 	note gp_name: "Enumerator to fill up: Gram Panchayat Name"
-	label define gp_name 101 "Asada" 102 "Khariguda" 201 "G Gurumunda" 202 "Jaltar" 302 "BK Padar" 303 "Dunduli" 305 "Kolnara" 306 "Mukundpur" 401 "Derigam" 402 "Gudiabandh" 403 "Kamapadara" 404 "Naira" 501 "Dangalodi" 502 "Halua" 503 "Karlakana" 504 "Kothapeta" 505 "Tadma" 506 "Badaalubadi"
+	label define gp_name 101 "Asada" 102 "Khariguda" 201 "G Gurumunda" 202 "Jaltar" 302 "BK Padar" 303 "Dunduli" 305 "Kolnara" 306 "Mukundpur" 307 "Dumbiriguda" 401 "Derigam" 402 "Gudiabandh" 403 "Kamapadara" 404 "Naira" 501 "Dangalodi" 502 "Halua" 503 "Karlakana" 504 "Kothapeta" 505 "Tadma" 506 "Badaalubadi"
 	label values gp_name gp_name
 
 	label variable village_name "Enumerator to fill up: Village Name"
 	note village_name: "Enumerator to fill up: Village Name"
-	label define village_name 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30602 "Mukundpur" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 50601 "Badaalubadi"
+	label define village_name 10101 "Asada" 10201 "Sanagortha" 20101 "Badabangi" 20201 "Jaltar" 30202 "BK Padar" 30301 "Tandipur" 30501 "Bhujbal" 30601 "Hatikhamba" 30602 "Mukundpur" 30701 "Gopi Kankubadi" 40101 "Karnapadu" 40201 "Bichikote" 40202 "Gudiabandh" 40301 "Mariguda" 40401 "Naira" 50101 "Dangalodi" 50201 "Barijhola" 50301 "Karlakana" 50401 "Birnarayanpur" 50402 "Kuljing" 50501 "Nathma" 50601 "Badaalubadi"
 	label values village_name village_name
 
 	label variable hamlet_name "Enumerator to fill up: Hamlet Name"
@@ -253,7 +253,7 @@ if _N>0 {
 
 	label variable a12_water_source_prim "A12) In the past month, which water source did your household primarily use for "
 	note a12_water_source_prim: "A12) In the past month, which water source did your household primarily use for drinking?"
-	label define a12_water_source_prim 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
+	label define a12_water_source_prim 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (part of JJM taps)" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
 	label values a12_water_source_prim a12_water_source_prim
 
 	label variable a12_prim_source_oth "A12.1) If Other, please specify:"
@@ -321,7 +321,7 @@ if _N>0 {
 
 	label variable water_prim_source_kids "A17.1) What is the primary drinking water source for your youngest children?"
 	note water_prim_source_kids: "A17.1) What is the primary drinking water source for your youngest children?"
-	label define water_prim_source_kids 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
+	label define water_prim_source_kids 1 "Government provided household Taps (supply paani)" 2 "Government provided community standpipe (part of JJM taps)" 3 "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)" 4 "Manual handpump" 5 "Covered dug well" 6 "Uncovered dug well" 7 "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c" 8 "Private Surface well" -77 "Other"
 	label values water_prim_source_kids water_prim_source_kids
 
 	label variable water_prim_kids_oth "A17.2) If Other, please specify:"
