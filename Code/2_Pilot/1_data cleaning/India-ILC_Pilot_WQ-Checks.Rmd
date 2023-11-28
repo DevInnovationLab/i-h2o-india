@@ -302,31 +302,31 @@ kbl(village_stats)%>%
 
 
 #Plotting chlorine concentrations against e. coli presence/absence
-p1 <- ggplot(data = idexx) + 
-  geom_boxplot(aes(x = ec_pa, y = fc_tap)) +
-  scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
-                     limits = c(0, 1.0),
-                     expand = c(0,0))+
-  labs(x = "Presence/Absence of E. coli", 
-       y = "Free Chlorine Concentration (mg/L)",
-       title = "Chlorination of JJM Taps and Detection of E. coli")+
-  theme_bw()
-
-p1
+# p1 <- ggplot(data = idexx) + 
+#   geom_boxplot(aes(x = ec_pa, y = fc_tap)) +
+#   scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
+#                      limits = c(0, 1.0),
+#                      expand = c(0,0))+
+#   labs(x = "Presence/Absence of E. coli", 
+#        y = "Free Chlorine Concentration (mg/L)",
+#        title = "Chlorination of JJM Taps and Detection of E. coli")+
+#   theme_bw()
+# 
+# p1
 
 
 #need to correct
-p2 <- ggplot(data = idexx) + 
-  geom_col(aes(x = village, y = fc_tap)) +
-  scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
-                     limits = c(0, 1.0),
-                     expand = c(0,0))+
-  labs(x = "Sample ID", 
-       y = "Average Free Chlorine Concentration (mg/L)",
-       title = "Chlorination of JJM Taps in each village in Odisha")+
-  theme_bw()
-
-p2
+# #p2 <- ggplot(data = idexx) + 
+#   geom_col(aes(x = village, y = fc_tap)) +
+#   scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
+#                      limits = c(0, 1.0),
+#                      expand = c(0,0))+
+#   labs(x = "Sample ID", 
+#        y = "Average Free Chlorine Concentration (mg/L)",
+#        title = "Chlorination of JJM Taps in each village in Odisha")+
+#   theme_bw()
+# 
+# p2
 
 
 #Plotting IDEXX E. coli data per village
@@ -336,8 +336,8 @@ p3 <- ggplot(data = idexx) +
                      limits = c(0, 4),
                      expand = c(0,0))+
   labs(x = "Village", 
-       y = "log(MPN E. coli/100 mL)",
-       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 136)")+
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
@@ -352,8 +352,8 @@ p4 <- ggplot(data = idexx) +
                      limits = c(0, 4),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
-       y = "log(MPN E. coli/100 mL)",
-       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 136)")+
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
@@ -369,7 +369,7 @@ p5 <- ggplot(data = idexx) +
   labs(x = "Block", 
        y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
        fill = "Sample Type",
-       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 144)")))+
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
@@ -383,26 +383,26 @@ p5
 
 ```{r ABR IDEXX Desc Stats}
 
-p4 <- ggplot(data = abr) + 
-  geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
-  scale_y_continuous(
-                     limits = c(0, 4),
-                     expand = c(0,0))+
-  labs(x = "Village", 
-       y = "log(MPN E. coli/100 mL)",
-       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
-  theme_bw()
+# p4 <- ggplot(data = abr) + 
+#   geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
+#   scale_y_continuous(
+#                      limits = c(0, 4),
+#                      expand = c(0,0))+
+#   labs(x = "Village", 
+#        y = "log(MPN E. coli/100 mL)",
+#        title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
+#   theme_bw()
+# 
+# p4
 
-p4
 
-
-p5 <- ggplot(data = abr) + 
-  geom_bar(aes(y = ec_pa, fill = village))+
-  labs(x = "Village", 
-       y = "log(MPN E. coli/100 mL)",
-       title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
-  theme_bw()
-p5
+# p5 <- ggplot(data = abr) + 
+#   geom_bar(aes(y = ec_pa, fill = village))+
+#   labs(x = "Village", 
+#        y = "log(MPN E. coli/100 mL)",
+#        title = "E. coli Presence in Tap and Stored Drinking Water in Odisha (N = 56)")+
+#   theme_bw()
+# p5
 
 
 
