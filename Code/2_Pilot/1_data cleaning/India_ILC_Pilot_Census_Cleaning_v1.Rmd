@@ -98,7 +98,7 @@ cs$caste <- cs$caste%>%
 ```{r write csv}
 
 
-#write_csv(cs, "G:/My Drive/Fall 2023/PBHLTH245/project/India_ILC_Census_Full.dta")
+#write_csv(cs, "G:/My Drive/Fall 2023/PBHLTH245/project/India_ILC_Census_Full.csv")
 
 
 ```
