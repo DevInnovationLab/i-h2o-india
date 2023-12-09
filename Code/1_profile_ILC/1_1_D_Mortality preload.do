@@ -52,7 +52,8 @@ drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="504021
 // Create scenarios 
 
 gen scenario = 0 
-replace scenario = 3 if Merge_consented == 1 
+replace scenario = 2 if R_Cen_resp_available== 2| R_Cen_resp_available== 5| R_Cen_resp_available== 6
+replace scenario = 3 if R_Cen_resp_available == 1 & Merge_consented==1
 replace scenario = 4 if Merge_consented == 3
 
 gen scenario_label = scenario
