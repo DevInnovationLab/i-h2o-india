@@ -354,7 +354,7 @@ label var C_Screened  "Screened"
 	label var R_Cen_sectionG_duration "Assets section duration"
 	label var R_Cen_sectionH_duration "Concluding section duration"
 	
-drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601 
+*drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601 
 
 end
 
@@ -415,7 +415,7 @@ program define   start_from_clean_file_Census
 
   use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
-  drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601
+  *drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601
 
   label var R_Cen_a2_hhmember_count "Household size" 
   
@@ -428,8 +428,8 @@ program define   start_from_clean_file_Preglevel
   start_from_clean_file_Census
   destring R_Cen_a5_autoage_13 R_Cen_a5_autoage_14 R_Cen_a5_autoage_15 R_Cen_a5_autoage_16 R_Cen_a5_autoage_17, replace
   
-keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* R_Cen_a4_hhmember_gender_*
-reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a4_hhmember_gender_ , i(unique_id) j(num)
+keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* R_Cen_a4_hhmember_gender_* R_Cen_a7_pregnant_*
+reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a4_hhmember_gender_ R_Cen_a7_pregnant_, i(unique_id) j(num)
 * Drop missing
 end
 

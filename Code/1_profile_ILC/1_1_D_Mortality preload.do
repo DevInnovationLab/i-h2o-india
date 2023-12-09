@@ -56,7 +56,7 @@ replace scenario = 3 if Merge_consented == 1
 replace scenario = 4 if Merge_consented == 3
 
 gen scenario_label = scenario
-label define scen 2 "Census, not available" 3 "Censusl, screened out" 4 "Census, screened in" 0 "Error"
+label define scen 2 "Census, not available" 3 "Census, screened out" 4 "Census, screened in" 0 "Error"
 label values scenario_label scen
 
 decode  scenario_label, gen(scenario_str)
@@ -72,14 +72,19 @@ forvalue i = 1/9 {
 
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
 
+/*
 local fam_age R_Cen_a6_hhmember_age_1 R_Cen_a6_hhmember_age_2 R_Cen_a6_hhmember_age_3 R_Cen_a6_hhmember_age_4 R_Cen_a6_hhmember_age_5 R_Cen_a6_hhmember_age_6 R_Cen_a6_hhmember_age_7 R_Cen_a6_hhmember_age_8 R_Cen_a6_hhmember_age_9 R_Cen_a6_hhmember_age_10 R_Cen_a6_hhmember_age_11 R_Cen_a6_hhmember_age_12 R_Cen_a6_hhmember_age_13 R_Cen_a6_hhmember_age_14 R_Cen_a6_hhmember_age_15 R_Cen_a6_hhmember_age_16 R_Cen_a6_hhmember_age_17 R_Cen_a6_hhmember_age_18 R_Cen_a6_hhmember_age_19 R_Cen_a6_hhmember_age_20
-foreach x of  local fam_age {
+*/
+
+forvalues i = 1/17 {
 	destring R_Cen_a6_hhmember_age_`i', gen(Cen_fam_age`i')
     local ++i
 }
 
+/*
 local fam_gender R_Cen_a4_hhmember_gender_1 R_Cen_a4_hhmember_gender_2 R_Cen_a4_hhmember_gender_3 R_Cen_a4_hhmember_gender_4 R_Cen_a4_hhmember_gender_5 R_Cen_a4_hhmember_gender_6 R_Cen_a4_hhmember_gender_7 R_Cen_a4_hhmember_gender_8 R_Cen_a4_hhmember_gender_9 R_Cen_a4_hhmember_gender_10 R_Cen_a4_hhmember_gender_11 R_Cen_a4_hhmember_gender_12 R_Cen_a4_hhmember_gender_13 R_Cen_a4_hhmember_gender_14 R_Cen_a4_hhmember_gender_15 R_Cen_a4_hhmember_gender_16 R_Cen_a4_hhmember_gender_17 R_Cen_a4_hhmember_gender_18 R_Cen_a4_hhmember_gender_19 R_Cen_a4_hhmember_gender_20
-foreach x of  local fam_gender {
+*/
+forvalues i = 1/17 {
 	destring R_Cen_a4_hhmember_gender_`i', gen(Cen_fam_gender`i')
     local ++i
 }

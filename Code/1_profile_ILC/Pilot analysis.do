@@ -48,7 +48,7 @@ start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.
 gen count_2=1 if (R_Cen_a6_hhmember_age_>=15 & R_Cen_a6_hhmember_age_<=49) & R_Cen_a4_hhmember_gender_==2
 collapse (sum) count_1 count_2, by (R_Cen_village_name)
-gen perc_preg_women= count_1/count_2
+gen perc_preg_women= count_1/192.22
 br
 sum count_1 perc_preg_women
 
@@ -57,7 +57,7 @@ start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a6_hhmember_age_<5
 gen count_2=1 if R_Cen_a6_hhmember_age_>=0 & R_Cen_a6_hhmember_age_<=14
 collapse (sum) count_1 count_2, by (R_Cen_village_name)
-gen perc_U5child= count_1/count_2
+gen perc_U5child= count_1/192.22
 sum count_1 perc_U5child
 
 //number and avg pregnant women+children <5years per village
@@ -65,7 +65,7 @@ start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<5
 gen count_2=1 if ((R_Cen_a6_hhmember_age_>=15 & R_Cen_a6_hhmember_age_<=49) & R_Cen_a4_hhmember_gender_==2) | R_Cen_a6_hhmember_age_>=0 & R_Cen_a6_hhmember_age_<=14
 collapse (sum) count_1 count_2, by (R_Cen_village_name)
-gen perc_total= count_1/count_2
+gen perc_total= count_1/192.22
 sum count_1 perc_total
 
 
@@ -73,7 +73,13 @@ sum count_1 perc_total
 //number of HHs with and pregnant women and children <5years per village
 start_from_clean_file_Population
 gen count1=1
-gen count2= 1 if R_Cen_screen_preg==1
+forvalues i = 1/17 {
+	gen C_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
+}
+egen      C_total_pregnant_hh = rowtotal(C_total_pregnant_*)
+label var C_total_pregnant_hh "Number of pregnant women"
+
+gen count2= 1 if C_total_pregnant_hh>0
 gen count3= 1 if R_Cen_screen_u5child ==1
 gen count4= 1 if C_Screened ==1
 collapse (sum) count1 count2 count3 count4, by (R_Cen_village_name)
@@ -465,6 +471,43 @@ esttab model10 model11 using "${Table}Water treatment_`k'.tex", ///
 }
 
 
+*	FOR JJM USERS
+foreach k in  general {
+start_from_clean_file_Census
+keep if R_Cen_a13_ws_sec_1==1 | R_Cen_a12_ws_prim_1==1
+
+
+* Diff
+	eststo  model10: estpost summarize $`k'
+	
+*Min
+start_from_clean_file_Census
+keep if R_Cen_a13_ws_sec_1==1 | R_Cen_a12_ws_prim_1==1
+
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model11: estpost summarize $`k'
+	
+	
+
+esttab model10 model11 using "${Table}Water treatment_JJM users.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "SD") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Water treatment-JJM users") 
+}
+
+
 
 //Water treatment frequency
 start_from_clean_file_Census
@@ -509,6 +552,42 @@ esttab model16 model17 using "${Table}Frequency of treatment_`k'.tex", ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   title("Frequency of treatment-`k'") 
+}
+
+*	FOR JJM USERS
+foreach k in  general {
+start_from_clean_file_Census
+keep if R_Cen_a13_ws_sec_1==1 | R_Cen_a12_ws_prim_1==1
+
+
+* Diff
+	eststo  model16: estpost summarize $`k'
+	
+*SD
+start_from_clean_file_Census
+keep if R_Cen_a13_ws_sec_1==1 | R_Cen_a12_ws_prim_1==1
+
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model17: estpost summarize $`k'
+	
+	
+
+esttab model16 model17 using "${Table}Frequency of treatment_JJM USERS.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "SD") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Frequency of treatment_JJM Users") 
 }
 
 
@@ -810,6 +889,28 @@ esttab model20  model21 model22  model24  model25 model26 model23 using "${Table
 	   title("Chlorine readings summary") 
 }
 
+
+/*----------------------------------------------
+*Storage container- number and quantity
+----------------------------------------------*/
+use "${DataDeid}1_2_Followup_cleaned.dta", clear
+drop if R_FU_r_cen_village_name_str== "Badaalubadi" 
+
+
+forvalues i = 1/25 {
+	gen container_size_midpt_`i'=. if R_FU_size_container_`i'!=.
+	replace container_size_midpt_`i'= 2.5 if R_FU_size_container_`i'==1
+	replace container_size_midpt_`i'= 7 if R_FU_size_container_`i'==2
+	replace container_size_midpt_`i'= 12 if R_FU_size_container_`i'==3
+	replace container_size_midpt_`i'= 17 if R_FU_size_container_`i'==4
+	replace container_size_midpt_`i'= 20 if R_FU_size_container_`i'==5
+}
+
+egen avg_water_per_hh= rowmean(container_size_midpt_1 container_size_midpt_2 container_size_midpt_3 container_size_midpt_4 container_size_midpt_5 container_size_midpt_6 container_size_midpt_7 container_size_midpt_8 container_size_midpt_9 container_size_midpt_10 container_size_midpt_11 container_size_midpt_12 container_size_midpt_13 container_size_midpt_14 container_size_midpt_15 container_size_midpt_16 container_size_midpt_17 container_size_midpt_18 container_size_midpt_19 container_size_midpt_20 container_size_midpt_21 container_size_midpt_22 container_size_midpt_23 container_size_midpt_24 container_size_midpt_25)
+
+replace avg_water_per_hh= round(avg_water_per_hh)
+sum R_FU_quant_containers //avg number of containers
+sum avg_water_per_hh // avg water at home
 
 
 /*----------------------------------------------
