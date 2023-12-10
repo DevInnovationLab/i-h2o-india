@@ -61,6 +61,8 @@ label define scen 2 "Census, not available" 3 "Census, screened out" 4 "Census, 
 label values scenario_label scen
 
 decode  scenario_label, gen(scenario_str)
+tempfile new
+save `new', replace
 
 //Cleaning the name of the household head
 rename R_Cen_a10_hhhead R_Cen_a10_hhhead_num
@@ -99,6 +101,9 @@ export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_
 * Step 4: Generating tracking list for supervisors for Mortality survey *
 ***********************************************************************
 
+use `new', clear
+keep if R_Cen_village_name==30701 
+
 tostring unique_id, force replace format(%15.0gc)
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
@@ -106,18 +111,20 @@ gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 
 
+
 //Changing labels 
 	label variable ID "Unique ID"
-	label variable R_Cen_village_name_str "Village Name"
+	label variable R_Cen_village_str "Village Name"
 	label variable R_Cen_block_name "Block name"
 	label variable R_Cen_hamlet_name "Hamlet name"
 	label variable R_Cen_saahi_name "Saahi name"
 	label variable R_Cen_landmark "Landmark"
 	label variable R_Cen_enum_name_label "Enumerator name"
+	label variable scenario "Scenario"
 	
 
 
-sort R_Cen_village_name_str R_Cen_enum_name_label  
-export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  scenario scenario_str using "${pilot}Supervisor_Mortality_Tracker_checking.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+sort R_Cen_village_str R_Cen_enum_name_label  
+export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  scenario using "${pilot}Supervisor_Mortality_Tracker_checking.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 
