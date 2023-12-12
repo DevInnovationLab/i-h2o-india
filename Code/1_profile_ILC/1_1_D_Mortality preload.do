@@ -75,25 +75,43 @@ forvalue i = 1/9 {
 
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
 
-/*
+
 local fam_age R_Cen_a6_hhmember_age_1 R_Cen_a6_hhmember_age_2 R_Cen_a6_hhmember_age_3 R_Cen_a6_hhmember_age_4 R_Cen_a6_hhmember_age_5 R_Cen_a6_hhmember_age_6 R_Cen_a6_hhmember_age_7 R_Cen_a6_hhmember_age_8 R_Cen_a6_hhmember_age_9 R_Cen_a6_hhmember_age_10 R_Cen_a6_hhmember_age_11 R_Cen_a6_hhmember_age_12 R_Cen_a6_hhmember_age_13 R_Cen_a6_hhmember_age_14 R_Cen_a6_hhmember_age_15 R_Cen_a6_hhmember_age_16 R_Cen_a6_hhmember_age_17 R_Cen_a6_hhmember_age_18 R_Cen_a6_hhmember_age_19 R_Cen_a6_hhmember_age_20
-*/
+
 
 forvalues i = 1/17 {
-	destring R_Cen_a6_hhmember_age_`i', gen(Cen_fam_age`i')
+	gen Cen_fam_age`i' = R_Cen_a6_hhmember_age_`i'
     local ++i
 }
 
-/*
+
 local fam_gender R_Cen_a4_hhmember_gender_1 R_Cen_a4_hhmember_gender_2 R_Cen_a4_hhmember_gender_3 R_Cen_a4_hhmember_gender_4 R_Cen_a4_hhmember_gender_5 R_Cen_a4_hhmember_gender_6 R_Cen_a4_hhmember_gender_7 R_Cen_a4_hhmember_gender_8 R_Cen_a4_hhmember_gender_9 R_Cen_a4_hhmember_gender_10 R_Cen_a4_hhmember_gender_11 R_Cen_a4_hhmember_gender_12 R_Cen_a4_hhmember_gender_13 R_Cen_a4_hhmember_gender_14 R_Cen_a4_hhmember_gender_15 R_Cen_a4_hhmember_gender_16 R_Cen_a4_hhmember_gender_17 R_Cen_a4_hhmember_gender_18 R_Cen_a4_hhmember_gender_19 R_Cen_a4_hhmember_gender_20
-*/
+
 forvalues i = 1/17 {
-	destring R_Cen_a4_hhmember_gender_`i', gen(Cen_fam_gender`i')
+	gen Cen_fam_gender`i' = R_Cen_a4_hhmember_gender_`i'
     local ++i
 }
+
+
+forvalues i = 1/17 {
+	gen female_15_49_`i' = 1 if Cen_fam_age`i' >= 15 & Cen_fam_age`i' <= 49 & Cen_fam_gender`i' == 2  
+    local ++i
+}
+
+
+
+forvalues i = 1/17 {
+	gen female_eligible_`i' = `i' if female_15_49_`i' == 1
+    local ++i
+}
+ egen R_Cen_num_female_15to49 = anycount(female_15_49_1-female_15_49_17), value(1)
 
 sort R_Cen_village_name_str
-export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20  R_Cen_a12_water_source_prim R_Cen_u5child_* R_Cen_pregwoman_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12 R_Cen_enum_name R_Cen_enum_code R_Cen_enum_name_label scenario scenario_str using "${DataPre}Mortality_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+
+egen R_Cen_female_eligible = concat(female_eligible_1-female_eligible_17), p(" ")
+replace R_Cen_female_eligible = subinstr(R_Cen_female_eligible, ".", "", .) 
+keep if scenario == 4
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20  R_Cen_a12_water_source_prim R_Cen_u5child_* R_Cen_pregwoman_* Cen_fam_age* R_Cen_female_above12 R_Cen_num_femaleabove12  R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12 R_Cen_enum_name R_Cen_enum_code R_Cen_enum_name_label scenario scenario_str R_Cen_num_female_15to49  R_Cen_female_eligible using "${DataPre}Mortality_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
 
@@ -103,6 +121,7 @@ export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_
 
 use `new', clear
 keep if R_Cen_village_name==30701 
+keep if scenario == 4
 
 tostring unique_id, force replace format(%15.0gc)
 gen newvar1 = substr(unique_id, 1, 5)
@@ -125,6 +144,6 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 
 
 sort R_Cen_village_str R_Cen_enum_name_label  
-export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  scenario using "${pilot}Supervisor_Mortality_Tracker_checking.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  scenario  R_Cen_a1_resp_name using "${pilot}Supervisor_Mortality_Tracker_checking.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 
