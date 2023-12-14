@@ -48,21 +48,26 @@ list dup unique_id if dup_HHID > 0
 
 keep unique_id
 
-save "C:\Users\Archi Gupta\Box\Data\New folder\BC_plan matching.dta",replace
+save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_plan matching.dta",replace
 
 clear
 
-import excel "C:\Users\Archi Gupta\Downloads\BC_IDs_field plan for 3rd nov.xls", sheet("Sheet1") firstrow
+import excel "C:\Users\Archi Gupta\Box\Data\99_Preload\Backcheck_preload_8Nov23.xlsx", sheet("Sheet1") firstrow
+cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
 duplicates drop
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
-format  unique_id %15.0gc
+destring unique_id, gen(unique_id_num)
+format  unique_id_num %15.0gc
+drop unique_id
+rename unique_id_num unique_id
 
 
-merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\New folder\BC_plan matching.dta", generate(_mergewithBCsubmitted)
-merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\New folder\Data_Quality_Checks_Only_UQs.dta", generate(_mergewithDQ)
-cd "C:\Users\Archi Gupta\Box\Data\New folder"
+
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_plan matching.dta", generate(_mergewithBCsubmitted)
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Data_Quality_Checks_Only_UQs.dta", generate(_mergewithDQ)
+cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
 
 export excel using "BC field plan new IDs 6th nov" if _mergewithBCsubmitted==1 & _mergewithDQ == 1, sheetmodify firstrow(variables)

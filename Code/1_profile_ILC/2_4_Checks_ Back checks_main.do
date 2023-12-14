@@ -1,4 +1,3 @@
-clear all 
 cd "C:\Users\Archi Gupta\Box\Data\1_raw"
 do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\Label\import_india_ilc_pilot_backcheck_Master.do"              
 set seed 758235657 // Just in case
@@ -42,25 +41,114 @@ cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
 	note enum_name: "What is the name of the enumerator?"
 	label define enumerator 101 "Sanjay Naik" 102 "Susanta Kumar Mahanta" 103 "Rajib Panda" 104 "Santosh Kumar Das" 105 "Bibhar Pankaj" 106 "Madhusmita Samal" 107 "Rekha Behera" 108 "Sanjukta Chichuan" 109 "Swagatika Behera" 110 "Sarita Bhatra" 111 "abhishek Rath" 112 "Binod Kumar Mohanandia" 113 "Mangulu Bagh" 114 "Padman Bhatra" 115 "Kuna Charan Naik" 116 "Sushil Kumar Pani" 117 "Jitendra Bagh" 118 "Rajeswar Digal" 119 "Pramodini Gahir" 120 "Manas Ranjan Parida" 121 "Ishadatta Pani"
 	label values enum_name enumerator
-cap export excel unique_id saahi_name a1_resp_name a10_hhhead a39_phone_name_1 a39_phone_num_1 village_name_str hamlet_name a11_oldmale_name fam_name1 fam_name2 fam_name3 fam_name4 fam_name5 pregwoman_1 pregwoman_2 pregwoman_3 u5child_1 u5child_2 u5child_3 a12_water_source_prim enum_name enum_name_label interviewed_before who_interviwed_before who_interviwed_before_1 who_interviwed_before_2 who_interviwed_before_3 a7_resp_name BC_surveydate using "BC_quality_checks" if dup_HHID >0,firstrow(variables) sheet(Duplicates) sheetreplace 
 
-
-tab interviewed_before
+cap export excel unique_id r_cen_a1_resp_name r_cen_village_name_str enum_name who_interviwed_before a7_resp_name BC_surveydate dup_HHID using "BC_quality_final" if dup_HHID>0, firstrow(variables) sheet(duplicates) sheetreplace
+	
 replace interviewed_before = 1 if unique_id == 10201108019 & enum_name == 120 & a7_resp_name == "SANYASI ARAKA" & r_cen_village_name_str == "Sanagortha"
 
+tab interviewed_before
 
 
-cap export excel interviewed_before unique_id saahi_name a1_resp_name a10_hhhead a39_phone_name_1 a39_phone_num_1 village_name_str hamlet_name a11_oldmale_name fam_name1 fam_name2 fam_name3 fam_name4 fam_name5 pregwoman_1 pregwoman_2 pregwoman_3 u5child_1 u5child_2 u5child_3 a12_water_source_prim enum_name enum_name_label interviewed_before who_interviwed_before who_interviwed_before_1 who_interviwed_before_2 who_interviwed_before_3 a7_resp_name BC_surveydate using "BC_quality_checks" if interviewed_before == 0,firstrow(variables) sheet(Not_interviewed_before) sheetreplace 
-
+cap export excel unique_id  interviewed_before r_cen_a1_resp_name r_cen_village_name_str enum_name who_interviwed_before a7_resp_name BC_surveydate dup_HHID using "BC_quality_final" if interviewed_before == 0, firstrow(variables) sheet(not_interviewed_before) sheetreplace
 
 //AG: List all the cases where BC recorded that under 5 child isn't present but census showed it is present 
-foreach i of varlist r_cen_u5child_1-r_cen_u5child_20{
+gen export_var = 0
+levelsof unique_id, local(id_list)
+foreach id of local id_list {
+replace export_var = 1 if unique_id == `id' & screen_u5child == 0 & (r_cen_u5child_1 != ""| r_cen_u5child_2 != ""| r_cen_u5child_3 != ""| r_cen_u5child_4 != ""| r_cen_u5child_5 != ""| r_cen_u5child_6 != ""| r_cen_u5child_7 != ""| r_cen_u5child_8 != ""| r_cen_u5child_9 != ""| r_cen_u5child_10 != ""| r_cen_u5child_11 != ""| r_cen_u5child_12 != ""| r_cen_u5child_13 != ""| r_cen_u5child_14 != ""| r_cen_u5child_15 != ""| r_cen_u5child_16 != ""| r_cen_u5child_17 != ""| r_cen_u5child_18 != ""| r_cen_u5child_19 != ""| r_cen_u5child_20 != "")
+}
+export excel unique_id enum_name r_cen_village_name_str using "BC_quality_final" if export_var == 1, sheet(notscreen_u5child_but_incensus) sheetreplace firstrow(variables) 
 
-list unique_id `i' enum_name if screen_u5child == 0 & `i'!= ""
+levelsof unique_id, local(id_list)
+foreach id of local id_list{
+list unique_id enum_name `i' if unique_id == `id' & screen_u5child == 1 & (a21_child_hh_1== 1 | a21_child_hh_2== 1 | a21_child_hh_3== 1  | a21_child_hh_4== 1 | a21_child_hh_5== 1)  & r_cen_u5child_1== "" &  r_cen_u5child_2== "" &  r_cen_u5child_3== "" &  r_cen_u5child_4== "" &  r_cen_u5child_5== "" &  r_cen_u5child_6== "" &  r_cen_u5child_7== "" &  r_cen_u5child_8== "" &  r_cen_u5child_9== "" &  r_cen_u5child_10== "" &  r_cen_u5child_11== "" &  r_cen_u5child_12== "" &  r_cen_u5child_13== "" &  r_cen_u5child_14== "" &  r_cen_u5child_15== "" &  r_cen_u5child_16== "" &  r_cen_u5child_17== "" &  r_cen_u5child_18== "" &  r_cen_u5child_19== "" &  r_cen_u5child_20== ""
+}
+//AG: list all the unique IDs where child has been screened for U5 but our previous surveys did not report it 
+
+drop export_var
+gen export_var = 0
+levelsof unique_id, local(id_list)
+foreach id of local id_list{
+replace export_var = 1 if unique_id == `id' & screen_u5child == 1 & (a21_child_hh_1== 1 | a21_child_hh_2== 1 | a21_child_hh_3== 1  | a21_child_hh_4== 1 | a21_child_hh_5== 1) & r_cen_u5child_1== "" &  r_cen_u5child_2== "" &  r_cen_u5child_3== "" &  r_cen_u5child_4== "" &  r_cen_u5child_5== "" &  r_cen_u5child_6== "" &  r_cen_u5child_7== "" &  r_cen_u5child_8== "" &  r_cen_u5child_9== "" &  r_cen_u5child_10== "" &  r_cen_u5child_11== "" &  r_cen_u5child_12== "" &  r_cen_u5child_13== "" &  r_cen_u5child_14== "" &  r_cen_u5child_15== "" &  r_cen_u5child_16== "" &  r_cen_u5child_17== "" &  r_cen_u5child_18== "" &  r_cen_u5child_19== "" &  r_cen_u5child_20== ""
+}
+export excel unique_id enum_name r_cen_village_name_str using "BC_quality_final" if export_var == 1, sheet(screen_u5child_but_notincensus) sheetreplace firstrow(variables) 
+
+
+//AG: list all the cases where BC recodred that pregnant women isn't present but in our previous surveys it showed present 
+foreach i of varlist r_cen_pregwoman_1-r_cen_pregwoman_20{
+list unique_id `i' enum_name if screen_preg == 0 & `i'!= ""
+*cap export excel unique_id enum_name r_cen_village_name_str using "BC_quality" if screen_preg == 0 & `i'!= "" ,firstrow(variables) sheet(notscreen_preg_but_incensus) sheetreplace
+}
+drop export_var
+gen export_var = 0
+levelsof unique_id, local(id_list)
+foreach id of local id_list{
+replace export_var = 1 if unique_id == `id' & screen_preg == 0 & (r_cen_pregwoman_1 != "" | r_cen_pregwoman_2 != "" | r_cen_pregwoman_3 != "" | r_cen_pregwoman_4 != "" | r_cen_pregwoman_5 != "" | r_cen_pregwoman_6 != "" | r_cen_pregwoman_7 != "" | r_cen_pregwoman_8 != "" | r_cen_pregwoman_8 != "" | r_cen_pregwoman_9 != "" | r_cen_pregwoman_10 != "" | r_cen_pregwoman_11 != "" | r_cen_pregwoman_12 != "" | r_cen_pregwoman_13 != "" | r_cen_pregwoman_14 != "" | r_cen_pregwoman_15 != "" | r_cen_pregwoman_16 != "" | r_cen_pregwoman_17 != "" | r_cen_pregwoman_18 != "" | r_cen_pregwoman_19 != "" | r_cen_pregwoman_20 != "") 
+}
+export excel unique_id enum_name r_cen_village_name_str using "BC_quality_final" if export_var == 1, sheet(screen_notpregnant_but_incensus) sheetreplace firstrow(variables) 
+
+
+//AG: list all the cases where BC recorded that pregnant women is presenr and this her usual residence but in our previous surveys it showed absent
+drop export_var
+gen export_var = 0
+levelsof unique_id, local(id_list)
+foreach id of local id_list{
+replace export_var = 1 if unique_id == `id' & screen_preg == 1 & a21_pregnant_hh_1== 1 & r_cen_pregwoman_1== "" &  r_cen_pregwoman_2== "" &  r_cen_pregwoman_3== "" &  r_cen_pregwoman_4== "" &  r_cen_pregwoman_5== "" &  r_cen_pregwoman_6== "" &  r_cen_pregwoman_7== "" &  r_cen_pregwoman_8== "" &  r_cen_pregwoman_9== "" &  r_cen_pregwoman_10== "" &  r_cen_pregwoman_11== "" &  r_cen_pregwoman_12== "" &  r_cen_pregwoman_13== "" &  r_cen_pregwoman_14== "" &  r_cen_pregwoman_15== "" &  r_cen_pregwoman_16== "" &  r_cen_pregwoman_17== "" &  r_cen_pregwoman_18== "" &  r_cen_pregwoman_19== "" &  r_cen_pregwoman_20== ""
 
 }
+cap export excel unique_id enum_name r_cen_village_name_str using "BC_quality_final" if export_var == 1, sheet(screen_pregnant_but_notincensus) sheetreplace firstrow(variables) 
 
+
+replace change_primary_source = 0 if change_primary_source == 1 & unique_id == 40202108028
+
+tab change_primary_source
+encode r_cen_a12_water_source_prim, generate(r_cen_a12_water_source_prim_)
+drop r_cen_a12_water_source_prim
+rename r_cen_a12_water_source_prim_ r_cen_a12_water_source_prim
+
+cap export excel primary_water_label r_cen_a12_water_source_prim bc_water_source_prim unique_id enum_name r_cen_village_name_str using "BC_quality_final" if change_primary_source == 1, sheet(change_primary_source) sheetreplace firstrow(variables) 
+
+******IGNORE THIS COMMENTED SECTION****************
+*cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
+*tempfile temp
+*foreach i of varlist r_cen_u5child_1-r_cen_u5child_20//
+    *list unique_id `i' enum_name if screen_u5child == 0 & `i'!= ""
+    *duplicates drop unique_id `i' enum_name, force
+    *keep if _n == 1
+    *gen B1 = unique_id
+    *gen B2 = `i'
+    *gen B3 = enum_name
+    *gen B4 = r_cen_village_name_str
+    *append using `temp'
+*}
+*export excel using "output1.xlsx", sheet("Sheet1") replace
+
+
+
+// Create a new variable that identifies all the v_id that meet the condition
+
+// Export all the v_id that meet the condition to the same sheet in the Excel file
 //AG: List all the cases where BC recorded that under 5 child isn't present but census showed it is present 
+*local cases ""
+*foreach i of varlist r_cen_u5child_1-r_cen_u5child_20{
+    *qui list unique_id `i' enum_name if screen_u5child == 0 & `i'!= ""
+    *local cases `"`cases' `r(unique_id)'"'
+*}
+*cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
+// Export the cases to an Excel file
+*export excel using "cases.xlsx", sheet("Cases") firstrow(variables) replace
+
+
+
+*cap confirmatory export excel unique_id `i' enum_name r_cen_village_name_str using "BC_quality", firstrow(variables) sheet(`i'_notscreenu5child_but_incensus) sheetreplace if _N>0
+
+
+
+
+
+
+
+
 
 
 *levelsof unique_id, local(id_list)
@@ -69,15 +157,8 @@ list unique_id `i' enum_name if screen_u5child == 0 & `i'!= ""
         *list unique_id enum_name if unique_id == `id' & screen_u5child == 1 & `var' == ""
     *}
 *}
-//AG: list all the unique IDs where child has been screened for U5 but our previous surveys did not report it 
-levelsof unique_id, local(id_list)
-foreach id of local id_list{
-list unique_id enum_name if unique_id == `id' & screen_u5child == 1 & r_cen_u5child_1== "" &  r_cen_u5child_2== "" &  r_cen_u5child_3== "" &  r_cen_u5child_4== "" &  r_cen_u5child_5== "" &  r_cen_u5child_6== "" &  r_cen_u5child_7== "" &  r_cen_u5child_8== "" &  r_cen_u5child_9== "" &  r_cen_u5child_10== "" &  r_cen_u5child_11== "" &  r_cen_u5child_12== "" &  r_cen_u5child_13== "" &  r_cen_u5child_14== "" &  r_cen_u5child_15== "" &  r_cen_u5child_16== "" &  r_cen_u5child_17== "" &  r_cen_u5child_18== "" &  r_cen_u5child_19== "" &  r_cen_u5child_20== ""
-
-}
 
 
-br screen_u5child unique_id r_cen_u5child_* if unique_id == 10201108019
 
 save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_cleaned data.dta", replace
 
@@ -87,7 +168,7 @@ rename a7_resp_name BC_respondent_name
 
 rename a10_hhhead BC_hhhead
 
-keep unique_id BC_surveydate BC_name BC_respondent_name BC_hhhead interviewed_before who_interviwed_before
+keep unique_id BC_surveydate BC_name BC_respondent_name  BC_hhhead interviewed_before who_interviwed_before r_cen_a1_resp_name r_cen_a10_hhhead r_cen_village_name_str r_cen_a11_oldmale_name r_cen_a39_phone_name_1 r_cen_address
 	
 save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_edited_data.dta", replace
 
@@ -95,7 +176,7 @@ save "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC_edited_data.d
 
 clear all 
 
-use "C:\Users\Archi Gupta\Box\Data\1_raw\1_1_Census_cleaned_consented.dta"
+use "C:\Users\Archi Gupta\Box\Data\3_final\Final_HH_Odisha_consented_Full.dta"
 
 renpfix R_Cen_ //removing R_cen prefix 
 
@@ -166,7 +247,7 @@ clear
 cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
  set matsize 600
  set emptycells drop
-bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census date for bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC data for bc stats.dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(BC_name)  keepsurvey(submissiondate)  showid(30) showall full replace 
+bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\Census date for bc stats.dta") bcdata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\BC data for bc stats.dta") id($id) t1vars($t1vars) t2vars($t2vars) ttest(a18_jjm_drinking) enumerator(enum_name) backchecker(BC_name)  keepsurvey(village_name a1_resp_name) keepbc(a7_resp_name interviewed_before no_of_u5child no_of_preg change_primary_source a21_pregnant_hh_* a21_pregnant_arrive_* r_cen_village_name_str) showid(30) showall full replace 
 *t2vars($t2vars) t3vars($t3vars)	  
  	/*t2vars(`t2vars') signrank(`signrank') */ 
 	/* 3vars(`t3vars') ttest(`ttest') */ 
@@ -175,6 +256,9 @@ bcstats, surveydata("C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\C
 
 	
 return list 
+
+
+
 
 foreach i in r(enum1) r(enum2) r(backchecker1) r(backchecker2) r(var1) r(var2){
 matrix list `i'
