@@ -17,6 +17,9 @@ save "${DataRaw}90_Village_Geo.dta", replace
 
 do "${Do_lab}import_india_ilc_pilot_backcheck_Master.do"
 save "${DataRaw}1_3_Back_Check.dta", replace
+
+do "${Do_lab}import_india_ilc_pilot_mortality_Master.do"
+save "${DataRaw}1_4_Mortality.dta", replace
 }
 
 * Windows User

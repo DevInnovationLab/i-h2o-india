@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "Mortality Survey" (ID: india_ilc_pilot_mortality_Master) data.
 *
-*	Inputs:  "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey_WIDE.csv"
-*	Outputs: "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
+*	Inputs:  "Mortality Survey_WIDE.csv"
+*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
 *
-*	Output by SurveyCTO December 14, 2023 9:32 AM.
+*	Output by SurveyCTO December 18, 2023 10:36 AM.
 
 * initialize Stata
 clear all
@@ -21,9 +21,9 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey_WIDE.csv"
-local dtafile "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
-local corrfile "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey_corrections.csv"
+local csvfile "Mortality Survey_WIDE.csv"
+local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
+local corrfile "Mortality Survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
 local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5"
@@ -33,18 +33,19 @@ local text_fields5 "cen_fam_age12 cen_fam_age13 cen_fam_age14 cen_fam_age15 cen_
 local text_fields6 "cen_fam_gender5 cen_fam_gender6 cen_fam_gender7 cen_fam_gender8 cen_fam_gender9 cen_fam_gender10 cen_fam_gender11 cen_fam_gender12 cen_fam_gender13 cen_fam_gender14 cen_fam_gender15 cen_fam_gender16"
 local text_fields7 "cen_fam_gender17 cen_fam_gender18 cen_fam_gender19 cen_fam_gender20 r_cen_a12_water_source_prim cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12"
 local text_fields8 "cen_children_below12 cen_num_childbelow12 child_bearing_list_preload scenario info_update enum_name_label_sc block_name_oth gp_name_oth village_name_oth hamlet_name saahi_name hh_code_format_sc1"
-local text_fields9 "unique_id_sc1 landmark address enum_name_label no_consent_reason no_consent_oth no_consent_comment consent_dur_end a1_resp_name hh_member_names_count namenumber_* a3_hhmember_name_* namefromearlier_*"
-local text_fields10 "a5_relation_oth_* a5_autoage_* fam_name1 fam_name2 fam_name3 fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14 fam_name15 fam_name16"
-local text_fields11 "fam_name17 fam_name18 fam_name19 fam_name20 fam_age1 fam_age2 fam_age3 fam_age4 fam_age5 fam_age6 fam_age7 fam_age8 fam_age9 fam_age10 fam_age11 fam_age12 fam_age13 fam_age14 fam_age15 fam_age16"
-local text_fields12 "fam_age17 fam_age18 fam_age19 fam_age20 female_above12 female_15to49 num_female_15to49 adults_hh_above12 num_adultsabove12 children_below12 num_childbelow12 sectionb_dur_end child_bearing_list"
-local text_fields13 "a12_prim_source_oth primary_source_label oth_previous_primary previous_primary_source_label change_reason_primary_source oth_change_primary_source a13_water_source_sec a13_water_sec_oth"
-local text_fields14 "oth_previous_secondary previous_sec_source_label change_reason_secondary a13_change_reason_secondary reason_yes_jjm oth_reason_yes_jjm reason_no_jjm oth_reason_no_jjm women_child_bearing_count"
-local text_fields15 "child_bearing_index_* name_pc_earlier_* no_consent_reason_pc_* no_consent_pc_oth_* no_consent_pc_comment_* vill_pc_oth_* village_name_res_* child_died_u5_count_* child_died_repeat_count_* name_child_*"
-local text_fields16 "name_child_earlier_* cause_death_* cause_death_oth_* cause_death_str_* women_child_bearing_sc_count child_bearing_index_sc_* name_pc_earlier_sc_* no_consent_reason_pc_sc_* no_consent_pc_oth_sc_*"
-local text_fields17 "no_consent_pc_comment_sc_* vill_pc_oth_sc_* village_name_res_sc_* child_died_u5_count_sc_* child_died_repeat_sc_count_* name_child_sc_* name_child_earlier_sc_* cause_death_sc_* cause_death_oth_sc_*"
-local text_fields18 "cause_death_str_sc_* women_child_bearing_oth_count child_bearing_index_oth_* name_pc_oth_* name_pc_earlier_oth_* no_consent_reason_pc_oth_* no_consent_pc_oth_oth_* no_consent_pc_comment_oth_*"
-local text_fields19 "vill_pc_oth_oth_* child_died_u5_count_oth_* child_died_repeat_oth_count_* name_child_oth_* name_child_earlier_oth_* cause_death_oth_add_* cause_death_oth_oth_* cause_death_str_oth_*"
-local text_fields20 "survey_member_names_count_* surveynumber_* a41_end_comments instanceid instancename"
+local text_fields9 "unique_id_sc1 landmark address enum_name_label no_consent_reason no_consent_oth no_consent_comment consent_dur_end a1_resp_name otherhous_address hh_member_names_count namenumber_* a3_hhmember_name_*"
+local text_fields10 "namefromearlier_* a5_relation_oth_* a5_autoage_* fam_name1 fam_name2 fam_name3 fam_name4 fam_name5 fam_name6 fam_name7 fam_name8 fam_name9 fam_name10 fam_name11 fam_name12 fam_name13 fam_name14"
+local text_fields11 "fam_name15 fam_name16 fam_name17 fam_name18 fam_name19 fam_name20 fam_age1 fam_age2 fam_age3 fam_age4 fam_age5 fam_age6 fam_age7 fam_age8 fam_age9 fam_age10 fam_age11 fam_age12 fam_age13 fam_age14"
+local text_fields12 "fam_age15 fam_age16 fam_age17 fam_age18 fam_age19 fam_age20 female_above12 female_15to49 num_female_15to49 adults_hh_above12 num_adultsabove12 children_below12 num_childbelow12 sectionb_dur_end"
+local text_fields13 "child_bearing_list otherhous_address_screened a12_prim_source_oth primary_source_label oth_previous_primary previous_primary_source_label change_reason_primary_source oth_change_primary_source"
+local text_fields14 "a13_water_source_sec a13_water_sec_oth oth_previous_secondary previous_sec_source_label change_reason_secondary a13_change_reason_secondary reason_yes_jjm oth_reason_yes_jjm reason_no_jjm"
+local text_fields15 "oth_reason_no_jjm women_child_bearing_count child_bearing_index_* name_pc_earlier_* no_consent_reason_pc_* no_consent_pc_oth_* no_consent_pc_comment_* vill_pc_oth_* village_name_res_*"
+local text_fields16 "child_died_u5_count_* child_died_repeat_count_* name_child_* name_child_earlier_* cause_death_* cause_death_oth_* cause_death_str_* women_child_bearing_sc_count child_bearing_index_sc_*"
+local text_fields17 "name_pc_earlier_sc_* no_consent_reason_pc_sc_* no_consent_pc_oth_sc_* no_consent_pc_comment_sc_* vill_pc_oth_sc_* village_name_res_sc_* num_stillborn_null_* num_less24_null_* num_more24_null_*"
+local text_fields18 "child_died_u5_count_sc_null_* child_died_repeat_sc_count_* name_child_sc_* name_child_earlier_sc_* cause_death_sc_* cause_death_oth_sc_* cause_death_str_sc_* women_child_bearing_oth_count"
+local text_fields19 "child_bearing_index_oth_* name_pc_oth_* name_pc_earlier_oth_* no_consent_reason_pc_oth_* no_consent_pc_oth_oth_* no_consent_pc_comment_oth_* vill_pc_oth_oth_* num_stillborn_null_oth_*"
+local text_fields20 "num_less24_null_oth_* num_more24_null_oth_* child_died_u5_count_sc_null_oth_* child_died_repeat_oth_count_* name_child_oth_* name_child_earlier_oth_* cause_death_oth_add_* cause_death_oth_oth_*"
+local text_fields21 "cause_death_str_oth_* survey_member_names_count_* surveynumber_* a41_end_comments instanceid instancename"
 local date_fields1 "a6_dob_* date_birth_* date_death_* date_birth_sc_* date_death_sc_* date_birth_oth_* date_death_oth_*"
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -274,6 +275,22 @@ if _N>0 {
 
 	label variable a2_hhmember_count "A5) How many people live in this household including you?"
 	note a2_hhmember_count: "A5) How many people live in this household including you?"
+
+	label variable own "A5.1) Do you own any other house excluding the one where you are residing curren"
+	note own: "A5.1) Do you own any other house excluding the one where you are residing currently in the village?"
+	label define own 1 "Yes" 0 "No"
+	label values own own
+
+	label variable otherhous_address "Please tell the address Hamlet name, Saahi name, landmark, House no., village na"
+	note otherhous_address: "Please tell the address Hamlet name, Saahi name, landmark, House no., village name)"
+
+	label variable own_screened "A5.1) Do you own any other house excluding the one where you are residing curren"
+	note own_screened: "A5.1) Do you own any other house excluding the one where you are residing currently in the village?"
+	label define own_screened 1 "Yes" 0 "No"
+	label values own_screened own_screened
+
+	label variable otherhous_address_screened "Please tell the address Hamlet name, Saahi name, landmark, House no., village na"
+	note otherhous_address_screened: "Please tell the address Hamlet name, Saahi name, landmark, House no., village name)"
 
 	label variable a12_water_source_prim "B1)In the past month, which water source did your household primarily use for dr"
 	note a12_water_source_prim: "B1)In the past month, which water source did your household primarily use for drinking and you are currently using it?"
@@ -1367,6 +1384,15 @@ if _N>0 {
 		}
 	}
 
+	capture {
+		foreach rgvar of varlist incentive_* {
+			label variable `rgvar' "Has the incentive been given or not?"
+			note `rgvar': "Has the incentive been given or not?"
+			label define `rgvar' 1 "Yes" 0 "No"
+			label values `rgvar' `rgvar'
+		}
+	}
+
 
 
 
@@ -1407,7 +1433,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey_corrections.csv
+*   Corrections file path and filename:  Mortality Survey_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
