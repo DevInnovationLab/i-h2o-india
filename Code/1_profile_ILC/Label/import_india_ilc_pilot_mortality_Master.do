@@ -589,6 +589,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_living_num_* {
+		    label drop `rgvar'
 			label variable `rgvar' "C11) How many children born since January 1, 2019 live with you?"
 			note `rgvar': "C11) How many children born since January 1, 2019 live with you?"
 		}
@@ -605,6 +606,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_notliving_num_* {
+			label drop `rgvar'
 			label variable `rgvar' "C13) How many children born since January 1, 2019 are alive but do not live with"
 			note `rgvar': "C13) How many children born since January 1, 2019 are alive but do not live with you?"
 		}
@@ -621,6 +623,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_stillborn_num_* {
+			label drop `rgvar'
 			label variable `rgvar' "C15) How many children born since January 1, 2019 were stillborn?"
 			note `rgvar': "C15) How many children born since January 1, 2019 were stillborn?"
 		}
@@ -637,6 +640,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_* {
+		    label drop `rgvar'
 			label variable `rgvar' "C17) How many children born since January 1, 2019 have died within 24 hours?"
 			note `rgvar': "C17) How many children born since January 1, 2019 have died within 24 hours?"
 		}
@@ -653,6 +657,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_more24_* {
+			label drop `rgvar'
 			label variable `rgvar' "C19) How many children born since January 1, 2019 have died after 24 hours from "
 			note `rgvar': "C19) How many children born since January 1, 2019 have died after 24 hours from birth till the age of 5 years ?"
 		}
@@ -872,13 +877,16 @@ if _N>0 {
 			note `rgvar': "P9) Do you have any children under 5 years of age to whom you have given birth since January 1, 2019 who are now living with you?"
 			label define `rgvar' 1 "Yes" 0 "No" 999 "Don't know" 98 "Refused to answer"
 			label values `rgvar' `rgvar'
+			
 		}
 	}
 
 	capture {
 		foreach rgvar of varlist child_living_num_sc_* {
+		    label drop `rgvar'
 			label variable `rgvar' "P10) How many children born since January 1, 2019 live with you?"
 			note `rgvar': "P10) How many children born since January 1, 2019 live with you?"
+			
 		}
 	}
 
@@ -893,10 +901,13 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_notliving_num_sc_* {
+		    label drop `rgvar'
 			label variable `rgvar' "P12) How many children born since January 1, 2019 are alive but do not live with"
 			note `rgvar': "P12) How many children born since January 1, 2019 are alive but do not live with you?"
+			
 		}
 	}
+
 
 	capture {
 		foreach rgvar of varlist child_stillborn_sc_* {
@@ -909,6 +920,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_stillborn_num_sc_* {
+		    label drop `rgvar'
 			label variable `rgvar' "P14) How many children born since January 1, 2019 were stillborn?"
 			note `rgvar': "P14) How many children born since January 1, 2019 were stillborn?"
 		}
@@ -925,6 +937,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_sc_* {
+		    label drop `rgvar'
 			label variable `rgvar' "P16) How many children born since January 1, 2019 have died within 24 hours?"
 			note `rgvar': "P16) How many children born since January 1, 2019 have died within 24 hours?"
 		}
@@ -941,6 +954,7 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_more24_sc_* {
+	       	label drop `rgvar'
 			label variable `rgvar' "P16.2) How many children born since January 1, 2019 have died after 24 hours fro"
 			note `rgvar': "P16.2) How many children born since January 1, 2019 have died after 24 hours from birth till the age of 5 years ?"
 		}
@@ -1393,8 +1407,7 @@ if _N>0 {
 		}
 	}
 
-
-
+    
 
 	* append old, previously-imported data (if any)
 	cap confirm file "`dtafile'"
