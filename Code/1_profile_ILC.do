@@ -68,17 +68,21 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global Overleaf "/Users/asthavohra/Dropbox/Apps/Overleaf"
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
-		else if c(username) == "archigupta" {		
-		global box 		"/Users/Archi Gupta/Box/India Water project/"
-		global github	"/Users/Archi Gupta/Documents/GitHub/i-h2o-india/"
-		global Overleaf "/Users/Archi Gupta/Dropbox/Apps/Overleaf"
-		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
-	}
+	
 
 	global code		     "${github}Code"
 	
 	* Box 
 	global pilot     "${box}2_Pilot/Data/"
+				if c(username) == "Archi Gupta" {		
+		global box 		"C:\Users\Archi Gupta\Box\Data"
+		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
+		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
+		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
+	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
+	}
+
+    
 	global DataRaw   "${pilot}1_raw/"
 	global DataDeid  "${pilot}2_deidentified/"
 	global DataFinal "${pilot}3_final/"
@@ -89,13 +93,33 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
+					if c(username) == "Archi Gupta" {		
+		global box 		"C:\Users\Archi Gupta\Box\Data"
+		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
+		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
+		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
+	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
+	    global Do_pilot "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
+	}
+
 	global Do_lab     "${github}Code/1_profile_ILC/Label/"
+					if c(username) == "Archi Gupta" {		
+		global box 		"C:\Users\Archi Gupta\Box\Data"
+		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
+		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
+		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
+	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
+	    global Do_pilot "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
+	    global Do_lab   "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\Label\" 
+	}
+	
 	global Data_map   "${box}4_Admin data/shrug-pc11-village-poly-shp/"
 	
 	* Overleaf
 	global Table =  "${Overleaf}/Everything document -ILC/Table/"
 	global Figure = "${Overleaf}/Everything document -ILC/Figure/"
-	
+	global Table_Pilot_analysis =  "${Overleaf}/India ILC Pilot- analysis/Table/"
+
 	cd "${DataRaw}"
 
 /*------------------------------------------------------------------------------
@@ -107,7 +131,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
     adopath ++  PLUS
     adopath ++  BASE
-	
+//Note: Install package ssc install ietoolkit	
 	* Set initial configurations as much as allowed by Stata version
 	ieboilstart, v(16.0)
 	`r(version)'
