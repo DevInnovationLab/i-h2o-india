@@ -112,7 +112,7 @@ gen unique_id_sc = subinstr(unique_id_hyphen, "-", "",.)
 destring unique_id_sc, gen(unique_id_sc_num)
 format   unique_id_sc_num %15.0gc
 
-replace unique_id_num = unique_id_sc_num if check_scenario == 0
+replace unique_id_num = unique_id_sc_num if check_scenario == 1
 
 * Stata variable names that are too long need to be rename
 rename (r_cen_a12_water_source_prim  previous_primary_source_label change_reason_primary_source change_reason_primary_source*  change_reason_secondary__77 a13_change_reason_secondary  women_child_bearing_oth_count      no_consent_pc_comment_oth_1 a7_pregnant_leave_days_oth_1  last_5_years_pregnant_oth_1 child_died_num_more24_oth_1  women_child_bearing_count_f          child_died_repeat_count_*   no_consent_reason_pc*    a7_pregnant_leave_months*   cause_death_diagnosed_*) (cen_a12_water_prim  previous_prim_label change_reason_prim change_reason_prim*   change_reason_sec__77 a13_change_reason_sec  women_child_oth_count     no_con_pc_com_oth_1 a7_preg_leave_days_oth_1  last_5_years_preg_oth_1 childdied_num_mor24_oth_1  women_child_bear_count_f childdied_repeat_count_*  no_con_reason_pc*   a7_preg_leave_months*   cause_death_diag_*)
