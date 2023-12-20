@@ -71,6 +71,9 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 
 	global code		     "${github}Code"
+				if c(username) == "Archi Gupta" {		
+		global code  "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
+	}
 	
 	* Box 
 	global pilot     "${box}2_Pilot/Data/"
@@ -84,32 +87,29 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 
     
 	global DataRaw   "${pilot}1_raw/"
+				if c(username) == "Archi Gupta" {		
+		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw\"
+	}
+	
 	global DataDeid  "${pilot}2_deidentified/"
 	global DataFinal "${pilot}3_final/"
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
 	global DataPre  "${pilot}99_Preload/"
+				if c(username) == "Archi Gupta" {		
+		global DataPre  "C:\Users\Archi Gupta\Box\Data\99_Preload"
+	}
+	
 	global Pilotofpilot "${pilot}1_raw/0_Archive/Pilot of pilot"
 	
 	* Do files
 	global Do_pilot   "${github}Code/1_profile_ILC/"
 					if c(username) == "Archi Gupta" {		
-		global box 		"C:\Users\Archi Gupta\Box\Data"
-		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
-		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
-		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
-	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
 	    global Do_pilot "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
 	}
 
 	global Do_lab     "${github}Code/1_profile_ILC/Label/"
 					if c(username) == "Archi Gupta" {		
-		global box 		"C:\Users\Archi Gupta\Box\Data"
-		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code"
-		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
-		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
-	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
-	    global Do_pilot "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
 	    global Do_lab   "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\Label\" 
 	}
 	
@@ -204,6 +204,7 @@ do "${Do_pilot}3_2_Descriptive_Follow_Up.do"
 * Who: All
 do "${Do_pilot}4_Analysis.do"
 
+do "${Do_pilot}1_1_D_Mortality_cleaning.do"
 ********************************
 * Erasing unccessary databases *
 ********************************

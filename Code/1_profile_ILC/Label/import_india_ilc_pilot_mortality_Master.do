@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "Mortality Survey" (ID: india_ilc_pilot_mortality_Master) data.
 *
-*	Inputs:  "Mortality Survey_WIDE.csv"
-*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
+*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey_WIDE.csv"
+*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey.dta"
 *
-*	Output by SurveyCTO December 18, 2023 10:36 AM.
+*	Output by SurveyCTO December 20, 2023 8:26 PM.
 
 * initialize Stata
 clear all
@@ -21,9 +21,9 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "Mortality Survey_WIDE.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
-local corrfile "Mortality Survey_corrections.csv"
+local csvfile "C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey_WIDE.csv"
+local dtafile "C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey.dta"
+local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
 local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5"
@@ -283,6 +283,11 @@ if _N>0 {
 
 	label variable otherhous_address "Please tell the address Hamlet name, Saahi name, landmark, House no., village na"
 	note otherhous_address: "Please tell the address Hamlet name, Saahi name, landmark, House no., village name)"
+
+	label variable a10_hhhead "A10) What is the name of the head of household? (Household head can be either ma"
+	note a10_hhhead: "A10) What is the name of the head of household? (Household head can be either male or female)"
+	label define a10_hhhead 1 "\${fam_name1}" 2 "\${fam_name2}" 3 "\${fam_name3}" 4 "\${fam_name4}" 5 "\${fam_name5}" 6 "\${fam_name6}" 7 "\${fam_name7}" 8 "\${fam_name8}" 9 "\${fam_name9}" 10 "\${fam_name10}" 11 "\${fam_name11}" 12 "\${fam_name12}" 13 "\${fam_name13}" 14 "\${fam_name14}" 15 "\${fam_name15}" 16 "\${fam_name16}" 17 "\${fam_name17}" 18 "\${fam_name18}" 19 "\${fam_name19}" 20 "\${fam_name20}"
+	label values a10_hhhead a10_hhhead
 
 	label variable own_screened "A5.1) Do you own any other house excluding the one where you are residing curren"
 	note own_screened: "A5.1) Do you own any other house excluding the one where you are residing currently in the village?"
@@ -589,7 +594,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_living_num_* {
-		    label drop `rgvar'
 			label variable `rgvar' "C11) How many children born since January 1, 2019 live with you?"
 			note `rgvar': "C11) How many children born since January 1, 2019 live with you?"
 		}
@@ -606,7 +610,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_notliving_num_* {
-			label drop `rgvar'
 			label variable `rgvar' "C13) How many children born since January 1, 2019 are alive but do not live with"
 			note `rgvar': "C13) How many children born since January 1, 2019 are alive but do not live with you?"
 		}
@@ -623,7 +626,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_stillborn_num_* {
-			label drop `rgvar'
 			label variable `rgvar' "C15) How many children born since January 1, 2019 were stillborn?"
 			note `rgvar': "C15) How many children born since January 1, 2019 were stillborn?"
 		}
@@ -640,7 +642,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_* {
-		    label drop `rgvar'
 			label variable `rgvar' "C17) How many children born since January 1, 2019 have died within 24 hours?"
 			note `rgvar': "C17) How many children born since January 1, 2019 have died within 24 hours?"
 		}
@@ -657,7 +658,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_more24_* {
-			label drop `rgvar'
 			label variable `rgvar' "C19) How many children born since January 1, 2019 have died after 24 hours from "
 			note `rgvar': "C19) How many children born since January 1, 2019 have died after 24 hours from birth till the age of 5 years ?"
 		}
@@ -877,16 +877,13 @@ if _N>0 {
 			note `rgvar': "P9) Do you have any children under 5 years of age to whom you have given birth since January 1, 2019 who are now living with you?"
 			label define `rgvar' 1 "Yes" 0 "No" 999 "Don't know" 98 "Refused to answer"
 			label values `rgvar' `rgvar'
-			
 		}
 	}
 
 	capture {
 		foreach rgvar of varlist child_living_num_sc_* {
-		    label drop `rgvar'
 			label variable `rgvar' "P10) How many children born since January 1, 2019 live with you?"
 			note `rgvar': "P10) How many children born since January 1, 2019 live with you?"
-			
 		}
 	}
 
@@ -901,13 +898,10 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_notliving_num_sc_* {
-		    label drop `rgvar'
 			label variable `rgvar' "P12) How many children born since January 1, 2019 are alive but do not live with"
 			note `rgvar': "P12) How many children born since January 1, 2019 are alive but do not live with you?"
-			
 		}
 	}
-
 
 	capture {
 		foreach rgvar of varlist child_stillborn_sc_* {
@@ -920,7 +914,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_stillborn_num_sc_* {
-		    label drop `rgvar'
 			label variable `rgvar' "P14) How many children born since January 1, 2019 were stillborn?"
 			note `rgvar': "P14) How many children born since January 1, 2019 were stillborn?"
 		}
@@ -937,7 +930,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_sc_* {
-		    label drop `rgvar'
 			label variable `rgvar' "P16) How many children born since January 1, 2019 have died within 24 hours?"
 			note `rgvar': "P16) How many children born since January 1, 2019 have died within 24 hours?"
 		}
@@ -954,7 +946,6 @@ if _N>0 {
 
 	capture {
 		foreach rgvar of varlist child_died_num_more24_sc_* {
-	       	label drop `rgvar'
 			label variable `rgvar' "P16.2) How many children born since January 1, 2019 have died after 24 hours fro"
 			note `rgvar': "P16.2) How many children born since January 1, 2019 have died after 24 hours from birth till the age of 5 years ?"
 		}
@@ -1407,7 +1398,8 @@ if _N>0 {
 		}
 	}
 
-    
+
+
 
 	* append old, previously-imported data (if any)
 	cap confirm file "`dtafile'"
@@ -1446,7 +1438,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  Mortality Survey_corrections.csv
+*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/Mortality Survey_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
