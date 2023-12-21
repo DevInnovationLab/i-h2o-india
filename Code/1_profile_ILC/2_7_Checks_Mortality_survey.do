@@ -1,89 +1,11 @@
 global PathTables "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
+global PathGraphs "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\New folder (2)"
 
-*Creating one village variable
 
 tostring R_mor_village_name, gen (R_mor_village)
 replace R_mor_village = "Gopi Kankubadi" if R_mor_village == "30701"
 replace R_mor_village = "Nathma" if R_mor_village == "50501"
 replace R_mor_village =  R_mor_r_cen_village_name_str if R_mor_village == "."
-
-*Creating one Unique ID variabls
-
-drop unique_id_num
-clonevar unique_id_num = R_mor_unique_id_sc_num
-destring R_mor_unique_id, replace
-replace unique_id_num = R_mor_unique_id if unique_id_num == .
-
-*creating combined enum name
-clonevar enum_name_f = R_mor_enum_name_label
-replace enum_name_f = R_mor_enum_name_label_sc if enum_name_f == ""
-
-
-/**[For cases with duplicate ID:
-***** Step 1: Check respondent names, phone numbers and address to see if there are similarities and drop obvious duplicates
-
-Respondent Names are recorded only after consent so they should be the same for one unique ID
-
-There can be three types of cases:
-1) Where ID is same and in one case respondent name is present but in others it is missing for the same day
-2) Where ID is same and name is missing. This could be because respondent wasn't available or was screened out or consent was not given.
-3) Where ID is same and names are different
-//check if the data is coming from same enumerator? or different enumerators?
-//check if village and enumerator are matched correctly; remove consistencies
-
-Case 1 shouldn't exist because for the same HH, we will have only one form => Field team to check
-Case 2 also shouldn't exist because for the same HH, we will submit just one form =>  Field team to check
-Case 3 can exist due to data entry issues. This will be fixed below 
-
-*/
-
-*Cleaning Duplicates
-
-*Dropping this ID because this was submitted during training by the enumerator because we wanted to check how data comes in the server. So, this is just a practise ID
-drop if unique_id_num == 30701119004 & R_mor_key == "uuid:152626bc-0c8a-49cb-88f7-9a00146848f7" & enum_name_f == "Sarita Bhatra"
-
-*Dropping this ID because this form was in edit saved but without completing the full survey enumerator by mistake finalized the survey so a new form was submitted under the same HHID and was submitted after completing the survey
-drop if unique_id_num == 30701119004 & R_mor_key == "uuid:75c83961-fafd-4284-a28b-fb9fb975d120" &  R_mor_resp_avail_pc_2_f == 3
-
-*Dropping this ID because enumerator by mistake again submitted this survey it was already submitted earlier, so the survey where HH members are 8 is the original one 
-drop if unique_id_num == 30701503009 & R_mor_key == "uuid:674c4468-e498-431f-a5a4-b56e1af2629a" &  R_mor_a2_hhmember_count  == 2
-
-*Dropping this ID because this was submitted during training by the enumerator because we wanted to check how data comes in the server. So, this is just a practise ID
-drop if unique_id_num == 77519001 & R_mor_key == "uuid:919be1f7-875d-49bd-be0c-bb3a3ce25171" & R_mor_village == "-77"	
-
-*Replacing response
-
-*Enumerator made a data entry here, there was no child at the HH who died under 24 hours. So, that is why replacing this with . becasue the number questioned won't be asked to them if that case hasn't happened at the HH at the first place 
-replace R_mor_child_died_num_1_f = . if R_mor_child_died_num_1_f == 1 & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b" & enum_name_f == "Pramodini Gahir"	
-
-
-*Manual data
-
-**HHID- 30701119003
-**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
-replace R_mor_name_child_1_1_f = "New baby" if R_mor_name_child_1_1_f == "" & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_age_child_1_1_f = 4 if R_mor_age_child_1_1_f == . & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_unit_child_1_1_f = 2 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_date_birth_sc_1_1 = date("24/02/2019", "DMY") if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_date_death_sc_1_1 = date("27/02/2019", "DMY")  if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-cap destring R_mor_cause_death_diag_1_1_f, replace
-cap destring R_mor_cause_death_999_1_1_f, replace
-replace R_mor_cause_death_999_1_1_f = 1 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_cause_death_diag_1_1_f = 0 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-replace R_mor_cause_death_str_1_1_f  = "It was a normal delivery and ASHA took the lady to the hospital but child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
-
-**HHID- 30701505008
-**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
-
-replace R_mor_name_child_1_1_f = "New baby" if R_mor_name_child_1_1_f == "" & unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_age_child_1_1_f = 1 if R_mor_age_child_1_1_f == . & unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_unit_child_1_1_f = 2 if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_date_birth_sc_1_1 = date("10/11/2020", "DMY") if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_date_death_sc_1_1 = date("10/11/2020", "DMY")  if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_cause_death_999_1_1_f = 1 if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_cause_death_diag_1_1_f = 999 if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-replace R_mor_cause_death_str_1_1_f  = "Delivery was done in the hospital and child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
-
 
 
 **Insert fuzzy matching duplicates too**
@@ -95,6 +17,9 @@ replace R_mor_cause_death_str_1_1_f  = "Delivery was done in the hospital and ch
 ****No of households********
 
 
+//creating combined enum name
+clonevar enum_name_f = R_mor_enum_name_label
+replace enum_name_f = R_mor_enum_name_label_sc if enum_name_f == ""
 
 ***Checking if any IDs are there which are sent before the survey start date or before 9 am on 12th dec"
 	gen Mor_day = day(dofc(R_mor_starttime))
@@ -120,6 +45,8 @@ list unique_id_num R_mor_village enum_name_f if cstart==cend & (startdate == end
 
 ***submiison range
 
+//dropped the ID since it was sent during training
+drop if unique_id_num == 77519001 & R_mor_key == "uuid:919be1f7-875d-49bd-be0c-bb3a3ce25171" & R_mor_village == "-77"	
 	
 	
 
@@ -420,8 +347,6 @@ destring R_mor_women_child_bear_count_f, replace
 rename R_mor_village village
 
 
-
-
 //VILLAGE WISE STATS
 
 preserve
@@ -515,21 +440,21 @@ rename R_mor_a2_hhmember_count Number_of_HH_nonscreend
 export excel village total HH_available consented HH_locked HH_not_3rdavailable screened_in screened_out screenedout_currentpreg_women  Number_of_HH_nonscreend using "$PathTables/Mortality_quality.xlsx", sheet("stats") sheetreplace firstrow(variables)
 
 //PERCENTAGES
-*rename R_mor_any_oth  Other_eli_females_present
+rename R_mor_any_oth  Other_eli_females_present
 
 gen consented_perc = (consented/HH_available)*100
 gen HH_available_perc = (HH_available/total)*100
 gen screened_out_perc = (screened_out/total)*100
 gen screened_in_perc = (screened_in/ total)*100
 gen current_preg_screened_out = (screenedout_currentpreg_women/screened_out)*100
-*gen Other_eli_females_perc = (Other_eli_females_present/screened_out)*100
+gen Other_eli_females_perc = (Other_eli_females_present/screened_out)*100
 
-local perc consented_perc HH_available_perc screened_out_perc screened_in_perc  current_preg_screened_out 
+local perc consented_perc HH_available_perc screened_out_perc screened_in_perc  current_preg_screened_out Other_eli_females_perc
 foreach x of local perc{
    gen `x'_rd = round(`x', 0.1)
 }   
 
-export excel village consented_perc HH_available_perc screened_out_perc screened_in_perc current_preg_screened_out  using "$PathTables/Mortality_quality.xlsx", sheet("percentages") sheetreplace firstrow(variables)
+export excel village consented_perc HH_available_perc screened_out_perc screened_in_perc current_preg_screened_out Other_eli_females_perc using "$PathTables/Mortality_quality.xlsx", sheet("percentages") sheetreplace firstrow(variables)
 
 restore
 
