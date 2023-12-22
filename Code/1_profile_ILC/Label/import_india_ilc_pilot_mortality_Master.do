@@ -3,7 +3,7 @@
 * 	Imports and aggregates "Mortality Survey" (ID: india_ilc_pilot_mortality_Master) data.
 *
 *	Inputs:  "Mortality Survey_WIDE.csv"
-*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
+*	Outputs: "Mortality Survey.dta"
 *
 *	Output by SurveyCTO December 18, 2023 10:36 AM.
 
@@ -22,9 +22,10 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Mortality Survey_WIDE.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Mortality Survey.dta"
+local dtafile "Mortality Survey.dta"
 local corrfile "Mortality Survey_corrections.csv"
 local note_fields1 ""
+local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
 local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
 local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5"
 local text_fields3 "r_cen_fam_name6 r_cen_fam_name7 r_cen_fam_name8 r_cen_fam_name9 r_cen_fam_name10 r_cen_fam_name11 r_cen_fam_name12 r_cen_fam_name13 r_cen_fam_name14 r_cen_fam_name15 r_cen_fam_name16 r_cen_fam_name17"
