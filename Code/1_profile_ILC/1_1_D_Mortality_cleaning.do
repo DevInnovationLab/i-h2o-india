@@ -21,6 +21,7 @@ putpdf paragraph, font("Courier")
 clear all               
 set seed 758235657 // Just in case
 
+*merge variable for num_stillborn_null_nsc num_less24_null_nsc num_more24_null_nsc child_died_u5_count_nsc
 
 use "${DataRaw}Mortality Survey.dta", clear
  
