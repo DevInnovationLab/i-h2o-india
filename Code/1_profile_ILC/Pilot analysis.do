@@ -807,7 +807,11 @@ esttab model14  model15 using "${Table}Baseline diarrhea_preg.tex", ///
 * Chlorine readings summary
 ----------------------------------------------*/
 use "${DataDeid}1_2_Followup_cleaned.dta", clear
-drop if R_FU_r_cen_village_name_str== "Badaalubadi" 
+drop if R_FU_r_cen_village_name_str== "Badaalubadi" | R_FU_r_cen_village_name_str=="Haathikambha"
+replace R_FU_fc_stored=0 if R_FU_fc_stored<0.14
+replace R_FU_tc_stored=0 if R_FU_tc_stored<0.14
+replace R_FU_fc_tap=0 if R_FU_fc_tap<0.14
+replace R_FU_tc_tap=0 if R_FU_tc_tap<0.14
 tempfile working
 save `working', replace	
    

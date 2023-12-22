@@ -22,7 +22,7 @@ clear all
 set seed 758235657 // Just in case
 
 
-use "${DataRaw}1_4_Mortality.dta", clear
+use "${DataRaw}Mortality Survey.dta", clear
  
  
  * Drop label that are getting auto generated for numeric variables
@@ -53,7 +53,7 @@ rename (child_died_u5_count_sc_null_1 child_died_u5_count_sc_null_2 child_died_u
  local screened  women_child_bearing_sc_count enum_name_sc enum_name_label_sc enum_code_sc  child_bearing_index_sc_1 name_pc_sc_1 name_pc_earlier_sc_1 resp_avail_pc_sc_1 consent_pc_sc_1 no_consent_reason_pc_sc_1 no_consent_reason_pc_sc_1_1 no_consent_reason_pc_sc_2_1 no_consent_reason_pc_sc__77_1 no_consent_pc_oth_sc_1 no_consent_pc_comment_sc_1 residence_yesno_pc_sc_1 vill_pc_sc_1 vill_pc_oth_sc_1 a7_pregnant_leave_sc_1 a7_pregnant_leave_days_sc_1 a7_pregnant_leave_months_sc_1 village_name_res_sc_1 vill_residence_sc_1 last_5_years_pregnant_sc_1 child_living_sc_1 child_living_num_sc_1 child_notliving_sc_1 child_notliving_num_sc_1 child_stillborn_sc_1 child_stillborn_num_sc_1 child_alive_died_24_sc_1 child_died_num_sc_1 child_alive_died_sc_1 child_died_num_more24_sc_1  child_died_u5_count_sc_1 child_died_repeat_sc_count_1 confirm_sc_1 correct_sc_1 translator_sc_1  child_bearing_index_sc_2 name_pc_sc_2 name_pc_earlier_sc_2 resp_avail_pc_sc_2 consent_pc_sc_2 no_consent_reason_pc_sc_2 no_consent_reason_pc_sc_1_2 no_consent_reason_pc_sc_2_2 no_consent_reason_pc_sc__77_2 no_consent_pc_oth_sc_2 no_consent_pc_comment_sc_2 residence_yesno_pc_sc_2 vill_pc_sc_2 vill_pc_oth_sc_2 a7_pregnant_leave_sc_2 a7_pregnant_leave_days_sc_2 a7_pregnant_leave_months_sc_2 village_name_res_sc_2 vill_residence_sc_2 last_5_years_pregnant_sc_2 child_living_sc_2 child_living_num_sc_2 child_notliving_sc_2 child_notliving_num_sc_2 child_stillborn_sc_2 child_stillborn_num_sc_2 child_alive_died_24_sc_2 child_died_num_sc_2 child_alive_died_sc_2 child_died_num_more24_sc_2  child_died_u5_count_sc_2 child_died_repeat_sc_count_2 confirm_sc_2 correct_sc_2 translator_sc_2 child_bearing_index_sc_3 name_pc_sc_3 name_pc_earlier_sc_3 resp_avail_pc_sc_3 consent_pc_sc_3 no_consent_reason_pc_sc_3 no_consent_reason_pc_sc_1_3 no_consent_reason_pc_sc_2_3 no_consent_reason_pc_sc__77_3 no_consent_pc_oth_sc_3 no_consent_pc_comment_sc_3 residence_yesno_pc_sc_3 vill_pc_sc_3 vill_pc_oth_sc_3 a7_pregnant_leave_sc_3 a7_pregnant_leave_days_sc_3 a7_pregnant_leave_months_sc_3 village_name_res_sc_3 vill_residence_sc_3 last_5_years_pregnant_sc_3 child_living_sc_3 child_living_num_sc_3 child_notliving_sc_3 child_notliving_num_sc_3 child_stillborn_sc_3 child_stillborn_num_sc_3 child_alive_died_24_sc_3 child_died_num_sc_3 child_alive_died_sc_3 child_died_num_more24_sc_3 child_died_u5_count_sc_3 child_died_repeat_sc_count_3 confirm_sc_3 correct_sc_3 translator_sc_3 child_bearing_index_sc_4 name_pc_sc_4 name_pc_earlier_sc_4 resp_avail_pc_sc_4 consent_pc_sc_4 no_consent_reason_pc_sc_4 no_consent_reason_pc_sc_1_4 no_consent_reason_pc_sc_2_4 no_consent_reason_pc_sc__77_4 no_consent_pc_oth_sc_4 no_consent_pc_comment_sc_4 residence_yesno_pc_sc_4 vill_pc_sc_4 vill_pc_oth_sc_4 a7_pregnant_leave_sc_4 a7_pregnant_leave_days_sc_4 a7_pregnant_leave_months_sc_4 village_name_res_sc_4 vill_residence_sc_4 last_5_years_pregnant_sc_4 child_living_sc_4 child_living_num_sc_4 child_notliving_sc_4 child_notliving_num_sc_4 child_stillborn_sc_4 child_stillborn_num_sc_4 child_alive_died_24_sc_4 child_died_num_sc_4 child_alive_died_sc_4 child_died_num_more24_sc_4  child_died_u5_count_sc_4 child_died_repeat_sc_count_4 confirm_sc_4 correct_sc_4 translator_sc_4 child_bearing_index_sc_5 name_pc_sc_5 name_pc_earlier_sc_5 resp_avail_pc_sc_5 consent_pc_sc_5 no_consent_reason_pc_sc_5 no_consent_reason_pc_sc_1_5 no_consent_reason_pc_sc_2_5 no_consent_reason_pc_sc__77_5 no_consent_pc_oth_sc_5 no_consent_pc_comment_sc_5 residence_yesno_pc_sc_5 vill_pc_sc_5 vill_pc_oth_sc_5 a7_pregnant_leave_sc_5 a7_pregnant_leave_days_sc_5 a7_pregnant_leave_months_sc_5 village_name_res_sc_5 vill_residence_sc_5 last_5_years_pregnant_sc_5 child_living_sc_5 child_living_num_sc_5 child_notliving_sc_5 child_notliving_num_sc_5 child_stillborn_sc_5 child_stillborn_num_sc_5 child_alive_died_24_sc_5 child_died_num_sc_5 child_alive_died_sc_5 child_died_num_more24_sc_5  child_died_u5_count_sc_5 child_died_repeat_sc_count_5 confirm_sc_5 correct_sc_5 translator_sc_5 child_bearing_index_sc_6 name_pc_sc_6 name_pc_earlier_sc_6 resp_avail_pc_sc_6 consent_pc_sc_6 no_consent_reason_pc_sc_6 no_consent_reason_pc_sc_1_6 no_consent_reason_pc_sc_2_6 no_consent_reason_pc_sc__77_6 no_consent_pc_oth_sc_6 no_consent_pc_comment_sc_6 residence_yesno_pc_sc_6 vill_pc_sc_6 vill_pc_oth_sc_6 a7_pregnant_leave_sc_6 a7_pregnant_leave_days_sc_6 a7_pregnant_leave_months_sc_6 village_name_res_sc_6 vill_residence_sc_6 last_5_years_pregnant_sc_6 child_living_sc_6 child_living_num_sc_6 child_notliving_sc_6 child_notliving_num_sc_6 child_stillborn_sc_6 child_stillborn_num_sc_6 child_alive_died_24_sc_6 child_died_num_sc_6 child_alive_died_sc_6 child_died_num_more24_sc_6   child_died_u5_count_sc_6 child_died_repeat_sc_count_6 confirm_sc_6 correct_sc_6 translator_sc_6
  
  *this is an irrelevant variable
-drop sectionb_dur_end child_died_u5_count_sc_null_oth_ child_died_repeat_oth_count_1 survey_member_names_count_1
+drop sectionb_dur_end child_died_u5_count_sc_null_oth_ child_died_repeat_oth_count_* survey_member_names_count_* consented1roster_sc_1_2_31a10_hh consented1roster_sc_1_2_31a11_ol
  
  * Combine women in child bearing age count  - women_child_bearing_count 
 foreach x of varlist `screened' {
@@ -112,10 +112,12 @@ gen unique_id_sc = subinstr(unique_id_hyphen, "-", "",.)
 destring unique_id_sc, gen(unique_id_sc_num)
 format   unique_id_sc_num %15.0gc
 
-replace unique_id_num = unique_id_sc_num if check_scenario == 1
+replace unique_id_num = unique_id_sc_num if  unique_id_num == .
+
+
 
 * Stata variable names that are too long need to be rename
-rename (r_cen_a12_water_source_prim  previous_primary_source_label change_reason_primary_source change_reason_primary_source*  change_reason_secondary__77 a13_change_reason_secondary  women_child_bearing_oth_count      no_consent_pc_comment_oth_1 a7_pregnant_leave_days_oth_1  last_5_years_pregnant_oth_1 child_died_num_more24_oth_1  women_child_bearing_count_f          child_died_repeat_count_*   no_consent_reason_pc*    a7_pregnant_leave_months*   cause_death_diagnosed_*) (cen_a12_water_prim  previous_prim_label change_reason_prim change_reason_prim*   change_reason_sec__77 a13_change_reason_sec  women_child_oth_count     no_con_pc_com_oth_1 a7_preg_leave_days_oth_1  last_5_years_preg_oth_1 childdied_num_mor24_oth_1  women_child_bear_count_f childdied_repeat_count_*  no_con_reason_pc*   a7_preg_leave_months*   cause_death_diag_*)
+rename (r_cen_a12_water_source_prim  previous_primary_source_label change_reason_primary_source change_reason_primary_source*  change_reason_secondary__77 a13_change_reason_secondary  women_child_bearing_oth_count      no_consent_pc_comment_oth_1 a7_pregnant_leave_days_oth_*  last_5_years_pregnant_oth_* child_died_num_more24_oth_*  women_child_bearing_count_f          child_died_repeat_count_*   no_consent_reason_pc*    a7_pregnant_leave_months*   cause_death_diagnosed_*) (cen_a12_water_prim  previous_prim_label change_reason_prim change_reason_prim*   change_reason_sec__77 a13_change_reason_sec  women_child_oth_count     no_con_pc_com_oth_1 a7_preg_leave_days_oth_*  last_5_years_preg_oth_* childdied_num_mor24_oth_*  women_child_bear_count_f childdied_repeat_count_*  no_con_reason_pc*   a7_preg_leave_months*   cause_death_diag_*)
 
 //Renaming vars with prefix R_mor
 foreach x of var * {
@@ -123,16 +125,33 @@ foreach x of var * {
 }
 
 rename R_mor_unique_id_num unique_id_num
+
+*Creating one village variable
+
+tostring R_mor_village_name, gen (R_mor_village)
+replace R_mor_village = "Gopi Kankubadi" if R_mor_village == "30701"
+replace R_mor_village = "Nathma" if R_mor_village == "50501"
+replace R_mor_village =  R_mor_r_cen_village_name_str if R_mor_village == "."
+
+
+*creating combined enum name
+clonevar R_mor_enum_name_f = R_mor_enum_name_label
+replace R_mor_enum_name_f = R_mor_enum_name_label_sc if R_mor_enum_name_f == ""
+
+
+* Household Head's name 
+
+
 /*------------------------------------------------------------------------------
 	1 Formatting dates
 ------------------------------------------------------------------------------*/
 	
 	*gen date = dofc(starttime)
 	*format date %td
-	gen R_mor_day = day(dofc(R_mor_starttime))
-	gen R_mor_month_num = month(dofc(R_mor_starttime))
+	gen M_mor_day = day(dofc(R_mor_starttime))
+	gen M_mor_month_num = month(dofc(R_mor_starttime))
 	//to change once survey date is fixed
-	drop if (R_mor_day==23 & R_mor_month_num==9)
+	drop if (M_mor_day==23 & M_mor_month_num==9)
 	
 	 generate M_starthour = hh(R_mor_starttime) 
 	 gen M_startmin= mm(R_mor_starttime)
@@ -143,27 +162,16 @@ rename R_mor_unique_id_num unique_id_num
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
-//1. Changing village_name to string
-*recode R_Cen_village_name 30101=50601
-*recode R_Cen_gp_name 301=506
-*label define R_Cen_village_namel 50601 "Baadalubadi"
-*label values R_Cen_village_name R_Cen_village_namel
-
-decode R_mor_village_name, gen (R_mor_village_str)
-br R_mor_village_name R_mor_village_str
-replace R_mor_village_str= "Badaalubadi" if R_mor_village_name==50601
 
 
-//2. dropping irrelevant entries
-
-//3. dropping duplicate case based on field team feedback
+//1. dropping duplicate case based on field team feedback
 *Note: the below duplicate is dropped because first the enumerator wrongly screened this HH out of the sample because of language issues. The supervisor later covered this case again
 drop if R_mor_key==""
 
 *Note: the below duplicate case is resolved such that 2 cases with the same HH number 36 do not exist. 
 
 
-//5. Cleaning the GPS data 
+//2. Cleaning the GPS data 
 // Keeping the most reliable entry of GPS
 
 * Manual
@@ -249,35 +257,62 @@ keep if M_new1==1 | M_new2==1 | M_new3==1
  capture export excel unique_id_num R_mor_enum_name_f R_mor_village_str_f R_m_submissiondate using "${pilot}Data_quality.xlsx" if unique_id_num_Unique!=1, sheet("Dup_ID_Mortality") ///
  firstrow(var) cell(A1) sheetreplace
 
-/* To update this onced discussed with Archi
-***** Step 3: Creating new IDs for obvious duplicates; keeping the first ID based on the starttime and consent and changing the IDs of the remaining
+ restore
+ 
+/*------------------------------------------------------------------------------
+	4  Manual corrections for duplicates and missing fields
+------------------------------------------------------------------------------*/
+ 
+// 1. Cleaning Duplicates
 
-use `dups', clear
-keep if M_dup_by_consent==2 & R_mor_consent==1
-tempfile dups_part1
-save `dups_part1', replace
+*Dropping this ID because this was submitted during training by the enumerator because we wanted to check how data comes in the server. So, this is just a practise ID
+drop if unique_id_num == 30701119004 & R_mor_key == "uuid:152626bc-0c8a-49cb-88f7-9a00146848f7" & R_mor_enum_name_f == "Sarita Bhatra"
 
-use `dups', clear
-keep if M_dup_tag==1
-tempfile dups_part2
-save `dups_part2', replace
+*Dropping this ID because this form was in edit saved but without completing the full survey enumerator by mistake finalized the survey so a new form was submitted under the same HHID and was submitted after completing the survey
+drop if unique_id_num == 30701119004 & R_mor_key == "uuid:75c83961-fafd-4284-a28b-fb9fb975d120" &  R_mor_resp_avail_pc_2_f == 3
 
+*Dropping this ID because enumerator by mistake again submitted this survey it was already submitted earlier, so the survey where HH members are 8 is the original one 
+drop if unique_id_num == 30701503009 & R_mor_key == "uuid:674c4468-e498-431f-a5a4-b56e1af2629a" &  R_mor_a2_hhmember_count  == 2
 
-//Using sequential numbers starting from 500 for remaining duplicate ID cases because we wouldn't encounter so many pregnant women/children U5 in a village
-use `dups', clear
-keep if C_dup_tag>1 & R_Cen_consent!=1
-bys unique_id :gen C_seq=_n
-replace R_Cen_hh_code= R_Cen_hh_code+ C_seq + 500
-egen unique_id_new= concat (R_Cen_village_name R_Cen_enum_code R_Cen_hh_code)
-replace unique_id= unique_id_new 
+*Dropping this ID because this was submitted during training by the enumerator because we wanted to check how data comes in the server. So, this is just a practise ID
+drop if unique_id_num == 77519001 & R_mor_key == "uuid:919be1f7-875d-49bd-be0c-bb3a3ce25171" & R_mor_village == "-77"	
 
-tempfile dups_part3
-save `dups_part3', replace
+*Replacing response
+
+*Enumerator made a data entry error here, there was no child at the HH who died under 24 hours. So, that is why replacing this with . becasue the number questioned won't be asked to them if that case hasn't happened at the HH at the first place 
+replace R_mor_child_died_num_1_f = . if R_mor_child_died_num_1_f == 1 & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b" & R_mor_enum_name_f == "Pramodini Gahir"	
 
 
-restore
-*/
+// 2. Manual data
 
+**HHID- 30701119003
+**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
+replace R_mor_name_child_1_1_f = "New baby" if R_mor_name_child_1_1_f == "" & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_age_child_1_1_f = 4 if R_mor_age_child_1_1_f == . & unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_unit_child_1_1_f = 2 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_date_birth_sc_1_1 = date("24/02/2019", "DMY") if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_date_death_sc_1_1 = date("27/02/2019", "DMY")  if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+cap destring R_mor_cause_death_diag_1_1_f, replace
+cap destring R_mor_cause_death_999_1_1_f, replace
+replace R_mor_cause_death_999_1_1_f = 1 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_cause_death_diag_1_1_f = 0 if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+replace R_mor_cause_death_str_1_1_f  = "It was a normal delivery and ASHA took the lady to the hospital but child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id_num == 30701119003 & R_mor_key == "uuid:af6ad7ee-8c88-4dfa-bab5-610ee055d26b"
+
+**HHID- 30701505008
+**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
+
+replace R_mor_name_child_1_1_f = "New baby" if R_mor_name_child_1_1_f == "" & unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_age_child_1_1_f = 1 if R_mor_age_child_1_1_f == . & unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_unit_child_1_1_f = 2 if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_date_birth_sc_1_1 = date("10/11/2020", "DMY") if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_date_death_sc_1_1 = date("10/11/2020", "DMY")  if  unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_cause_death_999_1_1_f = 1 if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_cause_death_diag_1_1_f = 999 if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+replace R_mor_cause_death_str_1_1_f  = "Delivery was done in the hospital and child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id_num == 30701505008 & R_mor_key == "uuid:9a0e5fe4-fc48-4f4f-a838-c5f676bad2ab"
+
+
+
+ 
 /*
 
 ****Step 4: Appending files with unqiue IDs
