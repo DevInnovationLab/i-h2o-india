@@ -24,6 +24,9 @@ set seed 758235657 // Just in case
 
 use "${DataRaw}Mortality Survey.dta", clear
  
+*AG: Variabls which are not labeled correctly- R_mor_child_living_oth_2 R_mor_child_living_1_f R_mor_child_living_2_f R_mor_child_living_3_f R_mor_child_living_4_f R_mor_child_living_5_f R_mor_child_living_6_f
+//They are labeled 1 or 0 and not as Yes or NO
+
  
  * Drop label that are getting auto generated for numeric variables
      capture { 
