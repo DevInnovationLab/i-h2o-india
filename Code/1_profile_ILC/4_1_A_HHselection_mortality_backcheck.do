@@ -137,8 +137,7 @@ local village 30701
 
 sort R_mor_village_name_str_f R_mor_enum_name_f  
 export excel ID R_mor_enum_name_f R_mor_block_name R_mor_village_name_str_f R_mor_hamlet_name_f R_mor_saahi_name_f R_mor_landmark_f  using "${pilot}Supervisor_Mortality_BC_Tracker_`village'.xlsx" if selected_new==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
-<<<<<<< Updated upstream
-=======
+
 
 
 ***********************************************************************
@@ -184,5 +183,3 @@ rename R_mor_unique_id_f unique_id
 export excel "${DataPre}BC_Mortality_preload.xlsx", firstrow(var) replace
 
 
-
->>>>>>> Stashed changes
