@@ -43,7 +43,7 @@ end
 *****************************************
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
 //1. Put the village code of the village for randomization
-    local Village_R 50401 
+    local Village_R 30601 
     keep if R_Cen_village_name==`Village_R'	
 
 keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking R_Cen_hamlet_name
@@ -92,8 +92,9 @@ save "${DataPre}Selected_`Village_R'_$S_DATE.dta", replace
 * Step 3: Carefully integrate back to the master list *
 *******************************************************
 * Only the village where we complete the randomization should be included in the merge list
-use "${DataPre}Selected_50401_ 9 Oct 2023.dta", clear
-*append using "${DataPre}Selected_40201_30 Sep 2023.dta"
+use "${DataPre}Selected_30601_16 Nov 2023.dta", clear
+*append using "${DataPre}Selected_30501_20 Oct 2023.dta"
+*append using "${DataPre}Selected_30202_20 Oct 2023.dta"
 save "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", replace
 
 
@@ -121,6 +122,8 @@ drop if Merge_WS==1
 * Dropping househods not selected for the revisit
 drop if S_BLWQ==0 
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
+replace R_Cen_village_name_str= "Haathikambha" if R_Cen_village_name_str==""
+
 
 * Adding_Ram
 * Add Sahi later
@@ -138,6 +141,7 @@ gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 gen Enumerator_Assigned= ""
+replace R_Cen_village_name_str= "Haathikambha" if R_Cen_village_name_str==""
 
 //Changing labels 
 	label variable ID "Unique ID"
@@ -154,7 +158,7 @@ gen Enumerator_Assigned= ""
 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_9 Oct 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_16 Nov 2023.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_9 Oct 2023_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_16 Nov 2023_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
