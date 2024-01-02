@@ -29,7 +29,7 @@ merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(
           keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
 
-keep if  R_Cen_village_name==30601 | R_Cen_village_name==30701 
+drop if  R_Cen_village_name==30501
 
 label var C_Screened  "Screened"
 	label variable R_Cen_consent "Census consent"
@@ -41,15 +41,8 @@ end
 
 
 //Remove HHIDs with differences between census and HH survey
-clear
-import excel "${DataPre}Backcheck_preload_17Nov23.xlsx", firstrow
-tempfile completed_ids
-save `completed_ids', replace
-
 start_from_clean_file_Population
-merge 1:1 unique_id using `completed_ids', force
-drop if _merge==3
-*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
 
 
 ***********************************************************************
@@ -71,7 +64,7 @@ egen strata= group(R_Cen_enum_code)
 //Total number of BC surveys needed per enumerator - 10%
 gen count= 1
 bys R_Cen_enum_name: egen total= total(count)
-gen ten_perc_per_enum= 0.25*total
+gen ten_perc_per_enum= 0.1*total
 replace ten_perc_per_enum= round(ten_perc_per_enum)
 
 //Randomly generating numbers that are assigned to obervations
@@ -112,19 +105,19 @@ keep if selected==1 | selected_replacementBC==1
 tempfile selected_for_BC
 save `selected_for_BC', replace
 
-/*
+
 //also adding IDs that need to be checked for data quality
 start_from_clean_file_Population
-*keep if unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+keep if unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
 gen data_quality_check=1
 tempfile data_quality_ID
 save `data_quality_ID', replace
-*/
+
 ***********************************************************************
 * Step 3: Generating preload list for BC survey *
 ***********************************************************************
 use `selected_for_BC', clear
-*append using `data_quality_ID'
+append using `data_quality_ID'
 tempfile working
 save `working', replace
 
@@ -142,10 +135,9 @@ forvalue i = 1/9 {
 
 
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
-replace R_Cen_village_name_str= "Haathikambha" if R_Cen_village_name_str==""
 
-sort R_Cen_village_name_str R_Cen_enum_name_label
-export excel unique_id R_Cen_village_name_str R_Cen_enum_name R_Cen_enum_code R_Cen_enum_name_label R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2  R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 R_Cen_a12_water_source_prim R_Cen_u5child_* R_Cen_pregwoman_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12  using "${DataPre}Backcheck_preload_20Nov23.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+sort R_Cen_village_name_str
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 R_Cen_a12_water_source_prim R_Cen_u5child_* R_Cen_pregwoman_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12 R_Cen_enum_name R_Cen_enum_code R_Cen_enum_name_label using "${DataPre}Backcheck_preload.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
 

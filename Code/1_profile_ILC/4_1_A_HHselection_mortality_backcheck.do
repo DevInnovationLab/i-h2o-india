@@ -15,6 +15,7 @@
 
 *------------------------------------------------------------------- -------------------------------------------------------------------*
 
+
 ********************************************************************
 * Cleaning and selecting random observations for backcheck sample *
 ********************************************************************
@@ -50,28 +51,7 @@ replace R_mor_unique_id_f= R_mor_unique_id if R_mor_check_scenario==1
 
 *Step 2: Total number of BC surveys needed per enumerator - 10%
 set seed 1234
-
-
-* Step 3: Randomly Select 10% of Completed IDs for Each Enumerator
-gen count=1
-bysort R_mor_enum_name_f: egen total_completed = total(count)
-by R_mor_enum_name_f: gen select_count = ceil(0.1 * total_completed)
-
-by R_mor_enum_name_f: sample 2, count // Randomly select 10% of completed IDs for each enumerator
-
-* Step 4: Further Random Selection Based on Census Status
-sort R_mor_enum_name_f R_mor_unique_id_f
-by R_mor_enum_name_f: gen selected_order = _n  // Generate an order for the selected IDs
-by R_mor_enum_name_f: gen selected_count = _N  // Count the selected IDs
-
-by R_mor_enum_name_f: egen census_not_conducted = total(R_mor_check_scenario == 0 & selected_order <= 0.8 * selected_count)
-by R_mor_enum_name_f: gen selected_for_sample = (R_mor_check_scenario == 0 & selected_order <= 0.8 * selected_count) | (R_mor_check_scenario == 1 & selected_order <= 0.2 * selected_count)
-
-
-
-
-/*
-
+gen count= 1
 bys R_mor_enum_name_f: egen total_surveys= total(count)
 bys R_mor_enum_name_f: gen ten_perc_per_enum= 0.10*total_surveys
 replace ten_perc_per_enum= round(ten_perc_per_enum)
@@ -93,13 +73,14 @@ sort R_mor_enum_name_f random_sc_in
 bys R_mor_enum_name_f: generate selected_sc_in = _n <= sc_in_perc_byenum 
 sort R_mor_enum_name_f random_sc_out
 bys R_mor_enum_name_f: generate selected_sc_out = _n <= sc_out_perc_byenum 
-*/
 
 
 * Final selection variable
-tab R_mor_check_scenario  //check if you have the 70-30 ratio
-tab R_mor_enum_name_f selected_for_sample
+gen selected= 1 if selected_sc_in==1 | selected_sc_out==1 
+tab R_mor_enum_name_f selected
+br if selected== 1
 
+keep if selected== 1
 append using `child_death_cases'
 
 //final correction to unique_id variable to include all cases
@@ -137,49 +118,3 @@ local village 30701
 
 sort R_mor_village_name_str_f R_mor_enum_name_f  
 export excel ID R_mor_enum_name_f R_mor_block_name R_mor_village_name_str_f R_mor_hamlet_name_f R_mor_saahi_name_f R_mor_landmark_f  using "${pilot}Supervisor_Mortality_BC_Tracker_`village'.xlsx" if selected_new==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
-
-
-
-***********************************************************************
-* Generating preload for BC survey *
-***********************************************************************
-
-clear
-import excel "${pilot}Supervisor_Mortality_BC_Tracker_30701.xlsx", firstrow
-rename UniqueID R_mor_unique_id_f
-gen newvar1 = substr(R_mor_unique_id_f, 1, 5)
-gen newvar2 = substr(R_mor_unique_id_f, 7, 3)
-gen newvar3 = substr(R_mor_unique_id_f, 11, 3)
-replace R_mor_unique_id_f= newvar1 + newvar2 + newvar3
-tempfile main
-save `main', replace
-
-use "${DataPre}1_1_Mortality_cleaned.dta", clear
-keep if R_mor_village_name_str_f== "Gopi Kankubadi"
-gen R_mor_unique_id_f= R_mor_unique_id_sc if R_mor_check_scenario==0
-replace R_mor_unique_id_f= R_mor_unique_id if R_mor_check_scenario==1
-merge 1:1 R_mor_unique_id_f using `main'
-keep if _merge==3
-
-
-//cleaning hh head names
-gen R_mor_a10_hhhead_f=""
-forvalues i= 1/20 {
-	
-	replace R_mor_a10_hhhead_f = R_mor_fam_name`i'_f if R_mor_a10_hhhead==`i'
-	
-}
-
-replace R_mor_a10_hhhead_f= R_mor_r_cen_a10_hhhead if R_mor_r_cen_a10_hhhead!=""
-replace R_mor_a10_hhhead_f = subinstr(R_mor_a10_hhhead_f, ".", "",.) 
-
-//generating preload
-keep R_mor_unique_id_f R_mor_enum_name_f R_mor_fam_name1_f R_mor_fam_name2_f R_mor_fam_name3_f R_mor_fam_name4_f R_mor_fam_name5_f R_mor_fam_name6_f R_mor_fam_name7_f R_mor_fam_name8_f R_mor_fam_name9_f R_mor_fam_name10_f R_mor_fam_name11_f R_mor_fam_name12_f R_mor_fam_name13_f R_mor_fam_name14_f R_mor_fam_name15_f R_mor_fam_name16_f R_mor_fam_name17_f R_mor_fam_name18_f R_mor_fam_name19_f R_mor_fam_name20_f R_mor_block_name R_mor_hamlet_name_f R_mor_saahi_name_f R_mor_landmark_f  R_mor_village_name_str_f R_mor_a10_hhhead_f R_mor_address_f
- 
-order R_mor_unique_id_f R_mor_enum_name_f R_mor_village_name_str_f R_mor_block_name R_mor_hamlet_name_f R_mor_saahi_name_f R_mor_address_f R_mor_landmark_f R_mor_a10_hhhead_f R_mor_fam_name1_f R_mor_fam_name2_f R_mor_fam_name3_f R_mor_fam_name4_f R_mor_fam_name5_f R_mor_fam_name6_f R_mor_fam_name7_f R_mor_fam_name8_f R_mor_fam_name9_f R_mor_fam_name10_f R_mor_fam_name11_f R_mor_fam_name12_f R_mor_fam_name13_f R_mor_fam_name14_f R_mor_fam_name15_f R_mor_fam_name16_f R_mor_fam_name17_f R_mor_fam_name18_f R_mor_fam_name19_f R_mor_fam_name20_f
-
-rename R_mor_unique_id_f unique_id
-
-export excel "${DataPre}BC_Mortality_preload.xlsx", firstrow(var) replace
-
-
