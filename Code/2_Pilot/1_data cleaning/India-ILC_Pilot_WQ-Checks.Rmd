@@ -6,9 +6,13 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, include = TRUE)
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE)
 
 ```
+
+# Introduction
+
+This report summarizes key water quality variables for the India ILc Pilot. It summarizes data collected during the baseline, follow-up, and monitoring data collection rounds. Key variables include free and total chlorine concentration and E. coli concentration.
 
 ```{r package loading, include=FALSE}
 
@@ -42,6 +46,8 @@ bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidenti
 
 census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
 
+mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 
 abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
@@ -50,7 +56,10 @@ village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Dat
 
 ```
 
-```{r data cleaning, include=FALSE}
+\newpage
+# Baseline Data Analysis
+
+```{r baseline data cleaning, include=FALSE}
 
 ###GENERAL DATA CLEANING##################################################
 #Filtering out test data from training, based on village IDs
@@ -122,7 +131,7 @@ bl$tc_tap_avg <- round(bl$tc_tap_avg, digits = 3)
 ```
 
 
-```{r data cleaning - idexx, include = FALSE}
+```{r baseline data cleaning - idexx, include = FALSE}
 
 
 #PREPARING IDEXX DATA##########################################################
@@ -224,7 +233,7 @@ abr <- abr%>%
 
 
 
-```{r Chlorine Data Desc Stats}
+```{r baseline chlorine data desc stats}
 
 ###Displaying chlorine test data for each village
 #Arranging data so chlorine test data is in one column
@@ -280,7 +289,7 @@ chlorine_check%>%
 
 
 
-```{r IDEXX Data Desc Stats}
+```{r Baseline IDEXX Data Desc Stats}
 
 # Calculate descriptive statistics by village
 village_stats <- idexx%>%
@@ -381,7 +390,7 @@ p5
 
 
 
-```{r ABR IDEXX Desc Stats}
+```{r Baseline ABR IDEXX Desc Stats}
 
 # p4 <- ggplot(data = abr) + 
 #   geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
@@ -405,8 +414,76 @@ p5
 # p5
 
 
+```
+
+
+\newpage
+
+# Longitudinal Chlorine Monitoring
+
+```{r Chlorine monitoring data cleaning}
+
+#Assigning more meaningful variable names
+mon <- mon%>%
+  rename(village_ID = "village_name")
+
+#Pairing village information
+mon$village_ID <- as.character(mon$village_ID)
+mon <- left_join(mon, village_details, by = "village_ID")
+
+
+#Averaging chlorine data
+mon <- mon%>%
+  mutate(nearest_tap_fc = (first_nearest_tap_fc + second_nearest_tap_fc)/2)%>%
+  mutate(nearest_tap_tc = (first_nearest_tap_tc + second_nearest_tap_tc)/2)%>%
+  mutate(farthest_tap_fc = (first_farthest_tap_fc + second_farthest_tap_fc)/2)%>%
+  mutate(farthest_tap_tc = (first_farthest_tap_tc + second_farthest_tap_tc)/2)%>%
+  mutate(nearest_stored_fc = (first_stored_water_fc + second_stored_water_fc)/2)%>%
+  mutate(nearest_stored_tc = (first_stored_water_tc + second_stored_water_tc)/2)%>%
+  mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
+  mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
+
+#Getting date of test
+mon$valve_open_time <- mdy_hms(mon$valve_open_time)
+mon <- mon%>%
+  mutate(test_date = date(valve_open_time))
+
+
 
 ```
 
+
+```{r Chlorine monitoring data analysis}
+
+#Creating time series plot of the data for each village
+mon_villages <- unique(mon$village_name)
+
+mon <- mon%>%
+  pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
+
+for (i in mon_villages){
+  xx <- mon%>%
+    filter(village_name == i)
+  
+  p1 <- ggplot(data = xx) + 
+    geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  print(p1)
+
+  
+}
+
+
+
+```
 
 
