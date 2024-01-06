@@ -1,0 +1,665 @@
+---
+title: "NFHS child mortality data"
+author: Alex Lehner
+date: "2024 January"
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+format: pdf
+urlcolor: blue
+linestretch: 1.5
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, include = FALSE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(DILmisc)
+# we want to do shrinkage on child mortality data
+# first we wanted some checks on the calculations out of the NFHS 4 and 5 datasets
+# ... could not find the nfhsfivechildlevelfile.dta and the "xx_cm.dta" prints are just subsets
+
+# From Arthurs email Dec24th
+# The numbers we sent to use are based on district-level estimates from a (Bora 2018) which used NFHS 2015-16.
+# We applied a linear time trend to account for reductions in mortality rates.  This led to estimates of 93, 66, 54 for Rayagada, Kandhamal, and Kalahandi respectively. 
+# Administrative data gives substantially lower figures. We believe that this is because some fraction of deaths are not captured in administrative data, but are captured in survey data from the NFHS. 
+# We are also working to update Bora 2018, using new NFHS data from 2019 - 2021. Our provisional estimates for the same states are 64, 48, and 47 respectively. These are about 30% lower than our previous estimates which used linear extrapolation. 
+
+odisha <- readstata13::read.dta13("NFHS_child_mortality/Shashank/21_cm.dta")
+# Original problem
+
+xlfile <- list.files("NFHS_child_mortality")[[1]]
+readxl::excel_sheets(paste0("NFHS_child_mortality/", xlfile))
+ssize4 <- readxl::read_xlsx(paste0("NFHS_child_mortality/", xlfile), sheet = "nfhs4_sample sizes")
+ssize4 <- ssize4[,1:4]
+ssize4 <- ssize4[!is.na(ssize4$State...1), ]
+
+ssize5 <- readxl::read_xlsx(paste0("NFHS_child_mortality/", xlfile), sheet = "nfhs5_sample sizes")
+ssize5 <- ssize5[,1:4]
+ssize5 <- ssize5[!is.na(ssize5$v024...1), ]
+
+```
+
+# NFHS DATA
+
+This notebook is not well formated or meant to produce a pdf report. The code chunks are a mere collection of output that was produced to investigate child mortality in Odisha with NFHS4 and 5 data.
+
+My text to share
+
+https://docs.google.com/spreadsheets/d/1--dPeDGB-J7MmLL8e6P9uA_ZT2uH4W6mfhKdjMVCtI0/edit#gid=1144467164
+The spreadsheet contains (extracted from this notebook) a replication of the synthetic cohort U2 mortality estimates that the India team produced and U2 mortality estimates that I produced with a true cohort approach directly from the NFHS dataset(s).
+The second sheet of the spreadsheet, "true_cohort_method", includes some details into this approach. Most importantly time series at the district level (averaged over two cohorts/birthyears and for single birth cohorts as well).
+
+The synthetic cohort life-table approach is sometimes imprecise and vulnerable to outlier years due to the need to construct synthetic cohorts. To be better able to resort to a true cohort approach, it would be best to resort to U2 mortality. This also allows to visualize the time trend per district in an informative way (looking at the year-wise timeseries, it also becomes clear what happened with the U5MR in Rayagada district around 2015).
+
+The replicated synthetic cohort method (the one that the DHS uses as well) has an average reference period of around mid-2018 for the U2 mortality.
+The (preferred) "U2MRwt_true_cohort" uses the average - weighted by the survey weights - of U2MR over the period from 2017 to 2019 to average over sampling variation.
+Both of these mortality estimates are shrunk via partial pooling (`baggr`) using the unweighted sample sizes per district. An empirical bayes approach (`ebnm`) and the James-Stein formula lead to very similar shrinkage results.
+There is also a juxtapostion that just takes the average over the six target districts without shrinkage for both U2MR methods.
+The "true_cohort_method" sheet visualizes the shrunk estimates for the true cohort method U2 at the district level and shows the projected time trend (a 3.3 percent decrease based on the state-level trend for the last 10 years)
+ 
+
+```{r}
+# this is how I created the Odisha subset from the NFHS datasets (making them from 2GB to 12MB)
+# nfhs5 <- readstata13::read.dta13("NFHS_child_mortality/nfhsfivechildlevelfile.DTA")
+# nfhs5.or <- nfhs5 |> filter(v024 == "odisha")
+# # this makes the filesize more managable - let's save it rightaway
+# saveRDS(nfhs5.or, "NFHS_child_mortality/nfhsfivechildlevelfile_odisha.rds")
+# 
+# nfhs4 <- readstata13::read.dta13("NFHS_child_mortality/nfhsfourchildlevelfile.DTA")
+# nfhs4.or <- nfhs4 |> filter(v024 == "odisha")
+# saveRDS(nfhs4.or, "NFHS_child_mortality/nfhsfourchildlevelfile_odisha.rds")
+
+
+# here I am loading the subsets
+nfhs4.or <- readRDS("NFHS_child_mortality/nfhsfourchildlevelfile_odisha.rds")
+nfhs5.or <- readRDS("NFHS_child_mortality/nfhsfivechildlevelfile_odisha.rds")
+
+
+```
+
+
+```{r}
+library(DHS.rates)
+readstata13::varlabel(nfhs5.or, var = "v025")
+readstata13::varlabel(nfhs5.or, var = "v007")
+nfhs5.or$v007 |> summary()
+
+# check all the variables for dhsrates
+readstata13::varlabel(nfhs5.or, var = "v022")
+readstata13::varlabel(nfhs5.or, var = "v021")
+readstata13::varlabel(nfhs5.or, var = "v005")
+readstata13::varlabel(nfhs5.or, var = "v008")
+readstata13::varlabel(nfhs5.or, var = "b3")
+readstata13::varlabel(nfhs5.or, var = "b7")
+# for NFHS4?
+readstata13::varlabel(nfhs4.or, var = "v022")
+readstata13::varlabel(nfhs4.or, var = "v021")
+readstata13::varlabel(nfhs4.or, var = "v005")
+readstata13::varlabel(nfhs4.or, var = "v008")
+readstata13::varlabel(nfhs4.or, var = "b3")
+readstata13::varlabel(nfhs4.or, var = "b7")
+
+# v005:
+#Weights are calculated to six decimals but are presented in the standard recode files without the decimal point. They need to be divided by 1,000,000 before use to approximate the number of cases.
+
+# create weights
+nfhs4.or$wt <- nfhs4.or$v005 / 1e6
+nfhs5.or$wt <- nfhs5.or$v005 / 1e6
+
+chmort(nfhs5.or, JK = "Yes")
+```
+
+```{r}
+test <- chmort(nfhs5.or,Period = 60)
+chmortp(nfhs5.or)
+test <- chmort(nfhs4.or,Period = 60)
+```
+
+## Districts
+
+```{r}
+# here we are cooking our own functions to loop over districts
+
+readstata13::varlabel(nfhs5.or, var = "sdist")
+nfhs5.or$sdist |> summary()
+nfhs5.or$sdist_dup <- nfhs5.or$sdist # create a copy so we can later extract the grouping variable
+nfhs4.or$sdist_dup <- nfhs4.or$sdistri # also for nfhs4
+
+
+test.dist <- nfhs4.or |> filter(sdistri == "rayagada")
+out <- chmort(test.dist, JK = "Yes", CL = 95)
+test.dist <- nfhs5.or |> filter(sdist == "rayagada")
+out <- chmort(test.dist, JK = "Yes", CL = 95)
+
+
+mod_chmort <- function(data, group, period = 60, ...) {
+  out.mort <- chmort(data, Period = period, ...)
+  out.mort <- out.mort["U5MR", ]
+  out.mort <- out.mort |> as.list() |> as.data.frame()
+  out.mort$district <- NA
+  out.mort$district <- as.character(unique(data$sdist_dup))
+  out.mort$period <- period
+  return(out.mort)
+}
+out <- mod_chmort(test.dist)
+
+test.dist |> group_by(sdist) |> group_map(~ mod_chmort(.x))
+out.list <- nfhs5.or |> group_by(sdist) |> group_map(~ mod_chmort(.x, period = 120))
+
+out.df <- out.list |> bind_rows()
+
+# for NFHS4
+out.list.4 <- nfhs4.or |> group_by(sdistri) |> group_map(~ mod_chmort(.x, period = 120))
+
+out.df.4 <- out.list.4 |> bind_rows()
+
+# compute U2 out of the chmortp
+
+outp <- chmortp(test.dist)
+# compute U2 with the weights? first replicate U1 and U5
+# following: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0216403
+# IMR (U1):
+(1 - prod((1 - outp$PROBABILITY[1:4])))
+# U2:
+(1 - prod((1 - outp$PROBABILITY[1:5])))
+
+mod_chmortp <- function(data, group, period = 60, ...) {
+  out.mort <- chmortp(data, Period = period, ...)
+  # compute U2 according to formula from cohort p's
+  u2 <- data.frame(U2MR = (1 - prod((1 - out.mort$PROBABILITY[1:5])))) 
+  u2$WN <- out.mort$W.EXPOSURE[5]
+  u2$N <- out.mort$EXPOSURE[5]
+  u2$district <- as.character(unique(data$sdist_dup))
+  u2$period <- period
+  return(u2)
+}
+
+outu2 <- mod_chmortp(test.dist)
+
+outu2.list <- nfhs5.or |> group_by(sdist) |> group_map(~ mod_chmortp(.x, period = 60))
+outu2.df <- outu2.list |> bind_rows()
+# OUTu2df GETS SHRUNKEN DOWN BELOW in the shrinking section
+
+# clip into GDoc
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2MR)  |> round(5))*1e3
+clipr::write_clip(clipout$U2MR)
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(WN))
+clipr::write_clip(clipout$WN)
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(N))
+clipr::write_clip(clipout$N)
+
+```
+
+
+# By year by hand
+
+Trying to do a "true cohort life table approach" instead of the synthetic one by DHS
+
+```{r}
+library(ggplot2)
+library(DILmisc)
+# data of interview - date of birth
+nfhs5.or$age_month <- nfhs5.or$v008 - nfhs5.or$b3
+
+# CLUSTER
+nfhs5.or$v001 |> unique() |> length()
+nfhs5.or |> group_by(sdist, v001) |> summarise(count = n())
+nfhs5.or |> group_by(sdist, v021) |> summarise(count = n())
+nfhs5.or |> group_by(sdist, v001, v004, v021) |> summarise(count = n())
+
+
+# birth year
+nfhs5.or$b2 |> table() # for the 2020 we can do the U1MR and for the 2019 we can do the U2MR
+nfhs4.or$b2 |> table()
+# child is alive
+nfhs5.or$b5 
+# age at death
+nfhs5.or$b6 |> hist()
+# age at death, months imputed
+nfhs5.or$b7 |> table() # here we can clearly see the bunching at year 1 (month 12 - technically 2nd year) and 24 months
+
+# ------
+
+
+nfhs5.or$dead    <- ifelse(nfhs5.or$b5 == "no", 1, 0)
+nfhs5.or$dead_u1 <- ifelse(nfhs5.or$b5 == "no" & nfhs5.or$b7 <= 12, 1, 0) # below or equal to 12 months, classify as U1MR
+
+nfhs5.or |> group_by(b2) |> filter(b2 > 2000 & b2 < 2020) |> summarise(U1MR = mean(dead_u1),
+                                      nobs = n(),
+                                      group = "1") |> 
+    ggplot(aes(x = b2, y = U1MR)) + geom_point() + stat_smooth(alpha = .2) + theme_bw() + scale_color_DIL()
+
+nfhs4.or.sub <- nfhs4.or |> select(1:20, b2, b5, b7, sdist_dup, wt, v025) # selecting the district duplicate from above isntead of renaming
+nfhs5.or.sub <- nfhs5.or |> select(1:20, b2, b5, b7, sdist_dup, wt, v025)
+nfhs.sub <- bind_rows(nfhs4.or.sub, nfhs5.or.sub)
+
+
+nfhs.sub$dead    <- ifelse(nfhs.sub$b5 == "no", 1, 0)
+nfhs.sub$dead_u1 <- ifelse(nfhs.sub$b5 == "no" & nfhs.sub$b7 < 12, 1, 0) # below or equal to 12 months, classify as U1MR
+nfhs.sub$dead_u2 <- ifelse(nfhs.sub$b5 == "no" & nfhs.sub$b7 < 24, 1, 0) # below or equal to 12 months, classify as U1MR
+nfhs.sub$sdist_dup <- as.character(nfhs.sub$sdist_dup)
+
+# full state
+
+nfhs.sub.state <- nfhs.sub |> group_by(b2) |> filter(b2 > 1990 & b2 < 2020) |> summarise(U1MR = mean(dead_u1),
+                                                                       U2MR = mean(dead_u2),
+                                                                       U1MRwt = weighted.mean(dead_u1, wt),
+                                                                       U2MRwt = weighted.mean(dead_u2, wt),
+                                                                       nobs = n(),
+                                                                       v025 = "statewide") 
+nfhs.sub.state |> 
+  ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + stat_smooth(method = stats::lm, alpha = .2) + theme_bw() + scale_color_DIL()
+
+# by urban/rural
+nfhs.sub.state |> bind_rows(nfhs.sub |> group_by(b2, v025) |> filter(b2 > 1990 & b2 < 2020) |> summarise(U1MR = mean(dead_u1),
+                                                                       U2MR = mean(dead_u2),
+                                                                       U1MRwt = weighted.mean(dead_u1, wt),
+                                                                       U2MRwt = weighted.mean(dead_u2, wt),
+                                                                       nobs = n()) 
+) |> 
+  ggplot(aes(x = b2, y = U2MRwt, col = v025, shape = v025)) + geom_point() + stat_smooth(alpha = .2) + theme_bw() + scale_color_DIL()
+
+
+
+U2MRwt_dist <- nfhs.sub |> group_by(sdist_dup, b2) |> filter(b2 > 2000 & b2 < 2020) |> summarise(U1MR = mean(dead_u1),
+                                                                                  U2MR = mean(dead_u2),
+                                                                                  U1MRwt = weighted.mean(dead_u1, wt),
+                                                                       U2MRwt = weighted.mean(dead_u2, wt),
+                                      nobs = n(),
+                                      group = "1") |> 
+  ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + 
+  #stat_smooth(method = stats::lm, formula = y ~ poly(x, 2), alpha = .2) + 
+  stat_smooth(alpha = .2) + ggtitle("True Cohort Lifetable Approach (U2MR by actual cohort)") + 
+  theme_bw() + facet_wrap(~ sdist_dup) #|> ggsave(filename = "U2MR_dist.png")
+
+
+
+```
+
+# DOING THE ACTUAL SHRINKAGE
+
+## U2 - avg last 3years
+
+```{r}
+# does it make sense to group the last 3 years?
+nfhs.sub.3y <- nfhs.sub |> group_by(sdist_dup) |> filter(b2 %in% 2017:2019) |> 
+  summarise(U2MR = mean(dead_u2),
+            U2MRwt = weighted.mean(dead_u2, wt),
+            nobs = n(),
+            nobswt = sum(wt))
+# df comes sorted
+nfhs.sub.3y <- nfhs.sub.3y[order(nfhs.sub.3y$sdist_dup), ] # just to be on the safe side, order it again
+
+# this makes all the %in% sort non-sensical
+clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(U2MRwt) |> round(5))*1e3)
+```
+
+### Shrinkage
+
+trying different approaches: bayesian treatment with baggr, the james-stein formula, empirical bayes out of an R package. All lead to very similar shrinkage patterns
+
+```{r}
+# shrink Bayesian treatment (WW) ----------------------------------------------------------------------------
+library(baggr)
+df <- nfhs.sub.3y %>% select(U2MRwt, nobs) |> 
+  mutate(sd = sqrt(U2MRwt*(1-U2MRwt)/(nobs*1))) %>%
+  rename(tau = U2MRwt, se = sd)
+bg <- baggr(df, refresh = 0)
+# bg
+# plot(bg)
+bag.out <- group_effects(bg, s=T) |> as.data.frame()
+
+nfhs.sub.3y$U2MRwt.shrink.bag <- bag.out$mean.mean
+
+# just the nobs first
+clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(nobs, nobswt)) |> round(1))
+clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(nobs, nobswt, U2MRwt,U2MRwt.shrink.bag) |> round(5))*1e3)
+
+# james stein
+# Compute group means and variances
+group_means <- nfhs.sub.3y$U2MRwt
+n <- nfhs.sub.3y$nobswt
+group_vars <- (group_means * (1 - group_means) / n)
+
+# Empirical Bayes shrinkage
+total_n <- sum(n)
+overall_mean <- sum(group_means) / nrow(nfhs.sub.3y) # don't do the incidences but just sum over the means - good enough but not 100% right
+overall_var <- sum(group_vars * (n - 1)) / (total_n - length(n))
+weights <- n / (n + overall_var / group_vars)
+shrinkage_means <- weights * group_means + (1 - weights) * overall_mean
+
+# Compare group means with and without shrinkage
+nfhs.sub.3y$U2MRwt.shrink.js <- shrinkage_means
+#clipr::write_clip(cbind(group_means, n, shrinkage_means, rep(overall_mean, 5)))
+
+# JAMES-STEIN formula: https://bookdown.org/content/922/james-stein.html, formula from Efron computer age book
+# Define variables for James-Stein estimator
+p_<- mean(nfhs.sub.3y$U2MRwt)
+N <- length(nfhs.sub.3y$U2MRwt)
+# ABs are the number of kids
+Nobs <- median(nfhs.sub.3y$nobswt)
+
+testjs <- nfhs.sub.3y |> mutate(sigma2 = (p_*(1-p_)) / Nobs,
+                      JS = p_ + (1 - ((N-3) * sigma2 / (sum((U2MRwt - p_)^2)))) * (U2MRwt - p_))
+
+
+
+
+# ebnm --------------------------------------------------------------------------------------------------
+library(ebnm)
+nfhs.sub.3y$U2MRwt_se <- (nfhs.sub.3y$U2MRwt*(1-nfhs.sub.3y$U2MRwt)/nfhs.sub.3y$nobs) |> sqrt()
+fit_normal <- ebnm(nfhs.sub.3y$U2MRwt, nfhs.sub.3y$U2MRwt_se, prior_family = "normal", mode = "estimate")
+fit_npmle <- ebnm(nfhs.sub.3y$U2MRwt, nfhs.sub.3y$U2MRwt_se, prior_family = "npmle")
+summary(fit_normal)
+plot(fit_normal)
+ebnm.out <- fitted(fit_normal)
+#ebnm.out.npmle <- fitted(fit_npmle) # nonparametric prior not performing well
+nfhs.sub.3y$U2MRwt.shrink.ebnm <- ebnm.out$mean
+#nfhs.sub.3y$U2MRwt.shrink.ebnm.np <- ebnm.out.npmle$mean
+```
+
+### treat 6 districts as single block and no shrinkage
+
+```{r}
+nfhs.sub.3y$sdist_dup
+block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "rayagada")
+
+nfhs.sub.3y$block6 <- ifelse(nfhs.sub.3y$sdist_dup %in% block, 1, 0)
+nfhs.sub.3y$U2MRwt.block6 <- NA
+nfhs.sub.3y$U2MRwt.block6[nfhs.sub.3y$block6 == 1] <- weighted.mean(nfhs.sub.3y$U2MRwt[nfhs.sub.3y$block6 == 1],
+                                                                    nfhs.sub.3y$nobswt[nfhs.sub.3y$block6 == 1])
+
+clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(U2MRwt.block6) |> round(5))*1e3)
+
+```
+
+### visualize the shrinkage in the timeseries
+
+```{r}
+
+# --------------------------------------------------------------------------
+# summing over two years to make estimate more robust
+# ... create an auxiliary year column and replace every 2nd
+nfhs.sub$b2_alt <- nfhs.sub$b2
+nfhs.sub$b2_alt |> max()
+# we want to start with 2019 so we can have the U2 MR - for U1MR we should start with 2020
+nfhs.sub$b2_alt[(nfhs.sub$b2_alt %% 2) == 0] <- nfhs.sub$b2_alt[(nfhs.sub$b2_alt %% 2) == 0] + 1
+nfhs.sub$b2_alt |> table()
+
+
+nfhs.sub.sum <- nfhs.sub |> group_by(sdist_dup, b2_alt) |> filter(b2_alt > 2000 & b2_alt < 2020) |> summarise(
+                                                                                  U2MR = mean(dead_u2),
+                                                                                  
+                                                                       U2MRwt = weighted.mean(dead_u2, wt),
+                                      nobs = n(),
+                                      group = "1") 
+# add the shrunken values
+nfhs.sub.sum.shrunk <- nfhs.sub.sum |> filter(b2_alt == 2019)
+nfhs.sub.sum.shrunk$b2_alt <- 2020
+nfhs.sub.sum.shrunk$group <- "shrunk"
+# this frame with shrunken estimates only gets created below, wrong sequence, copy this codechunk below
+nfhs.sub.sum.shrunk$U2MR.shrink <- nfhs.sub.3y$U2MRwt.shrink.bag
+
+U2MRwt_dist_shrink <- nfhs.sub.sum |> ggplot(aes(x = b2_alt, y = U2MRwt)) + geom_point() + stat_smooth(alpha = .2) + 
+  geom_point(data = nfhs.sub.sum.shrunk, aes(x = b2_alt, y = U2MR.shrink), col = "red", shape = 5) +
+  theme_bw() + facet_wrap(~ sdist_dup) + 
+  ggtitle("True Cohort Lifetable Approach (U2MR cohort, averaged over 2 yr)", 
+          subtitle = "[Diamond shape represents the shrinkage estimate]")
+
+
+U2MRwt_dist_shrink
+#ggsave("U2MR_dist_shrink.png", U2MRwt_dist_shrink, width = 10, height = 8)
+
+
+```
+
+
+## U2 - synthetic cohort method (DHS and DILIndia team)
+
+```{r}
+outu2.df |> str()
+# again, use the N not the weighted N for shrinkage
+df <- outu2.df %>% select(U2MR, N) |> 
+  mutate(sd = sqrt(U2MR*(1-U2MR)/(N*1))) %>%
+  rename(tau = U2MR, se = sd)
+bg <- baggr(df, refresh = 0)
+bg
+plot(bg)
+bag.out <- group_effects(bg, s=T) |> as.data.frame()
+
+outu2.df$U2MR.shrink.bag <- bag.out$mean.mean
+#outu2.df <- outu2.df[order(outu2.df$district), ] # dont change order here, danger for confusion if later something added
+
+clipout <- (outu2.df |> arrange(district) |> select(U2MR, U2MR.shrink.bag) |> round(5))*1e3
+clipr::write_clip(clipout)
+
+```
+
+### treat 6 districts as single block and no shrinkage - synthetic method
+
+```{r}
+outu2.df$district
+block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "rayagada")
+
+outu2.df$block6 <- ifelse(outu2.df$district %in% block, 1, 0)
+outu2.df$U2MRwt.block6 <- NA
+outu2.df$U2MRwt.block6[outu2.df$block6 == 1] <- weighted.mean(outu2.df$U2MR[outu2.df$block6 == 1],
+                                                                    outu2.df$WN[outu2.df$block6 == 1])
+
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2MRwt.block6) |> round(5))*1e3
+clipr::write_clip(clipout$U2MRwt.block6)
+
+```
+
+
+# TIMETREND
+
+
+```{r}
+# TREND AT STATE LEVEL ----------------------------------------------------------------------
+# statewise - getting the trend
+nfhs.sub |> filter(b2 %in% 2017:2019) |> 
+  summarise(U2MR = mean(dead_u2),
+            U2MRwt = weighted.mean(dead_u2, wt),
+            U1MR = mean(dead_u1),
+            U1MRwt = weighted.mean(dead_u1, wt),
+            nobs = n(),
+            nobswt = sum(wt))
+
+nfhs.sub.state <- nfhs.sub |> group_by(b2) |> filter(b2 > 1990 & b2 < 2020) |> summarise(U1MR = mean(dead_u1),
+                                                                       U2MR = mean(dead_u2),
+                                                                       U1MRwt = weighted.mean(dead_u1, wt),
+                                                                       U2MRwt = weighted.mean(dead_u2, wt),
+                                                                       nobs = n(),
+                                                                       v025 = "statewide") 
+
+# compute decrease by hand
+nfhs.sub.state <- nfhs.sub.state |> mutate(perc_U2MRwt = (U2MRwt - lag(U2MRwt)) / lag(U2MRwt))
+# long diff
+(nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] - nfhs.sub.state$U2MRwt[1]) / nfhs.sub.state$U2MRwt[1]
+# by year
+(nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] - nfhs.sub.state$U2MRwt[1]) / nfhs.sub.state$U2MRwt[1] / (nrow(nfhs.sub.state)-1) # pretty much same as OLS estimate - pecentage points
+
+
+# OLS
+lm(log(U2MRwt) ~ b2, data = nfhs.sub.state)
+lm(U2MRwt ~ b2, data = nfhs.sub.state)
+ols.U2wt <- lm(U2MRwt ~ b2, data = nfhs.sub.state)
+predict(ols.U2wt, data.frame(b2 = 2020:2026))
+
+# percent reductions
+nrow(nfhs.sub.state)-1
+nfhs.sub.state$U2MRwt[2] * .96^27
+nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] # check
+# now predict outwards based on this
+nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] * .96^7
+decr_vec <- nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] * .96 ^ (1:7)
+# based on the point estimate of OLS line visualized
+decr_vec_substr <- nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] + (1:7) * -0.002461
+
+
+nfhs.sub.state$U2MRwt[2] + (-0.002461*27)
+
+# visualize predicted
+length_pred <- length(2020:2026)
+na_rows <- as.data.frame(matrix(NA, ncol = ncol(nfhs.sub.state), nrow = length_pred))
+
+nfhs.sub.state.pred <- bind_rows(nfhs.sub.state, na_rows)
+nfhs.sub.state.pred$b2[(nrow(nfhs.sub.state.pred)-(length_pred-1)):nrow(nfhs.sub.state.pred)] <- 2020:2026
+nfhs.sub.state.pred$U2MRwt_pred <- NA
+nfhs.sub.state.pred$U2MRwt_pred[(nrow(nfhs.sub.state.pred)-(length_pred-1)):nrow(nfhs.sub.state.pred)] <- predict(ols.U2wt, data.frame(b2 = 2020:2026))
+
+nfhs.sub.state.pred$U2MRwt_extrap <- NA
+nfhs.sub.state.pred$U2MRwt_extrap[(nrow(nfhs.sub.state.pred)-(length_pred-1)):nrow(nfhs.sub.state.pred)] <- decr_vec
+
+nfhs.sub.state.pred$U2MRwt_extrap_sub <- NA
+nfhs.sub.state.pred$U2MRwt_extrap_sub[(nrow(nfhs.sub.state.pred)-(length_pred-1)):nrow(nfhs.sub.state.pred)] <- decr_vec_substr
+
+testsub <- nfhs.sub.state |> mutate(decr = (U2MRwt - lag(U2MRwt))/lag(U2MRwt))
+exp(mean(log(abs(testsub$decr[2:7])))); mean(testsub$decr[2:7]) # geometric vs arithmetic mean
+# compare how much of a difference it makes in reality over 6 periods
+testsub$rate1 <- NA
+testsub$rate1[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1117902) ^ (1:6)
+testsub$rate2[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1138925) ^ (1:6)
+
+
+```
+
+```{r}
+
+nfhs.sub.state.pred |> 
+  ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + stat_smooth(method = stats::lm, alpha = .2) +
+  geom_point(aes(x = b2, U2MRwt_pred, col = "red")) +
+  geom_point(aes(x = b2, U2MRwt_extrap, col = "brown")) +
+  geom_point(aes(x = b2, U2MRwt_extrap_sub, col = "green")) +
+  theme_bw() #+ scale_color_DIL()
+
+# average decline over the last 9 years (from 2009 to 2019)
+(nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] - nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)-10]) / nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)-10] / 9
+
+# a district wide ride in 2019 gets thus decreased with
+.044 * (1 - 0.033) ^ (1:7) # this is from 2020 to 2026
+
+U2MR_state <- nfhs.sub.state |> 
+  ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + stat_smooth(method = stats::lm, alpha = .2) +
+  theme_bw() + ggtitle("State-wide trend in true cohort U2MR (avg decline of 3.3pc p year since 2009")
+
+#ggsave("U2MR_state.png", U2MR_state, width = 7, height = 5)
+
+```
+
+## adding time trend to districts
+
+```{r}
+# have the district wise summary frame from above as starter
+
+# add the shrunken values
+nfhs.sub.sum.shrunk <- nfhs.sub.sum |> filter(b2_alt == 2019)
+nfhs.sub.sum.shrunk$b2_alt <- 2020
+nfhs.sub.sum.shrunk$group <- "shrunk"
+# this frame with shrunken estimates only gets created below, wrong sequence, copy this codechunk below
+nfhs.sub.sum.shrunk$U2MR.shrink <- nfhs.sub.3y$U2MRwt.shrink.bag
+
+nfhs.sub.sum.shrunk.decr <- nfhs.sub.sum.shrunk |> group_by(sdist_dup) |> group_modify(~ add_row(.x, b2_alt = 2021:2026))
+# don't need arrange(b2_alt) because it is already orderd (just added it above in order)
+nfhs.sub.sum.shrunk.decr <- nfhs.sub.sum.shrunk.decr |>  group_by(sdist_dup) |> mutate(decr = first(U2MR.shrink) * (1 - 0.033) ^ (1:7)) # using a base R vectorized approach within dplyr (works!)
+
+U2MRwt_dist_shrink_projected <- nfhs.sub.sum |> ggplot(aes(x = b2_alt, y = U2MRwt)) + geom_point() + stat_smooth(alpha = .2) + 
+  geom_point(data = nfhs.sub.sum.shrunk, aes(x = b2_alt, y = U2MR.shrink), col = "red", shape = 5) +
+  geom_point(data = nfhs.sub.sum.shrunk.decr, aes(x = b2_alt, y = decr), col = "darkgrey", shape = 3) +
+  theme_bw() + facet_wrap(~ sdist_dup, scales = "free") + ylim(-0.02,.15) +
+  ggtitle("True Cohort Lifetable Approach (U2MR cohort, averaged over 2 yr)", 
+          subtitle = "[Diamond shape represents the shrinkage estimate]\n (grey crosses are projected rates with a 3.3pc decrease per year based on state-wide trend)")
+
+
+U2MRwt_dist_shrink_projected
+ggsave("U2MR_dist_shrink_projected.png", U2MRwt_dist_shrink_projected, width = 10, height = 8)
+
+```
+
+
+
+```{r}
+# actual avg decreased used
+# let's do the average decrease over the last 10 years
+```
+
+
+# Villages
+
+```{r}
+# https://dhsprogram.com/Data/Guide-to-DHS-Statistics/index.htm#t=Analyzing_DHS_Data.htm&rhsyns=%20
+# The rural sample was selected through a two-stage sample design with villages as the Primary Sampling Units (PSUs) at the first stage (selected with probability proportional to size), followed by a random selection of 22 households in each PSU at the second stage. In urban areas, there was also a two-stage sample design with Census Enumeration Blocks (CEB) selected at the first stage and a random selection of 22 households in each CEB at the second stage. At the second stage in both urban and rural areas, households were selected after conducting a complete mapping and household listing operation in the selected first-stage units.
+
+# NFHS-5 fieldwork for Odisha was conducted in all 30 districts of the state from 19th January 2020 to 21st March 2020 prior to the lockdown and from 30th November 2020 to 31st March 2021, by the Indian Institute of Health Management Research (IIHMR). Information was collected from 26,467 households, 27,971 women age 15-49 (including 4,379 women interviewed in PSUs in the state module), and 3,865 men age 15-54.
+
+# Stratification is the process by which the sampling frame is divided into subgroups or strata that are as homogeneous as possible using certain criteria. Within each stratum, the sample is designed and selected independently. The principal objective of stratification is to reduce sampling errors. In a stratified sample, the sampling errors depend on the population variance existing within the strata but not between the strata. Typically, DHS samples are stratified by geographic region and by urban/rural areas within each region.
+#  
+# Within each stratum, the sample design specifies an allocation of households to be selected. Most DHS surveys use a fixed take of households per cluster of about 25-30 households, determining the number of clusters to be selected. In the first stage of selection, the primary sampling units (PSUs) are selected with probability proportional to size (PPS) within each stratum. The PSUs are typically census enumeration areas (EAS). The PSU forms the survey cluster. In the second stage, a complete household listing is conducted in each of the selected clusters. Following the listing of the households a fixed number of households is selected by equal probability systematic sampling in the selected cluster.
+
+#The overall selection probability for each household in the sample is the probability of selecting the cluster multiplied by the probability of selecting the household within the cluster. The overall probability of selection of a household will differ from cluster to cluster. See Appendix A of the DHS Survey Reports for most surveys for the details specific to that survey.
+
+# -----------
+# for the standard weights, just do weighted means
+
+# However when standard errors, confidence intervals or significance testing is required, then it is important to take into account the complex sample design. For the complex sample design, it is necessary to know three pieces of information – the primary sampling unit or cluster variable, the stratification variable, and the weight variable.
+
+# Sample weights are inversely proportional to the probability of selection and are used to correct for the under- or over-sampling of different strata during sample selection. If weights are not used, all calculations will be biased toward the levels and relationships in the over-sampled strata. Comparisons of regression coefficients, as well as rates, percentage, means, etc. coming from different surveys are only valid if weights have been used to correct for the sample designs of the different surveys.
+
+
+library(survey)
+# Complex sample design parameters
+DHSdesign<-svydesign(id=nfhs5.or$v021, strata=nfhs5.or$v023, weights=nfhs5.or$wt, data=nfhs5.or)
+ 
+# tabulate indicator by region
+svyby(~dead_u1, ~sdist, DHSdesign, svymean, vartype=c("se","ci"))
+
+```
+
+# FERTILITY / BIRTHS
+
+Would need the mother level file for fertility estimates (like TFR etc), but we are interested in the actual number of births per geographic unit, and not so much at individual level estimates.
+
+
+It would be great if we could do a GFR in addition to a CBR - even though we probably won't know the number of 15-44yr old women share per village (not even district?).
+
+```{r}
+# b2 ... year of birth
+
+nfhs4.or.sub <- nfhs4.or |> select(1:20, b2, b5, b7, sdist_dup, wt) # selecting the district duplicate from above isntead of renaming
+nfhs5.or.sub <- nfhs5.or |> select(1:20, b2, b5, b7, sdist_dup, wt)
+nfhs.sub.fert <- bind_rows(nfhs4.or.sub, nfhs5.or.sub)
+
+
+nfhs5.or$b2 |> table()
+
+
+nfhs5.or.sub |> group_by(b2) |> filter(b2 > 2005 & b2 < 2020) |> summarise(
+                                                                       nobs = n()) |> 
+  ggplot(aes(x = b2, y = nobs)) + geom_point() + stat_smooth(alpha = .2) + theme_bw() + scale_color_DIL()
+
+
+nfhs5.or.sub |> group_by(sdist_dup, b2) |> filter(b2 > 2005 & b2 < 2020) |> summarise(
+                                      nobs = n(),
+                                      group = "1") |> 
+  ggplot(aes(x = b2, y = nobs)) + geom_point() + stat_smooth(alpha = .2) + theme_bw() + facet_wrap(~ sdist_dup)
+
+
+```
+
+
+
+
+```{r}
+# https://dhsprogram.com/data/Guide-to-DHS-Statistics/Current_Fertility.htm#:~:text=The%20crude%20birth%20rate%20is,the%20calculation%20of%20the%20ASFRs.
+
+
+# Nominally the calculation of the crude birth rate is just the number of births in the period based on the BR file divided by the total de facto population based on the PR file, however, because there is some level of non-response to the women’s questionnaire the number of births would be an underestimate relative to the population, and thus would bias downwards the crude birth rate. To avoid this problem, the calculation instead takes each of the age-specific fertility rates (ASFRs) for women age 15-19 to age 45-49, each of which has women as the denominator, and multiplies each of the ASFRs by the proportion of women in the age group compared to the total de facto population, and sums these products, as follows:
+ 
+
+
+```
+
+
+
