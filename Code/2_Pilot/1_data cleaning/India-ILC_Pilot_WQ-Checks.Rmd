@@ -392,6 +392,33 @@ p5
 
 ```{r Baseline ABR IDEXX Desc Stats}
 
+# Calculate descriptive statistics by village
+village_stats <- abr%>%
+  group_by(village, sample_type) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Median MPN E. coli/100 mL" = median(ec_mpn),
+    "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+
+# Calculating overall percent of samples positive for abr e coli
+abr <- abr%>%
+  mutate(ec_pa_binary = ifelse(ec_pa == "Presence", 1, 0))
+# % positive
+mean(abr$ec_pa_binary)*100
+
+
+
+# Print the table
+kbl(village_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Water Quality Test Results " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
 # p4 <- ggplot(data = abr) + 
 #   geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
 #   scale_y_continuous(
