@@ -29,7 +29,7 @@ end
 start_from_file_mortalitysurvey
 
 //Update village code every time this code is run for a new village
-keep if R_mor_village_name_str_f== "Gopi Kankubadi"
+keep if R_mor_village_name_str_f== "Kuljing"
 
 
 *Step 1:Identifying child death cases
@@ -46,6 +46,7 @@ drop if U5child_death>0
 //generating compiled unique_if variable for screened in and screened out cases
 gen R_mor_unique_id_f= R_mor_unique_id_sc if R_mor_check_scenario==0
 replace R_mor_unique_id_f= R_mor_unique_id if R_mor_check_scenario==1
+duplicates drop R_mor_unique_id_f, force
 
 
 *Step 2: Total number of BC surveys needed per enumerator - 10%
@@ -57,7 +58,7 @@ gen count=1
 bysort R_mor_enum_name_f: egen total_completed = total(count)
 by R_mor_enum_name_f: gen select_count = ceil(0.1 * total_completed)
 
-by R_mor_enum_name_f: sample 2, count // Randomly select 10% of completed IDs for each enumerator
+by R_mor_enum_name_f: sample 4, count // Randomly select 10% of completed IDs for each enumerator
 
 * Step 4: Further Random Selection Based on Census Status
 sort R_mor_enum_name_f R_mor_unique_id_f
@@ -108,6 +109,7 @@ replace R_mor_unique_id_f= R_mor_unique_id if R_mor_check_scenario==1
 
 gen selected_new= 1
 tab R_mor_enum_name_f selected_new
+tab  R_mor_check_scenario selected_new
 
 
 ***********************************************************************
@@ -133,7 +135,7 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	
 
 //To be changed each time this code is run for a new village
-local village 30701
+local village 50402
 
 sort R_mor_village_name_str_f R_mor_enum_name_f  
 export excel ID R_mor_enum_name_f R_mor_block_name R_mor_village_name_str_f R_mor_hamlet_name_f R_mor_saahi_name_f R_mor_landmark_f  using "${pilot}Supervisor_Mortality_BC_Tracker_`village'.xlsx" if selected_new==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
@@ -145,7 +147,7 @@ export excel ID R_mor_enum_name_f R_mor_block_name R_mor_village_name_str_f R_mo
 ***********************************************************************
 
 clear
-import excel "${pilot}Supervisor_Mortality_BC_Tracker_30701.xlsx", firstrow
+import excel "${pilot}Supervisor_Mortality_BC_Tracker_50402.xlsx", firstrow
 rename UniqueID R_mor_unique_id_f
 gen newvar1 = substr(R_mor_unique_id_f, 1, 5)
 gen newvar2 = substr(R_mor_unique_id_f, 7, 3)
@@ -155,9 +157,10 @@ tempfile main
 save `main', replace
 
 use "${DataPre}1_1_Mortality_cleaned.dta", clear
-keep if R_mor_village_name_str_f== "Gopi Kankubadi"
+keep if R_mor_village_name_str_f== "Kuljing"
 gen R_mor_unique_id_f= R_mor_unique_id_sc if R_mor_check_scenario==0
 replace R_mor_unique_id_f= R_mor_unique_id if R_mor_check_scenario==1
+duplicates drop R_mor_unique_id_f, force
 merge 1:1 R_mor_unique_id_f using `main'
 keep if _merge==3
 
