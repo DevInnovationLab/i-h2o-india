@@ -29,6 +29,7 @@ library(experiment)
 library(stargazer)
 library(readxl)
 library(haven)
+library(googlesheets4)
 
 
 
@@ -47,6 +48,8 @@ bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidenti
 census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
 
 mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+
+gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
 
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
 
@@ -448,7 +451,7 @@ kbl(village_stats)%>%
 
 # Longitudinal Chlorine Monitoring
 
-```{r Chlorine monitoring data cleaning}
+```{r JPAL Chlorine monitoring data cleaning}
 
 #Assigning more meaningful variable names
 mon <- mon%>%
@@ -478,6 +481,15 @@ mon <- mon%>%
 
 
 ```
+
+
+```{r Gram Vikas chlorine monitoring data cleaning}
+
+
+
+
+```
+
 
 
 ```{r Chlorine monitoring data analysis}
