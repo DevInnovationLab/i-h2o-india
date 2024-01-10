@@ -26,8 +26,8 @@ use "${DataRaw}Mortality Survey.dta", clear
  
 *AG: Variabls which are not labeled correctly- R_mor_child_living_oth_2 R_mor_child_living_1_f R_mor_child_living_2_f R_mor_child_living_3_f R_mor_child_living_4_f R_mor_child_living_5_f R_mor_child_living_6_f
 //They are labeled 1 or 0 and not as Yes or NO
+*AG: These variables should be labeled as "Yes" or "No" but are labeled as 1 or 0 -R_mor_last_5_years_pregnant_1_f R_mor_last_5_years_pregnant_2_f R_mor_last_5_years_pregnant_3_f R_mor_last_5_years_pregnant_4_f R_mor_last_5_years_pregnant_5_f R_mor_last_5_years_pregnant_6_f R_mor_last_5_years_preg_oth_* 
 
- 
  * Drop label that are getting auto generated for numeric variables
      capture { 
 	  foreach rgvar of varlist child_living_num_* {
