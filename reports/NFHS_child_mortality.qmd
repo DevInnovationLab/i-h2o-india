@@ -46,8 +46,10 @@ This notebook is not well formated or meant to produce a pdf report. The code ch
 
 My text to share
 
+spreadsheet contains (extracted from this notebook) :
 https://docs.google.com/spreadsheets/d/1--dPeDGB-J7MmLL8e6P9uA_ZT2uH4W6mfhKdjMVCtI0/edit#gid=1144467164
-The spreadsheet contains (extracted from this notebook) a replication of the synthetic cohort U2 mortality estimates that the India team produced and U2 mortality estimates that I produced with a true cohort approach directly from the NFHS dataset(s).
+
+The spreadsheet contains a replication of the synthetic cohort U2 mortality estimates that the India team produced and U2 mortality estimates that I produced with a true cohort approach directly from the NFHS dataset(s).
 The second sheet of the spreadsheet, "true_cohort_method", includes some details into this approach. Most importantly time series at the district level (averaged over two cohorts/birthyears and for single birth cohorts as well).
 
 The synthetic cohort life-table approach is sometimes imprecise and vulnerable to outlier years due to the need to construct synthetic cohorts. To be better able to resort to a true cohort approach, it would be best to resort to U2 mortality. This also allows to visualize the time trend per district in an informative way (looking at the year-wise timeseries, it also becomes clear what happened with the U5MR in Rayagada district around 2015).
@@ -56,7 +58,17 @@ The replicated synthetic cohort method (the one that the DHS uses as well) has a
 The (preferred) "U2MRwt_true_cohort" uses the average - weighted by the survey weights - of U2MR over the period from 2017 to 2019 to average over sampling variation.
 Both of these mortality estimates are shrunk via partial pooling (`baggr`) using the unweighted sample sizes per district. An empirical bayes approach (`ebnm`) and the James-Stein formula lead to very similar shrinkage results.
 There is also a juxtapostion that just takes the average over the six target districts without shrinkage for both U2MR methods.
-The "true_cohort_method" sheet visualizes the shrunk estimates for the true cohort method U2 at the district level and shows the projected time trend (a 3.3 percent decrease based on the state-level trend for the last 10 years)
+The "true_cohort_method" sheet visualizes the shrunk estimates for the true cohort method U2 at the district level and shows the projected time trend (a 3.3 percent decrease based on the state-level trend for the last 10 years). The sample size for the period before 2016 was increased by adding the data from the NFHS4 survey round. This sheet also includes two different versions of the district-wise U2MR plots, the last one has the mortality rate for every single year and illustrates the fluctuations (that partly stem from the fact the the NFHS5 sample size is substantially smaller than the NFHS4 sample size)
+ 
+ 
+### reporting, response to AB on Jan10th
+
+Please can you (a) confirm these numbers, and (b) convert (can be roughly) to U5 mortality?
+NFHS using old data (2015-16) and their default approach (synthetic cohort): 55.6/1,000 U2MR (I get 58.9/1,000)
+Switching to new data (2020-21) with the default approach: 49.2/1,000
+Performing shrinkage on the district-level estimates: synthetic: 44.3/1,000
+Adding a time trend to estimates with shrinkage and deriving an average for years 2024-2026: 42/1,000
+We are also exploring an alternative strategy, where rather than using the synthetic cohort, we [explanation without numbers]. We would be happy to share our data with Stefan]...
  
 
 ```{r}
@@ -111,6 +123,8 @@ chmort(nfhs5.or, JK = "Yes")
 ```
 
 ```{r}
+#| eval: FALSE
+
 test <- chmort(nfhs5.or,Period = 60)
 chmortp(nfhs5.or)
 test <- chmort(nfhs4.or,Period = 60)
@@ -121,7 +135,7 @@ test <- chmort(nfhs4.or,Period = 60)
 ```{r}
 # here we are cooking our own functions to loop over districts
 
-readstata13::varlabel(nfhs5.or, var = "sdist")
+#readstata13::varlabel(nfhs5.or, var = "sdist")
 nfhs5.or$sdist |> summary()
 nfhs5.or$sdist_dup <- nfhs5.or$sdist # create a copy so we can later extract the grouping variable
 nfhs4.or$sdist_dup <- nfhs4.or$sdistri # also for nfhs4
@@ -316,6 +330,9 @@ nfhs.sub.3y$U2MRwt.shrink.bag <- bag.out$mean.mean
 clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(nobs, nobswt)) |> round(1))
 clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(nobs, nobswt, U2MRwt,U2MRwt.shrink.bag) |> round(5))*1e3)
 
+# just the shrunk
+clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(U2MRwt.shrink.bag) |> round(5))*1e3)
+
 # james stein
 # Compute group means and variances
 group_means <- nfhs.sub.3y$U2MRwt
@@ -367,8 +384,9 @@ block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "raya
 
 nfhs.sub.3y$block6 <- ifelse(nfhs.sub.3y$sdist_dup %in% block, 1, 0)
 nfhs.sub.3y$U2MRwt.block6 <- NA
-nfhs.sub.3y$U2MRwt.block6[nfhs.sub.3y$block6 == 1] <- weighted.mean(nfhs.sub.3y$U2MRwt[nfhs.sub.3y$block6 == 1],
-                                                                    nfhs.sub.3y$nobswt[nfhs.sub.3y$block6 == 1])
+nfhs.sub.3y$U2MRwt.block6[nfhs.sub.3y$block6 == 1] <- weighted.mean(nfhs.sub.3y$U2MRwt[nfhs.sub.3y$block6 == 1], nfhs.sub.3y$nobswt[nfhs.sub.3y$block6 == 1])
+# go back to arithmetic mean
+                                                                    nfhs.sub.3y$U2MRwt.block6[nfhs.sub.3y$block6 == 1] <- mean(nfhs.sub.3y$U2MRwt[nfhs.sub.3y$block6 == 1])
 
 clipr::write_clip((nfhs.sub.3y[nfhs.sub.3y$sdist_dup %in% sort(nfhs.sub.3y$sdist_dup), ] |> select(U2MRwt.block6) |> round(5))*1e3)
 
@@ -424,8 +442,8 @@ df <- outu2.df %>% select(U2MR, N) |>
   mutate(sd = sqrt(U2MR*(1-U2MR)/(N*1))) %>%
   rename(tau = U2MR, se = sd)
 bg <- baggr(df, refresh = 0)
-bg
-plot(bg)
+#bg
+#plot(bg)
 bag.out <- group_effects(bg, s=T) |> as.data.frame()
 
 outu2.df$U2MR.shrink.bag <- bag.out$mean.mean
@@ -446,6 +464,9 @@ outu2.df$block6 <- ifelse(outu2.df$district %in% block, 1, 0)
 outu2.df$U2MRwt.block6 <- NA
 outu2.df$U2MRwt.block6[outu2.df$block6 == 1] <- weighted.mean(outu2.df$U2MR[outu2.df$block6 == 1],
                                                                     outu2.df$WN[outu2.df$block6 == 1])
+
+# resorting back to arithmetic mean
+outu2.df$U2MRwt.block6[outu2.df$block6 == 1] <- mean(outu2.df$U2MR[outu2.df$block6 == 1])
 
 clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2MRwt.block6) |> round(5))*1e3
 clipr::write_clip(clipout$U2MRwt.block6)
@@ -481,6 +502,8 @@ nfhs.sub.state <- nfhs.sub.state |> mutate(perc_U2MRwt = (U2MRwt - lag(U2MRwt)) 
 # by year
 (nfhs.sub.state$U2MRwt[nrow(nfhs.sub.state)] - nfhs.sub.state$U2MRwt[1]) / nfhs.sub.state$U2MRwt[1] / (nrow(nfhs.sub.state)-1) # pretty much same as OLS estimate - pecentage points
 
+
+# THE BELOW IN THIS JUNK IS JUST EXPERIMENTAL CODE ------------------------------------------
 
 # OLS
 lm(log(U2MRwt) ~ b2, data = nfhs.sub.state)
@@ -519,15 +542,15 @@ nfhs.sub.state.pred$U2MRwt_extrap_sub[(nrow(nfhs.sub.state.pred)-(length_pred-1)
 testsub <- nfhs.sub.state |> mutate(decr = (U2MRwt - lag(U2MRwt))/lag(U2MRwt))
 exp(mean(log(abs(testsub$decr[2:7])))); mean(testsub$decr[2:7]) # geometric vs arithmetic mean
 # compare how much of a difference it makes in reality over 6 periods
-testsub$rate1 <- NA
-testsub$rate1[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1117902) ^ (1:6)
-testsub$rate2[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1138925) ^ (1:6)
+# testsub$rate1 <- NA
+# testsub$rate1[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1117902) ^ (1:6)
+# testsub$rate2[2:nrow(testsub)] <- testsub$rate[1] * (1 - 0.1138925) ^ (1:6)
 
 
 ```
 
 ```{r}
-
+# plot the different experimental trends
 nfhs.sub.state.pred |> 
   ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + stat_smooth(method = stats::lm, alpha = .2) +
   geom_point(aes(x = b2, U2MRwt_pred, col = "red")) +
@@ -545,6 +568,7 @@ U2MR_state <- nfhs.sub.state |>
   ggplot(aes(x = b2, y = U2MRwt)) + geom_point() + stat_smooth(method = stats::lm, alpha = .2) +
   theme_bw() + ggtitle("State-wide trend in true cohort U2MR (avg decline of 3.3pc p year since 2009")
 
+U2MR_state # that's the plot we want to show
 #ggsave("U2MR_state.png", U2MR_state, width = 7, height = 5)
 
 ```
@@ -564,6 +588,8 @@ nfhs.sub.sum.shrunk$U2MR.shrink <- nfhs.sub.3y$U2MRwt.shrink.bag
 nfhs.sub.sum.shrunk.decr <- nfhs.sub.sum.shrunk |> group_by(sdist_dup) |> group_modify(~ add_row(.x, b2_alt = 2021:2026))
 # don't need arrange(b2_alt) because it is already orderd (just added it above in order)
 nfhs.sub.sum.shrunk.decr <- nfhs.sub.sum.shrunk.decr |>  group_by(sdist_dup) |> mutate(decr = first(U2MR.shrink) * (1 - 0.033) ^ (1:7)) # using a base R vectorized approach within dplyr (works!)
+# NB: below in the full replication section I am doing the time-decrease from the last U2 value and not the shrunken one - same code
+
 
 U2MRwt_dist_shrink_projected <- nfhs.sub.sum |> ggplot(aes(x = b2_alt, y = U2MRwt)) + geom_point() + stat_smooth(alpha = .2) + 
   geom_point(data = nfhs.sub.sum.shrunk, aes(x = b2_alt, y = U2MR.shrink), col = "red", shape = 5) +
@@ -574,8 +600,14 @@ U2MRwt_dist_shrink_projected <- nfhs.sub.sum |> ggplot(aes(x = b2_alt, y = U2MRw
 
 
 U2MRwt_dist_shrink_projected
-ggsave("U2MR_dist_shrink_projected.png", U2MRwt_dist_shrink_projected, width = 10, height = 8)
+#ggsave("U2MR_dist_shrink_projected.png", U2MRwt_dist_shrink_projected, width = 10, height = 8)
 
+```
+
+
+```{r}
+# print the time decrease for excel sheet (like in the full replication section)
+nfhs.sub.sum.shrunk.decr
 ```
 
 
@@ -583,6 +615,281 @@ ggsave("U2MR_dist_shrink_projected.png", U2MRwt_dist_shrink_projected, width = 1
 ```{r}
 # actual avg decreased used
 # let's do the average decrease over the last 10 years
+```
+
+
+# Full replication step-by-step
+
+Goes in separate sheet to make things more traceable. As per WW:
+Lastly, would it be hard to generate a few numbers that show the impact of various adjustments? I am thinking:
+* NFHS using old data (2015-16) and their default approach (synthetic cohort): 55.6/1,000 U2MR
+* Switching to new data (2020-21) with the default approach: xxx
+* Adding a time trend and deriving an average for years 2024-2026: xxx
+* Switching to "live cohort" approach: xxx
+* Performing shrinkage on the district-level estimates: xxx
+
+Some of the code will be a duplication from above. Just to have the output order right in case someone wants to replicate
+
+## Synthetic cohort method
+
+### NFHS 4
+
+```{r}
+# NFHS 4
+outu2.4.list <- nfhs4.or |> group_by(sdistri) |> group_map(~ mod_chmortp(.x, period = 60))
+outu2.4.df <- outu2.4.list |> bind_rows()
+# OUTu2df GETS SHRUNKEN DOWN BELOW in the shrinking section
+
+# clip into GDoc (district variable name comes from the handwritten function)
+# first just the district name
+clipout <- (outu2.4.df$district[order(outu2.4.df$district)])
+clipr::write_clip(clipout)
+# then the numbers
+clipout <- (outu2.4.df[order(outu2.4.df$district), ] |> select(U2MR)  |> round(5))*1e3
+clipr::write_clip(clipout$U2MR)
+clipout <- (outu2.4.df[order(outu2.4.df$district), ] |> select(WN))
+clipr::write_clip(clipout$WN)
+clipout <- (outu2.4.df[order(outu2.4.df$district), ] |> select(N))
+clipr::write_clip(clipout$N)
+
+
+```
+
+
+```{r}
+# synthetic cohort
+outu2.4.df$district
+block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "rayagada")
+
+outu2.4.df$block6 <- ifelse(outu2.4.df$district %in% block, 1, 0)
+outu2.4.df$U2MRwt.block6 <- NA
+outu2.4.df$U2MRwt.block6[outu2.4.df$block6 == 1] <- weighted.mean(outu2.4.df$U2MR[outu2.4.df$block6 == 1], outu2.4.df$WN[outu2.4.df$block6 == 1])
+
+# resorting back to arithmetic mean
+outu2.4.df$U2MRwt.block6[outu2.4.df$block6 == 1] <- mean(outu2.4.df$U2MR[outu2.4.df$block6 == 1])
+
+clipout <- (outu2.4.df[order(outu2.4.df$district), ] |> select(U2MRwt.block6) |> round(5))*1e3
+clipr::write_clip(clipout$U2MRwt.block6)
+```
+
+### NFHS 5
+
+```{r}
+# just copied from above
+
+outu2.list <- nfhs5.or |> group_by(sdist) |> group_map(~ mod_chmortp(.x, period = 60))
+outu2.df <- outu2.list |> bind_rows()
+# OUTu2df GETS SHRUNKEN DOWN BELOW in the shrinking section
+
+# clip into GDoc
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2MR)  |> round(5))*1e3
+clipr::write_clip(clipout$U2MR)
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(WN))
+clipr::write_clip(clipout$WN)
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(N))
+clipr::write_clip(clipout$N)
+
+
+```
+
+```{r}
+outu2.df$district
+block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "rayagada")
+
+outu2.df$block6 <- ifelse(outu2.df$district %in% block, 1, 0)
+outu2.df$U2MRwt.block6 <- NA
+outu2.df$U2MRwt.block6[outu2.df$block6 == 1] <- weighted.mean(outu2.df$U2MR[outu2.df$block6 == 1],
+                                                                    outu2.df$WN[outu2.df$block6 == 1])
+
+# resorting back to arithmetic mean
+outu2.df$U2MRwt.block6[outu2.df$block6 == 1] <- mean(outu2.df$U2MR[outu2.df$block6 == 1])
+
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2MRwt.block6) |> round(5))*1e3
+clipr::write_clip(clipout$U2MRwt.block6)
+```
+
+
+
+### TIMETREND OUT OF NFHS5
+
+```{r}
+# before I did the timetrend only on my shrunken true cohort U2 MR averages (over 3 years)
+# here we have a wide district summary
+
+(49.2 * (1 - 0.033) ^ (1:7))[4:6] |> mean()
+
+outu2.df$U2MR[[1]] * (1 - 0.033) ^ (1:7)
+48.7 * (1 - 0.033) ^ (1:7)
+
+# bad? loop solution (in a long df it would be easier?) - but a wide table makes copyting into the sheet easier
+
+yearvec <- 2021:2026
+for (i in 1:6) {
+  outu2.df <- mutate(outu2.df, !!paste0(i) := U2MR * ((1 - 0.033) ^ i))
+}
+names(outu2.df)[8:14] <- as.character(yearvec)
+
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(as.character(2021:2026)) |> round(5))*1e3
+clipr::write_clip(clipout[, 1:6])
+
+
+```
+
+```{r}
+# average 2024-26
+outu2.df$mean24_26 <- outu2.df |> select("2024","2025","2026") |> rowMeans()
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(mean24_26) |> round(5))*1e3
+clipr::write_clip(clipout$mean24_26)
+
+```
+
+
+## True cohort approach
+
+
+### timetrend out of NFHS5 (unshrunken)
+
+```{r}
+# above i did this on the shrunken values, here on the last U2 estimate
+# in the same fashion as with the synthetic cohort, we assume that this avg represents the 2020 value
+# ... this is the only way to be consistent
+# nfhs.sub.sum.last <- nfhs.sub.sum |> filter(b2_alt == 2019)
+# nfhs.sub.sum.last$b2_alt <- 2020
+# 
+# # add the empty rows
+# nfhs.sub.sum.last.decr <- nfhs.sub.sum.last |> group_by(sdist_dup) |> group_modify(~ add_row(.x, b2_alt = 2021:2026))
+# # don't need arrange(b2_alt) because it is already orderd (just added it above in order)
+# nfhs.sub.sum.last.decr <- nfhs.sub.sum.last.decr |>  group_by(sdist_dup) |> mutate(decr = first(U2MR.shrink) * (1 - 0.033) ^ (1:7)) # using a base R vectorized approach within dplyr (works!)
+
+# NO - I have to take the 3y average - df comes in wide - so can do the same approach as above
+
+nfhs.sub.3y
+
+yearvec <- 2021:2026
+for (i in 1:6) {
+  nfhs.sub.3y <- mutate(nfhs.sub.3y, !!paste0(i) := U2MRwt * ((1 - 0.033) ^ i))
+}
+names(nfhs.sub.3y)[8:13] <- as.character(yearvec)
+
+clipout <- (nfhs.sub.3y[order(nfhs.sub.3y$sdist_dup), ] |> select(as.character(2021:2026)) |> round(5))*1e3
+clipr::write_clip(clipout[, 1:6])
+
+```
+
+```{r}
+# again, average over 24-26
+nfhs.sub.3y$mean24_26 <- nfhs.sub.3y |> select("2024","2025","2026") |> rowMeans()
+clipout <- (nfhs.sub.3y[order(nfhs.sub.3y$sdist_dup), ] |> select(mean24_26) |> round(5))*1e3
+clipr::write_clip(clipout$mean24_26)
+
+```
+
+
+## shrinkage on district estimates
+
+copy the entries above
+
+### timetrend based only on shrunken true cohort estimates
+
+### for the true cohort method
+
+```{r}
+# taking the thing from above and manipulating it to get out a wide copy
+# this is where we print the picture: U2MRwt_dist_shrink_projected
+library(tidyr)
+thething.wider <- nfhs.sub.sum.shrunk.decr |> select(sdist_dup, decr, b2_alt) |> 
+  pivot_wider(id_cols = sdist_dup, names_from = b2_alt, values_from = decr)
+
+names(thething.wider)[2:8] <- as.character(2021:2027)
+thething.orderd <- thething.wider[order(thething.wider$sdist_dup), ]
+thething.orderd <- thething.orderd[, 2:8]
+
+clipout <- (thething.orderd |> select(as.character(2021:2026)) |> round(5))*1e3
+clipr::write_clip(clipout[, 1:6])
+
+```
+
+```{r}
+# again, average over 24-26
+thething.orderd$mean24_26 <- thething.orderd |> select("2024","2025","2026") |> rowMeans()
+clipout <- (thething.orderd |> select(mean24_26) |> round(5))*1e3
+clipr::write_clip(clipout$mean24_26)
+```
+
+### for the synthetic (shrunken)
+
+```{r}
+# copying the df from above
+# sort it:
+outu2.df <- outu2.df[order(outu2.df$district), ]
+# copy in the numbers from the old exercise so the slight variation due to baggr draws does not cause confusion (it always varies on the 2nd comma on every draw)
+outu2.df$shrunken.old <- c(32.79,
+37.91,
+23.68,
+19.81,
+38.59,
+28.16,
+20.88,
+47.57,
+30.92,
+48.9,
+23.83,
+22.37,
+36.87,
+31.63,
+40.91,
+38.46,
+40.72,
+41.31,
+28.26,
+50.05,
+73.31,
+41.71,
+56.96,
+20.03,
+37.93,
+25.19,
+41.51,
+32.78,
+41.64,
+56.69)
+
+
+
+
+yearvec <- 2021:2026
+for (i in 1:6) {
+  outu2.df <- mutate(outu2.df, !!paste0(i) := shrunken.old * ((1 - 0.033) ^ i))
+}
+# this has to be carefully checked, columns shifted because i copied in stuff
+names(outu2.df)[8:13] <- as.character(yearvec)
+
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(as.character(2021:2026)) |> round(2))
+clipr::write_clip(clipout[, 1:6])
+```
+
+
+```{r}
+# again, average over 24-26
+outu2.df$mean24_26 <- outu2.df |> select("2024","2025","2026") |> rowMeans()
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(mean24_26) |> round(2))
+clipr::write_clip(clipout$mean24_26)
+
+```
+
+```{r}
+#
+outu2.df$district
+block <- c("kalahandi", "kandhamal", "koraput", "nabarangapur", "nuapada", "rayagada")
+
+outu2.df$block6 <- ifelse(outu2.df$district %in% block, 1, 0)
+outu2.df$U2shrunk.block <- NA
+# resorting back to arithmetic mean
+outu2.df$U2shrunk.block[outu2.df$block6 == 1] <- mean(outu2.df$mean24_26[outu2.df$block6 == 1])
+
+clipout <- (outu2.df[order(outu2.df$district), ] |> select(U2shrunk.block) |> round(5))
+clipr::write_clip(clipout$U2shrunk.block)
+
 ```
 
 
