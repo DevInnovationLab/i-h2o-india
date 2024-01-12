@@ -1,0 +1,190 @@
+---
+title: "Untitled"
+author: "Astha Vohra"
+date: "2024-01-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r package loading, include=FALSE}
+
+library(rsurveycto)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(experiment)
+library(stargazer)
+library(readxl)
+library(haven)
+library(googlesheets4)
+library(dplyr)
+
+
+
+```
+
+```{r}
+#------------------------ setting user path ----------------------------------------#
+
+
+user_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == ""){
+    path = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = user_path())
+
+# setting github directory
+github_path <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user=="akitokamei"){
+    github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user == "") {
+    github = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    github = getwd()
+  }
+  
+  stopifnot(file.exists(github))
+  return(github)
+}
+
+# setting github directory
+overleaf <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    overleaf = "/Users/asthavohra/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user=="akitokamei"){
+    overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "") {
+    overleaf = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    overleaf = getwd()
+  }
+  
+  stopifnot(file.exists(overleaf))
+  return(overleaf)
+}
+
+```
+
+```{r load data}
+#------------------------ Load the data ----------------------------------------#
+
+df.daily.cl <- read.csv(paste0(user_path(),"1_raw/Daily Chlorine Monitoring Form_WIDE.csv"))
+df.super <- read.csv(paste0(user_path(),"1_raw/india_ilc_pilot_monitoring_WIDE.csv"))
+
+```
+
+```{r stats }
+#------------------------ Water Quality Stats ----------------------------------------#
+
+df.temp <- df.daily.cl
+
+# Displaying chlorine concentration for each village
+# Arranging data so chlorine test data is in one column
+df.temp <- df.temp %>% mutate(nearest_tap_fc = (first_nearest_tap_fc+second_nearest_tap_fc)/2, 
+                              nearest_tap_tc = (first_nearest_tap_tc+second_nearest_tap_tc)/2,
+                              nearest_stored_fc =(first_stored_water_fc+ second_stored_water_fc)/2,
+                              nearest_stored_tc =(first_stored_water_tc+ second_stored_water_tc)/2,
+                              farthest_tap_fc = (first_farthest_tap_fc+second_farthest_tap_fc)/2,
+                              farthest_tap_tc = (first_farthest_tap_tc+second_farthest_tap_tc)/2,
+                              farthest_stored_fc = (far_first_stored_water_fc+far_second_stored_water_fc)/2,
+                              farthest_stored_tc = (far_first_stored_water_tc+far_second_stored_water_tc)/2) 
+chlorine <- df.temp%>%
+  pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, 
+                        farthest_tap_fc,farthest_tap_tc, 
+                        nearest_stored_fc, farthest_stored_fc, 
+                        nearest_stored_tc, farthest_stored_tc), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
+
+chlorine$ReportDate <- as.Date(chlorine$starttime, format = "%m/%d/%Y") 
+
+chlorine <- chlorine %>% dplyr::select(village_name, chlorine_test_type, chlorine_concentration, ReportDate )
+
+chlorine <- chlorine %>% mutate(village = ifelse(village_name == 30701, "Gopi Kankubadi", 
+                                                 ifelse(village_name == 50401, "Birnarayanpur", 
+                                                    ifelse(village_name == 50501,"Nathma", 
+                                                          ifelse(village_name == 30301,"Tandipur",
+                                                                ifelse(village_name == 20101, "Badabangi", 
+                                                                       ifelse(village_name == 40201, "Bichikote", NA))))))) %>%
+  mutate(Distance = ifelse(chlorine_test_type == "nearest_tap_tc"| chlorine_test_type == "nearest_stored_tc"|
+                             chlorine_test_type == "nearest_stored_fc"|chlorine_test_type == "nearest_tap_fc", "Nearest", "Farthest")) %>%
+  mutate(Test = ifelse(chlorine_test_type == "nearest_tap_tc"| chlorine_test_type == "farthest_tap_tc", "Tap Water: Total Chlorine", 
+                       ifelse(chlorine_test_type == "nearest_tap_fc"| chlorine_test_type == "farthest_tap_fc", "Tap Water: Free Chlorine", 
+             ifelse(chlorine_test_type == "nearest_stored_fc"| chlorine_test_type == "farthest_stored_fc", "Stored Water: Free Chlorine", 
+                             "Stored Water: Total Chlorine")))) 
+  
+village_list <- unique(chlorine$village) 
+plot_list = list()
+
+for (i in village_list){
+  df.vil.cl <-   chlorine %>% filter(village == i)    
+  p <- ggplot(df.vil.cl, aes(x = ReportDate, y = chlorine_concentration, color=Test, linetype = Distance)) +
+  geom_line(size = 0.8)  + 
+  labs(title = " Concentration of Chlorine",
+       x = "Date",
+       y = "") +  
+  scale_x_date(date_breaks = '1 day', 
+               labels = scales::date_format("%b %d")) +
+  theme(
+    legend.position = c(1, 1),
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(6, 6, 6, 6), axis.text.x = element_text(angle = 90, size = 10)
+    ) +  scale_color_brewer(palette="Dark2") + 
+    ggtitle(paste0('Village_',i))
+
+    print(p)
+    plot_list[[i]] = p
+  
+}
+
+
+setwd(paste0(overleaf(), "/Figure"))
+for (i in village_list) {
+    file_name = paste("Village_", i, ".png", sep="")
+    png(file_name)
+    print(plot_list[[i]])
+    dev.off()
+}
+
+```
+
