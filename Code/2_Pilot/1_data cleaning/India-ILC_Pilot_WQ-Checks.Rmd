@@ -566,12 +566,21 @@ mon_villages <- unique(mon$village_name)
 
 mon <- mon%>%
   pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
+mon
+
+mon_near <- mon%>%
+  filter(chlorine_test %in% c("nearest_tap_fc", "nearest_stored_fc", "nearest_tap_tc", "nearest_stored_tc"))
+
+mon_far <- mon%>%
+  filter(chlorine_test %in% c("farthest_tap_fc", "farthest_stored_fc", "farthest_tap_tc", "farthest_stored_tc"))
 
 for (i in mon_villages){
-  xx <- mon%>%
+  x_near <- mon_near%>%
+    filter(village_name == i)
+  x_far <- mon_far%>%
     filter(village_name == i)
   
-  p1 <- ggplot(data = xx) + 
+  p1 <- ggplot(data = x_near) + 
     geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
     scale_y_continuous(
                      limits = c(0, 1),
@@ -584,6 +593,20 @@ for (i in mon_villages){
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
   
   print(p1)
+  
+  p2 <- ggplot(data = x_far) + 
+    geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  print(p2)
 
   
 }
