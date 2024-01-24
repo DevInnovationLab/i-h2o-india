@@ -49,6 +49,8 @@ census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_fina
 
 mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
 
+mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+
 gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
 
 idexx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
@@ -514,10 +516,15 @@ kbl(abr_stats)%>%
 mon <- mon%>%
   rename(village_ID = "village_name")
 
+mon_full <- mon_full%>%
+  rename(village_ID = "village_name")
+
 #Pairing village information
 mon$village_ID <- as.character(mon$village_ID)
 mon <- left_join(mon, village_details, by = "village_ID")
 
+mon_full$village_ID <- as.character(mon_full$village_ID)
+mon_full <- left_join(mon_full, village_details, by = "village_ID")
 
 #Averaging chlorine data
 mon <- mon%>%
@@ -530,10 +537,48 @@ mon <- mon%>%
   mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
   mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
 
+mon_full <- mon_full%>%
+  mutate(nearest_tap_fc = (first_nearest_tap_fc + second_nearest_tap_fc)/2)%>%
+  mutate(nearest_tap_tc = (first_nearest_tap_tc + second_nearest_tap_tc)/2)%>%
+  mutate(farthest_tap_fc = (first_farthest_tap_fc + second_farthest_tap_fc)/2)%>%
+  mutate(farthest_tap_tc = (first_farthest_tap_tc + second_farthest_tap_tc)/2)%>%
+  mutate(nearest_stored_fc = (first_stored_water_fc + second_stored_water_fc)/2)%>%
+  mutate(nearest_stored_tc = (first_stored_water_tc + second_stored_water_tc)/2)%>%
+  mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
+  mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
+
+
 #Getting date of test
 mon$valve_open_time <- mdy_hms(mon$valve_open_time)
 mon <- mon%>%
   mutate(test_date = date(valve_open_time))
+
+mon_full$valve_open_time <- mdy_hms(mon_full$valve_open_time)
+mon_full <- mon_full%>%
+  mutate(test_date = date(valve_open_time))
+
+#Selecting for variables only in the shorter daily monitoring form
+mon <- bind_rows(mon, mon_full)
+
+
+### Cleaning and formatting datasets ### 
+mon_villages <- unique(mon$village_name)
+
+
+#Pivoting to make datasets only have a single column for chlorine concentration measurement
+mon <- mon%>%
+  pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
+mon
+
+#Subsetting for nearest and farthest tap connections
+mon_near <- mon%>%
+  filter(chlorine_test %in% c("nearest_tap_fc", "nearest_stored_fc", "nearest_tap_tc", "nearest_stored_tc"))
+
+mon_far <- mon%>%
+  filter(chlorine_test %in% c("farthest_tap_fc", "farthest_stored_fc", "farthest_tap_tc", "farthest_stored_tc"))
+
+
+
 
 
 
@@ -559,20 +604,12 @@ gv <- gv%>%
 
 ## JPAL Chlorine Monitoring Results
 
-```{r JPAL Chlorine monitoring data analysis}
+
+
+```{r JPAL Chlorine Monitoring Data Analysis}
+
 
 #Creating time series plot of the data for each village
-mon_villages <- unique(mon$village_name)
-
-mon <- mon%>%
-  pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
-mon
-
-mon_near <- mon%>%
-  filter(chlorine_test %in% c("nearest_tap_fc", "nearest_stored_fc", "nearest_tap_tc", "nearest_stored_tc"))
-
-mon_far <- mon%>%
-  filter(chlorine_test %in% c("farthest_tap_fc", "farthest_stored_fc", "farthest_tap_tc", "farthest_stored_tc"))
 
 for (i in mon_villages){
   x_near <- mon_near%>%
@@ -581,7 +618,7 @@ for (i in mon_villages){
     filter(village_name == i)
   
   p1 <- ggplot(data = x_near) + 
-    geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+    geom_jitter(aes(x = test_date, y = chlorine_concentration, color = chlorine_test), width = 0.05, height = 0.001) +
     scale_y_continuous(
                      limits = c(0, 1),
                      expand = c(0,0))+
@@ -595,7 +632,7 @@ for (i in mon_villages){
   print(p1)
   
   p2 <- ggplot(data = x_far) + 
-    geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+    geom_jitter(aes(x = test_date, y = chlorine_concentration, color = chlorine_test), width = 0.05, height = 0.001) +
     scale_y_continuous(
                      limits = c(0, 1),
                      expand = c(0,0))+
@@ -611,9 +648,8 @@ for (i in mon_villages){
   
 }
 
-
-
 ```
+
 
 
 
