@@ -52,7 +52,7 @@ preserve
     *local Village_R 
     keep if R_Cen_village_name==`value'	
 	
-	keep R_Cen_village_name unique_id R_Cen_a13_water_source_sec_1 R_Cen_a12_water_source_prim 	R_Cen_hamlet_name
+	keep R_Cen_village_name unique_id R_Cen_a18_jjm_drinking R_Cen_hamlet_name
 	* Keep only the village where you want to conduct the randomization
 	global Var_Select S_BLS S_BLWQ 
 
@@ -63,7 +63,7 @@ preserve
 	}
 
 	* Household selection, all the HH consented are
-	keep if R_Cen_a13_water_source_sec_1==1 | R_Cen_a12_water_source_prim==1 // JJM tap is primary or secondary water source
+	keep if R_Cen_a18_jjm_drinking==1 // They drink water from the JJM tap
 
 
 
@@ -90,7 +90,7 @@ preserve
 	label values S_BLS S_BLSl
 
 
-	save "${DataPre}Selected_`value'_$S_DATE.dta", replace
+	save "${DataPre}Selected_`value'_31 Jan 2024.dta", replace
 
 
 
@@ -114,17 +114,6 @@ label define S_BLWQl 1 "Water sample : Yes" 2 "Water sample : Yes" 3 "Water samp
 label values S_BLWQ S_BLWQl
 
 
-//Cleaning the name of the household head
-rename R_Cen_a10_hhhead R_Cen_a10_hhhead_num
-
-gen     R_Cen_a10_hhhead=""
-forvalue i = 1/9 {
-	replace R_Cen_a10_hhhead=R_Cen_a3_hhmember_name_`i' if R_Cen_a10_hhhead_num==`i'
-}
-
-***********************************************************************
-* Step 4: Creating the data for pre-load
-***********************************************************************
 * Drop households not using JJM for drinking
 drop if Merge_WS==1
 * Dropping househods not selected for the revisit
@@ -132,29 +121,15 @@ drop if S_BLWQ==0
 decode R_Cen_village_name, gen(R_Cen_village_name_str)
 replace R_Cen_village_name_str= R_Cen_village_str if R_Cen_village_name_str==""
 
-//renaming vars
 
-forvalues i = 1/17 {
-	rename R_Cen_a4_hhmember_gender_`i' Cen_fam_gender`i'
-	
-}
 
-forvalues i = 1/17 {
-	rename R_Cen_a6_hhmember_age_`i' Cen_fam_age`i'
-	
-}
 
 levelsof R_Cen_village_str
 local vill `r(levels)'
 
-* Adding_Ram
-* Add Sahi later
-sort  S_BLS S_BLWQ
-export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_name_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 using "${DataPre}Followup_preload_`vill'.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
-* drop if unique_id==99999999999 (Drop if Ram: Commenting out since we do not want Ram in the actaul data collection)
 
 ***********************************************************************
-* Step 5: Data to be uploaded for google sheet
+* Step 4: Data to be uploaded for google sheet
 ***********************************************************************
 gen Date_Random="$S_DATE"
 tostring unique_id, force replace format(%15.0gc)
@@ -163,7 +138,7 @@ gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 gen Enumerator_Assigned= ""
-replace R_Cen_village_name_str= "Asada" if R_Cen_village_name_str==""
+replace R_Cen_village_name_str= R_Cen_village_str if R_Cen_village_name_str==""
 
 //Changing labels 
 	label variable ID "Unique ID"
@@ -188,3 +163,73 @@ export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_
 restore
 
 }
+
+
+***********************************************************************
+* Step 5: Creating the data for pre-load
+***********************************************************************
+
+local mylist 10101 10201 20201 30202 30301 30501 30601 30602 30701 ///
+ 40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 50601
+
+foreach i of local mylist {
+	
+use "${DataPre}Selected_`i'_31 Jan 2024.dta", clear
+
+tempfile vill_`i'
+save `vill_`i'', replace
+
+use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+merge 1:1 unique_id using `vill_`i'', keep(master matched) gen(Merge_WS)
+
+drop if Merge_WS==1
+
+save `vill_`i'', replace
+
+}
+
+local mylist2 10101 10201 20201 30202 30301 30501 30601 30602 ///
+ 30701 40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 
+ 
+ use `vill_50601', clear
+foreach j of local mylist2 {
+	
+	append using `vill_`j''
+	
+}
+
+* Drop households not using JJM for drinking
+drop if Merge_WS==1
+* Dropping househods not selected for the revisit
+drop if S_BLWQ==0 
+
+
+//Cleaning the name of the household head
+rename R_Cen_a10_hhhead R_Cen_a10_hhhead_num
+
+gen     R_Cen_a10_hhhead=""
+forvalue i = 1/17 {
+	replace R_Cen_a10_hhhead=R_Cen_a3_hhmember_name_`i' if R_Cen_a10_hhhead_num==`i'
+}
+
+
+
+//renaming vars
+
+	forvalues i = 1/17 {
+		rename R_Cen_a4_hhmember_gender_`i' Cen_fam_gender`i'
+		
+	}
+
+	forvalues i = 1/17 {
+		rename R_Cen_a6_hhmember_age_`i' Cen_fam_age`i'
+		
+	}
+	
+	
+	
+
+sort  S_BLS S_BLWQ
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 R_Cen_enum_name_label R_Cen_enum_code using "${DataPre}Followup_preload_31 Jan 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+
+
