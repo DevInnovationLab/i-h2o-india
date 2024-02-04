@@ -1,4 +1,7 @@
 
+*Running Astha's cleaning file
+cap do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\1_1_D_Mortality_cleaning.do"
+
 *Astha for now please add your directories in PathGraphs and PathTables (I didn't add it because my dropbox and overleaf isn't linked and global paths for table export is happening in dropbox once that's sorted I will add a global dropbox path 
 
 global PathGraphs "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
@@ -81,8 +84,28 @@ tab dup_HHID
 list unique_id_num if dup_HHID > 0
 cap export excel unique_id_num R_mor_enum_name_f R_mor_village R_mor_resp_name R_mor_a2_hhmember_count  if dup_HHID > 0  using "$PathTables/Mortality_tables.xlsx", firstrow(varlabels) sheet(duplicates) sheetreplace
 
+	
+/*-----------------------------------------------------------------------------------------------------------------------------------
+Age calculation                                                  
+-------------------------------------------------------------------------------------------------------------------------------------*/
 
 
+ds R_mor_a6_dob_*
+foreach var of varlist `r(varlist)'{ 
+gen days_`var' = submission_date - `var'
+gen years_`var' = days_`var' / 365
+}
+
+forvalues i = 1/12 {
+      gen diff_`i' = years_R_mor_a6_dob_`i' - R_mor_a6_hhmember_age_`i'
+}
+
+//creating a subset for child deaths to match with CDR
+br village unique_id_num R_mor_landmark_f R_mor_vill_pc_* R_mor_vill_residence_* R_mor_women_child_bear_count_f R_mor_name_pc_earlier_* R_mor_last_5_years_pregnant_* R_mor_last_5_years_preg_oth_* total_stillborn R_mor_child_stillborn_* total_childdiedless24 total_childdiedmore24  R_mor_child_alive_died_*  total_childlivingnum R_mor_child_living_* total_notlivingchild R_mor_child_notliving_* R_mor_name_child_earlier_* R_mor_age_child_* R_mor_unit_child_* R_mor_date_birth_* R_mor_date_death_* R_mor_cause_death_* R_mor_cause_death_oth_* R_mor_cause_death_str_* R_mor_miscarriage_*
+ds R_mor_name_child_earlier_*
+foreach var of varlist `r(varlist)' { 
+rename R_mor_name_child_earlier_1_2_sc
+}
 /*-----------------------------------------------------------------------------------------------------------------------------------
                                                         SECTION 1(PART A) - PRODUCTIVITY
 -------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1434,6 +1457,9 @@ restore
 /*-------------------------------------------------------------------------------------------------------------------------------------------------
                                                       SECTION 7: TREATMENT AND CONTROL VILLAGE WISE CLASSIFICATION (still in working plz ignore)
 ---------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+preserve
+
 clonevar TC = village
 replace TC = "0" if village == "BK Padar"
 replace TC = "0" if village == "Kuljing"
@@ -1580,4 +1606,4 @@ br village R_mor_submissiondate unique_id_num R_mor_enum_name_f R_mor_child_stil
 
 collapse (sum) R_mor_women_child_bear_count_f total_last5preg_women total_notlast5preg_women total_currently_preg total_stillborn total_childlivingnum total_notlivingchild total_childdiedless24 total_childdiedmore24 total_miscarriages visitors  perm_5years, by (TC)
 
-
+restore
