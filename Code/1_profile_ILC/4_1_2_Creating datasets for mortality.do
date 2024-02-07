@@ -1,8 +1,8 @@
 *=========================================================================* 
 * Project information at:https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
-****** Purpose: 
-****** Created by: DIL
+****** Purpose: Reshaping mortality survey data to compare with admin data
+****** Created by: Michelle (DIL)
 ****** Used by:  DIL
 ****** Input data : 
 ****** Output data : 
