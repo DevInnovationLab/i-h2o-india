@@ -1,4 +1,4 @@
-* 000000063
+* 000000073
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -754,4 +754,17 @@ d Support: email N.J.Cox@@durham.ac.uk
 d 
 f f/findname.ado
 f f/findname.hlp
+e
+S http://www.stata-journal.com/software/sj5-4
+N dm88_1.pkg
+D  6 Feb 2024
+U 7
+d SJ5-4 dm88_1.  Update:  Renaming variables, multiply and...
+d Update:  Renaming variables, multiply and systematically
+d by Nicholas J. Cox, Durham University, UK
+d    Jeroen Weesie, Utrecht University, Netherlands
+d Support:  n.j.cox@@durham.ac.uk, j.weesie@@fss.uu.nl
+d After installation, type help ^renvars^
+f r/renvars.ado
+f r/renvars.hlp
 e
