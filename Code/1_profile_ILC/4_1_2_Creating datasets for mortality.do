@@ -286,6 +286,11 @@ label values cause_death_child_ cause_death_childl
 
 renvars woman_name_ - miscarriage_yn_, postdrop(1)
 
+replace woman_name = subinstr(woman_name,"and","",.)
+replace woman_name = subinstr(woman_name,"years","",.)
+gen woman_age= substr(woman_name,-3,2)
+replace woman_name = subinstr(woman_name, word(woman_name, -1), "", 1) if real(word(woman_name, -1))  < .
+
 save "${DataFinal}Mortality survey dataset_reshaped_child deaths.dta", replace
 
 
