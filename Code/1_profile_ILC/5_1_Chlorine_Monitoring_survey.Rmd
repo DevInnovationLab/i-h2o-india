@@ -19,14 +19,14 @@ library(sjmisc)
 library(knitr)
 library(kableExtra)
 library(readxl)
-library(experiment)
+#library(experiment)
 library(stargazer)
 library(readxl)
 library(haven)
 library(googlesheets4)
 library(dplyr)
-
-
+library(rsurveycto)
+library(data.table)
 
 ```
 
@@ -129,22 +129,30 @@ df.temp <- df.temp %>% mutate(nearest_tap_fc = (first_nearest_tap_fc+second_near
                               farthest_tap_tc = (first_farthest_tap_tc+second_farthest_tap_tc)/2,
                               farthest_stored_fc = (far_first_stored_water_fc+far_second_stored_water_fc)/2,
                               farthest_stored_tc = (far_first_stored_water_tc+far_second_stored_water_tc)/2) 
+
 chlorine <- df.temp%>%
   pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, 
                         farthest_tap_fc,farthest_tap_tc, 
                         nearest_stored_fc, farthest_stored_fc, 
                         nearest_stored_tc, farthest_stored_tc), values_to = "chlorine_concentration", names_to = "chlorine_test_type")
 
-chlorine$ReportDate <- as.Date(chlorine$starttime, format = "%m/%d/%Y") 
+chlorine$datetime <- strptime(chlorine$starttime, format = "%m/%d/%Y,%H:%M:%S")
 
-chlorine <- chlorine %>% dplyr::select(village_name, chlorine_test_type, chlorine_concentration, ReportDate )
+chlorine$Date <- as.IDate(chlorine$datetime) 
+
+chlorine <- chlorine %>% dplyr::select(village_name, chlorine_test_type, chlorine_concentration, Date )
 
 chlorine <- chlorine %>% mutate(village = ifelse(village_name == 30701, "Gopi Kankubadi", 
                                                  ifelse(village_name == 50401, "Birnarayanpur", 
                                                     ifelse(village_name == 50501,"Nathma", 
-                                                          ifelse(village_name == 30301,"Tandipur",
-                                                                ifelse(village_name == 20101, "Badabangi", 
-                                                                       ifelse(village_name == 40201, "Bichikote", NA))))))) %>%
+                                                      ifelse(village_name == 30301,"Tandipur",
+                                                        ifelse(village_name == 20101, "Badabangi", 
+                                                          ifelse(village_name == 40201, "Bichikote", 
+                                                            ifelse(village_name == 10101, "Asada", 
+                                                              ifelse(village_name == 30202, "BK Padar", 
+                                                               ifelse(village_name == 30602, "Mukundpur",
+                                                                ifelse(village_name == 40101, "Karnapadu",
+                                                                 ifelse(village_name == 40401, "Naira",NA)))))))))))) %>%
   mutate(Distance = ifelse(chlorine_test_type == "nearest_tap_tc"| chlorine_test_type == "nearest_stored_tc"|
                              chlorine_test_type == "nearest_stored_fc"|chlorine_test_type == "nearest_tap_fc", "Nearest", "Farthest")) %>%
   mutate(Test = ifelse(chlorine_test_type == "nearest_tap_tc"| chlorine_test_type == "farthest_tap_tc", "Tap Water: Total Chlorine", 
@@ -153,38 +161,80 @@ chlorine <- chlorine %>% mutate(village = ifelse(village_name == 30701, "Gopi Ka
                              "Stored Water: Total Chlorine")))) 
   
 village_list <- unique(chlorine$village) 
-plot_list = list()
+
+df.stored <- chlorine %>% filter(chlorine_test_type == "nearest_stored_tc"|chlorine_test_type == "nearest_stored_fc"|
+                                   chlorine_test_type == "farthest_stored_tc"|  chlorine_test_type == "farthest_stored_fc" )
+df.tap <- chlorine %>% filter(chlorine_test_type == "nearest_tap_tc"|chlorine_test_type == "nearest_tap_fc"|
+                                   chlorine_test_type == "farthest_tap_tc"|  chlorine_test_type == "farthest_tap_fc" )
+
+plot_list_stored = list()
 
 for (i in village_list){
-  df.vil.cl <-   chlorine %>% filter(village == i)    
-  p <- ggplot(df.vil.cl, aes(x = ReportDate, y = chlorine_concentration, color=Test, linetype = Distance)) +
-  geom_line(size = 0.8)  + 
+  df.vil.cl <-   df.stored %>% filter(village == i)    
+  p <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color=Distance, linetype = Test)) +
+  geom_line(linewidth = 0.8)  + 
   labs(title = " Concentration of Chlorine",
        x = "Date",
        y = "") +  
   scale_x_date(date_breaks = '1 day', 
-               labels = scales::date_format("%b %d")) +
+               labels = scales::date_format("%b %d")) + 
+    scale_y_continuous(limits = c(0.00, 2.00), breaks = seq(0, 2, by= 0.1)) +
   theme(
     legend.position = c(1, 1),
     legend.justification = c("right", "top"),
     legend.box.just = "right",
     legend.margin = margin(6, 6, 6, 6), axis.text.x = element_text(angle = 90, size = 10)
     ) +  scale_color_brewer(palette="Dark2") + 
-    ggtitle(paste0('Village_',i))
+    ggtitle(paste0('Stored water: Village_',i))
 
     print(p)
-    plot_list[[i]] = p
+    plot_list_stored[[i]] = p
   
 }
 
 
 setwd(paste0(overleaf(), "/Figure"))
 for (i in village_list) {
-    file_name = paste("Village_", i, ".png", sep="")
+    file_name = paste("Village_stored_", i, ".png", sep="")
     png(file_name)
-    print(plot_list[[i]])
+    print(plot_list_stored[[i]])
     dev.off()
 }
+
+plot_list_tap = list()
+
+for (i in village_list){
+  df.vil.cl <-   df.tap %>% filter(village == i)    
+  p <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color=Distance, linetype = Test)) +
+  geom_line(linewidth = 0.8)  + 
+  labs(title = " Concentration of Chlorine",
+       x = "Date",
+       y = "") +  
+  scale_x_date(date_breaks = '1 day', 
+               labels = scales::date_format("%b %d")) +
+    scale_y_continuous(limits = c(0.00, 2.00), breaks = seq(0.00, 2.00, 0.1)) +
+  theme(
+    legend.position = c(1, 1),
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(6, 6, 6, 6), axis.text.x = element_text(angle = 90, size = 10)
+    ) +  scale_color_brewer(palette="Dark2") + 
+    ggtitle(paste0('Tap water: Village_',i))
+
+    print(p)
+    plot_list_tap[[i]] = p
+  
+}
+
+
+setwd(paste0(overleaf(), "/Figure"))
+for (i in village_list) {
+    file_name = paste("Village_tap_", i, ".png", sep="")
+    png(file_name)
+    print(plot_list_tap[[i]])
+    dev.off()
+}
+
 
 ```
 
