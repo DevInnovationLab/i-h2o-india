@@ -22,6 +22,7 @@ capture drop consented1burden_of_water_collec consented1chlorination_perceptio c
 
 drop r_cen_a1_resp_name  r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_a11_oldmale_name r_cen_address r_cen_saahi_name
 
+rename consented1water_quality_testing1 consented_wq_testing1
 foreach x of var * { 
 	rename `x' R_FU1_`x' 
 } 
@@ -55,7 +56,9 @@ rename R_FU1_wq_chlorine_storedtc R_FU1_tc_stored
 	gen FU1_month = word("`c(Mons)'", FU1_month_num)
     
 	//to change once survey date is fixed - TODO
-	 *keep if (FU_day >19 & FU_month_num >=9)  
+	
+	
+	 keep if (FU1_day >4 & FU1_month_num >=2)  
      egen FU1_date = concat(FU1_day FU1_month)
 	 gen FU1_starthour = hh(R_FU1_starttime) 
 	 gen FU1_startmin= mm(R_FU1_starttime)

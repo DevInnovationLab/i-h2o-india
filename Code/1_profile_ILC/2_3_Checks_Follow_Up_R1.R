@@ -138,6 +138,12 @@ df.temp <- df.temp %>% filter(date >= as.Date("2024-02-05"))
 df.temp.consent <- df.temp[which(df.temp$R_FU1_consent==1) ,]
 
 
+#------------------------ Assign the correct treatment to villages ----------------------------------------#
+
+df.temp.consent <- df.temp.consent %>% mutate(Treatment = ifelse(R_FU1_r_cen_village_name_str %in%
+                                                                   c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "T", "C"))
+
+
 #------------------------ Progress table ----------------------------------------#
 
 submissions <- df.temp %>% select(R_FU1_r_cen_village_name_str) %>%
@@ -269,14 +275,13 @@ df.temp.consent <- df.temp.consent %>% mutate(FU1_test_type = ifelse(R_FU1_water
 secE_cl_dur_enum <- df.temp.consent %>%  filter(FU1_test_type == 1) %>% 
   mutate(FU1_secE_dur_min  = ifelse(FU1_secE_dur_min<0 , NA, FU1_secE_dur_min)) %>% 
   group_by(R_FU1_enum_name_label) %>%
-   dplyr:: summarise("Chlorine Testing"= round(mean(FU1_secE_dur_min, na.rm = T),1))  %>%
-  mutate(count_of_testing_chlorine = n()) %>% ungroup()
+   dplyr:: summarise("Chlorine Testing"= round(mean(FU1_secE_dur_min, na.rm = T),1))   %>% ungroup()
 
 secE_both_dur_enum <- df.temp.consent %>%  filter(FU1_test_type == 2) %>% 
   mutate(FU1_secE_dur_min  = ifelse(FU1_secE_dur_min<0 , NA, FU1_secE_dur_min)) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Both Testing"= round(mean(FU1_secE_dur_min, na.rm = T),1)) %>% 
-  mutate(count_of_testing_both = n()) %>% ungroup()
+  ungroup()
 
 df.duration.wq.enum <- left_join(secE_cl_dur_enum,secE_both_dur_enum) 
 df.duration.wq.enum <- df.duration.wq.enum %>% rename(Enumerator = R_FU1_enum_name_label )
@@ -287,7 +292,8 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Dura
 #2. Count of Dont Know by enumerators 
 
 df.dk.enum <- df.temp.consent %>%
-  group_by(R_FU1_enum_name_label) %>%
+  group_by(R_FU1_enum_name_label) %>% select(-R_FU1_fc_stored,-R_FU1_tc_stored, -R_FU1_wq_chlorine_storedfc_again, -R_FU1_wq_chlorine_storedtc_again,
+                                             -R_FU1_fc_tap, -R_FU1_tc_tap,-R_FU1_wq_tap_fc_again,-R_FU1_wq_tap_tc_again) %>%
   summarise_all(~sum(. == 999)) %>% 
   transmute(R_FU1_enum_name_label, sum_dk = rowSums(.[-1], na.rm = T)) %>% 
   rename(Enumerator = R_FU1_enum_name_label, "Count of DK" = sum_dk)
@@ -556,5 +562,14 @@ stargazer(df.consistency, summary=F, title= "Check for not using drinking water,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_consistency_HH_Survey_R1.tex"))
 
 
+#Counting people accompanying to shadow enumerators
 
+df.shadow <- df.temp.consent %>%   dplyr::select(R_FU1_enum_name_label,R_FU1_r_cen_village_name_str, R_FU1_survey_accompany_num) %>%
+  group_by(R_FU1_enum_name_label,R_FU1_r_cen_village_name_str ) %>% 
+    dplyr:: summarise(mean = round(mean(R_FU1_survey_accompany_num),1), 
+                      min = round(min(R_FU1_survey_accompany_num),1), max = round(max(R_FU1_survey_accompany_num),1)) %>%
+  rename(Village = R_FU1_r_cen_village_name_str, Enumerator = R_FU1_enum_name_label) 
+
+stargazer(df.shadow, summary=F, title= "Check instances of shadowing of enumerators during survey, by enumerator, by village",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_shadow_HH_Survey_R1.tex"))
 

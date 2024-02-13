@@ -5,7 +5,7 @@
 *	Inputs:  "HH follow up survey_WIDE.csv"
 *	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/HH follow up survey.dta"
 *
-*	Output by SurveyCTO February 7, 2024 10:42 AM.
+*	Output by SurveyCTO February 11, 2024 9:18 AM.
 
 * initialize Stata
 clear all
@@ -40,8 +40,9 @@ local text_fields12 "people_prim20 liter_estimation_count container_nmbr_* sourc
 local text_fields13 "treat_resp_list_count treat_resp_index_* treat_resp_value_* treat_resp_label_* treat_resp_labels treat_resp1 treat_resp2 treat_resp3 treat_resp4 treat_resp5 treat_resp6 treat_resp7 treat_resp8"
 local text_fields14 "treat_resp9 treat_resp10 treat_resp11 treat_resp12 treat_resp13 treat_resp14 treat_resp15 treat_resp16 treat_resp17 treat_resp18 treat_resp19 treat_resp20 duration_seca tap_supply_freq_oth"
 local text_fields15 "tap_function_noreason tap_function_reason_oth tap_use tap_use_oth cooking_issue_reason cooking_issue_reason_oth tap_function_reason tap_function_oth tap_use_future_oth duration_secb tap_taste_desc"
-local text_fields16 "tap_taste_desc_oth tap_smell tap_smell_oth tap_color tap_color_oth tap_trust_fu tap_trust_oth duration_secc no_test_reason unique_id_3_digit_wt no_stored_bag stored_bag_source_oth no_chlorine_stored"
-local text_fields17 "no_running_bag no_tap_reason testing_comment duration_sece time_stored_running overall_comment duration_end survey_member_names_count surveynumber_* instanceid instancename"
+local text_fields16 "tap_taste_desc_oth tap_smell tap_smell_oth tap_color tap_color_oth tap_trust_fu tap_trust_oth duration_secc no_test_reason unique_id_3_digit_wt no_stored_bag stored_bag_source_oth tap_barcode_stored"
+local text_fields17 "no_chlorine_stored no_running_bag tap_barcode_running no_tap_reason error_types_count calc_error_nmbr_* testing_comment duration_sece time_stored_running overall_comment duration_end"
+local text_fields18 "survey_member_names_count surveynumber_* instanceid instancename"
 local date_fields1 ""
 local datetime_fields1 "submissiondate starttime endtime"
 
@@ -355,7 +356,7 @@ if _N>0 {
 
 	label variable tap_use_drinking "G9) When was the last time you collected water from the government provided hous"
 	note tap_use_drinking: "G9) When was the last time you collected water from the government provided household taps/ supply paani for drinking purposes?"
-	label define tap_use_drinking 1 "Today" 2 "Yesterday" 3 "Earlier this week" 4 "Earlier this month" 5 "Not used for drinking" -77 "Other"
+	label define tap_use_drinking 1 "Today" 2 "Yesterday" 3 "Earlier this week" 4 "Earlier this month" -77 "Other"
 	label values tap_use_drinking tap_use_drinking
 
 	label variable tap_function "G10) In the last two weeks, have you tried to collect water from the government "
@@ -490,6 +491,9 @@ if _N>0 {
 	label variable tap_bag_id_stored "Please prepare a sample collection bag and scan the sample ID barcode, and label"
 	note tap_bag_id_stored: "Please prepare a sample collection bag and scan the sample ID barcode, and label them as stored water sample. For stored water, sample ID is in form '20001' or '20002' or so on.."
 
+	label variable tap_barcode_stored "Please click a picture of sample ID barcode."
+	note tap_barcode_stored: "Please click a picture of sample ID barcode."
+
 	label variable tap_bag_id_stored_typed "A3) Please enter the sample ID (For stored water: 2_ _ _ _)"
 	note tap_bag_id_stored_typed: "A3) Please enter the sample ID (For stored water: 2_ _ _ _)"
 
@@ -507,8 +511,11 @@ if _N>0 {
 	label variable no_chlorine_stored "A5.1) Why are you not able to collect the stored tap water samples?"
 	note no_chlorine_stored: "A5.1) Why are you not able to collect the stored tap water samples?"
 
-	label variable stored_time "A5.1.a) Record the time stamp for the stored water collected"
-	note stored_time: "A5.1.a) Record the time stamp for the stored water collected"
+	label variable stor_time_hours "A5.1.a) Record the time stamp for the stored water collected (hours)"
+	note stor_time_hours: "A5.1.a) Record the time stamp for the stored water collected (hours)"
+
+	label variable stor_time_mins "A5.1.b) Record the time stamp for the stored water collected (mins)"
+	note stor_time_mins: "A5.1.b) Record the time stamp for the stored water collected (mins)"
 
 	label variable wq_chlorine_storedfc "A5.2) What is the free chlorine reading from the stored sample?"
 	note wq_chlorine_storedfc: "A5.2) What is the free chlorine reading from the stored sample?"
@@ -533,6 +540,9 @@ if _N>0 {
 	label variable tap_bag_id_running "Please prepare a sample collection bag and scan the sample ID barcode, and label"
 	note tap_bag_id_running: "Please prepare a sample collection bag and scan the sample ID barcode, and label them as running water sample. For running water, sample ID is in form '10001' or '10002' or so on.."
 
+	label variable tap_barcode_running "Please click a picture of sample ID barcode."
+	note tap_barcode_running: "Please click a picture of sample ID barcode."
+
 	label variable tap_bag_id_running_typed "A7) Please enter the sample ID (For running water: 1_ _ _ _)"
 	note tap_bag_id_running_typed: "A7) Please enter the sample ID (For running water: 1_ _ _ _)"
 
@@ -550,8 +560,11 @@ if _N>0 {
 	label variable no_tap_reason "A9.1) Why are you not able to collect a running tap water sample?"
 	note no_tap_reason: "A9.1) Why are you not able to collect a running tap water sample?"
 
-	label variable running_time "A9.1.a) Record the time stamp for the running water collected"
-	note running_time: "A9.1.a) Record the time stamp for the running water collected"
+	label variable run_time_hours "A9.1.a) Record the time stamp for the running water collected (hours)"
+	note run_time_hours: "A9.1.a) Record the time stamp for the running water collected (hours)"
+
+	label variable run_time_mins "A9.1.b) Record the time stamp for the running water collected (mins)"
+	note run_time_mins: "A9.1.b) Record the time stamp for the running water collected (mins)"
 
 	label variable wq_tap_fc "A10) What is the free chlorine reading from the Government provided household ta"
 	note wq_tap_fc: "A10) What is the free chlorine reading from the Government provided household tap?"
@@ -576,8 +589,8 @@ if _N>0 {
 	label define error_yesno 1 "Yes" 0 "No"
 	label values error_yesno error_yesno
 
-	label variable error_num "A15) What was the number of the error message?"
-	note error_num: "A15) What was the number of the error message?"
+	label variable error_how_many "A14.1) How many error messages did you receive?"
+	note error_how_many: "A14.1) How many error messages did you receive?"
 
 	label variable testing_comment "A16) Do you have any comments regarding the testing?"
 	note testing_comment: "A16) Do you have any comments regarding the testing?"
@@ -621,6 +634,13 @@ if _N>0 {
 	}
 
 	capture {
+		foreach rgvar of varlist error_num_* {
+			label variable `rgvar' "A15) What was the number of the error \${calc_error_nmbr} message?"
+			note `rgvar': "A15) What was the number of the error \${calc_error_nmbr} message?"
+		}
+	}
+
+	capture {
 		foreach rgvar of varlist survey_member_role_* {
 			label variable `rgvar' "What is the role of person number \${surveynumber}?"
 			note `rgvar': "What is the role of person number \${surveynumber}?"
@@ -648,7 +668,7 @@ if _N>0 {
 		gen new_data_row=1
 		
 		* pull in old data
-		append using "`dtafile'", force
+		append using "`dtafile'"
 		
 		* drop duplicates in favor of old, previously-imported data if overwrite_old_data is 0
 		* (alternatively drop in favor of new data if overwrite_old_data is 1)
