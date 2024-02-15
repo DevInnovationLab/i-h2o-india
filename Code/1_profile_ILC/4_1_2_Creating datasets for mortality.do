@@ -23,8 +23,11 @@
 ********************************************************************************
 
 
-use "${DataRaw}Mortality Survey.dta", clear
+*use "${DataRaw}Mortality Survey.dta", clear
+clear
+import delimited "${DataRaw}Mortality Survey_WIDE.csv", stringcols(_all)
 drop name_child_earlier_* name_child_earlier_sc_*
+
 
 keep name_pc_earlier_* consent_pc_* no_consent_reason_pc_* residence_yesno_pc_* ///
 vill_pc_*  ///
@@ -94,7 +97,7 @@ rename unique_id_sc1					unique_id_new
 
 
 //cleaning unique IDs
-destring unique_id_screen, gen(unique_id_num)
+destring unique_id_screen, gen (unique_id_num)
 format   unique_id_num %15.0gc 
 gen unique_id_hyphen_screen = substr(unique_id_screen, 1,5) + "-"+ substr(unique_id_screen, 6,3) + "-"+ substr(unique_id_screen, 9,3)
 drop unique_id_screen
@@ -150,7 +153,7 @@ duplicates report unique_id new_woman_name_
 duplicates tag unique_id new_woman_name_, gen(dup)
 tab dup
 br if dup>0
-drop if dup>0 & new_consent_woman_==.
+drop if dup>0 & new_consent_woman_==""
 
 duplicates report unique_id new_woman_name_
 drop dup
@@ -167,6 +170,7 @@ reshape long new_name_child_ new_age_child_ new_unit_child_age_ new_cause_death_
 
 //dropping households which did not have deaths
 sort unique_id new_woman_name_ child_num
+destring new_child_died_yn_less24_ new_child_died_yn_more24_, replace
 bys unique_id new_woman_name_ : keep if new_child_died_yn_less24_==1 | new_child_died_yn_more24_ ==1
 
 replace new_name_child_="New baby" if new_woman_name_=="Kantama Hikaka and 38 years"
@@ -212,7 +216,20 @@ drop if dup>0
 
 //dropping redudant vars
 
-drop screen_cause_death_child_1_1_1 screen_cause_death_child_2_1_1 screen_cause_death_child_3_1_1 screen_cause_death_child_4_1_1 screen_cause_death_child_5_1_1 screen_cause_death_child_6_1_1 screen_cause_death_child_7_1_1 screen_cause_death_child_8_1_1 screen_cause_death_child_9_1_1 screen_cause_death_child_10_1_1 screen_cause_death_child_11_1_1 screen_cause_death_child_12_1_1 screen_cause_death_child_13_1_1 screen_cause_death_child_14_1_1 screen_cause_death_child_15_1_1 screen_cause_death_child_16_1_1 screen_cause_death_child_17_1_1 screen_cause_death_child_18_1_1 screen_cause_death_child__77_1_1 screen_cause_death_child_999_1_1 screen_cause_death_child_98_1_1 screen_cause_death_child_1_1_2 screen_cause_death_child_2_1_2 screen_cause_death_child_3_1_2 screen_cause_death_child_4_1_2 screen_cause_death_child_5_1_2 screen_cause_death_child_6_1_2 screen_cause_death_child_7_1_2 screen_cause_death_child_8_1_2 screen_cause_death_child_9_1_2 screen_cause_death_child_10_1_2 screen_cause_death_child_11_1_2 screen_cause_death_child_12_1_2 screen_cause_death_child_13_1_2 screen_cause_death_child_14_1_2 screen_cause_death_child_15_1_2 screen_cause_death_child_16_1_2 screen_cause_death_child_17_1_2 screen_cause_death_child_18_1_2 screen_cause_death_child__77_1_2 screen_cause_death_child_999_1_2 screen_cause_death_child_98_1_2 screen_cause_death_child_1_2_1 screen_cause_death_child_2_2_1 screen_cause_death_child_3_2_1 screen_cause_death_child_4_2_1 screen_cause_death_child_5_2_1 screen_cause_death_child_6_2_1 screen_cause_death_child_7_2_1 screen_cause_death_child_8_2_1 screen_cause_death_child_9_2_1 screen_cause_death_child_10_2_1 screen_cause_death_child_11_2_1 screen_cause_death_child_12_2_1 screen_cause_death_child_13_2_1 screen_cause_death_child_14_2_1 screen_cause_death_child_15_2_1 screen_cause_death_child_16_2_1 screen_cause_death_child_17_2_1 screen_cause_death_child_18_2_1 screen_cause_death_child__77_2_1 screen_cause_death_child_999_2_1 screen_cause_death_child_98_2_1 screen_cause_death_child_1_2_2 screen_cause_death_child_2_2_2 screen_cause_death_child_3_2_2 screen_cause_death_child_4_2_2 screen_cause_death_child_5_2_2 screen_cause_death_child_6_2_2 screen_cause_death_child_7_2_2 screen_cause_death_child_8_2_2 screen_cause_death_child_9_2_2 screen_cause_death_child_10_2_2 screen_cause_death_child_11_2_2 screen_cause_death_child_12_2_2 screen_cause_death_child_13_2_2 screen_cause_death_child_14_2_2 screen_cause_death_child_15_2_2 screen_cause_death_child_16_2_2 screen_cause_death_child_17_2_2 screen_cause_death_child_18_2_2 screen_cause_death_child__77_2_2 screen_cause_death_child_999_2_2 screen_cause_death_child_98_2_2 screen_cause_death_child_1_3_1 screen_cause_death_child_2_3_1 screen_cause_death_child_3_3_1 screen_cause_death_child_4_3_1 screen_cause_death_child_5_3_1 screen_cause_death_child_6_3_1 screen_cause_death_child_7_3_1 screen_cause_death_child_8_3_1 screen_cause_death_child_9_3_1 screen_cause_death_child_10_3_1 screen_cause_death_child_11_3_1 screen_cause_death_child_12_3_1 screen_cause_death_child_13_3_1 screen_cause_death_child_14_3_1 screen_cause_death_child_15_3_1 screen_cause_death_child_16_3_1 screen_cause_death_child_17_3_1 screen_cause_death_child_18_3_1 screen_cause_death_child__77_3_1 screen_cause_death_child_999_3_1 screen_cause_death_child_98_3_1 screen_cause_death_child_1_3_2 screen_cause_death_child_2_3_2 screen_cause_death_child_3_3_2 screen_cause_death_child_4_3_2 screen_cause_death_child_5_3_2 screen_cause_death_child_6_3_2 screen_cause_death_child_7_3_2 screen_cause_death_child_8_3_2 screen_cause_death_child_9_3_2 screen_cause_death_child_10_3_2 screen_cause_death_child_11_3_2 screen_cause_death_child_12_3_2 screen_cause_death_child_13_3_2 screen_cause_death_child_14_3_2 screen_cause_death_child_15_3_2 screen_cause_death_child_16_3_2 screen_cause_death_child_17_3_2 screen_cause_death_child_18_3_2 screen_cause_death_child__77_3_2 screen_cause_death_child_999_3_2 screen_cause_death_child_98_3_2 screen_cause_death_child_1_4_1 screen_cause_death_child_2_4_1 screen_cause_death_child_3_4_1 screen_cause_death_child_4_4_1 screen_cause_death_child_5_4_1 screen_cause_death_child_6_4_1 screen_cause_death_child_7_4_1 screen_cause_death_child_8_4_1 screen_cause_death_child_9_4_1 screen_cause_death_child_10_4_1 screen_cause_death_child_11_4_1 screen_cause_death_child_12_4_1 screen_cause_death_child_13_4_1 screen_cause_death_child_14_4_1 screen_cause_death_child_15_4_1 screen_cause_death_child_16_4_1 screen_cause_death_child_17_4_1 screen_cause_death_child_18_4_1 screen_cause_death_child__77_4_1 screen_cause_death_child_999_4_1 screen_cause_death_child_98_4_1 screen_cause_death_child_1_4_2 screen_cause_death_child_2_4_2 screen_cause_death_child_3_4_2 screen_cause_death_child_4_4_2 screen_cause_death_child_5_4_2 screen_cause_death_child_6_4_2 screen_cause_death_child_7_4_2 screen_cause_death_child_8_4_2 screen_cause_death_child_9_4_2 screen_cause_death_child_10_4_2 screen_cause_death_child_11_4_2 screen_cause_death_child_12_4_2 screen_cause_death_child_13_4_2 screen_cause_death_child_14_4_2 screen_cause_death_child_15_4_2 screen_cause_death_child_16_4_2 screen_cause_death_child_17_4_2 screen_cause_death_child_18_4_2 screen_cause_death_child__77_4_2 screen_cause_death_child_999_4_2 screen_cause_death_child_98_4_2 screen_cause_death_child_1_5_1 screen_cause_death_child_2_5_1 screen_cause_death_child_3_5_1 screen_cause_death_child_4_5_1 screen_cause_death_child_5_5_1 screen_cause_death_child_6_5_1 screen_cause_death_child_7_5_1 screen_cause_death_child_8_5_1 screen_cause_death_child_9_5_1 screen_cause_death_child_10_5_1 screen_cause_death_child_11_5_1 screen_cause_death_child_12_5_1 screen_cause_death_child_13_5_1 screen_cause_death_child_14_5_1 screen_cause_death_child_15_5_1 screen_cause_death_child_16_5_1 screen_cause_death_child_17_5_1 screen_cause_death_child_18_5_1 screen_cause_death_child__77_5_1 screen_cause_death_child_999_5_1 screen_cause_death_child_98_5_1 screen_cause_death_child_1_5_2 screen_cause_death_child_2_5_2 screen_cause_death_child_3_5_2 screen_cause_death_child_4_5_2 screen_cause_death_child_5_5_2 screen_cause_death_child_6_5_2 screen_cause_death_child_7_5_2 screen_cause_death_child_8_5_2 screen_cause_death_child_9_5_2 screen_cause_death_child_10_5_2 screen_cause_death_child_11_5_2 screen_cause_death_child_12_5_2 screen_cause_death_child_13_5_2 screen_cause_death_child_14_5_2 screen_cause_death_child_15_5_2 screen_cause_death_child_16_5_2 screen_cause_death_child_17_5_2 screen_cause_death_child_18_5_2 screen_cause_death_child__77_5_2 screen_cause_death_child_999_5_2 screen_cause_death_child_98_5_2 screen_cause_death_child_1_6_1 screen_cause_death_child_2_6_1 screen_cause_death_child_3_6_1 screen_cause_death_child_4_6_1 screen_cause_death_child_5_6_1 screen_cause_death_child_6_6_1 screen_cause_death_child_7_6_1 screen_cause_death_child_8_6_1 screen_cause_death_child_9_6_1 screen_cause_death_child_10_6_1 screen_cause_death_child_11_6_1 screen_cause_death_child_12_6_1 screen_cause_death_child_13_6_1 screen_cause_death_child_14_6_1 screen_cause_death_child_15_6_1 screen_cause_death_child_16_6_1 screen_cause_death_child_17_6_1 screen_cause_death_child_18_6_1 screen_cause_death_child__77_6_1 screen_cause_death_child_999_6_1 screen_cause_death_child_98_6_1 screen_cause_death_child_1_6_2 screen_cause_death_child_2_6_2 screen_cause_death_child_3_6_2 screen_cause_death_child_4_6_2 screen_cause_death_child_5_6_2 screen_cause_death_child_6_6_2 screen_cause_death_child_7_6_2 screen_cause_death_child_8_6_2 screen_cause_death_child_9_6_2 screen_cause_death_child_10_6_2 screen_cause_death_child_11_6_2 screen_cause_death_child_12_6_2 screen_cause_death_child_13_6_2 screen_cause_death_child_14_6_2 screen_cause_death_child_15_6_2 screen_cause_death_child_16_6_2 screen_cause_death_child_17_6_2 screen_cause_death_child_18_6_2 screen_cause_death_child__77_6_2 screen_cause_death_child_999_6_2 screen_cause_death_child_98_6_2 screen_no_consent_reason_1_1 screen_no_consent_reason_2_1 screen_no_consent_reason__77_1 screen_no_consent_reason_1_2 screen_no_consent_reason_2_2 screen_no_consent_reason__77_2 screen_no_consent_reason_1_3 screen_no_consent_reason_2_3 screen_no_consent_reason__77_3 screen_no_consent_reason_1_4 screen_no_consent_reason_2_4 screen_no_consent_reason__77_4 screen_no_consent_reason_1_5 screen_no_consent_reason_2_5 screen_no_consent_reason__77_5 screen_no_consent_reason_1_6 screen_no_consent_reason_2_6 screen_no_consent_reason__77_6
+drop screen_cause_death_child_1_1_1 - screen_cause_death_child_98_1_1 
+drop screen_cause_death_child_1_1_2 - screen_cause_death_child_98_1_2 
+drop screen_cause_death_child_1_2_1 - screen_cause_death_child_98_2_1 
+drop screen_cause_death_child_1_2_2 - screen_cause_death_child_98_2_2
+drop screen_cause_death_child_1_3_1 - screen_cause_death_child_98_3_1 
+drop screen_cause_death_child_1_3_2 - screen_cause_death_child_98_3_2
+drop screen_cause_death_child_1_4_1 - screen_cause_death_child_98_4_1 
+drop screen_cause_death_child_1_4_2 - screen_cause_death_child_98_4_2
+drop screen_cause_death_child_1_5_1 - screen_cause_death_child_98_5_1
+drop screen_cause_death_child_1_5_2 - screen_cause_death_child_98_5_2 
+drop screen_cause_death_child_1_6_1 - screen_cause_death_child_98_6_1
+drop screen_cause_death_child_1_6_2 - screen_cause_death_child_98_6_2
+
+drop screen_no_consent_reason_1_1 screen_no_consent_reason_2_1 screen_no_consent_reason__77_1 screen_no_consent_reason_1_2 screen_no_consent_reason_2_2 screen_no_consent_reason__77_2 screen_no_consent_reason_1_3 screen_no_consent_reason_2_3 screen_no_consent_reason__77_3 screen_no_consent_reason_1_4 screen_no_consent_reason_2_4 screen_no_consent_reason__77_4 screen_no_consent_reason_1_5 screen_no_consent_reason_2_5 screen_no_consent_reason__77_5 screen_no_consent_reason_1_6 screen_no_consent_reason_2_6 screen_no_consent_reason__77_6
 
 
 
@@ -238,6 +255,7 @@ reshape long screen_name_child_ screen_age_child_ screen_unit_child_age_ screen_
 
 //dropping households which did not have deaths
 sort unique_id screen_woman_name_ child_num
+destring sc_child_died_yn_less24_ sc_child_died_yn_more24_, replace
 bys unique_id screen_woman_name_ : keep if sc_child_died_yn_less24_==1 | sc_child_died_yn_more24_ ==1
 
 replace screen_name_child_="New baby" if screen_woman_name_=="Gauri Hikaka and 35 years"
@@ -266,7 +284,7 @@ foreach v in sc_child_died_yn_less24_ sc_child_died_num_less24_ sc_child_died_yn
 }
 
 order child_died_yn_less24_ child_died_num_less24_ child_died_yn_more24_ child_died_num_more24_, last
-renvars screen_woman_name_- screen_date_death_child_, predrop(7)
+renvars screen_woman_name_- screen_miscarriage_yn_, predrop(7)
 
 save "${DataRaw}Mortality survey_cleaned vars_screenedwomen.dta", replace
 
@@ -284,12 +302,53 @@ replace cause_death_child_=77 if cause_death_child_==-77
 label define cause_death_childl 13 "Jaundice" 14 "Low birth weight" 999 "Don't know" 77 "Other", modify
 label values cause_death_child_ cause_death_childl
 
+label define unit_child_agel 1 "Months" 2 "Days" 3 "Years", modify
+destring unit_child_age_, replace
+label values unit_child_age_ unit_child_agel
+
 renvars woman_name_ - miscarriage_yn_, postdrop(1)
+
 
 replace woman_name = subinstr(woman_name,"and","",.)
 replace woman_name = subinstr(woman_name,"years","",.)
 gen woman_age= substr(woman_name,-3,2)
 replace woman_name = subinstr(woman_name, word(woman_name, -1), "", 1) if real(word(woman_name, -1))  < .
+
+replace woman_name= "Jagaladi Kandagari" if woman_name== "Jagaladi Kagari    "
+replace woman_name= "Sangeet Kandagari" if woman_name== "Sangeet Kagari   "
+
+// 2. Manual data
+
+**HHID- 30701119003
+**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
+replace age_child = "4" if unique_id == "30701-119-003" 
+replace unit_child_age = 2 if unique_id == "30701-119-003" 
+replace date_birth_child = "02/24/2019" if unique_id == "30701-119-003" 
+replace date_death_child = "02/27/2019" if unique_id == "30701-119-003"
+replace cause_death_child_str = "It was a normal delivery and ASHA took the lady to the hospital but child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id == "30701-119-003"
+replace cause_death_diag_yn = "0" if unique_id == "30701-119-003"
+replace cause_death_child = 999 if unique_id == "30701-119-003"
+
+
+**HHID- 30701505008
+**There was an error in the form due to which survey wasn't showing death section for the child if the death has occured and form was already in the edit saved so we had to ask the enum to submit the form without doing death section as it was in edit saved and any update from our side couldn't be incorporated in the edit saved form. We asked them to collect details for death section on a piece of paper which was destroyed later. Form error has been fixed now
+
+replace age_child = "1" if unique_id == "30701-505-008" 
+replace unit_child_age = 2 if unique_id == "30701-505-008" 
+replace date_birth_child = "10/11/2020" if unique_id == "30701-505-008" 
+replace date_death_child = "10/11/2020" if unique_id == "30701-505-008" 
+replace cause_death_child_str = "Delivery was done in the hospital and child died in the hospital, she wasn't informed about the issue and she could not find that out on her own" if unique_id == "30701-505-008" 
+replace cause_death_diag_yn = "999" if unique_id == "30701-505-008" 
+replace cause_death_child = 999 if unique_id == "30701-505-008" 
+
+
+//3. other manual cleaning
+replace date_death_child = "12/31/2022" if unique_id == "50402-503-013"  
+replace date_death_child = "12/1/2022" if unique_id == "50402-106-029" 
+replace date_death_child = "2/28/2022" if unique_id == "50501-119-010" 
+
+
+
 
 save "${DataFinal}Mortality survey dataset_reshaped_child deaths.dta", replace
 
