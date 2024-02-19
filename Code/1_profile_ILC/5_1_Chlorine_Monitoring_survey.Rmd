@@ -83,7 +83,7 @@ github_path <- function() {
   return(github)
 }
 
-# setting github directory
+# setting overleaf directory
 overleaf <- function() {
   user <- Sys.info()["user"]
   if (user == "asthavohra") {

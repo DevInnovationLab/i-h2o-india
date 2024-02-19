@@ -191,8 +191,9 @@ stargazer(df.progress, summary=F, title= "Overall Progress: Follow Up Round 1 HH
 #df.temp$date <- format(as.Date(df.temp$R_FU1_starttime, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d")
 
 
+
 #------------------------ Distribution of surveys by dates & villages ----------------------------------------#
-date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% 
+date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% filter(date >= as.Date("2024-02-07")) %>%
   group_by( R_FU1_r_cen_village_name_str, date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
@@ -210,7 +211,7 @@ stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_date_village_R1.tex
 
 #------------------------ Distribution of surveys by Enumerator, dates & villages ----------------------------------------#
 
-date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% 
+date.plt<- df.temp %>% filter(R_FU1_consent == 1)%>% filter(date >= as.Date("2024-02-07")) %>%
   group_by( R_FU1_r_cen_village_name_str,R_FU1_enum_name_label,  date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
