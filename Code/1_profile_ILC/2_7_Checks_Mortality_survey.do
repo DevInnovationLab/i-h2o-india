@@ -88,7 +88,7 @@ cap export excel unique_id_num R_mor_enum_name_f R_mor_village R_mor_resp_name R
 /*-----------------------------------------------------------------------------------------------------------------------------------
 Age calculation                                                  
 -------------------------------------------------------------------------------------------------------------------------------------*/
-
+*********************************************************
 
 ds R_mor_a6_dob_*
 foreach var of varlist `r(varlist)'{ 
@@ -99,6 +99,31 @@ gen years_`var' = days_`var' / 365
 forvalues i = 1/12 {
       gen diff_`i' = years_R_mor_a6_dob_`i' - R_mor_a6_hhmember_age_`i'
 }
+
+export excel R_mor_village unique_id_num submission_date R_mor_a6_dob_1 years_R_mor_a6_dob_1 R_mor_a6_hhmember_age_1 R_mor_a6_dob_2 years_R_mor_a6_dob_2 R_mor_a6_hhmember_age_2 R_mor_a6_dob_3 years_R_mor_a6_dob_3 R_mor_a6_hhmember_age_3 R_mor_a6_dob_4 years_R_mor_a6_dob_4 R_mor_a6_hhmember_age_4 R_mor_a6_dob_5 years_R_mor_a6_dob_5 R_mor_a6_hhmember_age_5 R_mor_a6_dob_6 years_R_mor_a6_dob_6 R_mor_a6_hhmember_age_6 R_mor_a6_dob_7 years_R_mor_a6_dob_7 R_mor_a6_hhmember_age_7 R_mor_a6_dob_8 years_R_mor_a6_dob_8 R_mor_a6_hhmember_age_8 R_mor_a6_dob_9 years_R_mor_a6_dob_9 R_mor_a6_hhmember_age_9 R_mor_a6_dob_10 years_R_mor_a6_dob_10 R_mor_a6_hhmember_age_10 R_mor_a6_dob_11 years_R_mor_a6_dob_11 R_mor_a6_hhmember_age_11 R_mor_a6_dob_12 years_R_mor_a6_dob_12 R_mor_a6_hhmember_age_12 using "$PathTables/Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
+
+ 
+forvalues i = 1/4 {
+      gen child_diff_`i' = R_mor_date_death_`i'_1 - R_mor_date_birth_`i'_1
+      gen child_diff_years_`i' = child_diff_`i' / 365 
+}
+
+*export excel R_mor_village unique_id_num submission_date R_mor_date_death_1_1 R_mor_date_birth_1_1 child_diff_years_1  using "$PathTables/Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
+
+  
+forvalues i = 1/6 {
+      gen sc_child_diff_`i' = R_mor_date_death_sc_`i'_1 - R_mor_date_birth_sc_`i'_1
+      gen sc_child_diff_years_`i' = sc_child_diff_`i' / 365 
+
+}
+
+  
+forvalues i = 1/6 {
+      gen sc_2_child_diff_`i' = R_mor_date_death_sc_`i'_2 - R_mor_date_birth_sc_`i'_2
+	  gen sc_2_child_diff_years_`i' = sc_2_child_diff_`i' / 365
+}
+
+*******************************************************
 
 //creating a subset for child deaths to match with CDR
 br village unique_id_num R_mor_landmark_f R_mor_vill_pc_* R_mor_vill_residence_* R_mor_women_child_bear_count_f R_mor_name_pc_earlier_* R_mor_last_5_years_pregnant_* R_mor_last_5_years_preg_oth_* total_stillborn R_mor_child_stillborn_* total_childdiedless24 total_childdiedmore24  R_mor_child_alive_died_*  total_childlivingnum R_mor_child_living_* total_notlivingchild R_mor_child_notliving_* R_mor_name_child_earlier_* R_mor_age_child_* R_mor_unit_child_* R_mor_date_birth_* R_mor_date_death_* R_mor_cause_death_* R_mor_cause_death_oth_* R_mor_cause_death_str_* R_mor_miscarriage_*
