@@ -89,8 +89,13 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 				if c(username) == "Archi Gupta" {		
 		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw\"
 	}
+
 	
 	global DataDeid  "${pilot}2_deidentified/"
+					if c(username) == "Archi Gupta" {		
+		global DataDeid  "C:\Users\Archi Gupta\Box\Data\2_deidentified\"
+	}
+
 	global DataFinal "${pilot}3_final/"
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
