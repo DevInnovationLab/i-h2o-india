@@ -20,6 +20,7 @@ capture drop consented1burden_of_water_collec consented1chlorination_perceptio c
 
 ** Drop ID information
 
+
 *drop r_cen_a1_resp_name  r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_a11_oldmale_name r_cen_address r_cen_saahi_name
 
 rename consented1water_quality_testing1 consented_wq_testing1
