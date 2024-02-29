@@ -101,7 +101,7 @@ overleaf <- function() {
 #------------------------ Load the data ----------------------------------------#
 
 df.temp <- read_dta(paste0(user_path(),"2_deidentified/1_5_Followup_R1_cleaned.dta" ))
-df.preload <- read_xlsx(paste0(user_path(),"99_Preload/Followup_preload_31 Jan 2024.xlsx"))
+df.preload <- read_xlsx(paste0(user_path(),"99_Preload/Followup_preload_20 Feb 2024.xlsx"))
 #------------------------ Apply the labels for variables  ----------------------------------------#
 
 temp.labels <- lapply(df.temp , var_lab)
@@ -131,7 +131,7 @@ df.temp$datetime <- strptime(df.temp$R_FU1_starttime, format = "%Y-%m-%d %H:%M:%
 df.temp$date <- as.IDate(df.temp$datetime) 
 
 #filter out the testing dates
-df.temp <- df.temp %>% filter(date >= as.Date("2024-02-05"))
+df.temp <- df.temp %>% filter(date >= as.Date("2024-02-10"))
 
 #------------------------ Keep consented cases ----------------------------------------#
 
@@ -193,7 +193,7 @@ stargazer(df.progress, summary=F, title= "Overall Progress: Follow Up Round 1 HH
 
 
 #------------------------ Distribution of surveys by dates & villages ----------------------------------------#
-date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% filter(date >= as.Date("2024-02-07")) %>%
+date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% filter(date >= as.Date("2024-02-10")) %>%
   group_by( R_FU1_r_cen_village_name_str, date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
@@ -211,7 +211,7 @@ stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_date_village_R1.tex
 
 #------------------------ Distribution of surveys by Enumerator, dates & villages ----------------------------------------#
 
-date.plt<- df.temp %>% filter(R_FU1_consent == 1)%>% filter(date >= as.Date("2024-02-07")) %>%
+date.plt<- df.temp %>% filter(R_FU1_consent == 1)%>% filter(date >= as.Date("2024-02-10")) %>%
   group_by( R_FU1_r_cen_village_name_str,R_FU1_enum_name_label,  date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
