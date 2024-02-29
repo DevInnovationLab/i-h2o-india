@@ -4,7 +4,7 @@
 ****** Purpose: 
 ****** Created by: Michelle (DIL)
 ****** Used by:  DIL
-****** Date created: 31 Jan 2024 
+****** Date created: 20 Feb 2024 
 ****** Date revised: -- 
 ****** Language: English
 *=========================================================================*
@@ -92,7 +92,7 @@ keep if ineligible==0
 	label values S_BLS S_BLSl
 
 
-	save "${DataPre}Selected_`value'_31 Jan 2024.dta", replace
+	save "${DataPre}Selected_`value'_20 Feb 2024.dta", replace
 
 
 
@@ -102,7 +102,7 @@ keep if ineligible==0
 * Step 3: Carefully integrate back to the master list *
 *******************************************************
 * Only the village where we complete the randomization should be included in the merge list
-use "${DataPre}Selected_`value'_31 Jan 2024.dta", clear
+use "${DataPre}Selected_`value'_20 Feb 2024.dta", clear
 *append using "${DataPre}Selected_30501_20 Oct 2023.dta"
 *append using "${DataPre}Selected_30202_20 Oct 2023.dta"
 save "${DataPre}Selected_HHs_HH survey_water_testing_R1.dta", replace
@@ -157,10 +157,10 @@ replace R_Cen_village_name_str= R_Cen_village_str if R_Cen_village_name_str==""
 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_`vill'_31 Jan 2024.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_`vill'_20 Feb 2024.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_`vill'_31 Jan 2024_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_HH_Tracker_Baseline_`vill'_20 Feb 2024_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) keepcellfmt
 
 restore
 
@@ -171,12 +171,12 @@ restore
 * Step 5: Creating the data for pre-load
 ***********************************************************************
 
-local mylist 10101 10201 20201 30202 30301 30501 30601 30602 30701 ///
+local mylist 10101 10201 20101 20201 30202 30301 30501 30601 30602 30701 ///
  40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 50601
 
 foreach i of local mylist {
 	
-use "${DataPre}Selected_`i'_31 Jan 2024.dta", clear
+use "${DataPre}Selected_`i'_20 Feb 2024.dta", clear
 
 tempfile vill_`i'
 save `vill_`i'', replace
@@ -190,7 +190,7 @@ save `vill_`i'', replace
 
 }
 
-local mylist2 10101 10201 20201 30202 30301 30501 30601 30602 ///
+local mylist2 10101 10201 20101 20201 30202 30301 30501 30601 30602 ///
  30701 40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 
  
  use `vill_50601', clear
@@ -232,7 +232,7 @@ forvalue i = 1/17 {
 	
 
 sort  S_BLS S_BLWQ
-export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 R_Cen_enum_name_label R_Cen_enum_code using "${DataPre}Followup_preload_31 Jan 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 R_Cen_enum_name_label R_Cen_enum_code using "${DataPre}Followup_preload_20 Feb 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
-export excel unique_id R_Cen_a12_water_source_prim R_Cen_a13_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a18_jjm_drinking using "${DataPre}Followup_watersource_31 Jan 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_Cen_a12_water_source_prim R_Cen_a13_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a18_jjm_drinking using "${DataPre}Followup_watersource_20 Feb 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 

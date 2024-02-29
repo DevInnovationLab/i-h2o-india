@@ -206,10 +206,10 @@ plot_list_tap = list()
 for (i in village_list){
   df.vil.cl <-   df.tap %>% filter(village == i)    
   p <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color=Distance, linetype = Test)) +
-  geom_line(linewidth = 0.8)  + 
+  geom_line(linewidth = 1.00)  + 
   labs(title = " Concentration of Chlorine",
        x = "Date",
-       y = "") +  
+       y = "Chlorine Concentration") +  
   scale_x_date(date_breaks = '1 day', 
                labels = scales::date_format("%b %d")) +
     scale_y_continuous(limits = c(0.00, 2.00), breaks = seq(0.00, 2.00, 0.1)) +
@@ -217,8 +217,18 @@ for (i in village_list){
     legend.position = c(1, 1),
     legend.justification = c("right", "top"),
     legend.box.just = "right",
-    legend.margin = margin(6, 6, 6, 6), axis.text.x = element_text(angle = 90, size = 10)
-    ) +  scale_color_brewer(palette="Dark2") + 
+    legend.margin = margin(6, 6, 6, 6), 
+    legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=15), #change legend title font size
+        legend.text = element_text(size=14), 
+    axis.text.x = element_text(angle = 90, size = 14), 
+    axis.text.y = element_text(size = 14), 
+    axis.title=element_text(size=14,face="bold")) + 
+    scale_color_brewer(palette="Dark2") + geom_hline(yintercept=0.2, linetype="dotdash", color = "blue" ,linewidth=0.5) +
+    geom_hline(yintercept=0.5, linetype="dotdash", color = "blue", linewidth=0.5) +   
+    annotate("text", min(df.vil.cl$Date), 0.5, vjust = -1, label = "Ideal Dose Range", color = "blue", size = 4) + 
     ggtitle(paste0('Tap water: Village_',i))
 
     print(p)
@@ -234,6 +244,9 @@ for (i in village_list) {
     print(plot_list_tap[[i]])
     dev.off()
 }
+
+
+
 
 
 ```
