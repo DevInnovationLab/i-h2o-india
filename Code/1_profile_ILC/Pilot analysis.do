@@ -1056,3 +1056,148 @@ esttab model29  model30 using "${Table}Perceptions_`k'.tex", ///
 				   ) ///
 	   title("Perceptions of taste & smell of JJM provided tap water") 
 }
+
+
+
+
+
+/*----------------------------------------------
+*Comparing data from baseline and followup data
+----------------------------------------------*/
+
+//Baseline HH survey data
+
+use  "${DataDeid}1_2_Followup_cleaned.dta", clear
+keep if R_FU_consent==1
+tab R_FU_r_cen_village_name_str
+drop if R_FU_r_cen_village_name_str=="Badaalubadi" | R_FU_r_cen_village_name_str=="Haathikambha"
+
+foreach i in R_FU_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+foreach v in R_FU_water_treat R_FU_water_source_prim ///
+ {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+tempfile baseline
+save `baseline', replace
+
+
+global baseline R_FU_water_treat_1 R_FU_water_source_prim_1 R_FU_fc_tap R_FU_fc_stored
+
+foreach k in baseline {
+use `baseline', clear
+
+
+* Diff
+	eststo  model1: estpost summarize $`k'
+	
+*Min
+use `baseline', clear
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model2: estpost summarize $`k'
+	
+	
+
+esttab model1 model2 using "${Table}Baseline HH survey stats.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "SD") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Baseline HH survey statistics") 
+}
+
+
+
+//Follow-up R1 survey data
+
+use "${DataDeid}1_5_Followup_R1_cleaned.dta", clear
+keep if R_FU1_consent ==1
+tab R_FU1_r_cen_village_name_str
+
+**assign treatment
+
+gen treatment= 1 if R_FU1_r_cen_village_name_str== "Birnarayanpur" | R_FU1_r_cen_village_name_str=="Nathma"|R_FU1_r_cen_village_name_str== "Badabangi"| R_FU1_r_cen_village_name_str=="Naira"| R_FU1_r_cen_village_name_str== "Bichikote"|R_FU1_r_cen_village_name_str== "Karnapadu"| R_FU1_r_cen_village_name_str=="Mukundpur"|R_FU1_r_cen_village_name_str== "Tandipur"|R_FU1_r_cen_village_name_str== "Gopi Kankubadi"|R_FU1_r_cen_village_name_str== "Asada" 
+
+replace treatment=0 if treatment==.
+                                                                  
+
+
+
+foreach i in R_FU1_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+foreach v in R_FU1_water_source_prim R_FU1_tap_use_drinking_yesno R_FU1_water_treat ///
+ {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+**doing some chlorine data cleaning
+replace R_FU1_fc_tap=. if R_FU1_fc_tap==999
+	
+tempfile followup
+save `followup', replace
+
+
+**Note: change treatment status to 1 or 0 depending on the table you want to create
+global followup R_FU1_water_source_prim_1 R_FU1_water_source_sec_1 R_FU1_tap_use_drinking_yesno_1 R_FU1_water_treat_1 R_FU1_fc_stored R_FU1_fc_tap
+
+foreach k in followup {
+use `followup', clear
+
+
+
+* Diff
+	eststo  model3: estpost summarize $`k' if treatment==1
+	
+*Min
+use `followup', clear
+
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model4: estpost summarize $`k' if treatment==1
+	
+	
+
+esttab model3 model4 using "${Table}Follow R1 survey stats-treatment villages.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "SD") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Follow R1 survey stats-treament villages") 
+}
+
