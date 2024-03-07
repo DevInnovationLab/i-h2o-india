@@ -575,21 +575,21 @@ all_stats <- idexx%>%
 # Print the table
 kbl(village_stats)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Baseline - Water Quality Test Results " = 6)) %>%
+  add_header_above(c("Baseline - Water Quality Test Results " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
 kbl(tc_stats)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Baseline - Water Quality Test Results " = 5)) %>%
+  add_header_above(c("Baseline - Water Quality Test Results " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
 kbl(all_stats)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Baseline - Water Quality Test Results " = 5)) %>%
+  add_header_above(c("Baseline - Water Quality Test Results " = 6)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
