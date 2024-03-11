@@ -30,6 +30,7 @@ library(stargazer)
 library(readxl)
 library(haven)
 library(googlesheets4)
+library(ggsignif)
 
 
 
@@ -890,21 +891,22 @@ p6 <- ggplot(data = tc_stats) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
-  labs(x = "Block", 
+  labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
-       fill = "Sample Type",
+       fill = "Assignment",
        title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p7 <- ggplot(data = tc_stats) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
-  labs(x = "Block", 
+  labs(x = "Sample Type", 
        y = expression(paste("% positive for total coliform")),
-       fill = "Sample Type",
+       fill = "Assignment",
        title = expression(paste(" R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -912,7 +914,22 @@ p7 <- ggplot(data = tc_stats) +
 
 p7 + p6
 
+#Fisher's Exact Test for differences between control and treatment
+idexx_r1_stored <- idexx_r1%>%
+  filter(sample_type == "Stored")
 
+idexx_r1_tap <- idexx_r1%>%
+  filter(sample_type == "Tap")
+
+stored_cf <- fisher.test(x = idexx_r1_stored$assignment, y=idexx_r1_stored$cf_pa)
+
+stored_ec <- fisher.test(x = idexx_r1_stored$assignment, y=idexx_r1_stored$ec_pa)
+
+tap_cf <- fisher.test(x = idexx_r1_tap$assignment, y=idexx_r1_tap$cf_pa)
+
+tap_ec <- fisher.test(x = idexx_r1_tap$assignment, y=idexx_r1_tap$ec_pa)
+
+idexx_r1_signif <- data.frame(stored_cf$p.value, stored_ec$p.value, tap_cf$p.value, tap_ec$p.value)
 
 
 ```
