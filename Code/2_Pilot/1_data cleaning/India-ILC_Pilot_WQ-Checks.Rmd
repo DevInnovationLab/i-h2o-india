@@ -56,9 +56,9 @@ mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/
 
 gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
 
-idx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_IDEXX_data_MASTER.xlsx")
+idx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_IDEXX_data_MASTER.xlsx")
 
-abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
+abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
 
 village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
@@ -462,7 +462,13 @@ idexx_r1 <- idexx_r1%>%
 #log transforming data
 idexx_r1 <- idexx_r1%>%
   mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))
+  mutate(cf_log = log(cf_mpn, base = 10))%>%
+  mutate(ec_log = case_when(ec_log < 0 ~ 0.5,
+                            ec_log >= 0 ~ ec_log))%>%
+  mutate(cf_log = case_when(cf_log < 0 ~ 0.5,
+                            cf_log >= 0 ~ cf_log))
+#Make - inf values be 0
+
 
 
 
@@ -788,7 +794,7 @@ kbl(village_stats)%>%
 
 kbl(tc_stats)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("R1 - Water Quality Test Results " = 6)) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
@@ -848,13 +854,14 @@ p3
 
 #Plotting IDEXX E. coli data by sample type
 p4 <- ggplot(data = idexx_r1) + 
-  geom_boxplot(aes(x = sample_type, y = ec_log)) +
+  geom_boxplot(aes(x = sample_type, y = ec_log, fill = assignment)) +
   scale_y_continuous(
                      limits = c(0, 4),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
        y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
-       title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
+       fill = "Assignment",
+       title = expression(paste(italic("E. coli"), " Follow-up 1 - Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
@@ -875,6 +882,36 @@ p5 <- ggplot(data = idexx_r1) +
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p5
+
+
+#Plotting treatment/control stats on a bar plot
+p6 <- ggplot(data = tc_stats) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Block", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Sample Type",
+       title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p7 <- ggplot(data = tc_stats) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Block", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Sample Type",
+       title = expression(paste(" R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p7 + p6
+
 
 
 
