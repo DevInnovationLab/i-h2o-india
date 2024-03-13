@@ -31,6 +31,7 @@ library(readxl)
 library(haven)
 library(googlesheets4)
 library(ggsignif)
+library(patchwork)
 
 
 
@@ -770,10 +771,25 @@ tc_stats <- idexx_r1%>%
   summarize(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
     "Median MPN E. coli/100 mL" = median(ec_mpn),
     "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
   )
+#adjusting CI to be within 0-100
+tc_stats <- tc_stats%>%
+  mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
+                            `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+  mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
+                            `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+
 
 all_stats <- idexx_r1%>%
   group_by(sample_type) %>%
@@ -888,6 +904,9 @@ p5
 #Plotting treatment/control stats on a bar plot
 p6 <- ggplot(data = tc_stats) + 
   geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
@@ -900,6 +919,9 @@ p6 <- ggplot(data = tc_stats) +
 
 p7 <- ggplot(data = tc_stats) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
                      limits = c(0, 100),
@@ -911,7 +933,8 @@ p7 <- ggplot(data = tc_stats) +
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-
+p6
+p7
 p7 + p6
 
 #Fisher's Exact Test for differences between control and treatment
