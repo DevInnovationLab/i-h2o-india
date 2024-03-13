@@ -35,14 +35,19 @@ format  unique_id %15.0gc
 //Conduct stratification
 keep R_FU1_r_cen_village_name_str unique_id  R_FU1_enum_name  
 
+levelsof R_FU1_r_cen_village_name_str
+foreach value in `r(levels)' {
 
+preserve
+    *local Village_R 
+keep if R_FU1_r_cen_village_name_str==`value'	
 
 egen strata= group(R_FU1_enum_name) 
 
 //Total number of BC surveys needed per enumerator - 10%
 gen count= 1
 bys R_FU1_enum_name: egen total= total(count)
-gen ten_perc_per_enum= 0.1*total
+gen ten_perc_per_enum= 0.10*total
 replace ten_perc_per_enum= round(ten_perc_per_enum)
 
 //Randomly generating numbers that are assigned to obervations
@@ -77,6 +82,8 @@ tempfile selected_for_BC
 save `selected_for_BC', replace
 save "${DataPr}selected_for_BC.dta", replace
 
+restore
+}
 
 ***********************************************************************
 * Step 3: Generating preload list for BC survey *
@@ -96,7 +103,6 @@ keep if merge_BC_select==3
 
 sort R_FU1_r_cen_village_name_str R_FU1_enum_name_label 
 export excel unique_id R_FU1_r_cen_village_name_str R_FU1_enum_name R_FU1_enum_name_label R_FU1_r_cen_a10_hhhead R_FU1_r_cen_a1_resp_name R_FU1_r_cen_a39_phone_name_1 R_FU1_r_cen_a39_phone_num_1 R_FU1_r_cen_a39_phone_name_2 R_FU1_r_cen_a39_phone_num_2 R_FU1_r_cen_landmark R_FU1_r_cen_address R_FU1_r_cen_hamlet_name R_FU1_r_cen_saahi_name R_FU1_r_cen_a11_oldmale_name R_FU1_r_cen_fam_name1 R_FU1_r_cen_fam_name2 R_FU1_r_cen_fam_name3 R_FU1_r_cen_fam_name4 R_FU1_r_cen_fam_name5 R_FU1_r_cen_fam_name6 R_FU1_r_cen_fam_name7 R_FU1_r_cen_fam_name8 R_FU1_r_cen_fam_name9 R_FU1_r_cen_fam_name10 R_FU1_r_cen_fam_name11 R_FU1_r_cen_fam_name12 R_FU1_r_cen_fam_name13 R_FU1_r_cen_fam_name14 R_FU1_r_cen_fam_name15 R_FU1_r_cen_fam_name16 R_FU1_r_cen_fam_name17 R_FU1_r_cen_fam_name18 R_FU1_r_cen_fam_name19 R_FU1_r_cen_fam_name20 R_FU1_water_source_prim using "${DataPre}Backcheck_FU1_preload_20Feb24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
-
 
 
 ***********************************************************************
@@ -126,3 +132,6 @@ export excel ID R_FU1_enum_name R_FU1_r_cen_village_name_str R_FU1_r_cen_hamlet_
 
 sort R_FU1_r_cen_village_name_str R_FU1_enum_name 
 export excel ID R_FU1_enum_name R_FU1_r_cen_village_name_str R_FU1_r_cen_hamlet_name R_FU1_r_cen_saahi_name R_FU1_r_cen_landmark using "${pilot}Supervisor_BC_FU1_Tracker_checking_repl.xlsx" if selected_replacementBC==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+
+
+

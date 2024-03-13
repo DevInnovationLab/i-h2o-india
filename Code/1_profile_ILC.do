@@ -101,7 +101,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataTemp  "${pilot}99_temp/"
 	global DataPre  "${pilot}99_Preload/"
 				if c(username) == "Archi Gupta" {		
-		global DataPre  "C:\Users\Archi Gupta\Box\Data\99_Preload"
+		global DataPre  "C:\Users\Archi Gupta\Box\Data\99_Preload\"
 	}
 	
 	global Pilotofpilot "${pilot}1_raw/0_Archive/Pilot of pilot"
