@@ -24,17 +24,179 @@ keep R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen
 reshape long R_Cen_a3_hhmember_name_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_  R_Cen_a9_school_current_ R_Cen_a9_read_write_ , i(unique_id) j(num)
 
 
+
+* Create dataset of women who are in the eligible category
 preserve 
 
 keep if R_Cen_a4_hhmember_gender_ == 2 & R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49
-tempfile eligible_women
-save `eligible_women'
+rename  (R_Cen_a3_hhmember_name_ R_Cen_a6_hhmember_age_  R_Cen_a6_age_confirm2_  R_Cen_village_name R_Cen_a7_pregnant_ ) (name_woman age_woman  confirmed_age  village_woman is_last_preg )
+
+tempfile eligible_women_census
+save `eligible_women_census'
+
+restore
+
+* Assigning mother name to each child (right not it is only the index of the household member)
+gen mother = ""
+forval i = 1/17{ 
+	bys unique_id: replace mother = R_Cen_a3_hhmember_name_[`i'] if R_Cen_u5mother_name_ == `i'
+}
+
+* Create dataset of children under 5 with their mothers' name 
+preserve 
+
+keep if  R_Cen_a6_hhmember_age_ <= 5 
+tempfile child_u5_census
+save `child_u5_census'
 
 restore
 
 
-bys unique_id: gen mother = 1 if R_Cen_u5mother_name_ == num[_n]
+/*------------------------------------------------------------------------------
+	2 Mortality data preparations
+------------------------------------------------------------------------------*/
 
+* This file contains two important data information for only 3 villages
+* 1. Household rosters for when we didn't do roster during Census - need to create both eligible women and child under 5 rosters from this 
+* 2. Mortality data of all the sample, both census roster women and mortality roster women, need to create a separate data to capture the birth and death information of all these eligible women - separate dataset
+
+use "${DataRaw}Mortality survey_cleaned vars.dta", clear
+
+drop if unique_id_new ==  "30701-503-009" & new_woman_name_1 == "TULASI MAHANANDIA and 15 years"
+
+keep unique_id_new new_* 
+rename unique_id_new unique_id
+
+
+drop if unique_id==""
+duplicates report unique_id
+duplicates tag unique_id, gen(dup)
+tab dup
+
+drop if unique_id == "-77-519-001"
+
+destring unique_id, gen(unique_id_num) ignore(-)  
+format unique_id_num %15.0gc
+
+
+//dropping irrelavent vars
+drop new_cause_death_child_1_1_1 new_cause_death_child_2_1_1 new_cause_death_child_3_1_1 new_cause_death_child_4_1_1 new_cause_death_child_5_1_1 new_cause_death_child_6_1_1 new_cause_death_child_7_1_1 new_cause_death_child_8_1_1 new_cause_death_child_9_1_1 new_cause_death_child_10_1_1 new_cause_death_child_11_1_1 new_cause_death_child_12_1_1 new_cause_death_child_13_1_1 new_cause_death_child_14_1_1 new_cause_death_child_15_1_1 new_cause_death_child_16_1_1 new_cause_death_child_17_1_1 new_cause_death_child_18_1_1 new_cause_death_child__77_1_1 new_cause_death_child_999_1_1 new_cause_death_child_98_1_1 new_cause_death_child_1_2_1 new_cause_death_child_2_2_1 new_cause_death_child_3_2_1 new_cause_death_child_4_2_1 new_cause_death_child_5_2_1 new_cause_death_child_6_2_1 new_cause_death_child_7_2_1 new_cause_death_child_8_2_1 new_cause_death_child_9_2_1 new_cause_death_child_10_2_1 new_cause_death_child_11_2_1 new_cause_death_child_12_2_1 new_cause_death_child_13_2_1 new_cause_death_child_14_2_1 new_cause_death_child_15_2_1 new_cause_death_child_16_2_1 new_cause_death_child_17_2_1 new_cause_death_child_18_2_1 new_cause_death_child__77_2_1 new_cause_death_child_999_2_1 new_cause_death_child_98_2_1 new_cause_death_child_1_3_1 new_cause_death_child_2_3_1 new_cause_death_child_3_3_1 new_cause_death_child_4_3_1 new_cause_death_child_5_3_1 new_cause_death_child_6_3_1 new_cause_death_child_7_3_1 new_cause_death_child_8_3_1 new_cause_death_child_9_3_1 new_cause_death_child_10_3_1 new_cause_death_child_11_3_1 new_cause_death_child_12_3_1 new_cause_death_child_13_3_1 new_cause_death_child_14_3_1 new_cause_death_child_15_3_1 new_cause_death_child_16_3_1 new_cause_death_child_17_3_1 new_cause_death_child_18_3_1 new_cause_death_child__77_3_1 new_cause_death_child_999_3_1 new_cause_death_child_98_3_1 new_cause_death_child_1_4_1 new_cause_death_child_2_4_1 new_cause_death_child_3_4_1 new_cause_death_child_4_4_1 new_cause_death_child_5_4_1 new_cause_death_child_6_4_1 new_cause_death_child_7_4_1 new_cause_death_child_8_4_1 new_cause_death_child_9_4_1 new_cause_death_child_10_4_1 new_cause_death_child_11_4_1 new_cause_death_child_12_4_1 new_cause_death_child_13_4_1 new_cause_death_child_14_4_1 new_cause_death_child_15_4_1 new_cause_death_child_16_4_1 new_cause_death_child_17_4_1 new_cause_death_child_18_4_1 new_cause_death_child__77_4_1 new_cause_death_child_999_4_1 new_cause_death_child_98_4_1
+
+
+
+drop new_no_consent_reason_1_1 new_no_consent_reason_2_1 new_no_consent_reason__77_1 new_no_consent_reason_1_2 new_no_consent_reason_2_2 new_no_consent_reason__77_2 new_no_consent_reason_1_3 new_no_consent_reason_2_3 new_no_consent_reason__77_3
+
+drop new_vill_woman_oth_1  new_vill_woman_oth_2  new_vill_woman_oth_3  new_vill_woman_oth_4  new_vill_woman_oth_sc_1  new_vill_woman_oth_sc_2  new_vill_woman_oth_sc_3  new_vill_woman_oth_sc_4  new_vill_woman_oth_sc_5 new_vill_woman_oth_sc_6  new_woman_name_oth_1 new_consent_woman_oth_1 new_no_consent_reason_oth_1 new_no_consent_reason_oth_1_1 new_no_consent_reason_oth_2_1 new_no_consent_reason_oth__77_1 new_residence_yesno_oth_1 new_vill_woman_oth_add_1 new_vill_woman_oth_oth_1 new_last_5yrs_preg_oth_1 new_child_living_yn_oth_1 new_child_living_num_oth_1 new_child_away_yn_oth_1 new_child_away_num_oth_1 new_child_still_yn_oth_1 new_child_still_num_oth_1 new_child_died_yn_less24_oth_1 new_child_died_num_less24_oth_1 new_child_died_yn_more24_oth_1 new_child_died_num_more24_oth_1 new_miscarriage_yn_oth_1 new_woman_name_oth_2 new_consent_woman_oth_2 new_no_consent_reason_oth_2 new_no_consent_reason_oth_1_2 new_no_consent_reason_oth_2_2 new_no_consent_reason_oth__77_2 new_residence_yesno_oth_2 new_vill_woman_oth_add_2 new_vill_woman_oth_oth_2 new_last_5yrs_preg_oth_2 new_child_living_yn_oth_2 new_child_living_num_oth_2 new_child_away_yn_oth_2 new_child_away_num_oth_2 new_child_still_yn_oth_2 new_child_still_num_oth_2 new_child_died_yn_less24_oth_2 new_child_died_num_less24_oth_2 new_child_died_yn_more24_oth_2 new_child_died_num_more24_oth_2 new_miscarriage_yn_oth_2
+
+drop new_no_consent_reason_1_4 new_no_consent_reason_2_4 new_no_consent_reason__77_4 new_cause_death_child_str_sc_1_1 new_cause_death_child_str_sc_1_2 new_cause_death_child_str_sc_2_1 new_cause_death_child_str_sc_2_2 new_cause_death_child_str_sc_3_1 new_cause_death_child_str_sc_3_2 new_cause_death_child_str_sc_4_1 new_cause_death_child_str_sc_4_2 new_cause_death_child_str_sc_5_1 new_cause_death_child_str_sc_5_2 new_cause_death_child_str_sc_6_1 new_cause_death_child_str_sc_6_2 dup
+
+tempfile mortality
+
+save `mortality'
+use "${DataPre}1_1_Mortality_cleaned.dta", clear
+keep if R_mor_check_scenario == 0 
+
+
+keep R_mor_block_name R_mor_village_name  R_mor_a1_resp_name  R_mor_a2_hhmember_count R_mor_a3_hhmember_name_* R_mor_a4_hhmember_gender_* R_mor_a5_hhmember_relation_*  R_mor_a6_hhmember_age_* R_mor_age_accurate_* R_mor_a5_autoage_* R_mor_marital_* R_mor_a7_pregnant_* unique_id_num 
+
+
+merge 1:1 unique_id_num using "`mortality'"
+rename  unique_id unique_id_str
+rename unique_id_num unique_id
+//reshaping at woman level
+reshape long new_woman_name_ new_consent_woman_ new_no_consent_reason_ new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_ new_child_living_num_ new_child_away_num_ new_child_away_yn_ new_child_living_yn_ new_child_still_num_ new_child_still_yn_ new_child_died_yn_less24_ new_child_died_yn_more24_ new_child_died_num_more24_ new_child_died_num_less24_ new_name_child_ new_age_child_ new_unit_child_age_ new_date_birth_child_ new_date_death_child_ new_cause_death_diag_yn_ new_cause_death_child_ new_cause_death_oth_ new_miscarriage_yn_ R_mor_a3_hhmember_name_ R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_   R_mor_marital_ R_mor_a7_pregnant_ R_mor_a7_pregnant_month_, i(unique_id) j(num)
+
+drop if new_woman_name_==""
+
+
+// separating out name and age
+
+gen name_new_woman = trim(substr(new_woman_name_, 1, strpos(new_woman_name_, " and") - 1))
+
+gen age_new_woman = substr(new_woman_name_, location, 3)
+destring age_new_woman, replace force
+drop if name_new_woman==""
+
+keep unique_id num name_new_woman age_new_woman new_consent_woman_ new_no_consent_reason_ new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_  R_mor_block_name R_mor_village_name  R_mor_a1_resp_name  R_mor_a2_hhmember_count R_mor_a3_hhmember_name_* R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_  R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_ R_mor_marital_ R_mor_a7_pregnant_  
+
+
+//further cleaning- handling duplicates
+
+duplicates report unique_id new_woman_name_
+duplicates tag unique_id new_woman_name_, gen(dup)
+tab dup
+br if dup>0
+drop if dup>0 & new_consent_woman_==""
+
+duplicates report unique_id new_woman_name_
+drop dup
+duplicates tag unique_id new_woman_name_, gen(dup)
+tab dup
+br if dup>0
+duplicates drop unique_id new_woman_name_, force
+
+duplicates report unique_id new_woman_name_
+
+
+* Create dataset of women who are in the eligible category
+preserve 
+
+keep if R_mor_a4_hhmember_gender_ == 2 & R_mor_a6_hhmember_age_ >= 15 & R_mor_a6_hhmember_age_ <= 49
+rename  (R_mor_a3_hhmember_name_ R_mor_a6_hhmember_age_  R_mor_a6_age_confirm2_  R_mor_village_name R_mor_a7_pregnant_ ) (name_woman age_woman  confirmed_age  village_woman is_last_preg )
+rename  (name_new_woman age_new_woman   new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_ ) (name_woman age_woman residence_yesno village_woman is_last_5yrs_preg )
+
+tempfile eligible_women_mortality
+save `eligible_women_mortality'
+
+restore
+ 
+ 
+ 
+
+* Now create data of children under 5 from the roster done during Mortality survey 
+
+use "${DataPre}1_1_Mortality_cleaned.dta", clear
+keep if R_mor_check_scenario == 0 
+
+keep R_mor_block_name R_mor_village_name  R_mor_a1_resp_name  R_mor_a2_hhmember_count R_mor_a3_hhmember_name_* R_mor_a4_hhmember_gender_* R_mor_a5_hhmember_relation_*  R_mor_a6_hhmember_age_* R_mor_age_accurate_* R_mor_a5_autoage_* R_mor_marital_* R_mor_a7_pregnant_* unique_id_num 
+
+reshape long R_mor_a3_hhmember_name_ R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_   R_mor_marital_ R_mor_a7_pregnant_ R_mor_a7_pregnant_month_   R_Cen_a8_u5mother_       , i(unique_id_num) j(num)
+
+
+* Assigning mother name to each child (right not it is only the index of the household member)
+gen mother = R_mor_a1_resp_name if R_mor_a1_resp_name == R_mor_a3_hhmember_name_ &  R_mor_a4_hhmember_gender_ == 2
+bys unique_id_num: replace mother = mother[1] 
+forval i = 1/12{ 
+	
+	bys unique_id_num: replace mother = "" if  R_mor_a5_hhmember_relation_ != 3 
+}
+rename unique_id_num unique_id
+* Create dataset of children under 5 with their mothers' name 
+preserve 
+
+keep if  R_mor_a6_hhmember_age_ < 5 
+tempfile child_u5_mortality
+save `child_u5_mortality'
+
+restore
+
+/*------------------------------------------------------------------------------
+	3 Full roster of eligible women and childU5
+------------------------------------------------------------------------------*/
+
+* Next step would be to combine Census and Mortality rosters in one dataset, so we have household ID of all the hhs in the village with their roster info. 
+
+use "`eligible_women_census'", clear
+
+
+append 
+
+
+/*------------------------------------------------------------------------------
+	4 Pregnancy history 
+------------------------------------------------------------------------------*/
+
+* Now we should merge mortality/ death data of eligible women to this roster. 
 
 
 
