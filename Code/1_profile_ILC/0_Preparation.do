@@ -24,8 +24,11 @@ save "${DataRaw}1_4_Mortality.dta", replace
 
 do "${Do_lab}import_india_ilc_pilot_hh_followup_survey_enc.do"
 save "${DataRaw}1_5_FollowUp_R1.dta", replace
-}
 
+
+do "${Do_lab}import_india_ilc_pilot_hh_followup_R2_survey_enc.do"
+save "${DataRaw}1_6_FollowUp_R2.dta", replace
+}
 
 * Windows User
 else if c(username) == "cueva" | c(username) == "ABC"   {

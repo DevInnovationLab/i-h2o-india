@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "HH follow up R2 survey" (ID: india_ilc_pilot_hh_followup_R2_survey_enc) data.
 *
-*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey_WIDE.csv"
-*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey.dta"
+*	Inputs:  "HH follow up R2 survey_WIDE.csv"
+*	Outputs: "HH follow up R2 survey.dta"
 *
-*	Output by SurveyCTO March 8, 2024 8:11 AM.
+*	Output by SurveyCTO March 12, 2024 10:04 AM.
 
 * initialize Stata
 clear all
@@ -21,9 +21,9 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey_WIDE.csv"
-local dtafile "C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey.dta"
-local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey_corrections.csv"
+local csvfile "HH follow up R2 survey_WIDE.csv"
+local dtafile "HH follow up R2 survey.dta"
+local corrfile "HH follow up R2 survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum unique_id_3_digit unique_id r_cen_landmark r_cen_address r_cen_saahi_name r_cen_a1_resp_name r_cen_a10_hhhead r_cen_a39_phone_name_1 r_cen_a39_phone_num_1"
 local text_fields2 "r_cen_a39_phone_name_2 r_cen_a39_phone_num_2 r_cen_village_name_str r_cen_hamlet_name r_cen_a11_oldmale_name r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5"
@@ -366,8 +366,8 @@ if _N>0 {
 	label define skin_treat 1 "Yes" 0 "No"
 	label values skin_treat skin_treat
 
-	label variable skin_treat_type "What did you do?"
-	note skin_treat_type: "What did you do?"
+	label variable skin_treat_type "What did you do to treat this condition?"
+	note skin_treat_type: "What did you do to treat this condition?"
 
 	label variable skin_issues_before "Before last 3 months, Have you experienced similar skin problems in the past?"
 	note skin_issues_before: "Before last 3 months, Have you experienced similar skin problems in the past?"
@@ -736,7 +736,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/HH follow up R2 survey_corrections.csv
+*   Corrections file path and filename:  HH follow up R2 survey_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
