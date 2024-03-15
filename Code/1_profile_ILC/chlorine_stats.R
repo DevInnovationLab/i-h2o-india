@@ -726,38 +726,9 @@ df.tap <- df.tap %>%
   mutate(Test = ifelse(Test == "Tap Water: Total Chlorine", "Total_Chlorine_tap", Test))
 
 
+
+names(chlorine)
 # STORED WATER 
-#Orginial plot
-
-plot_list_stored <- list()
-
-for (i in village_list) {
-  df.vil.cl <- df.stored %>% filter(village == i) 
-  
-  # Parse Date variable to Date class using mdy() function
-  df.vil.cl$Date <- mdy(df.vil.cl$Date)
-  
-  s <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color = Distance, linetype = Test)) +
-    geom_line(linewidth = 0.8) +
-    geom_hline(yintercept = c(0.2, 0.5), linetype = "twodash", color = "black") +
-    labs(title = "Concentration of Chlorine",
-         x = "Date",
-         y = "") +  
-    scale_x_date(date_breaks = '3 day', labels = scales::date_format("%b %d")) +  # Adjust date_breaks to 5 days
-    scale_y_continuous(limits = c(0.00, 2.00), breaks = seq(0, 2, by = 0.1)) +
-    theme(
-      legend.position = c(1, 1),
-      legend.justification = c("right", "top"),
-      legend.box.just = "right",
-      legend.margin = margin(6, 6, 6, 6), 
-      axis.text.x = element_text(angle = 90, size = 10)
-    ) + 
-    scale_color_brewer(palette = "Dark2") + 
-    ggtitle(paste0('Stored water: Village_', i))
-  
-  print(s)
-  plot_list_stored[[i]] <- s
-}
 
 # STORED WATER 
 #new plot with scatter plot type graph (line point graphs)
@@ -9356,18 +9327,100 @@ print(interactive_choropleth)
 
 
 
+install.packages("shiny")
+library(shiny)
 
 
 
 
+# Define UI
+ui <- fluidPage(
+  titlePanel("Chlorine Concentration Dashboard"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("village", "Choose a Village:",
+                  choices = unique(chlorine$village)),
+      selectInput("testType", "Choose Test Type:",
+                  choices = unique(chlorine$chlorine_test_type))
+    ),
+    mainPanel(
+      plotlyOutput("chlorinePlot")
+    )
+  )
+)
+
+# Define server logic
+server <- function(input, output) {
+  output$chlorinePlot <- renderPlotly({
+    # Filter data based on input
+    filtered_data <- chlorine %>%
+      filter(village == input$village, chlorine_test_type == input$testType)
+    
+    # Create plot
+    plot <- plot_ly(filtered_data, x = ~Date, y = ~chlorine_concentration,
+                    type = 'scatter', mode = 'lines+markers',
+                    color = ~Test)
+    plot
+  })
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)
+
+
+install.packages("shinyWidgets")
+library("shinyWidgets")
+
+ui <- navbarPage("Chlorine Concentration Dashboard",
+                 tabPanel("Data Visualization",
+                          sidebarLayout(
+                            sidebarPanel(
+                              selectInput("village", "Choose a Village:",
+                                          choices = c("All", unique(chlorine$village))),
+                              selectInput("testType", "Choose Test Type:",
+                                          choices = c("All", unique(chlorine$chlorine_test_type))),
+                              sliderInput("distanceRange", "Select Distance Range:",
+                                          min = min(chlorine$Distance, na.rm = TRUE), 
+                                          max = max(chlorine$Distance, na.rm = TRUE),
+                                          value = c(min(chlorine$Distance, na.rm = TRUE), max(chlorine$Distance, na.rm = TRUE))),
+                              pickerInput("test", "Select Test:",
+                                          choices = unique(chlorine$Test), 
+                                          options = list(`actions-box` = TRUE), 
+                                          multiple = TRUE)
+                            ),
+                            mainPanel(
+                              plotlyOutput("chlorinePlot")
+                            )
+                          )
+                 )
+                 # You can add more tabs or tabPanels here for additional pages or visualizations.
+)
 
 
 
+server <- function(input, output) {
+  output$chlorinePlot <- renderPlotly({
+    # Filter data based on input with additional conditions
+    filtered_data <- chlorine %>%
+      filter((village == input$village | input$village == "All") &
+               (chlorine_test_type == input$testType | input$testType == "All") &
+               Distance >= input$distanceRange[1] & Distance <= input$distanceRange[2] &
+               Test %in% input$test)
+    
+    # Create plot with some enhancements
+    plot <- plot_ly(filtered_data, x = ~Date, y = ~chlorine_concentration,
+                    type = 'scatter', mode = 'lines+markers',
+                    color = ~Test, colors = "Viridis",
+                    marker = list(size = 10, opacity = 0.6)) %>%
+      layout(title = "Chlorine Concentration Over Time",
+             xaxis = list(title = "Date"),
+             yaxis = list(title = "Chlorine Concentration"))
+    plot
+  })
+}
 
-
-
-
-
+# Run the application
+shinyApp(ui = ui, server = server)
 
 
 
