@@ -1123,13 +1123,17 @@ foreach v in R_FU_water_treat R_FU_water_source_prim R_Cen_a18_jjm_drinking R_Ce
 	}
 	}
 	
+
 tempfile baseline
 save `baseline', replace
+save "${DataPre}Baseline HH survey_cleaned.dta", replace
 
-*local vars1 R_FU_water_treat_1 R_FU_water_source_prim_1 R_FU_fc_tap R_FU_fc_stored
 
-ttest R_FU_water_source_prim_1, by(treatment) 
+ttest 
 
+
+************ TTests and regressions
+local vars1 R_FU_water_treat_1 R_FU_water_source_prim_1 R_FU_fc_tap R_FU_fc_stored
 
 
 local baseline R_FU_water_source_prim_1 R_Cen_a13_water_source_sec_1_1 ///
@@ -1285,6 +1289,15 @@ replace R_FU1_fc_tap=. if R_FU1_fc_tap==999
 tempfile followup
 save `followup', replace
 
+save "${DataPre}Followup R1 survey_cleaned.dta", replace
+
+
+
+
+
+
+
+************ TTests and regressions
 local followup R_FU1_water_source_prim_1 R_FU1_water_source_sec_1 R_FU1_tap_use_drinking_yesno_1 R_FU1_water_treat_1 taste_satisfy_1 tap_trust_1 tap_use_future_1 tap_rc stored_rc
 
 foreach k of local followup {
