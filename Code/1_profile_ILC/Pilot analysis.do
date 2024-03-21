@@ -709,6 +709,17 @@ global diarrhea_preg C_diarrhea_prev_wom_1week C_diarrhea_prev_wom_2weeks ///
 						 
 local diarrhea_U5 "Diarrhea_U5"
 local diarrhea_preg "Diarrhea_Preg"
+
+start_from_clean_file_ChildLevel
+keep if R_Cen_a6_hhmember_age_<2
+
+decode R_Cen_village_name, gen(R_Cen_village_name_str)
+drop if R_Cen_village_name_str== "Badaalubadi" | R_Cen_village_name_str=="Haathikambha"
+gen treatment= 1 if R_Cen_village_name_str== "Birnarayanpur" | R_Cen_village_name_str=="Nathma"|R_Cen_village_name_str== "Badabangi"| R_Cen_village_name_str=="Naira"| R_Cen_village_name_str== "Bichikote"|R_Cen_village_name_str== "Karnapadu"| R_Cen_village_name_str=="Mukundpur"|R_Cen_village_name_str== "Tandipur"|R_Cen_village_name_str== "Gopi Kankubadi"|R_Cen_village_name_str== "Asada" 
+
+replace treatment=0 if treatment==.
+
+ttest C_diarrhea_comb_U5_2weeks, by(treatment)
 						      
 
 //U2 diarrhea
@@ -1056,3 +1067,311 @@ esttab model29  model30 using "${Table}Perceptions_`k'.tex", ///
 				   ) ///
 	   title("Perceptions of taste & smell of JJM provided tap water") 
 }
+
+
+
+
+
+/*----------------------------------------------
+*Comparing data from baseline and followup data
+----------------------------------------------*/
+
+//Baseline HH survey data
+
+
+use "${DataPre}1_1_Census_cleaned.dta", clear
+merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
+keep if Merge_C_F==3
+
+keep if R_FU_consent==1
+tab R_FU_r_cen_village_name_str
+drop if R_FU_r_cen_village_name_str=="Badaalubadi" | R_FU_r_cen_village_name_str=="Haathikambha"
+
+**creating new vars
+gen taste_satisfy=0
+replace taste_satisfy=1 if R_FU_tap_taste_satisfied==1 | R_FU_tap_taste_satisfied==2
+gen tap_trust=0
+replace tap_trust= 1 if R_FU_tap_trust==1 | R_FU_tap_trust==2
+gen tap_use_future= 0
+replace tap_use_future= 1 if R_FU_tap_use_future==1 | R_FU_tap_use_future==2
+gen stored_rc=0
+replace stored_rc=1 if R_FU_fc_stored>0.1 & R_FU_fc_stored!=.
+gen tap_rc=0
+replace tap_rc=1 if R_FU_fc_tap>0.1 & R_FU_fc_tap!=.
+
+
+**assign treatment
+
+gen treatment= 1 if R_FU_r_cen_village_name_str== "Birnarayanpur" | R_FU_r_cen_village_name_str=="Nathma"|R_FU_r_cen_village_name_str== "Badabangi"| R_FU_r_cen_village_name_str=="Naira"| R_FU_r_cen_village_name_str== "Bichikote"|R_FU_r_cen_village_name_str== "Karnapadu"| R_FU_r_cen_village_name_str=="Mukundpur"|R_FU_r_cen_village_name_str== "Tandipur"|R_FU_r_cen_village_name_str== "Gopi Kankubadi"|R_FU_r_cen_village_name_str== "Asada" 
+
+replace treatment=0 if treatment==.
+
+
+
+foreach i in R_FU_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+foreach v in R_FU_water_treat R_FU_water_source_prim R_Cen_a18_jjm_drinking R_Cen_a13_water_source_sec_1 taste_satisfy tap_trust tap_use_future ///
+ {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+tempfile baseline
+save `baseline', replace
+
+*local vars1 R_FU_water_treat_1 R_FU_water_source_prim_1 R_FU_fc_tap R_FU_fc_stored
+
+ttest R_FU_water_source_prim_1, by(treatment) 
+
+
+
+local baseline R_FU_water_source_prim_1 R_Cen_a13_water_source_sec_1_1 ///
+R_Cen_a18_jjm_drinking_1 R_FU_water_treat_1 taste_satisfy tap_trust tap_use_future tap_rc stored_rc  
+
+
+foreach k of local baseline {
+	
+ttest `k', by(treatment) 
+}
+
+
+local baseline2 stored_rc  tap_rc
+foreach k of local baseline2 {
+	
+ttest `k' , by(treatment) 
+}
+
+
+foreach k in baseline {
+use `baseline', clear
+
+
+* Mean
+	eststo model1: estpost summarize $`k' if treatment==0
+	eststo model2: estpost summarize $`k' if treatment==1
+	
+*SE
+use `baseline', clear
+	foreach i in $`k' {
+	reg `i' i.treatment
+	matrix b = r(table)
+	scalar p_1 = b[2,2]
+	replace `i'=p_1 
+	}
+	eststo  model3: estpost summarize $`k'
+	
+* Differece
+use `baseline', clear
+	foreach i in $`k' {
+	reg `i' i.treatment
+	matrix b = r(table)
+	scalar p_1 = b[1,2]
+	replace `i'=p_1
+	}
+	eststo  model5: estpost summarize $`k'
+	
+* P-value
+use `baseline', clear
+	foreach i in $`k' {
+	reg `i' i.treatment
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=p_1
+	}
+	eststo  model6: estpost summarize $`k'
+
+esttab model1 model2 model3 model5 model6 using "${Table}Baseline HH survey stats.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{C}" "T" "SD-C" "SD-T" "diff" "PVALUE") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Baseline HH survey statistics") 
+}
+
+
+************ E.coli results at baseline
+import delimited "/Users/michellecherian/Downloads/BL_idexx_master_cleaned.csv", clear
+drop if assignment=="NA"
+drop if date=="2024-02-20T00:00:00Z"
+
+gen positive_ecoli=1 if ec_mpn>0
+replace positive_ecoli=0 if ec_mpn==0
+
+gen positive_totalcoliform=1 if cf_mpn>0
+replace positive_totalcoliform=0 if cf_mpn==0
+gen treatment= 1 if assignment=="T"
+replace treatment=0 if assignment=="C"
+
+save "${DataDeid}Ecoli results baseline_cleaned.dta", replace
+
+
+ttest positive_ecoli if sample_type=="Tap", by(treatment)
+ttest positive_ecoli if sample_type=="Stored", by(treatment)
+
+ttest positive_totalcoliform if sample_type=="Tap", by(treatment)
+ttest positive_totalcoliform if sample_type=="Stored", by(treatment)
+
+tab positive_ecoli if sample_type=="Tap" & assignment=="C"
+tab positive_ecoli if sample_type=="Tap" & assignment=="T"
+tab positive_ecoli if sample_type=="Stored" & assignment=="C"
+tab positive_ecoli if sample_type=="Stored" & assignment=="T"
+ttest ec_mpn if sample_type=="Tap", by(assignment)
+ttest ec_mpn if sample_type=="Stored", by(assignment)
+ttest cf_mpn if sample_type=="Tap", by(assignment)
+ttest cf_mpn if sample_type=="Stored", by(assignment)
+
+
+//Follow-up R1 survey data
+
+use "${DataDeid}1_5_Followup_R1_cleaned.dta", clear
+keep if R_FU1_consent ==1
+tab R_FU1_r_cen_village_name_str
+
+
+**creating new vars
+gen taste_satisfy=0
+replace taste_satisfy=1 if R_FU1_tap_taste_satisfied==1 | R_FU1_tap_taste_satisfied==2
+gen tap_trust=0
+replace tap_trust= 1 if R_FU1_tap_trust==1 | R_FU1_tap_trust==2
+gen tap_use_future= 0
+replace tap_use_future= 1 if R_FU1_tap_use_future==1 | R_FU1_tap_use_future==2
+gen stored_rc=0
+replace stored_rc=1 if R_FU1_fc_stored>0.1
+gen tap_rc=0
+replace tap_rc=1 if R_FU1_fc_tap>0.1
+
+
+**assign treatment
+
+gen treatment= 1 if R_FU1_r_cen_village_name_str== "Birnarayanpur" | R_FU1_r_cen_village_name_str=="Nathma"|R_FU1_r_cen_village_name_str== "Badabangi"| R_FU1_r_cen_village_name_str=="Naira"| R_FU1_r_cen_village_name_str== "Bichikote"|R_FU1_r_cen_village_name_str== "Karnapadu"| R_FU1_r_cen_village_name_str=="Mukundpur"|R_FU1_r_cen_village_name_str== "Tandipur"|R_FU1_r_cen_village_name_str== "Gopi Kankubadi"|R_FU1_r_cen_village_name_str== "Asada" 
+
+replace treatment=0 if treatment==.
+                                                                  
+
+
+
+foreach i in R_FU1_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+foreach v in R_FU1_water_source_prim R_FU1_tap_use_drinking_yesno R_FU1_water_treat taste_satisfy tap_trust tap_use_future ///
+ {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+**doing some chlorine data cleaning
+replace R_FU1_fc_tap=. if R_FU1_fc_tap==999
+	
+tempfile followup
+save `followup', replace
+
+local followup R_FU1_water_source_prim_1 R_FU1_water_source_sec_1 R_FU1_tap_use_drinking_yesno_1 R_FU1_water_treat_1 taste_satisfy_1 tap_trust_1 tap_use_future_1 tap_rc stored_rc
+
+foreach k of local followup {
+	
+ttest `k', by(treatment) 
+}
+
+
+**Note: change treatment status to 1 or 0 depending on the table you want to create
+global followup R_FU1_water_source_prim_1 R_FU1_water_source_sec_1 R_FU1_tap_use_drinking_yesno_1 R_FU1_water_treat_1 R_FU1_fc_stored R_FU1_fc_tap
+
+foreach k in followup {
+use `followup', clear
+
+
+
+* Diff
+	eststo  model3: estpost summarize $`k' if treatment==1
+	
+*Min
+use `followup', clear
+
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model4: estpost summarize $`k' if treatment==1
+	
+	
+
+esttab model3 model4 using "${Table}Follow R1 survey stats-treatment villages.tex", ///
+	   replace label cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Average}" "SD") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&            _&    _\\" "" ///
+				   "PWS: JJM Taps" "\multicolumn{4}{l}{\textbf{Primary water source}} \\ \hline PWS: JJM Taps" ///
+				   "WT: No" "\multicolumn{4}{l}{Water treatment} \\ WT: No" ///
+				   "Freq: Every 2-3 days in a week" "\multicolumn{4}{l}{Collection frequency} \\ Freq: Every 2-3 days in a week" ///
+				   "Drink JJM water" "\textbf{Drink JJM water}" ///
+				   "SWS: No" "\multicolumn{4}{l}{\textbf{Secondary water source}} \\ \hline SWS: No" ///
+				   "PWS:" "~~~" "WT:" "~~~" "Freq:" "~~~" "SWS:" "~~~" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   title("Follow R1 survey stats-treament villages") 
+}
+
+
+************ E.coli results at followup R1
+import delimited "/Users/michellecherian/Downloads/R1_idexx_master_cleaned.csv", clear
+
+split date, parse("-")
+replace date3 = substr(date3, 1, 2)
+egen date_comb= concat(date3 date2 date1)
+gen date_comb_num = date(date_comb, "DMY")
+format date_comb_num %td
+
+duplicates tag sample_id, gen(dup)
+sort sample_id
+br if dup>0
+keep if dup>0
+export excel using "${pilot}Duplicates in Ecoli data_Followup R1.xlsx", sheet("data") firstrow(var) cell(A1) sheetreplace
+bys sample_id (date_comb), sort: keep if _n == _N 
+
+gen positive_ecoli=1 if ec_mpn>0
+replace positive_ecoli=0 if ec_mpn==0
+gen positive_totalcoliform=1 if cf_mpn>0
+replace positive_totalcoliform=0 if cf_mpn==0
+
+gen treatment= 1 if assignment=="Treatment"
+replace treatment=0 if assignment=="Control"
+
+save "${DataDeid}Ecoli results followup R1_cleaned.dta", replace
+
+
+*append using "${DataDeid}Ecoli results baseline_cleaned.dta", force
+
+
+ttest positive_ecoli if sample_type=="Tap", by(treatment)
+ttest positive_ecoli if sample_type=="Stored", by(treatment)
+
+ttest positive_totalcoliform if sample_type=="Tap", by(treatment)
+ttest positive_totalcoliform if sample_type=="Stored", by(treatment)
+
+tab positive_ecoli if sample_type=="Tap" & assignment=="Control"
+tab positive_ecoli if sample_type=="Tap" & assignment=="Treatment"
+tab positive_ecoli if sample_type=="Stored" & assignment=="Control"
+tab positive_ecoli if sample_type=="Stored" & assignment=="Treatment"
+ttest ec_mpn if sample_type=="Tap", by(assignment)
+ttest ec_mpn if sample_type=="Stored", by(assignment)
+ttest cf_mpn if sample_type=="Tap", by(assignment)
+ttest cf_mpn if sample_type=="Stored", by(assignment)
