@@ -21,6 +21,7 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
+library(data.table)
 #library(xtable)
 
 #------------------------ setting user path ----------------------------------------#
@@ -294,7 +295,7 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Dura
 
 df.dk.enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by(R_FU2_enum_name_label) %>% select(-R_FU2_fc_stored,-R_FU2_tc_stored, -R_FU2_wq_chlorine_storedfc_again, -R_FU2_wq_chlorine_storedtc_again,
-                                             -R_FU2_fc_tap, -R_FU2_tc_tap,-R_FU2_wq_tap_fc_again,-R_FU2_wq_tap_tc_again) %>%
+                                             -R_FU2_fc_tap, -R_FU2_tc_tap,-R_FU2_wq_tap_fc_again,-R_FU2_wq_tap_tc_again, -R_FU2_r_cen_a39_phone_name_1, - R_FU2_r_cen_a39_phone_name_2) %>%
   summarise_all(~sum(. == 999)) %>% 
   transmute(R_FU2_enum_name_label, sum_dk = rowSums(.[-1], na.rm = T)) %>% 
   rename(Enumerator = R_FU2_enum_name_label, "Count of DK" = sum_dk)
@@ -539,7 +540,7 @@ stargazer(df.count, summary=F, title= "Count of Testing not possible",float=F,ro
 #checking cases when people say they don't use JJM for drinking and their answers to the last time they used drinking water from JJM taps
 
 df.consistency <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU2_tap_use_drinking_yesno == 0 ) %>%
-  dplyr::select(R_FU2_r_cen_village_name_str, R_FU2_enum_name_label, R_FU2_tap_use_drinking  ) %>% 
+  dplyr::select(R_FU2_r_cen_village_name_str, R_FU2_enum_name_label, R_FU2_tap_use_drinking , unique_id_num ) %>% 
   mutate(R_FU2_tap_use_drinking = ifelse(R_FU2_tap_use_drinking == 1, "Today", 
                                          ifelse(R_FU2_tap_use_drinking == 2, "Yesterday", 
                                                 ifelse(R_FU2_tap_use_drinking == 3, "Earlier this week", 

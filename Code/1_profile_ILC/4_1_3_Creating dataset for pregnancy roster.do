@@ -112,8 +112,8 @@ drop if new_woman_name_==""
 // separating out name and age
 
 gen name_new_woman = trim(substr(new_woman_name_, 1, strpos(new_woman_name_, " and") - 1))
-
-gen age_new_woman = substr(new_woman_name_, location, 3)
+gen location  = strpos(new_woman_name_, " and") + 4
+gen age_new_woman = substr(new_woman_name_, location,  3)
 destring age_new_woman, replace force
 drop if name_new_woman==""
 
@@ -122,27 +122,16 @@ keep unique_id num name_new_woman age_new_woman new_consent_woman_ new_no_consen
 
 //further cleaning- handling duplicates
 
-duplicates report unique_id new_woman_name_
-duplicates tag unique_id new_woman_name_, gen(dup)
+*duplicates report unique_id name_new_woman
+duplicates tag unique_id name_new_woman, gen(dup)
 tab dup
-br if dup>0
 drop if dup>0 & new_consent_woman_==""
-
-duplicates report unique_id new_woman_name_
-drop dup
-duplicates tag unique_id new_woman_name_, gen(dup)
-tab dup
-br if dup>0
-duplicates drop unique_id new_woman_name_, force
-
-duplicates report unique_id new_woman_name_
-
 
 * Create dataset of women who are in the eligible category
 preserve 
 
 keep if R_mor_a4_hhmember_gender_ == 2 & R_mor_a6_hhmember_age_ >= 15 & R_mor_a6_hhmember_age_ <= 49
-rename  (R_mor_a3_hhmember_name_ R_mor_a6_hhmember_age_  R_mor_a6_age_confirm2_  R_mor_village_name R_mor_a7_pregnant_ ) (name_woman age_woman  confirmed_age  village_woman is_last_preg )
+rename  (R_mor_a3_hhmember_name_ R_mor_a6_hhmember_age_   R_mor_age_accurate_ R_mor_a5_autoage_ R_mor_village_name R_mor_a7_pregnant_ ) (name_resp age_resp  confirmed_age auto_age village_resp is_last_preg )
 rename  (name_new_woman age_new_woman   new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_ ) (name_woman age_woman residence_yesno village_woman is_last_5yrs_preg )
 
 tempfile eligible_women_mortality
@@ -187,16 +176,115 @@ restore
 * Next step would be to combine Census and Mortality rosters in one dataset, so we have household ID of all the hhs in the village with their roster info. 
 
 use "`eligible_women_census'", clear
+destring unique_id, replace
+destring confirmed_age, replace
+gen village = tostring(village_woman) 
+drop village_woman
+rename village village_woman
+append using "`eligible_women_mortality'" 
 
+tempfile final_eligible_women
 
-append 
-
+save `final_eligible_women'
 
 /*------------------------------------------------------------------------------
 	4 Pregnancy history 
 ------------------------------------------------------------------------------*/
 
 * Now we should merge mortality/ death data of eligible women to this roster. 
+
+
+
+
+/*------------------------------------------------------------------------------
+	5 Admin Data
+------------------------------------------------------------------------------*/
+
+
+* Cleaning the Child Line listing data 
+clear
+import excel "${box}4_Admin data/rch_genderwise child report_master_2023-now.xlsx", sheet("Sheet1") firstrow
+
+keep Block_Name Facility_Name Facility_Type RCH_ID New_Born_Name Gender Father_Name Mother_Name  Mobile_No DOB Address ANM_Name ASHA_Name Registration_Date Child_Death 
+egen parents = concat(Mother_Name Father_Name), punct(_)
+
+tempfile cll
+save `cll'
+
+clear
+import excel "${box}4_Admin data/rch listing_pw_master 2022-2023.xlsx", sheet("Sheet1") firstrow
+keep Health_Block Health_Facility Health_SubFacility Village RCHID CaseNo MotherName HusbandName Mobileof MobileNo MotherAge BankName Address ANM_Name ASHA_Name RegistrationDate LMP Med_PastIllness EDD ANC1 ANC2 ANC3 ANC4 TT1 TT2 TTB ANC_IFA PNC_IFA IFA Delivery PNC1 PNC2 PNC3 PNC4 PNC5 PNC6 PNC7 HighRisk1stVisit HighRisk2ndVisit HighRisk3rdVisit HighRisk4thVisit HBLevel1stVisit HBLevel2ndVisit HBLevel3rdVisit HBLevel4thVisit MaternalDeath abortion_Present JSY_Beneficiary Death_Date Death_Reason
+
+rename MotherName Mother_Name
+egen parents = concat(Mother_Name HusbandName), punct(_)
+
+tempfile pll
+save `pll'
+
+merge m:m parents   using "`cll'"
+
+
+* manual check of 
+keep if _merge == 3 
+
+
+* creating a series of checks: 
+
+*1. check to see if the block names are same: 
+gen check1 = 1 if  Health_Block == Block_Name
+
+*2. check to see if mobile number matches
+gen check2 = 1 if  Mobile_No == MobileNo
+
+replace check1 = 1 if check1 != 1 & check2 == 1 // this also affirms the cases where mobile number is same, however the block names could be different 
+
+
+*3. check if DOB is within a threshold of EDD and LMP
+gen check3 = 1 if DOB == Delivery | DOB == EDD // absolute check
+
+*convert dates to date format to be able to check the time passed between EDD and DOB and Delivery date and DOB
+
+
+generate str2 dobda1= substr(DOB,1,2)
+generate str2 dobmo1 = substr(DOB,4,5)
+generate str4 dobyr1 = substr(DOB,7,10)
+
+destring dob*, replace
+gen date_of_birth = mdy(dobmo1, dobda1, dobyr1)
+
+
+generate str2 eddda1= substr(EDD,1,2)
+generate str2 eddmo1 = substr(EDD,4,5)
+generate str4 eddyr1 = substr(EDD,7,10)
+
+destring edd*, replace
+gen exp_del_date = mdy(eddmo1, eddda1, eddyr1)
+
+
+generate str2 delda1= substr(Delivery,1,2)
+generate str2 delmo1 = substr(Delivery,4,5)
+generate str4 delyr1 = substr(Delivery,7,10)
+
+destring del*, replace
+gen del_date = mdy(delmo1, delda1, delyr1)
+
+gen dob_edd = date_of_birth - exp_del_date
+
+gen dob_del = date_of_birth - del_date
+
+*ANM and ASHA name and DOB, missing in mobile number
+
+*
+generate str2 lmpda1= substr(LMP,1,2)
+generate str2 lmpmo1 = substr(LMP,4,5)
+generate str4 lmpyr1 = substr(LMP,7,10)
+
+destring lmp*, replace
+gen del_date = mdy(lmpmo1, lmpda1, lmpyr1)
+
+
+
+
 
 
 

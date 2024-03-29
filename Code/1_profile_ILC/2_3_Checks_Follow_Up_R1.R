@@ -131,7 +131,7 @@ df.temp$datetime <- strptime(df.temp$R_FU1_starttime, format = "%Y-%m-%d %H:%M:%
 df.temp$date <- as.IDate(df.temp$datetime) 
 
 #filter out the testing dates
-df.temp <- df.temp %>% filter(date >= as.Date("2024-02-10"))
+df.temp <- df.temp 
 
 #------------------------ Keep consented cases ----------------------------------------#
 
@@ -146,7 +146,7 @@ df.temp.consent <- df.temp.consent %>% mutate(Treatment = ifelse(R_FU1_r_cen_vil
 
 #------------------------ Progress table ----------------------------------------#
 
-submissions <- df.temp %>% select(R_FU1_r_cen_village_name_str) %>%
+submissions <- df.temp  %>% select(R_FU1_r_cen_village_name_str) %>%
   group_by(R_FU1_r_cen_village_name_str) %>% mutate(Submission=n()) %>% ungroup()  %>% unique() %>% 
   arrange(R_FU1_r_cen_village_name_str)
 
@@ -193,7 +193,7 @@ stargazer(df.progress, summary=F, title= "Overall Progress: Follow Up Round 1 HH
 
 
 #------------------------ Distribution of surveys by dates & villages ----------------------------------------#
-date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% filter(date >= as.Date("2024-02-10")) %>%
+date.plt<- df.temp %>% filter(R_FU1_consent == 1) %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by( R_FU1_r_cen_village_name_str, date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
@@ -211,7 +211,7 @@ stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_date_village_R1.tex
 
 #------------------------ Distribution of surveys by Enumerator, dates & villages ----------------------------------------#
 
-date.plt<- df.temp %>% filter(R_FU1_consent == 1)%>% filter(date >= as.Date("2024-02-10")) %>%
+date.plt<- df.temp %>% filter(R_FU1_consent == 1)%>% filter(date >= as.Date("2024-02-15")) %>%
   group_by( R_FU1_r_cen_village_name_str,R_FU1_enum_name_label,  date) %>%
   dplyr:: summarise(Date_N=n()) %>% ungroup()
 
@@ -232,25 +232,25 @@ stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_enum_date_village_R
 
 # 1. Duration by enumerators
 
-resp_hh_location_dur_enum <- df.temp.consent %>%
+resp_hh_location_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15"))  %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Locating Respondent" = round(mean(FU1_locatehh_dur_min),1)) %>% ungroup()
-consent_dur_enum <- df.temp.consent %>%
+consent_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Consent" = round(mean(FU1_consent_dur_min),1)) %>% ungroup()
-secA_dur_enum <- df.temp.consent %>% 
+secA_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Sec A" = round(mean(FU1_secA_dur_min),1)) %>% ungroup()
-secB_dur_enum <- df.temp.consent %>% 
+secB_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Sec B" = round(mean(FU1_secB_dur_min),1))  %>% ungroup()
-secC_dur_enum <- df.temp.consent %>% 
+secC_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Sec C" = round(mean(FU1_secC_dur_min),1))%>% ungroup()
-secE_dur_enum <- df.temp.consent %>% 
+secE_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Sec E" = round(mean(FU1_secE_dur_min),1))  %>% ungroup()
-total_dur_enum <- df.temp.consent %>% 
+total_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Overall" = round(mean(R_FU1_duration_end/60),1))  %>% ungroup()
 
@@ -268,17 +268,17 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Dura
 # Value for water quality test has changed now in Round 1 of Follow Up HH survey, compared to Baseline HH Survey, with
 # R_FU1_water_qual_test == 1 but whether only chlorine testing or both chlorine and sample collection dependent on R_FU1_ecoli_yn and R_FU1_available_jjm
 
-df.temp.consent <- df.temp.consent %>% mutate(FU1_test_type = ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 0, 1, 
+df.temp.consent <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% mutate(FU1_test_type = ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 0, 1, 
                                                                      ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 1 &
                                                                               (R_FU1_available_jjm == 1 | R_FU1_available_jjm == 2),2,
                                                                      ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 1 & (R_FU1_available_jjm == 3 | R_FU1_available_jjm == 4), 1, 0))))
 # Duration of water quality testing by type of test
-secE_cl_dur_enum <- df.temp.consent %>%  filter(FU1_test_type == 1) %>% 
+secE_cl_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%  filter(FU1_test_type == 1) %>% 
   mutate(FU1_secE_dur_min  = ifelse(FU1_secE_dur_min<0 , NA, FU1_secE_dur_min)) %>% 
   group_by(R_FU1_enum_name_label) %>%
    dplyr:: summarise("Chlorine Testing"= round(mean(FU1_secE_dur_min, na.rm = T),1))   %>% ungroup()
 
-secE_both_dur_enum <- df.temp.consent %>%  filter(FU1_test_type == 2) %>% 
+secE_both_dur_enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%  filter(FU1_test_type == 2) %>% 
   mutate(FU1_secE_dur_min  = ifelse(FU1_secE_dur_min<0 , NA, FU1_secE_dur_min)) %>% 
   group_by(R_FU1_enum_name_label) %>%
   dplyr:: summarise("Both Testing"= round(mean(FU1_secE_dur_min, na.rm = T),1)) %>% 
@@ -292,7 +292,7 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Dura
 
 #2. Count of Dont Know by enumerators 
 
-df.dk.enum <- df.temp.consent %>%
+df.dk.enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by(R_FU1_enum_name_label) %>% select(-R_FU1_fc_stored,-R_FU1_tc_stored, -R_FU1_wq_chlorine_storedfc_again, -R_FU1_wq_chlorine_storedtc_again,
                                              -R_FU1_fc_tap, -R_FU1_tc_tap,-R_FU1_wq_tap_fc_again,-R_FU1_wq_tap_tc_again) %>%
   summarise_all(~sum(. == 999)) %>% 
@@ -304,7 +304,7 @@ stargazer(df.dk.enum, summary=F, title= "Count of DK by enumerator",float=F,rown
 
 #3. Count of 888 by enumerators for 24-7 filter
 
-df.888.enum <- df.temp.consent %>%
+df.888.enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by(R_FU1_enum_name_label) %>%
   summarise_all(~sum(. == 888)) %>% 
   transmute(R_FU1_enum_name_label, sum_dk = rowSums(.[-1], na.rm = T)) %>% 
@@ -316,7 +316,7 @@ stargazer(df.888.enum, summary=F, title= "Count of DK by enumerator",float=F,row
 #------------------------  Enumerator: Displaying chlorine test data for each village ------------------------  
 
 
-bl <- df.temp.consent
+bl <- df.temp.consent %>% filter(date >= as.Date("2024-02-15"))
 
 ###Displaying chlorine test data for each village
 #Arranging data so chlorine test data is in one column
@@ -431,7 +431,7 @@ stargazer(df.chlorine.vil, summary=F, title= "Count of  Chlorine Tests by villag
 #------------------------  Overall checks ------------------------  
 
 #1 Duration of each section
-resp_hh_location_dur <- df.temp.consent %>% filter(FU1_locatehh_dur_min > 0) %>%
+resp_hh_location_dur <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(FU1_locatehh_dur_min > 0) %>%
   dplyr:: summarise(mean = round(mean(FU1_locatehh_dur_min),1), min = round(min(FU1_locatehh_dur_min),1), max = round(max(FU1_locatehh_dur_min),1))  %>%
   mutate(variable = "Locating HH")
 consent_dur <- df.temp.consent %>%  filter(FU1_consent_dur_min > 0) %>%
@@ -450,7 +450,7 @@ secE_dur <- df.temp.consent %>% filter(FU1_secE_dur_min > 0) %>%
   dplyr:: summarise(mean = round(mean(FU1_secE_dur_min),1), min = round(min(FU1_secE_dur_min),1), max = round(max(FU1_secE_dur_min),1) ) %>%
   mutate(variable = "Sec E: Water Quality testing")
 
-overall_mean <- df.temp.consent %>% filter(R_FU1_duration_end > 0) %>%
+overall_mean <- df.temp.consent %>% filter(date >= as.Date("2024-02-12")) %>% filter(R_FU1_duration_end > 0) %>%
   dplyr:: summarise(mean = round(mean(R_FU1_duration_end/60),1), min = round(min(R_FU1_duration_end/60),1), max = round(max(R_FU1_duration_end/60),1) ) %>%
   mutate(variable = "Overall")
 
@@ -464,7 +464,7 @@ stargazer(df.duration, summary=F, title= "Duraction by section Baseline HH Surve
 
 #2 Section on Water Quality Testing, separate duration by whether sample was collected or not? 
 
-secE_dur <- df.temp.consent %>% mutate(FU1_test_type = ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 0 &
+secE_dur <- df.temp.consent %>% filter(date >= as.Date("2024-02-12")) %>% mutate(FU1_test_type = ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 0 &
                                                                        (R_FU1_available_jjm == 3 | R_FU1_available_jjm == 4), 1, 
                                                                      ifelse(R_FU1_water_qual_test == 1 & R_FU1_ecoli_yn == 1 &
                                                                               (R_FU1_available_jjm == 1 | R_FU1_available_jjm == 2),2, 0)))
@@ -516,14 +516,14 @@ stargazer(df.count, summary=F, title= "Count of Sample collection",float=F,rowna
 #------------------------ Special Checks ------------------------  
 
 #count of cases when they were supposed to be sample collection but wasn't possible due to available_jjm being 3 or 4 
-df.sample.collection <- df.temp.consent %>% filter(R_FU1_ecoli_yn == 1 & (R_FU1_available_jjm ==3 | R_FU1_available_jjm == 4)) %>%
+df.sample.collection <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU1_ecoli_yn == 1 & (R_FU1_available_jjm ==3 | R_FU1_available_jjm == 4)) %>%
   mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
   dplyr::select(R_FU1_r_cen_village_name_str, Count_of_Sample, R_FU1_enum_name_label ) %>% 
   rename(Village = R_FU1_r_cen_village_name_str, "Count-Sample collection not possible" = Count_of_Sample ) %>% 
   unique()
 
 #count of cases when they were supposed to be chlorine testing but wasn't possible 
-df.water.testing <- df.temp.consent %>% filter( R_FU1_water_qual_test == 0) %>%
+df.water.testing <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter( R_FU1_water_qual_test == 0) %>%
   mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
   dplyr::select(R_FU1_r_cen_village_name_str, Count_of_Sample, R_FU1_enum_name_label, R_FU1_no_test_reason  ) %>% 
   rename(Village = R_FU1_r_cen_village_name_str, "Count-Chlorine testing not possible" = Count_of_Sample, "Reason for no test" = R_FU1_no_test_reason ) %>% 
@@ -538,7 +538,7 @@ stargazer(df.count, summary=F, title= "Count of Testing not possible",float=F,ro
 
 #checking cases when people say they don't use JJM for drinking and their answers to the last time they used drinking water from JJM taps
 
-df.consistency <- df.temp.consent %>% filter(R_FU1_tap_use_drinking_yesno == 0 ) %>%
+df.consistency <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU1_tap_use_drinking_yesno == 0 ) %>%
   dplyr::select(R_FU1_r_cen_village_name_str, R_FU1_enum_name_label, R_FU1_tap_use_drinking  ) %>% 
   mutate(R_FU1_tap_use_drinking = ifelse(R_FU1_tap_use_drinking == 1, "Today", 
                                   ifelse(R_FU1_tap_use_drinking == 2, "Yesterday", 
@@ -549,7 +549,7 @@ df.consistency <- df.temp.consent %>% filter(R_FU1_tap_use_drinking_yesno == 0 )
   rename(Village = R_FU1_r_cen_village_name_str,"Last time collected water from the JJM tap" = R_FU1_tap_use_drinking ) %>% 
   unique()
 
-df.consistency_the_other_way <- df.temp.consent %>% filter(R_FU1_tap_use_drinking_yesno == 1 & R_FU1_tap_use_drinking == 5) %>%
+df.consistency_the_other_way <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU1_tap_use_drinking_yesno == 1 & R_FU1_tap_use_drinking == 5) %>%
   dplyr::select(R_FU1_r_cen_village_name_str, R_FU1_enum_name_label, R_FU1_tap_use_drinking  ) %>% 
   mutate(R_FU1_tap_use_drinking = ifelse(R_FU1_tap_use_drinking == 1, "Today", 
                                          ifelse(R_FU1_tap_use_drinking == 2, "Yesterday", 
@@ -565,7 +565,7 @@ stargazer(df.consistency, summary=F, title= "Check for not using drinking water,
 
 #Counting people accompanying to shadow enumerators
 
-df.shadow <- df.temp.consent %>%   dplyr::select(R_FU1_enum_name_label,R_FU1_r_cen_village_name_str, R_FU1_survey_accompany_num) %>%
+df.shadow <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%   dplyr::select(R_FU1_enum_name_label,R_FU1_r_cen_village_name_str, R_FU1_survey_accompany_num) %>%
   group_by(R_FU1_enum_name_label,R_FU1_r_cen_village_name_str ) %>% 
     dplyr:: summarise(mean = round(mean(R_FU1_survey_accompany_num),1), 
                       min = round(min(R_FU1_survey_accompany_num),1), max = round(max(R_FU1_survey_accompany_num),1)) %>%

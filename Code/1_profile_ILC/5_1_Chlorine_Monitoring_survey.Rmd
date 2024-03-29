@@ -142,6 +142,8 @@ chlorine$Date <- as.IDate(chlorine$datetime)
 
 chlorine <- chlorine %>% dplyr::select(village_name, chlorine_test_type, chlorine_concentration, Date )
 
+chlorine <- chlorine %>% filter(Date >= as.Date("2024-02-01"))
+
 chlorine <- chlorine %>% mutate(village = ifelse(village_name == 30701, "Gopi Kankubadi", 
                                                  ifelse(village_name == 50401, "Birnarayanpur", 
                                                     ifelse(village_name == 50501,"Nathma", 
@@ -204,9 +206,9 @@ for (i in village_list) {
 plot_list_tap = list()
 
 for (i in village_list){
-  df.vil.cl <-   df.tap %>% filter(village == i)    
-  p <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color=Distance, linetype = Test)) +
-  geom_line(linewidth = 1.00)  + 
+  df.vil.cl <-   df.tap %>% filter(village == i) %>% filter(chlorine_test_type != "nearest_tap_tc" &  chlorine_test_type != "farthest_tap_tc"  )    
+  p <- ggplot(df.vil.cl, aes(x = Date, y = chlorine_concentration, color=Distance)) +
+  geom_line(linewidth = 1.00)  + geom_point() + 
   labs(title = " Concentration of Chlorine",
        x = "Date",
        y = "Chlorine Concentration") +  
@@ -227,7 +229,7 @@ for (i in village_list){
     axis.text.y = element_text(size = 14), 
     axis.title=element_text(size=14,face="bold")) + 
     scale_color_brewer(palette="Dark2") + geom_hline(yintercept=0.2, linetype="dotdash", color = "blue" ,linewidth=0.5) +
-    geom_hline(yintercept=0.5, linetype="dotdash", color = "blue", linewidth=0.5) +   
+    geom_hline(yintercept=0.6, linetype="dotdash", color = "blue", linewidth=0.5) +   
     annotate("text", min(df.vil.cl$Date), 0.5, vjust = -1, label = "Ideal Dose Range", color = "blue", size = 4) + 
     ggtitle(paste0('Tap water: Village_',i))
 
@@ -239,7 +241,7 @@ for (i in village_list){
 
 setwd(paste0(overleaf(), "/Figure"))
 for (i in village_list) {
-    file_name = paste("Village_tap_", i, ".png", sep="")
+    file_name = paste("Village_tap_for_GV_", i, ".png", sep="")
     png(file_name)
     print(plot_list_tap[[i]])
     dev.off()
