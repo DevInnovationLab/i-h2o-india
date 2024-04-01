@@ -730,6 +730,13 @@ df.tap <- df.tap %>%
 names(chlorine)
 # STORED WATER 
 
+
+#__________________________________________________________________
+#THIS IS INCLUDING TOTAL FREE AND FIRST INSTALLATION DATES
+#____________________________________________________________________
+
+
+
 # STORED WATER 
 #new plot with scatter plot type graph (line point graphs)
 
@@ -900,7 +907,6 @@ Master_tracker$Date <- mdy(Master_tracker$Date)
 
 class(Master_tracker$Date)
 class(df.stored$Date)
-class(df.vil.cl$Date)
 # Renaming columns
 print("Renaming columns...")
 Master_tracker <- Master_tracker %>%
@@ -1196,7 +1202,6 @@ current_install$Ins_status <- "last_installation_date"
 
 
 class(df.stored$Date)
-class(df.vil.cl$Date)
 class(initial_install$Date)
 class(current_install$Date)
 
@@ -2120,9 +2125,64 @@ df.new.GV.tap <- df.new.GV %>%
 #_____________________GV - TAP WATER TIME SERIES____________________________#
 ###############################################################################
 
-df.new.GV.filtered.tap <- df.new.GV.tap %>%
+
+df.new.GV.LI <- df.new.GV.tap
+
+# Append datasets while preserving all columns
+appended_df_GV_LI <- full_join(df.new.GV.LI, Installation_df, by = c("Date", "village"))
+
+View(appended_df_GV_LI)
+
+# Checking if village names are unique 
+print(unique(appended_df_GV_LI$village))
+print(unique(df.new.GV.LI$village))
+
+changed_df_GV_LI <- appended_df_GV_LI %>%
+  group_by(village) %>%
+  mutate(current_installation_status = Date[which.max(Ins_status == "last_installation_date")])
+
+changed_df_GV_LI <- changed_df_GV_LI %>%
+  group_by(village) %>%
+  mutate(first_installation_status = Date[which.max(Ins_status == "first_installation_date")])
+
+View(changed_df_GV_LI)
+
+changed_df_GV_after_LI_LI <- changed_df_GV_LI %>%
+  group_by(village, Date) %>%
+  filter(Date >= current_installation_status)  # Exclude dates earlier than current_installation_date
+
+# Check if any dates before the current installation are still present
+if (any(changed_df_GV_after_LI_LI$Date < changed_df_GV_after_LI_LI$current_installation_status)) {
+  cat("Some dates before current installation are still present.\n")
+} else {
+  cat("Dates only before the current installation are removed for each village.\n")
+}
+
+View(changed_df_GV_after_LI_LI)
+
+
+na_rows <- changed_df_GV_after_LI_LI %>%
+  filter(is.na(chlorine_concentration))
+
+View(na_rows)
+#dropping NA values
+changed_df_GV_after_LI_LI <- changed_df_GV_after_LI_LI %>%
+  drop_na(chlorine_concentration)
+
+View(changed_df_GV_after_LI_LI)
+
+View(changed_df_GV_after_LI_LI)
+changed_df_GV_after_LI_LI.free <- changed_df_GV_after_LI_LI %>%
+  filter(chlorine_test == "Free Chlorine")
+
+df.new.GV.filtered.tap <- changed_df_GV_after_LI_LI.free %>%
   filter(chlorine_concentration <= 2.5)
-df.new.GV.less <- df.new.GV.tap
+
+df.new.GV.filtered.tap <- changed_df_GV_after_LI_LI.free 
+
+df.new.GV.less <- changed_df_GV_after_LI_LI.free
+
+View(df.new.GV.filtered.tap)
 
 # Define colorblind friendly colors
 colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -2233,9 +2293,308 @@ for (i in village_list) {
 print("Plots generated for all villages.")
 
 
+#########################################################################################################
+#*______________________________________________________________________*#
+
+#PANEL GRAPHS
+#*______________________________________________________________________*#
+
+# Continue from your existing ggplot code
+
+# Highlight points above a certain threshold (e.g., 2)
+
+# Rest of your code for plotting
 
 
-###############################################################################
+library(ggplot2)
+library(dplyr)
+install.packages("scales")
+library(scales)
+
+# Assuming df.new.GV.filtered.tap and Installation_df are already defined
+
+# Function to categorize concentrations
+categorize_concentration <- function(concentration, threshold = 2) {
+  ifelse(concentration > threshold, paste0(">", threshold), paste0("<=", threshold))
+}
+
+# Apply the categorization
+df.new.GV.filtered.tap$category <- with(df.new.GV.filtered.tap, categorize_concentration(chlorine_concentration))
+
+# Now adjust your plotting code inside the loop to use faceting
+for (i in GV_village_list) {
+  print(paste("Processing village:", i))
+  
+  # Your data preparation remains the same
+  GV.df.com <- df.new.GV.filtered.tap %>% filter(village == i) %>% arrange(Date)
+  
+  # Your plot adjustments here
+  gv.tap <- ggplot(GV.df.com, aes(x = Date, y = chlorine_concentration)) +
+    geom_line(aes(color = chlorine_test), linewidth = 1) + # Use aesthetic mappings
+    geom_point(aes(shape = chlorine_test), size = 3) +
+    facet_grid(rows = vars(category), scales = "free_y", space = "free") + # Faceting
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    labs(
+      title = paste0('Tap Water Chlorine Levels: Village ', i),
+      x = "Date",
+      y = "Chlorine Concentration"
+    ) +
+    scale_x_date(date_breaks = '3 day', labels = date_format("%b %d")) +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    theme_minimal() + # Cleaner theme
+    theme(panel.spacing = unit(1, "lines"), # Adjust spacing between facets
+          strip.text.y = element_text(angle = 0)) + # Rotate facet labels if needed
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17))
+  
+  # Display and save the plot as before
+  print(gv.tap)
+  plot_list_tap[[i]] <- gv.tap
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/GV_Tap_Village", i, ".png")
+  
+  ggsave(file_path, plot = gv.tap, device = 'png', width = 10, height = 6, dpi = 300)
+}
+
+print("Plots generated for all villages.")
+
+
+
+
+
+
+
+
+
+
+
+#_#_#_#_#_#_#_#_#_#_  WITH KINK 
+
+GV_village_list <- unique( df.new.GV.filtered.tap$village) 
+View(GV_village_list)
+
+# Define colorblind friendly colors
+colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# Create an empty list to store plots
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in GV_village_list) {
+  print(paste("Processing village:", i))
+  
+  GV.df.com <- df.new.GV.filtered.tap %>% filter(village == i)
+  GV.df.com <- GV.df.com %>% arrange(Date)
+  max_date <- max(GV.df.com$Date, na.rm = TRUE)
+  min_date <- min(GV.df.com$Date, na.rm = TRUE)
+  print(paste("Generating plot for village:", i))
+  
+  # Filter Installation_df for relevant data
+  installations <- Installation_df %>% filter(village == i)
+  
+  # Find the unique installation dates for this village
+  unique_install_dates <- unique(installations$Date)
+  
+  # Set x-axis limits based on the minimum and maximum dates in the combined data
+  #min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(10)
+  if(i == "naira") {
+    min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(20)
+  }
+  else {
+    # For other villages, the min_plot_date is set as before
+    min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(10)
+  }
+  max_plot_date <- max(GV.df.com$Date, na.rm = TRUE) + days(5)
+  
+  last_installation_date <- installations %>% 
+    filter(Ins_status == "last_installation_date") %>% 
+    summarize(max_date = max(Date)) %>% 
+    .$max_date
+  GV.df.com_leq2 <- GV.df.com %>% filter(chlorine_concentration <= 2)
+  GV.df.com_gt2 <- GV.df.com %>% filter(chlorine_concentration > 2)
+  
+  # Create plot with adjustments
+  gv.tap <- ggplot(GV.df.com , aes(x = Date, y = chlorine_concentration, color = chlorine_test, group = 1)) +
+    geom_line(aes(y = chlorine_concentration), data = GV.df.com_leq2, linetype = "solid") +  # Line for <= 2
+    geom_point(aes(y = chlorine_concentration), data = GV.df.com_gt2) +  # Line for > 2    
+    geom_line(linewidth = 1) + # Increase line thickness
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    # Add x-axis and y-axis lines
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    annotate("text", x = max_plot_date, y = 0.18, label = "Ideal Range", hjust = 1, size = 3) +
+    annotate("text", x = max_plot_date, y = 0.56, label = "Ideal Range", hjust = 1, size = 3) +
+    geom_vline(xintercept = seq(min_plot_date, max_plot_date, by = "1 week"), linetype = "dotted", color = "gray") +
+    # Add geom_vline for the last installation date with annotation
+    geom_vline(
+      data = filter(installations, Ins_status == "last_installation_date"),
+      aes(xintercept = Date), linetype = "solid", color = colorblind_palette[2]
+    ) +
+    annotate(
+      "text", x = last_installation_date, y = Inf, label = "Last Installation Date",
+      hjust = 1.1, vjust = 1, angle = 90, color = colorblind_palette[2]
+    ) +
+    # Add geom_vline for each unique installation date
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") + # Added Y-axis label
+    scale_x_date(
+      limits = c(min_plot_date, max_plot_date), # Set x-axis limits based on combined data with padding
+      date_breaks = '3 day', 
+      labels = scales::date_format("%b %d")
+    ) +
+    scale_y_continuous(
+      limits = c(0.00, max(c(GV.df.com$chlorine_concentration, 2.5))),  # Adjust for max data value
+      breaks = seq(0, max(c(GV.df.com$chlorine_concentration, 2.5)), by = 0.1),
+      expand = c(0.05, 0.05)  # Add some padding around breaks
+    ) +
+    #annotate("text", x = Date, y = 2, label = "Break", hjust = 1, vjust = 0.5, angle = 90) +# Increased y-axis limit to 2.5
+    theme(
+      legend.text = element_text(size = 8), # Increased legend text size
+      legend.key.size = unit(0.5, "cm"),   # Reduce legend key size
+      legend.box = "vertical",       # Change legend box to vertical
+      legend.spacing.y = unit(0.5, "cm"),  # Add spacing between legends
+      legend.position = "right",       # Position legends at the right
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),  # Adjust legend margins
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"), # Change background color to white
+      panel.border = element_rect(color = "black", fill = NA), # Add border around plot
+      panel.grid.major = element_blank(), # Remove major gridlines
+      panel.grid.minor = element_blank(), # Remove minor gridlines
+      axis.line = element_line(color = "black") # Add axis lines
+    ) +
+    scale_color_manual(values = colorblind_palette) + # Use colorblind friendly colors
+    scale_shape_manual(values = c(16, 17)) + # Change shapes
+    ggtitle(paste0('GV plot for Tap Water: Village_', i)) 
+    # Add footnote for villages with chlorine concentrations > 2.5
+    #if (any(df.new.GV.less$chlorine_concentration[df.new.GV.less$village == i] > 2.5)) {
+      #annotate("text", x = max(df.new.GV.less$Date[df.new.GV.less$village == i], na.rm = TRUE), y = 2.5, label = paste0("Note: ", sum(df.new.GV.less$chlorine_concentration[df.new.GV.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+    #}
+  
+  print(paste("Plot for village", i, "generated."))
+  print(gv.tap)
+  plot_list_tap[[i]] <- gv.tap
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/GV_Tap_Village", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = gv.tap, device = 'png', width = 10, height = 6, dpi = 300) # Increased dpi for better resolution
+}
+
+print("Plots generated for all villages.")
+
+
+
+#________________________________________________________________________________#
+
+############   FINAL PLOT   ####################################
+#________________________________________________________________________________#
+
+
+#in progress
+GV_village_list <- unique( df.new.GV.filtered.tap$village) 
+View(GV_village_list)
+
+# Define colorblind friendly colors
+colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# Create an empty list to store plots
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in GV_village_list) {
+  print(paste("Processing village:", i))
+  
+  GV.df.com <- df.new.GV.filtered.tap %>% filter(village == i)
+  GV.df.com <- GV.df.com %>% arrange(Date)
+  max_date <- max(GV.df.com$Date, na.rm = TRUE)
+  min_date <- min(GV.df.com$Date, na.rm = TRUE)
+  print(paste("Generating plot for village:", i))
+  
+  # Filter Installation_df for relevant data
+  installations <- Installation_df %>% filter(village == i)
+  
+  # Find the unique installation dates for this village
+  unique_install_dates <- unique(installations$Date)
+  
+  # Set x-axis limits based on the minimum and maximum dates in the combined data
+  #min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(10)
+  if(i == "naira") {
+    min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(20)
+  }
+  else {
+    # For other villages, the min_plot_date is set as before
+    min_plot_date <- min(GV.df.com$Date, na.rm = TRUE) - days(10)
+  }
+  max_plot_date <- max(GV.df.com$Date, na.rm = TRUE) + days(5)
+  
+  last_installation_date <- installations %>% 
+    filter(Ins_status == "last_installation_date") %>% 
+    summarize(max_date = max(Date)) %>% 
+    .$max_date
+  
+gv.tap <- ggplot(GV.df.com , aes(x = Date, y = chlorine_concentration, color = chlorine_test, group = 1)) +
+  geom_line(linewidth = 1) + # Increase line thickness
+  geom_point(size = 3) +
+  geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+  # Add x-axis and y-axis lines
+  geom_hline(yintercept = seq(0, 2.5, by = 0.1), linetype = "dotted", color = "gray") + # Adjusted y-axis limit to 3
+  annotate("text", x = max_plot_date, y = 0.18, label = "Ideal Range", hjust = 1, size = 3) +
+  annotate("text", x = max_plot_date, y = 0.56, label = "Ideal Range", hjust = 1, size = 3) +
+  geom_vline(xintercept = seq(min_plot_date, max_plot_date, by = "3 days"), linetype = "dotted", color = "gray") +
+  # Add geom_vline for the last installation date with annotation
+  geom_vline(
+    data = filter(installations, Ins_status == "last_installation_date"),
+    aes(xintercept = Date), linetype = "solid", color = colorblind_palette[2]
+  ) +
+  annotate(
+    "text", x = last_installation_date, y = Inf, label = "Last Installation Date",
+    hjust = 1.1, vjust = 1, angle = 90, color = colorblind_palette[2]
+  ) +
+  # Add geom_vline for each unique installation date
+  labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") + # Added Y-axis label
+  scale_x_date(
+    limits = c(min_plot_date, max_plot_date), # Set x-axis limits based on combined data with padding
+    date_breaks = '3 day', 
+    labels = scales::date_format("%b %d")
+  ) +
+  scale_y_continuous(limits = c(0.00, 2.5), breaks = seq(0, 2.5, by = 0.1)) + # Increased y-axis limit to 3
+  theme(
+    legend.text = element_text(size = 8), # Increased legend text size
+    legend.key.size = unit(0.5, "cm"),   # Reduce legend key size
+    legend.box = "vertical",       # Change legend box to vertical
+    legend.spacing.y = unit(0.5, "cm"),  # Add spacing between legends
+    legend.position = "right",       # Position legends at the right
+    legend.justification = "top",
+    legend.box.just = "right",
+    legend.margin = margin(0, 0, 6, 0),  # Adjust legend margins
+    axis.text.x = element_text(angle = 90, size = 10),
+    panel.background = element_rect(fill = "white"), # Change background color to white
+    panel.border = element_rect(color = "black", fill = NA), # Add border around plot
+    panel.grid.major = element_blank(), # Remove major gridlines
+    panel.grid.minor = element_blank(), # Remove minor gridlines
+    axis.line = element_line(color = "black") # Add axis lines
+  ) +
+  scale_color_manual(values = colorblind_palette) + # Use colorblind friendly colors
+  scale_shape_manual(values = c(16, 17)) + # Change shapes
+  ggtitle(paste0('GV plot for Tap Water: Village_', i)) +
+  # Add footnote for villages with chlorine concentrations > 2.5
+  if (any(df.new.GV.less$chlorine_concentration[df.new.GV.less$village == i] > 2.5)) {
+    annotate("text", x = max(df.new.GV.less$Date[df.new.GV.less$village == i], na.rm = TRUE), y = 2.5, label = paste0("Note: ", sum(df.new.GV.less$chlorine_concentration[df.new.GV.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+  }
+
+print(paste("Plot for village", i, "generated."))
+print(gv.tap)
+plot_list_tap[[i]] <- gv.tap
+file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/GV_Tap_Village", i, ".png")
+
+# Now, save the plot to the specified path
+ggsave(file_path, plot = gv.tap, device = 'png', width = 10, height = 6, dpi = 300) # Increased dpi for better resolution
+}
+
+print("Plots generated for all villages.")
+
+
+#DO IT FOR TOTAL TOO
+
 
 #_____________________GV - STORED WATER TIME SERIES____________________________#
 ###############################################################################
@@ -2437,8 +2796,12 @@ View(df.stored.after_L)
 JPAL.filtered.stored <- df.stored.after_L %>%
   filter(chlorine_concentration <= 2.5)
 
+
+JPAL.filtered.stored.free <- JPAL.filtered.stored %>%
+  filter(Test == "Free_Chlorine_stored")
+
 View(JPAL.filtered.stored)
-df.new.JPAL.less <- df.stored.after_L
+df.new.JPAL.less <- JPAL.filtered.stored.free
 
 # Define colorblind friendly colors
 colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -2452,7 +2815,7 @@ plot_list_tap <- list()
 for (i in village_list) {
   print(paste("Processing village:", i))
   
-  stored.AI <- JPAL.filtered.stored %>% filter(village == i)
+  stored.AI <- JPAL.filtered.stored.free %>% filter(village == i)
   
   # Get the maximum and minimum dates with non-missing values
   min_date <- min(stored.AI$Date[!is.na(stored.AI$chlorine_concentration)])
@@ -2461,7 +2824,7 @@ for (i in village_list) {
   print(paste("Generating plot for village:", i))
   
   # Create plot with adjustments
-  Stored_after_L <- ggplot(stored.AI , aes(x = Date, y = chlorine_concentration, color = Distance, shape = Test, group = 1)) +
+  Stored_after_L <- ggplot(stored.AI , aes(x = Date, y = chlorine_concentration, color = Distance, group = 1)) +
     geom_line(linewidth = 1) + 
     geom_point(size = 3) +
     geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
@@ -2507,6 +2870,70 @@ for (i in village_list) {
 print("Plots generated for all villages.")
 
 
+#######################################################################
+
+# FINAL COMMAND ( DO THE SMAE FOR TAP WATER) 
+#########################################################################
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  stored.AI <- JPAL.filtered.stored.free %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(stored.AI$Date[!is.na(stored.AI$chlorine_concentration)])
+  max_date <- max(stored.AI$Date[!is.na(stored.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+  
+
+Stored_after_L <- ggplot(stored.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+  geom_line(linewidth = 1) + 
+  geom_point(size = 3) +
+  geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+  geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+  labs(title = paste0('Stored water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+  scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) +
+  scale_y_continuous(limits = c(0.00, 2.50), breaks = seq(0, 2.5, by = 0.1)) +
+    # Theme adjustments here
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+      scale_color_manual(values = colorblind_palette) +
+      scale_shape_manual(values = c(16, 17)) +
+      ggtitle(paste0('Stored Water: Village_', i, '(Only dates after the last installation)'))
+    
+    # Add footnote for villages with chlorine concentrations > 2.5
+    if (any(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5)) {
+      Stored_after_L <- Stored_after_L +
+        annotate("text", x = max_date, y = 2.5, label = paste0("Note: ", sum(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+    }
+    
+    print(paste("Plot for village", i, "generated."))
+    print(Stored_after_L)
+    plot_list_tap[[i]] <- Stored_after_L
+    file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Stored_Village_L", i, ".png")
+    
+    # Now, save the plot to the specified path
+    ggsave(file_path, plot = Stored_after_L, device = 'png', width = 10, height = 6, dpi = 300)
+}
+
+print("Plots generated for all villages.")
 
 #------------------------------------------------------------------------------
 #TAP WATER
@@ -2566,10 +2993,18 @@ df.tap.after_L <- df.tap.after_L %>%
 
 #___________________________________________________________________________#
 
-JPAL.filtered.tap <- df.tap.after_L %>%
-  filter(chlorine_concentration <= 2.5)
+df.tap.after_L.free <- df.tap.after_L %>%
+  filter(Test == "Free_Chlorine_tap")
 
-df.new.JPAL.less <- df.tap.after_L
+#JPAL.filtered.tap <- df.tap.after_L.free %>%
+  #filter(chlorine_concentration <= 2.5)
+
+JPAL.filtered.tap <- df.tap.after_L.free 
+
+View(JPAL.filtered.tap)
+
+
+df.new.JPAL.less <- df.tap.after_L.free
 
 # Define colorblind friendly colors
 colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -2590,9 +3025,11 @@ for (i in village_list) {
   max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
   
   print(paste("Generating plot for village:", i))
+
   
+
   # Create plot with adjustments
-  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = Distance, shape = Test, group = 1)) +
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
     geom_line(linewidth = 1) + 
     geom_point(size = 3) +
     geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
@@ -2639,9 +3076,437 @@ print("Plots generated for all villages.")
 
 
 
+#########################################################
+
+install.packages("plotrix")
+library(plotrix)
+install.packages("gg.gap")
+library(gg.gap)
+
+# Create an empty list to store plots
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  tap.AI <- JPAL.filtered.tap %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+
+  
+
+  # Create plot with adjustments
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+    geom_line(linewidth = 1) + 
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+    scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) + # Set x-axis limits to only include dates with non-missing values
+    scale_y_continuous(limits = c(0.00, 9), breaks = seq(0, 2, by = 0.1), breaks = seq(2,9,by = 5)) +   
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17)) +
+    ggtitle(paste0('Tap Water: Village_', i, '(Only dates after the last installation)'))
+  
+  # Add footnote for villages with chlorine concentrations > 2.5
+  if (any(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5)) {
+    Tap_after_L <-  Tap_after_L +
+      annotate("text", x = max_date, y = 2.5, label = paste0("Note: ", sum(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+  }
+  
+  print(paste("Plot for village", i, "generated."))
+  print(Tap_after_L)
+  plot_list_tap[[i]] <- Tap_after_L
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Village_L", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = Tap_after_L, device = 'png', width = 10, height = 6, dpi = 300)
+}
+
+print("Plots generated for all villages.")
+
+
+#_#_#_#_#
+
+
+install.packages("gg.gap")
+library(gg.gap)
+# Create an empty list to store plots
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  tap.AI <- JPAL.filtered.tap %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+  
+  
+  
+  # Create plot with adjustments
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+    geom_line(linewidth = 1) + 
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+    scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) + # Set x-axis limits to only include dates with non-missing values
+    scale_y_continuous(limits = c(0.00, 2.0), expand = c(0,0), breaks = seq(0, 2.0, by = 0.1)) +
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17)) 
+    
+    ggtitle(paste0('Tap Water: Village_', i, '(Only dates after the last installation)'))
+  
+  # Add footnote for villages with chlorine concentrations > 2.5
+  if (any(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5)) {
+    Tap_after_L <-  Tap_after_L +
+      annotate("text", x = max_date, y = 2.5, label = paste0("Note: ", sum(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+  }
+  
+  print(paste("Plot for village", i, "generated."))
+  # Apply gg.gap to the plot with all theme settings included
+  Tap_after_L <- gg.gap(
+    plot = Tap_after_L,
+    segments = c(2, 2.01),
+    ylim = c(0, 9),
+    tick_width = c(0.1, 1))
+
+  print(Tap_after_L)
+  plot_list_tap[[i]] <- Tap_after_L
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Village_L", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = Tap_after_L, device = 'png', width = 10, height = 10, dpi = 300)
+}
+
+print("Plots generated for all villages.")
 
 
 
+
+
+
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  tap.AI <- JPAL.filtered.tap %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+  
+  
+  
+  # Create plot with adjustments
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+    geom_line(linewidth = 1) + 
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+    scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) + # Set x-axis limits to only include dates with non-missing values
+    scale_y_continuous(limits = c(0.00, 2.0), expand = c(0,0), breaks = seq(0, 2.0, by = 0.1)) +
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17)) 
+  
+  ggtitle(paste0('Tap Water: Village_', i, '(Only dates after the last installation)'))
+  
+  # Add footnote for villages with chlorine concentrations > 2.5
+  if (any(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5)) {
+    Tap_after_L <-  Tap_after_L +
+      annotate("text", x = max_date, y = 2.5, label = paste0("Note: ", sum(df.new.JPAL.less$chlorine_concentration[df.new.JPAL.less$village == i] > 2.5), " values > 2.5"), hjust = 1)
+  }
+  
+  print(paste("Plot for village", i, "generated."))
+  # Apply gg.gap to the plot with all theme settings included
+  print(Tap_after_L)
+  plot_list_tap[[i]] <- Tap_after_L
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Village_L", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = Tap_after_L, device = 'png', width = 10, height = 10, dpi = 300)
+}
+
+print("Plots generated for all villages.")
+
+
+
+
+
+
+
+
+
+plot_list_tap <- list()
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  tap.AI <- JPAL.filtered.tap %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+  
+  
+  
+  # Create plot with adjustments
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+    geom_line(linewidth = 1) + 
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+    scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) + # Set x-axis limits to only include dates with non-missing values
+    scale_y_continuous(limits = c(0.00, 2.0), breaks = seq(0, 2.0, by = 0.1))+
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17)) +
+    ggtitle(paste0('Tap Water: Village_', i, '(Only dates after the last installation)'))
+  
+  # Add footnote for villages with chlorine concentrations > 2.5
+
+  print(paste("Plot for village", i, "generated."))
+  print(Tap_after_L)
+  plot_list_tap[[i]] <- Tap_after_L
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Village_L", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = Tap_after_L, device = 'png', width = 10, height = 6, dpi = 300)
+}
+
+print("Plots generated for all villages.")
+
+
+df.tap.after_L.free <- df.tap.after_L %>%
+  filter(Test == "Free_Chlorine_tap")
+
+
+
+library(plotrix)
+View(JPAL.filtered.tap)
+View(tap.AI)
+from <- 2
+to <- 8
+JPAL.filtered.tap.F <- JPAL.filtered.tap %>% filter(village == "naira")
+gap.plot(JPAL.filtered.tap.F$Date, JPAL.filtered.tap.F$chlorine_concentration, gap=c(from,to), type="b", xlab="index", ylab="value")
+axis.break(2, from, breakcol="snow", style="gap")
+axis.break(2, from*(1+0.02), breakcol="black", style="slash")
+axis.break(4, from*(1+0.02), breakcol="black", style="slash")
+axis(2, at=from)
+
+
+
+library(ggplot2)
+library(dplyr)
+
+library(plotrix)
+
+# Assuming JPAL.filtered.tap.F is already filtered and exists
+# and `from` and `to` are defined as in your question
+
+# Create a simple plot
+gap.plot(JPAL.filtered.tap.F$Date, JPAL.filtered.tap.F$chlorine_concentration, gap=c(from,to), type="b", 
+         xlab="Date", ylab="Chlorine Concentration", 
+         main="Chlorine Concentration in Naira Village")
+
+# Add a legend
+legend("topright", legend=c("Chlorine Concentration"), col="blue", pch=1, bty="n")
+
+# Add a title
+title(main="Chlorine Concentration Over Time")
+
+# Add axis breaks and customize
+axis.break(2, from, breakcol="snow", style="gap")
+axis.break(2, from*(1+0.02), breakcol="black", style="slash")
+axis.break(4, from*(1+0.02), breakcol="black", style="slash")
+axis(2, at=from)
+
+# Add background color
+
+# Add gridlines
+
+# Adjust margins if necessary
+# You might need to play with the values to fit your plot
+par(mar = c(5, 4, 4, 2) + 0.1)
+
+
+
+
+library(plotrix)
+
+# Create a line and point plot
+gap.plot(JPAL.filtered.tap.F$Date, JPAL.filtered.tap.F$chlorine_concentration, gap=c(from,to), type="l", 
+         xlab="Date", ylab="Chlorine Concentration", 
+         main="Chlorine Concentration in Naira Village")
+
+# Add points to the plot
+points(JPAL.filtered.tap.F$Date, JPAL.filtered.tap.F$chlorine_concentration, pch=16, col="blue")
+
+# Add a legend
+legend("topright", legend=c("Chlorine Concentration"), col="blue", pch=16, bty="n")
+
+# Add a title
+title(main="Chlorine Concentration Over Time")
+
+# Add axis breaks and customize
+axis.break(2, from, breakcol="snow", style="gap")
+axis.break(2, from*(1+0.02), breakcol="black", style="slash")
+axis.break(4, from*(1+0.02), breakcol="black", style="slash")
+axis(2, at=from)
+
+# Add background color
+
+#_______________________________________________________
+## FACETS GRAPHS
+#_________________________________________________________
+
+
+# Load necessary library
+library(plotrix)
+
+# Loop through each village
+for (i in village_list) {
+  print(paste("Processing village:", i))
+  
+  tap.AI <- JPAL.filtered.tap %>% filter(village == i)
+  
+  # Get the maximum and minimum dates with non-missing values
+  min_date <- min(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  max_date <- max(tap.AI$Date[!is.na(tap.AI$chlorine_concentration)])
+  
+  print(paste("Generating plot for village:", i))
+  
+  # Create plot with adjustments
+  Tap_after_L <- ggplot(tap.AI , aes(x = Date, y = chlorine_concentration, color = as.factor(Distance), group = as.factor(Distance))) +
+    geom_line(linewidth = 1) + 
+    geom_point(size = 3) +
+    geom_hline(yintercept = c(0.2, 0.6), linetype = "twodash", color = "black") +
+    geom_hline(yintercept = seq(0, 2, by = 0.1), linetype = "dotted", color = "gray") +
+    labs(title = paste0('Tap water: Village_', i), x = "Date", y = "Chlorine Concentration") +
+    scale_x_date(limits = c(min_date, max_date), date_breaks = '3 day', labels = scales::date_format("%b %d")) + # Set x-axis limits to only include dates with non-missing values
+    scale_y_continuous(limits = c(0.00, 2.0), breaks = seq(0, 2.0, by = 0.1)) +
+    theme(
+      legend.text = element_text(size = 8),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box = "vertical",
+      legend.spacing.y = unit(0.5, "cm"),
+      legend.position = "right",
+      legend.justification = "top",
+      legend.box.just = "right",
+      legend.margin = margin(0, 0, 6, 0),
+      axis.text.x = element_text(angle = 90, size = 10),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(color = "black")
+    ) +
+    scale_color_manual(values = colorblind_palette) +
+    scale_shape_manual(values = c(16, 17)) +
+    ggtitle(paste0('Tap Water: Village_', i, '(Only dates after the last installation)')) +
+    facet_wrap(~ ifelse(chlorine_concentration > 2, "Above 2", "Below or Equal to 2"), scales = "free")
+  
+  # Add footnote for villages with chlorine concentrations > 2.5
+  
+  print(paste("Plot for village", i, "generated."))
+  print(Tap_after_L)
+  plot_list_tap[[i]] <- Tap_after_L
+  file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Village_L", i, ".png")
+  
+  # Now, save the plot to the specified path
+  ggsave(file_path, plot = Tap_after_L, device = 'png', width = 10, height = 6, dpi = 300)
+}
+
+print("Plots generated for all villages.")
+# Optionally, you can further customize the appearance of the plot as needed
+
+
+
+
+# Define a function to set Y-axis limits based on chlorine concentration
+# Simulate data with gaps
 #_______________________________________________________________________________
 #BOXPLOTS STORED WATER
 #_______________________________________________________________________________
@@ -2713,6 +3578,38 @@ print(boxplot_all_villages)
 # Save the plot
 file_path <- "C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Tap_Boxplots_Villages.png"
 ggsave(file_path, plot = boxplot_all_villages, device = 'png', width = 10, height = 6, bg = "white")
+
+
+
+# Concatenate the data frames for stored water and tap water
+df_combined <- rbind(df.stored.free, df.tap.free)
+
+# Generate color palette with enough colors for all unique villages
+color_palette <- viridis_pal()(length(unique(df_combined$village)))
+
+# Create a combined boxplot for stored water and tap water
+combined_boxplot <- ggplot(df_combined, aes(x = village, y = chlorine_concentration, fill = Test)) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +  # Dodge position to separate boxplots
+  labs(title = "Chlorine concentration for free chlorine (After the Last Installation Date)",
+       x = "Village",
+       y = "Chlorine Concentration") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "right",
+        legend.box = "vertical",
+        legend.margin = margin(t = 5),
+        panel.border = element_rect(color = "black", fill = NA),
+        panel.grid.major = element_line(color = "gray", size = 0.5),
+        axis.line = element_line(color = "black")) +
+  scale_fill_manual(values = color_palette, labels = c("Stored", "Tap")) +  # Set color palette and labels
+  guides(fill = guide_legend(override.aes = list(size = 2)))  # Adjust legend size
+
+# Print the combined boxplot
+print(combined_boxplot)
+
+# Save the plot
+file_path <- "C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Combined_Boxplots_Villages.png"
+ggsave(file_path, plot = combined_boxplot, device = 'png', width = 10, height = 6, bg = "white")
 
 #_______________________________________________________________________________
 #Ridges plot STORED WATER 

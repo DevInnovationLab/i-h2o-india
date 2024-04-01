@@ -1,6 +1,6 @@
 
 *Running Astha's cleaning file
-cap do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\1_1_D_Mortality_cleaning.do"
+do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\1_1_D_Mortality_cleaning.do"
 
 *Astha for now please add your directories in PathGraphs and PathTables (I didn't add it because my dropbox and overleaf isn't linked and global paths for table export is happening in dropbox once that's sorted I will add a global dropbox path 
 
@@ -84,7 +84,13 @@ tab dup_HHID
 list unique_id_num if dup_HHID > 0
 cap export excel unique_id_num R_mor_enum_name_f R_mor_village R_mor_resp_name R_mor_a2_hhmember_count  if dup_HHID > 0  using "$PathTables/Mortality_tables.xlsx", firstrow(varlabels) sheet(duplicates) sheetreplace
 
-	
+
+	 gen starttime= dofc(R_mor_starttime)
+	 format starttime %td
+	 gen endtime = dofc(R_mor_endtime)
+	 format endtime %td 
+	 gen diff_date = submission_date- starttime
+
 /*-----------------------------------------------------------------------------------------------------------------------------------
 Age calculation                                                  
 -------------------------------------------------------------------------------------------------------------------------------------*/
@@ -126,11 +132,6 @@ forvalues i = 1/6 {
 *******************************************************
 
 //creating a subset for child deaths to match with CDR
-br village unique_id_num R_mor_landmark_f R_mor_vill_pc_* R_mor_vill_residence_* R_mor_women_child_bear_count_f R_mor_name_pc_earlier_* R_mor_last_5_years_pregnant_* R_mor_last_5_years_preg_oth_* total_stillborn R_mor_child_stillborn_* total_childdiedless24 total_childdiedmore24  R_mor_child_alive_died_*  total_childlivingnum R_mor_child_living_* total_notlivingchild R_mor_child_notliving_* R_mor_name_child_earlier_* R_mor_age_child_* R_mor_unit_child_* R_mor_date_birth_* R_mor_date_death_* R_mor_cause_death_* R_mor_cause_death_oth_* R_mor_cause_death_str_* R_mor_miscarriage_*
-ds R_mor_name_child_earlier_*
-foreach var of varlist `r(varlist)' { 
-rename R_mor_name_child_earlier_1_2_sc
-}
 /*-----------------------------------------------------------------------------------------------------------------------------------
                                                         SECTION 1(PART A) - PRODUCTIVITY
 -------------------------------------------------------------------------------------------------------------------------------------*/
@@ -204,6 +205,16 @@ restore
 ********************************************************************************************************************************************
 //Including all surveys (Complete and unavailable surveys)
 ********************************************************************************************************************************************
+
+
+// Step 1: Sort the dataset by R_mor_village and submission_date
+sort R_mor_village submission_date
+
+// Step 2: Use by prefix to group observations by R_mor_village
+by R_mor_village: egen unique_dates = total(submission_date != submission_date[_n-1])
+
+// Step 3: List the village-wise total number of unique dates
+list R_mor_village unique_dates
 
  *Average productivity per day by surveyor                                                          
 

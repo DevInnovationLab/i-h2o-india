@@ -24,6 +24,21 @@ list unique_id if dup_HHID > 0
 
 
 
+*change in data
+*50401117012	chlorine_yesno	No	Yes 16mar2024
+*40201111008    water_treat	Yes	No (water_treat_when_1 water_treat_type__77)
+*40201111006    water treatment happened in stored water and we dont ask it in BCs 
+*40202110024     water_treat_when_1  survey 0	 BC- 1 for sarita 
+*40202110024     water_treat_when_6  survey 1	 BC- 0 for sarita 
+
+   
+ 
+
+ 
+ 
+*data entry error
+replace chlorine_yesno = 0 if  unique_id == 50401117012 & key == "uuid:2da3fbdc-6bb8-4f42-8eba-b836df6ca651"
+
 	label variable key "Unique submission ID"
 	cap label variable submissiondate "Date/time submitted"
 	cap label variable formdef_version "Form version used on device"
@@ -82,11 +97,11 @@ save "$In_progress_files/BC_FollowpR2_for_merging_with_followup.dta", replace
 *************importing followup data**********************
 
  
-use  "${DataRaw}HH follow up R2 survey.dta" , clear
-destring  unique_id, replace
-format  unique_id %15.0gc
+use "${DataDeid}1_6_Followup_R2_cleaned.dta", clear
+keep if R_FU2_consent == 1
+clonevar unique_id =  unique_id_num
 
-keep if consent == 1
+renpfix R_FU2_
 
 //renpfix R_FU1_ //removing R_cen prefix 
 
@@ -96,13 +111,15 @@ merge 1:1 unique_id using "$In_progress_files/BC_FollowpR2_for_merging_with_foll
 //since all IDs have matched
 
  //import follow up cleaned data again
-use  "${DataRaw}HH follow up R2 survey.dta" , clear
-destring  unique_id, replace
-format  unique_id %15.0gc
+use "${DataDeid}1_6_Followup_R2_cleaned.dta", clear
+keep if R_FU2_consent == 1
+clonevar unique_id =  unique_id_num
 
-keep if consent == 1
 
 global id unique_id
+
+renpfix R_FU2_
+
 
 rename r_cen_village_name_str survey_village
 
@@ -113,6 +130,18 @@ format surveydate %td
 rename r_cen_a10_hhhead  survey_hhead
 
 rename r_cen_a1_resp_name Follow_Respondent
+
+replace chlorine_drank_yesno = 0 if  unique_id == 50402117005 & key == "uuid:0f936bc4-d83c-424a-8577-f3bdab1f7908"
+
+
+replace where_sec_locate = 3 if  unique_id == 50402106042 & key == "uuid:265a6388-366a-4302-829c-bc67e7a64ae6"
+
+
+replace water_treat_type_2 = 0 if  unique_id == 50402117014 & key == "uuid:6b0df70d-e092-42c6-a4c4-2c11dd10d169"
+
+//40201111025  chlorine_drank_yesno	No	Yes
+
+
 
 
 save "$In_progress_files/Follow_upR2_data_for_matching.dta", replace
