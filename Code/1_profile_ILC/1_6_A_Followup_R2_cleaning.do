@@ -55,8 +55,8 @@ rename R_FU2_wq_chlorine_storedtc R_FU2_tc_stored
     
 	//to change once survey date is fixed - TODO
 	
-	
-	 keep if (FU2_day >=5 & FU2_month_num >=3)  
+*AG: This command is not aloowing for entries that have day lesser than 5 so 1st april is lesser than 5 so I commented it out	
+	 *keep if (FU2_day >=5 & FU2_month_num >=3)  
      egen FU2_date = concat(FU2_day FU2_month)
 	 gen FU2_starthour = hh(R_FU2_starttime) 
 	 gen FU2_startmin= mm(R_FU2_starttime)

@@ -58,7 +58,7 @@ br R_FU2_enum_name unique_id R_FU2_r_cen_village_name_str if R_FU2_r_cen_village
 *Naira  done
 *Mariguda done
 *Karnapadu done
-local mylist2 
+local mylist2 Badabangi
 foreach j of local mylist2 {
 
 preserve
@@ -133,6 +133,10 @@ replace selected = 1 if unique_id == 40202108039
 replace selected = 1 if unique_id == 40401108047
 replace selected = 1 if unique_id == 40401113048
 
+replace selected = 1 if unique_id == 20101111017
+replace selected = 1 if unique_id == 20101111018
+
+
 tab R_FU2_enum_name selected
 
 
@@ -155,7 +159,7 @@ gen random_number = runiform()
 
 // Reorder the enum variable based on the sorted random numbers
 egen rank = group(enum)
-save "${DataPr}selected_`j'_31stmar2024_for_R2_FollowupBC.dta", replace
+save "${DataPr}selected_`j'_1stApr2024_for_R2_FollowupBC.dta", replace
 
 restore
 }
@@ -167,7 +171,7 @@ label variable R_FU2_consent "HH survey consent"
 replace R_FU2_r_cen_village_name_str = "Gopi_Kankubadi" if R_FU2_r_cen_village_name_str == "Gopi Kankubadi" 
 replace R_FU2_r_cen_village_name_str = "BK_Padar" if R_FU2_r_cen_village_name_str == "BK Padar" 
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
-merge 1:1 unique_id using "${DataPr}selected_Karnapadu_31stmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
+merge 1:1 unique_id using "${DataPr}selected_Badabangi_1stApr2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
 
 keep if merge_BC_select==3
 
@@ -180,7 +184,7 @@ replace Main_Respondent = R_FU2_r_cen_fam_name`i' if R_FU2_main_respondent == `i
 }
 
 rename Main_Respondent R_FU2_Main_Respondent
-export excel unique_id R_FU2_r_cen_village_name_str R_FU2_enum_name R_FU2_enum_name_label R_FU2_r_cen_a10_hhhead R_FU2_Main_Respondent R_FU2_r_cen_a39_phone_name_1 R_FU2_r_cen_a39_phone_num_1 R_FU2_r_cen_a39_phone_name_2 R_FU2_r_cen_a39_phone_num_2 R_FU2_r_cen_landmark R_FU2_r_cen_address R_FU2_r_cen_hamlet_name R_FU2_r_cen_saahi_name R_FU2_r_cen_a11_oldmale_name R_FU2_r_cen_fam_name1 R_FU2_r_cen_fam_name2 R_FU2_r_cen_fam_name3 R_FU2_r_cen_fam_name4 R_FU2_r_cen_fam_name5 R_FU2_r_cen_fam_name6 R_FU2_r_cen_fam_name7 R_FU2_r_cen_fam_name8 R_FU2_r_cen_fam_name9 R_FU2_r_cen_fam_name10 R_FU2_r_cen_fam_name11 R_FU2_r_cen_fam_name12 R_FU2_r_cen_fam_name13 R_FU2_r_cen_fam_name14 R_FU2_r_cen_fam_name15 R_FU2_r_cen_fam_name16 R_FU2_r_cen_fam_name17 R_FU2_r_cen_fam_name18 R_FU2_r_cen_fam_name19 R_FU2_r_cen_fam_name20 R_FU2_water_source_prim using "${DataPre}Backcheck_FU2_preload_Karnapadu_31stmar24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_FU2_r_cen_village_name_str R_FU2_enum_name R_FU2_enum_name_label R_FU2_r_cen_a10_hhhead R_FU2_Main_Respondent R_FU2_r_cen_a39_phone_name_1 R_FU2_r_cen_a39_phone_num_1 R_FU2_r_cen_a39_phone_name_2 R_FU2_r_cen_a39_phone_num_2 R_FU2_r_cen_landmark R_FU2_r_cen_address R_FU2_r_cen_hamlet_name R_FU2_r_cen_saahi_name R_FU2_r_cen_a11_oldmale_name R_FU2_r_cen_fam_name1 R_FU2_r_cen_fam_name2 R_FU2_r_cen_fam_name3 R_FU2_r_cen_fam_name4 R_FU2_r_cen_fam_name5 R_FU2_r_cen_fam_name6 R_FU2_r_cen_fam_name7 R_FU2_r_cen_fam_name8 R_FU2_r_cen_fam_name9 R_FU2_r_cen_fam_name10 R_FU2_r_cen_fam_name11 R_FU2_r_cen_fam_name12 R_FU2_r_cen_fam_name13 R_FU2_r_cen_fam_name14 R_FU2_r_cen_fam_name15 R_FU2_r_cen_fam_name16 R_FU2_r_cen_fam_name17 R_FU2_r_cen_fam_name18 R_FU2_r_cen_fam_name19 R_FU2_r_cen_fam_name20 R_FU2_water_source_prim using "${DataPre}Backcheck_FU2_preload_1stApr24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
 ***********************************************************************
@@ -208,7 +212,7 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 
 
 sort R_FU2_r_cen_village_name_str R_FU2_enum_name rank 
-export excel ID R_FU2_enum_name R_FU2_r_cen_village_name_str R_FU2_r_cen_hamlet_name R_FU2_r_cen_saahi_name R_FU2_r_cen_landmark rank R_FU2_chlorine_yesno R_FU2_chlorine_drank_yesno R_FU2_water_treat_when using "${pilot}Supervisor_BC_FU2_Tracker_checking.xlsx" , sheet("Karnapadu", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_FU2_enum_name R_FU2_r_cen_village_name_str R_FU2_r_cen_hamlet_name R_FU2_r_cen_saahi_name R_FU2_r_cen_landmark rank R_FU2_chlorine_yesno R_FU2_chlorine_drank_yesno R_FU2_water_treat_when using "${pilot}Supervisor_BC_FU2_Tracker_checking.xlsx" , sheet("sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 *for check
