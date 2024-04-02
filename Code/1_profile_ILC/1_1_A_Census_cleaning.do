@@ -50,9 +50,18 @@ format   unique_id_num %15.0gc
 	
 	 generate C_starthour = hh(R_Cen_starttime) 
 	 gen C_startmin= mm(R_Cen_starttime)
-	
+
 	gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
 	
+
+    gen R_Cen_yr_num = year(dofc(R_Cen_starttime))
+
+	
+    
+    gen cen_date = mdy(R_Cen_month_num, R_Cen_day, R_Cen_yr_num)
+
+	format cen_date  %d
+
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
