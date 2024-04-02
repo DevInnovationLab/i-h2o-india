@@ -51,6 +51,7 @@ census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_fina
 
 r1 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_5_followup_R1_cleaned.dta")
 
+r2 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_6_followup_R2_cleaned.dta")
 
 mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
 
@@ -478,7 +479,120 @@ idexx_r1 <- idexx_r1%>%
 
 
 
+\newpage
+# Followup R2 Data Cleaning
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+
+
+
+```{r followup r2 data cleaning, include=FALSE}
+
+###GENERAL DATA CLEANING##################################################
+#Filtering out test data from training, based on village IDs
+unique(r2$R_FU2_unique_id_1)
+r2 <- r2%>%
+  filter(!(R_FU2_unique_id_1 == 88888 |
+           R_FU2_unique_id_1 == 99999)) # Clean data doesn't require this step
+
+
+#Selecting r2 data key variables for WQ testing
+r2 <- r2%>%
+  dplyr::select(R_FU2_unique_id_1, R_FU2_unique_id_2, R_FU2_unique_id_3, unique_id_num, R_FU2_r_cen_village_name_str, R_FU2_consent, R_FU2_water_source_prim, R_FU2_primary_water_label, R_FU2_water_qual_test, R_FU2_wq_stored_bag, R_FU2_stored_bag_source, R_FU2_sample_ID_stored, R_FU2_bag_ID_stored, R_FU2_fc_stored, R_FU2_wq_chlorine_storedfc_again, R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again, R_FU2_sample_ID_tap, R_FU2_bag_ID_tap, R_FU2_fc_tap, R_FU2_wq_tap_fc_again, R_FU2_tc_tap, R_FU2_wq_tap_tc_again, R_FU2_instancename)
+
+#Assigning more meaningful variable names
+r2 <- r2%>%
+  rename_all(~stringr::str_replace(.,"R_FU2_",""))%>%
+  rename(village = "r_cen_village_name_str")%>%
+  rename(village_ID = "unique_id_1")%>%
+  rename(unique_id = "unique_id_num")%>%
+  rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
+  rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
+  rename(fc_tap_2 = "wq_tap_fc_again")%>%
+  rename(tc_tap_2 = "wq_tap_tc_again")
+
+#Pairing village information
+r2$village_ID <- as.character(r2$village_ID)
+r2 <- left_join(r2, village_details, by = "village_ID")
+
+
+#Filtering out HHs that did not consent
+r2 <- r2%>%
+  filter(is.na(consent) == FALSE)
+  
+#Other way:
+  #rename(fc_stored = R_FU_fc_stored)%>%
+  #rename(tc_stored = R_FU_tc_stored)%>%
+  #rename(fc_tap = R_FU_fc_tap)%>%
+  #rename(tc_tap = R_FU_tc_tap)%>%
+  #rename(sample_ID_stored = R_FU_sample_ID_stored)
+
+#Correcting sample IDs in r2 dataset? Need to check
+#for(i in (1:length(r2$unique_id))){
+ # if(r2$unique_id[i] == 50301106013){
+  #  r2$sample_ID_stored[i] = 20290
+#  }
+#}
+
+#Renamed control vs treatment assignment
+r2$assignment <- factor(r2$assignment)%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
+#Removing cases of "999" being reported in a measurement. Replacing with NA values for now.
+xx <- r2%>%
+  filter(fc_stored > 2.0 |
+           fc_stored_2 > 2.0 |
+           fc_tap > 2.0 |
+           fc_tap_2 > 2.0 |
+           tc_stored > 2.0 |
+           tc_stored_2 > 2.0 |
+           tc_tap > 2.0 |
+           tc_tap_2 > 2.0)
+
+#write_csv(xx, "C:/Users/jerem/Box/India Water project/2_Pilot/Data/0-data cleaning/chlorine_data_review_20240229.csv")
+
+r2 <- r2 %>%
+  mutate_at(vars(fc_stored_2, tc_stored, fc_tap, tc_tap, tc_tap_2), ~ifelse(. > 100, 0, .))
+
+#Averaging chlorine data across two tests
+r2 <- r2%>%
+  mutate(fc_stored_avg = rowMeans(dplyr::select(r2, starts_with("fc_stored")), na.rm = TRUE))%>%
+  mutate(fc_tap_avg = rowMeans(dplyr::select(r2, starts_with("fc_tap")), na.rm = TRUE))%>%
+  mutate(tc_stored_avg = rowMeans(dplyr::select(r2, starts_with("tc_stored")), na.rm = TRUE))%>%
+  mutate(tc_tap_avg = rowMeans(dplyr::select(r2, starts_with("tc_tap")), na.rm = TRUE))
+  
+r2$fc_stored_avg <- round(r2$fc_stored_avg, digits = 3)
+r2$fc_tap_avg <- round(r2$fc_tap_avg, digits = 3)
+r2$tc_stored_avg <- round(r2$tc_stored_avg, digits = 3)
+r2$tc_tap_avg <- round(r2$tc_tap_avg, digits = 3)
+
+#
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 \newpage
 # Analysis
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1106,28 +1220,101 @@ for (i in mon_villages){
 ```
 
 
+```{r JPAL HH survey chlorine monitoring data analysis}
+
+#Creating table to represent data for each village across survey rounds
+#Preparing data to bind into one dataframe
+bl_cl <- bl%>%
+  dplyr::select(village_name, assignment, fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg)%>%
+  mutate(round = "bl")%>%
+  filter(village_name != "Hatikhamba") #removing hatikhamba
+
+bl_cl$assignment <- bl_cl$assignment%>%
+  factor()%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+  
+
+r1_cl <- r1%>%
+  dplyr::select(village_name, assignment, fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg)%>%
+  mutate(round = "r1")
+
+r2_cl <- r2%>%
+  dplyr::select(village_name, assignment, fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg)%>%
+  mutate(round = "r2")
+
+
+hh_survey_cl <- bind_rows(bl_cl, r1_cl, r2_cl)
+
+
+
+#Displaying results in a table
+# Calculate descriptive statistics by village
+village_stats <- hh_survey_cl%>%
+  group_by(village_name, assignment, round) %>%
+  summarize(
+    "% taps positive for free chlorine (> 0.07 mg/L)" = round((sum(fc_tap_avg > 0.07) / n()) * 100, 1),
+    "% taps above 0.2 mg/L" = round((sum(fc_tap_avg > 0.20) / n()) * 100, 1),
+    "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3),
+    "Stored Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 3)
+  )%>%
+  filter(assignment == "Treatment")
+
+all_stats <- hh_survey_cl %>%
+  group_by(assignment, round) %>%
+  summarize(
+    "% taps positive for free chlorine (> 0.07 mg/L)" = round((sum(fc_tap_avg > 0.07) / n()) * 100, 1),
+    "% taps above 0.2 mg/L" = round((sum(fc_tap_avg > 0.20) / n()) * 100, 1),
+    "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3),
+    "Stored Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 3))
+
+# Print the table
+kbl(village_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Household Survey Chlorine Results " = 7)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+# Print the table
+kbl(all_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Household Survey Chlorine Results " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
+```
+
+
+
 
 
 ## Gram Vikas Chlorine Monitoring Results
 
 ```{r Gram Vikas Chlorine Monitoring Results}
 
+### TO BE UPDATED LATER ###
+
+
 #Selecting for Karnapadu results
 
-karn <- gv%>%
-  filter(Village == "Karnapadu")%>%
-  pivot_longer(cols = c("sample_1 - Free Chlorine (mg/L)",
-                        "sample_2 - Free Chlorine (mg/L)",
-                        "sample_3 - Free Chlorine (mg/L)",
-                        "sample_4 - Free Chlorine (mg/L)",
-                        "sample_5 - Free Chlorine (mg/L)",
-                        "sample_6 - Free Chlorine (mg/L)",
-                        "sample_7 - Free Chlorine (mg/L)",
-                        "sample_8 - Free Chlorine (mg/L)",
-                        "sample_9 - Free Chlorine (mg/L)",
-                        "sample_10 - Free Chlorine (mg/L)",
-                        "sample_11 - Free Chlorine (mg/L)",
-                        "sample_12 - Free Chlorine (mg/L)"), names_to = "sample_fc", values_to = "free_chlorine")
+# karn <- gv%>%
+#   filter(Village == "Karnapadu")%>%
+#   pivot_longer(cols = c("sample_1 - Free Chlorine (mg/L)",
+#                         "sample_2 - Free Chlorine (mg/L)",
+#                         "sample_3 - Free Chlorine (mg/L)",
+#                         "sample_4 - Free Chlorine (mg/L)",
+#                         "sample_5 - Free Chlorine (mg/L)",
+#                         "sample_6 - Free Chlorine (mg/L)",
+#                         "sample_7 - Free Chlorine (mg/L)",
+#                         "sample_8 - Free Chlorine (mg/L)",
+#                         "sample_9 - Free Chlorine (mg/L)",
+#                         "sample_10 - Free Chlorine (mg/L)",
+#                         "sample_11 - Free Chlorine (mg/L)",
+#                         "sample_12 - Free Chlorine (mg/L)"), names_to = "sample_fc", values_to = "free_chlorine")
 #pivot_longer(cols = c("sample_1_location", "sample_2_location", "sample_3_location",
  #                       "sample_4_location", "sample_5_location", "sample_6_location",
   #                      "sample_7_location", "sample_8_location", "sample_9_location", 
@@ -1148,4 +1335,8 @@ karn <- gv%>%
 
 
 ```
+
+
+
+
 
