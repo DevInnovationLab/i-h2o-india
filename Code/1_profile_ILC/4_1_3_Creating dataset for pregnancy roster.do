@@ -134,6 +134,10 @@ keep if R_mor_a4_hhmember_gender_ == 2 & R_mor_a6_hhmember_age_ >= 15 & R_mor_a6
 rename  (R_mor_a3_hhmember_name_ R_mor_a6_hhmember_age_   R_mor_age_accurate_ R_mor_a5_autoage_ R_mor_village_name R_mor_a7_pregnant_ ) (name_resp age_resp  confirmed_age auto_age village_resp is_last_preg )
 rename  (name_new_woman age_new_woman   new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_ ) (name_woman age_woman residence_yesno village_woman is_last_5yrs_preg )
 
+decode village_resp, gen(village)
+drop village_resp
+rename village village_resp
+
 tempfile eligible_women_mortality
 save `eligible_women_mortality'
 
@@ -178,9 +182,11 @@ restore
 use "`eligible_women_census'", clear
 destring unique_id, replace
 destring confirmed_age, replace
-gen village = tostring(village_woman) 
+
+
+decode village_woman, gen(village_resp)
 drop village_woman
-rename village village_woman
+gen village_woman = village_resp
 append using "`eligible_women_mortality'" 
 
 tempfile final_eligible_women
@@ -191,10 +197,15 @@ save `final_eligible_women'
 	4 Pregnancy history 
 ------------------------------------------------------------------------------*/
 
-* Now we should merge mortality/ death data of eligible women to this roster. 
+* Now we should merge mortality/ death data of children of eligible women to this roster. 
 
+unique_id num R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_
 
+rename (R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_) ()
 
+unique_id num R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_ 
+
+R_mor_block_name village_resp R_mor_a1_resp_name R_mor_a2_hhmember_count name_resp R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ age_resp auto_age R_mor_marital_ new_consent_woman_ new_no_consent_reason_ residence_yesno is_last_5yrs_preg dup
 
 /*------------------------------------------------------------------------------
 	5 Admin Data
@@ -223,8 +234,17 @@ save `pll'
 
 merge m:m parents   using "`cll'"
 
+* Saving non match cases, = 
+preserve 
 
-* manual check of 
+keep if _merge == 1 | _merge == 2
+tempfile not_match
+save `not_match'
+
+restore
+
+
+* manual check of these merged cases
 keep if _merge == 3 
 
 
@@ -272,6 +292,8 @@ gen dob_edd = date_of_birth - exp_del_date
 
 gen dob_del = date_of_birth - del_date
 
+drop if dob_edd > 90 | dob_edd < -90 | dob_del > 90 | dob_del < -90
+
 *ANM and ASHA name and DOB, missing in mobile number
 
 *
@@ -280,8 +302,39 @@ generate str2 lmpmo1 = substr(LMP,4,5)
 generate str4 lmpyr1 = substr(LMP,7,10)
 
 destring lmp*, replace
-gen del_date = mdy(lmpmo1, lmpda1, lmpyr1)
+gen lmp_date = mdy(lmpmo1, lmpda1, lmpyr1)
 
+
+// Total match is 3786 between preg woman listing and child line listing
+
+drop _merge 
+
+
+tempfile pwl_cl
+save `pwl_cl'
+
+* keep relevant years of this too
+
+
+
+
+
+
+
+
+
+
+
+
+* Create a data set with the pw who weren't matched
+use "`not_match'", clear
+keep if _merge == 1 
+
+
+
+* Create a data set with child who weren't matched
+use "`not_match'", clear
+keep if _merge == 2
 
 
 
