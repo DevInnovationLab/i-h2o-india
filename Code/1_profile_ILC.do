@@ -214,7 +214,7 @@ do "${Do_pilot}3_2_Descriptive_Follow_Up.do"
 * Who: All
 do "${Do_pilot}4_Analysis.do"
 
-*Astha
+* (5) Mortality data cleaning
 do "${Do_pilot}1_1_D_Mortality_cleaning.do"
 
 ********************************
