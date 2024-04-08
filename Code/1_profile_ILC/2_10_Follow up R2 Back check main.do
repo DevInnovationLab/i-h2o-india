@@ -1,4 +1,7 @@
 
+cap do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC.do"
+
+
 do "${Do_lab}import_india_ilc_pilot_backcheck_follow_up_R2_Master.do"
 
 *hey, astha not setting any common path for exporting working files because they are merely used for merging etc 
@@ -28,8 +31,6 @@ list unique_id if dup_HHID > 0
 *50401117012	chlorine_yesno	No	Yes 16mar2024
 *40201111008    water_treat	Yes	No (water_treat_when_1 water_treat_type__77)
 *40201111006    water treatment happened in stored water and we dont ask it in BCs 
-*40202110024     water_treat_when_1  survey 0	 BC- 1 for sarita 
-*40202110024     water_treat_when_6  survey 1	 BC- 0 for sarita 
 
    
  
@@ -140,8 +141,14 @@ replace where_sec_locate = 3 if  unique_id == 50402106042 & key == "uuid:265a638
 replace water_treat_type_2 = 0 if  unique_id == 50402117014 & key == "uuid:6b0df70d-e092-42c6-a4c4-2c11dd10d169"
 
 //40201111025  chlorine_drank_yesno	No	Yes
+*40202110024     water_treat_when_1  survey 0	 BC- 1 for sarita 
+*40202110024     water_treat_when_6  survey 1	 BC- 0 for sarita 
+*correct pankaj's data entry error in household data 	Sarita Bhatra
 
+*20101110004 correction in sarita's data water_treat_when_1	survey- 0, BC-	1	
+*20101110004 correction in sarita's data water_treat_when__77	survey- 1	, BC- 0
 
+ 
 
 
 save "$In_progress_files/Follow_upR2_data_for_matching.dta", replace
@@ -151,6 +158,7 @@ save "$In_progress_files/Follow_upR2_data_for_matching.dta", replace
 *****************************after cleaning is done*********************************
 
 clear 
+ssc install bcstats
 //BC stats
 cd "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
  set matsize 600
