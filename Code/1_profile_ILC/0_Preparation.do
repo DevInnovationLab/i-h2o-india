@@ -29,6 +29,10 @@ save "${DataRaw}1_5_FollowUp_R1.dta", replace
 do "${Do_lab}import_india_ilc_pilot_hh_followup_R2_survey_enc.do"
 save "${DataRaw}1_6_FollowUp_R2.dta", replace
 
+do "${Do_lab}import_india_ilc_pilot_hh_followup_R3_survey_enc.do"
+save "${DataRaw}1_7_FollowUp_R3.dta", replace
+
+
 do "${Do_lab}import_e.coli_results_follow_up_R2.do"
 save "${DataRaw}1_7_E.Coli_R2.dta", replace
 }
