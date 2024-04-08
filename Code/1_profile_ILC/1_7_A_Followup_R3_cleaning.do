@@ -52,11 +52,13 @@ rename R_FU3_wq_chlorine_storedtc R_FU3_tc_stored
     gen FU3_day = day(dofc(R_FU3_starttime))
 	gen FU3_month_num = month(dofc(R_FU3_starttime))
 	gen FU3_month = word("`c(Mons)'", FU3_month_num)
+	gen submission_date = dofc(R_FU3_submissiondate)
+	format submission_date  %td
     
 	//to change once survey date is fixed - TODO
 	
-	
-	 keep if (FU3_day >5 & FU3_month_num >=4)  
+	drop if  submission_date <= mdy(4,5,2024)
+	 *keep if (FU3_day >5 & FU3_month_num >=4)  
      egen FU3_date = concat(FU3_day FU3_month)
 	 gen FU3_starthour = hh(R_FU3_starttime) 
 	 gen FU3_startmin= mm(R_FU3_starttime)

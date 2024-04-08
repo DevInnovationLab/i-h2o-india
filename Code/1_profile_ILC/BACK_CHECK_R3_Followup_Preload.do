@@ -24,8 +24,11 @@
   * Open clean file
 
   // Start of your do file
-cap do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC.do"
 
+  
+do "${Do_lab}import_india_ilc_pilot_hh_followup_R3_survey_enc.do"
+save "${DataRaw}1_7_FollowUp_R3.dta", replace
+do "${github}1_7_A_Followup_R3_cleaning.do"
 use "${DataDeid}1_7_Followup_R3_cleaned.dta",clear
 keep if R_FU3_consent == 1
 clonevar unique_id =  unique_id_num
@@ -35,32 +38,13 @@ replace R_FU3_r_cen_village_name_str = "BK_Padar" if R_FU3_r_cen_village_name_st
 
 tab R_FU3_r_cen_village_name_str 
 
-drop if R_FU3_key == "uuid:ea7eee64-47ac-4a7f-88ee-f9efbb348f57" 
 ***********************************************************************
 * Step 2: Selecting households for BC survey based on random numbers *
 ***********************************************************************
 set seed 123456789
 *local mylist2 BK_Padar Bhujbal Birnarayanpur Jaltar Mukundpur Naira Nathma Tandipur Sanagortha Kuljing 
 *Karlakana done already
-*Barijhola done already
-*Dangalodi done alreday
-*Kuljing done already
-*Nathma doen already
-* Birnarayanpur doen already
-*Gopi_Kankubadi already done
-*Mukundpur already done 
-*BK_Padar done
-*Tandipur done
-*Bhujbal done
-*Bichikote  done
-*Gudiabandh done
-*Naira  done
-*Mariguda done
-*Karnapadu done
-*Badabangi done
-*Jaltar done
-*Sanagortha done
-local mylist2  Karlakana 
+local mylist2  Barijhola  
 foreach j of local mylist2 {
 
 preserve
@@ -116,7 +100,7 @@ gen random_number = runiform()
 
 // Reorder the enum variable based on the sorted random numbers
 egen rank = group(enum)
-save "${DataPr}selected_`j'_7thApr2024_for_R2_FollowupBC.dta", replace
+save "${DataPr}selected_`j'_7thApr2024_for_R3_FollowupBC.dta", replace
 
 restore
 }
@@ -128,7 +112,7 @@ label variable R_FU3_consent "HH survey consent"
 replace R_FU3_r_cen_village_name_str = "Gopi_Kankubadi" if R_FU3_r_cen_village_name_str == "Gopi Kankubadi" 
 replace R_FU3_r_cen_village_name_str = "BK_Padar" if R_FU3_r_cen_village_name_str == "BK Padar" 
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
-merge 1:1 unique_id using "${DataRaw}selected_Karlakana_7thApr2024_for_R2_FollowupBC.dta", assert(master using match) keep(master using match)
+merge 1:1 unique_id using "${DataPr}selected_Barijhola_7thApr2024_for_R3_FollowupBC.dta"
 rename _merge merge_BC_select
 keep if merge_BC_select==3
 
