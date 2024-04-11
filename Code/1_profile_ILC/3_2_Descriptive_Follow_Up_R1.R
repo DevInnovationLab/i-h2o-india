@@ -100,7 +100,7 @@ overleaf <- function() {
 #------------------------ Load the data ----------------------------------------#
 
 df.temp <- read_dta(paste0(user_path(),"2_deidentified/1_5_Followup_R1_cleaned.dta" ))
-df.baseline <- read_xlsx(paste0(user_path(),"99_Preload/Followup_watersource_31 Jan 2024.xlsx"))
+df.baseline <- read_xlsx(paste0(user_path(),"99_Preload/Followup_watersource_20 Feb 2024.xlsx"))
 
 #------------------------ Apply the labels for variables  ----------------------------------------#
 
@@ -326,7 +326,7 @@ val_lab(df.baseline.long$Prim_source_b) = num_lab("
             -77 Other
             ")  
 
-df.baseline.long <- df.baseline.long %>% rename(unique_id_num = unique_id)
+df.baseline.long <- df.baseline.long %>% mutate(unique_id_num = as.numeric(unique_id))
 #-------------Process WASH variables-------------#
 
 df.wash <- df.temp.consent %>% select(unique_id_num,R_FU1_water_source_prim, R_FU1_water_sec_yn,
@@ -451,7 +451,6 @@ star.out <- stargazer(df.switch, summary=F, title= "Switch in primary water sour
 star.out <- sub(" ccc"," |L|L|L|L|", star.out) 
 
 starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_HH_Survey_R1.tex"))
-
 
 
 df.switch <- df.combine %>%  mutate(Switched = ifelse(R_FU1_water_source_prim != Prim_source_b,1,0)) %>%
