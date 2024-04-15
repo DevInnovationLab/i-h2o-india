@@ -54,13 +54,15 @@ r1 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidenti
 
 r2 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_6_followup_R2_cleaned.dta")
 
+r3 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_7_followup_R3_cleaned.dta")
+
 mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
 
 mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
 gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
 
-gv_mwater <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring v2 2024-04-09.csv")
+gv_mwater <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring v2 2024-04-15.csv")
 
 idx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_IDEXX_data_MASTER.xlsx")
 
