@@ -60,15 +60,17 @@ mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily
 
 mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
-gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
+#gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
 
-gv_mwater <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring v2 2024-04-15.csv")
+gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
 
 idx <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_IDEXX_data_MASTER.xlsx")
 
 abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
 
 idexx_r2 <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_IDEXX_data_R2.csv")
+
+idexx_r3 <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_IDEXX_data_R3.csv")
 
 village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
@@ -715,6 +717,241 @@ idexx_r2 <- idexx_r2%>%
 ```
 
 
+\newpage
+
+# Followup R3 Data Cleaning
+
+
+
+```{r followup r3 data cleaning, include= FALSE}
+
+###GENERAL DATA CLEANING##################################################
+#Filtering out test data from training, based on village IDs
+unique(r3$R_FU3_unique_id_1)
+r3 <- r3%>%
+  filter(!(R_FU3_unique_id_1 == 88888 |
+           R_FU3_unique_id_1 == 99999)) # Clean data doesn't require this step
+
+
+#Selecting r3 data key variables for WQ testing
+r3 <- r3%>%
+  dplyr::select(R_FU3_unique_id_1, R_FU3_unique_id_2, R_FU3_unique_id_3, unique_id_num, R_FU3_r_cen_village_name_str, R_FU3_consent, R_FU3_water_source_prim, R_FU3_primary_water_label, R_FU3_water_qual_test, R_FU3_wq_stored_bag, R_FU3_stored_bag_source, R_FU3_sample_ID_stored, R_FU3_bag_ID_stored, R_FU3_fc_stored, R_FU3_wq_chlorine_storedfc_again, R_FU3_tc_stored, R_FU3_wq_chlorine_storedtc_again, R_FU3_sample_ID_tap, R_FU3_bag_ID_tap, R_FU3_fc_tap, R_FU3_wq_tap_fc_again, R_FU3_tc_tap, R_FU3_wq_tap_tc_again, R_FU3_instancename)
+
+#Assigning more meaningful variable names
+r3 <- r3%>%
+  rename_all(~stringr::str_replace(.,"R_FU3_",""))%>%
+  rename(village = "r_cen_village_name_str")%>%
+  rename(village_ID = "unique_id_1")%>%
+  rename(unique_id = "unique_id_num")%>%
+  rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
+  rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
+  rename(fc_tap_2 = "wq_tap_fc_again")%>%
+  rename(tc_tap_2 = "wq_tap_tc_again")
+
+#Pairing village information
+r3$village_ID <- as.character(r3$village_ID)
+r3 <- left_join(r3, village_details, by = "village_ID")
+
+
+#Filtering out HHs that did not consent
+r3 <- r3%>%
+  filter(is.na(consent) == FALSE)
+  
+#Other way:
+  #rename(fc_stored = R_FU_fc_stored)%>%
+  #rename(tc_stored = R_FU_tc_stored)%>%
+  #rename(fc_tap = R_FU_fc_tap)%>%
+  #rename(tc_tap = R_FU_tc_tap)%>%
+  #rename(sample_ID_stored = R_FU_sample_ID_stored)
+
+#Correcting sample IDs in r3 dataset? Need to check
+#for(i in (1:length(r3$unique_id))){
+ # if(r3$unique_id[i] == 50301106013){
+  #  r3$sample_ID_stored[i] = 20290
+#  }
+#}
+
+#Renamed control vs treatment assignment
+r3$assignment <- factor(r3$assignment)%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
+#Removing cases of "999" being reported in a measurement. Replacing with NA values for now.
+xx <- r3%>%
+  filter(fc_stored > 2.0 |
+           fc_stored_2 > 2.0 |
+           fc_tap > 2.0 |
+           fc_tap_2 > 2.0 |
+           tc_stored > 2.0 |
+           tc_stored_2 > 2.0 |
+           tc_tap > 2.0 |
+           tc_tap_2 > 2.0)
+
+#write_csv(xx, "C:/Users/jerem/Box/India Water project/2_Pilot/Data/0-data cleaning/chlorine_data_review_20240229.csv")
+
+r3 <- r3 %>%
+  mutate_at(vars(fc_stored_2, tc_stored, fc_tap, tc_tap, tc_tap_2), ~ifelse(. > 100, 0, .))
+
+#Averaging chlorine data across two tests
+r3 <- r3%>%
+  mutate(fc_stored_avg = rowMeans(dplyr::select(r3, starts_with("fc_stored")), na.rm = TRUE))%>%
+  mutate(fc_tap_avg = rowMeans(dplyr::select(r3, starts_with("fc_tap")), na.rm = TRUE))%>%
+  mutate(tc_stored_avg = rowMeans(dplyr::select(r3, starts_with("tc_stored")), na.rm = TRUE))%>%
+  mutate(tc_tap_avg = rowMeans(dplyr::select(r3, starts_with("tc_tap")), na.rm = TRUE))
+  
+r3$fc_stored_avg <- round(r3$fc_stored_avg, digits = 3)
+r3$fc_tap_avg <- round(r3$fc_tap_avg, digits = 3)
+r3$tc_stored_avg <- round(r3$tc_stored_avg, digits = 3)
+r3$tc_tap_avg <- round(r3$tc_tap_avg, digits = 3)
+
+#
+
+
+
+
+
+
+```
+
+
+
+```{r r3 data cleaning - idexx, include = FALSE}
+
+#PREPARING IDEXX DATA##########################################################
+#Adding village name column
+village_ID <- village_details%>%
+  dplyr::select(village_name, village_ID, assignment)
+idexx_r3 <- idexx_r3%>%
+  mutate(village_ID = as.character(village))%>%
+  mutate(sample_ID = unique_sample_id)
+
+idexx_r3 <- left_join(idexx_r3, village_ID, by = "village_ID")
+
+
+#Pivoting dataset to be longer for pairing IDEXX data to sample IDs
+r3_for_idexx <- r3%>%
+  pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
+
+#Noting duplicate samples
+#idexx_r3 <- idexx_r3%>%
+ # mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
+  #replace_na(duplicate, value = 0)
+
+#Noting lab blank and field blanks
+idexx_r3 <- idexx_r3%>%
+  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
+                               end_comments == "Lab blank" |
+                               end_comments == "This is LAB BLANK results")
+                            & sample_ID == 0, 1, 0))%>%
+  replace_na(lab_blank, value = 0)
+
+idexx_r3 <- idexx_r3%>%
+  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+                                 end_comments == "Field blank" |
+                                 end_comments == "This is FIELD BLANK")
+                            & sample_ID == 0, 1, 0))%>%
+  replace_na(field_blank, value = 0)
+
+#Noting solar tank water
+idexx_r3 <- idexx_r3%>%
+  mutate(solar_water = ifelse((end_comments == "Solar water" | 
+                                 end_comments == "Solar Tank Water"), 1, 0))%>%
+  replace_na(solar_water, value = 0)
+
+
+#Dropping lab blanks, field blanks, and duplicates
+#idexx_r3 <- idexx_r3%>%
+ # filter(sample_ID != "Lab Blank",
+  #       sample_ID != "Field Blank")%>%
+  #filter(duplicate < 1)
+
+#Checking IDs which do not match between survey data and lab data
+#idexx_ids <- idexx_r3$sample_ID
+#r3_sample_ids <- r3_for_idexx$sample_ID
+#idexx_id_check <- idexx_r3%>%
+ # filter(!(sample_ID %in% r3_sample_ids))
+
+#combining idexx results to survey results
+#r3_for_idexx$sample_ID <- as.character(r3_for_idexx$sample_ID)
+#idexx_r3 <- inner_join(idexx_r3, r3_for_idexx, by = "sample_ID")
+#abr$sample_ID <- as.character(abr$sample_ID)
+#abr <- inner_join(abr, bl_idexx, by = "sample_ID")
+
+
+#creating new variable to tell the sample type
+idexx_r3 <- idexx_r3%>%
+  mutate(sample_type = ifelse((sample_ID < 11000 & sample_ID > 9000), "Tap", 
+                        ifelse((sample_ID > 19000 & sample_ID < 21000), "Stored", "Blank")))
+
+
+#Other way using survey data
+#idexx_r3$sample_type <- idexx_r3$sample_type%>%
+  #factor()%>%
+  #fct_recode("Stored" = "sample_ID_stored",
+             #"Tap" = "sample_ID_tap")
+
+#abr$sample_type <- abr$sample_type%>%
+ # factor()%>%
+  #fct_recode("Stored" = "sample_ID_stored",
+   #          "Tap" = "sample_ID_tap")
+
+#Calculating MPN for each IDEXX test
+idexx_r3 <- idexx_r3%>%
+  mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+idexx_r3 <- idexx_r3%>%
+  mutate(ec_95lo = quantify_95lo(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_mpn  = quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))%>%
+  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+
+
+#Adding presence/absence data
+idexx_r3 <- idexx_r3%>%
+  mutate(cf_pa = case_when(
+    is.na(cf_mpn) == TRUE ~ "Presence",
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+idexx_r3 <- idexx_r3%>%
+  mutate(ec_pa = case_when(
+    is.na(ec_mpn) == TRUE ~ "Presence",
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
+idexx_r3 <- idexx_r3%>%
+  mutate(cf_pa_binary = case_when(
+    cf_mpn > 0 ~ 1,
+    cf_mpn == 0 ~ 0))
+
+idexx_r3 <- idexx_r3%>%
+  mutate(ec_pa_binary = case_when(
+    ec_mpn > 0 ~ 1,
+    ec_mpn == 0 ~ 0))
+
+
+#log transforming data
+idexx_r3 <- idexx_r3%>%
+  mutate(ec_log = log(ec_mpn, base = 10))%>%
+  mutate(cf_log = log(cf_mpn, base = 10))%>%
+  mutate(ec_log = case_when(ec_log < 0 ~ 0.5,
+                            ec_log >= 0 ~ ec_log))%>%
+  mutate(cf_log = case_when(cf_log < 0 ~ 0.5,
+                            cf_log >= 0 ~ cf_log))
+#Make - inf values be 0
+
+#write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/r3_idexx_master_cleaned.csv")
+
+
+
+
+```
+
+
 
 
 
@@ -1301,6 +1538,95 @@ table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r2)
 ```
 
 
+\newpage
+
+# R3 IDEXX Results
+
+```{r R3 IDEXX Results}
+
+
+#Removing NA result
+idexx_r3 <- idexx_r3%>%
+  filter(is.na(ec_mpn) == FALSE)
+
+## Removing Solar Tank Samples
+idexx_r3 <- idexx_r3%>%
+  filter(solar_water == 0)
+
+# Calculate descriptive statistics by village
+village_stats <- idexx_r3%>%
+  group_by(village, sample_type) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Median MPN E. coli/100 mL" = median(ec_mpn),
+    #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+tc_stats <- idexx_r3%>%
+  group_by(assignment, sample_type) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Median MPN E. coli/100 mL" = median(ec_mpn),
+    #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+#adjusting CI to be within 0-100
+tc_stats <- tc_stats%>%
+  mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
+                            `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+  mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
+                            `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+
+
+all_stats <- idexx_r3%>%
+  group_by(sample_type) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
+    "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
+    #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+
+# Print the table
+kbl(village_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("r2 - Water Quality Test Results " = 5)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+kbl(tc_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("r2 - Water Quality Test Results " = 10)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+kbl(all_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("r2 - Water Quality Test Results " = 4)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+idexx_r3 <- idexx_r3%>%
+  filter(sample_type != "Blank")
+table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r3)
+
+```
 
 
 \newpage
@@ -1364,9 +1690,11 @@ mon_villages <- unique(mon$village_name)
 
 
 #Pivoting to make datasets only have a single column for chlorine concentration measurement
+#saving wide format
+mon_wide <- mon
 mon <- mon%>%
   pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
-mon
+
 
 #Subsetting for nearest and farthest tap connections
 mon_near <- mon%>%
@@ -1383,21 +1711,6 @@ mon_far <- mon%>%
 ```
 
 
-```{r Gram Vikas chlorine monitoring data cleaning}
-
-#Assigning more meaningful variable names
-gv <- gv%>%
-  rename_all(~stringr::str_replace(.,"Sample ","sample_"))%>%
-  rename_all(~stringr::str_replace(.," - Free Chlorine (mg/L)","_fc"))%>%
-  rename_all(~stringr::str_replace(.," - Total Chlorine (mg/L)","_tc"))%>%
-  rename_all(~stringr::str_replace(.," - Location","_location"))
-  
-
-  #rename(village = "r_cen_village_name_str")%>%
-  
-
-
-```
 
 
 ## JPAL Chlorine Monitoring Results
@@ -1445,6 +1758,40 @@ for (i in mon_villages){
 
   
 }
+
+#Creating table of most 4 recent chlorine concentration measurements by JPAL team for each village
+mon_wide <- mon_wide%>%
+  dplyr::select(village_name, test_date, nearest_tap_fc, nearest_stored_fc, farthest_tap_fc, farthest_stored_fc)
+
+#Removing NA value
+mon_villages <- mon_villages[-11]
+
+#initializing empty dataframe
+y <- mon_wide[0,]
+
+for (i in mon_villages){
+  #Selecting each village in the loop
+  x <- mon_wide%>%
+    filter(village_name == i)
+  #sorting and filtering for 4 most recent tests
+  x <- x%>%
+    arrange(desc(test_date))
+  x <- x[1:4,]
+  
+  #binding rows to table dataframe
+  y <- bind_rows(y,x)
+  
+}
+
+
+# Printing kable with 4 most recent test results
+  kbl(y)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("JPAL Chlorine Monitoring" = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
 
 ```
 
@@ -1523,11 +1870,48 @@ kbl(all_stats)%>%
 
 ## Gram Vikas Chlorine Monitoring Results
 
+```{r Gram Vikas chlorine monitoring data cleaning}
+
+#OLD CODE for google sheet
+#Assigning more meaningful variable names
+#gv <- gv%>%
+ # rename_all(~stringr::str_replace(.,"Sample ","sample_"))%>%
+  #rename_all(~stringr::str_replace(.," - Free Chlorine (mg/L)","_fc"))%>%
+  #rename_all(~stringr::str_replace(.," - Total Chlorine (mg/L)","_tc"))%>%
+  #rename_all(~stringr::str_replace(.," - Location","_location"))
+  #rename(village = "r_cen_village_name_str")%>%
+
+
+
+### mWater Results ###
+
+gv <- gv%>%
+  filter(is.na(Village) == FALSE)%>%
+  mutate(test_date = as_date(`valve_open (Time Answered)`))%>%
+  filter(is.na(test_date) == FALSE)
+
+mon_villages <- unique(gv$Village)
+
+mon_near <- gv%>%
+  dplyr::select(test_date, Village, nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc))
+
+mon_far <- gv%>%
+  dplyr::select(test_date, Village, farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc))
+  
+
+
+```
+
+
 ```{r Gram Vikas Chlorine Monitoring Results}
 
-### TO BE UPDATED LATER ###
 
 
+#Old Google Sheet results
 #Selecting for Karnapadu results
 
 # karn <- gv%>%
@@ -1562,22 +1946,6 @@ kbl(all_stats)%>%
 #   )
 
 
-#mWater Results
-gv <- gv_mwater%>%
-  filter(is.na(Village) == FALSE)%>%
-  mutate(test_date = mdy_hm(`valve_open (Time Answered)`))
-
-mon_villages <- unique(gv$Village)
-
-mon_near <- gv%>%
-  dplyr::select(test_date, Village, nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc)%>%
-  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
-               cols = c(nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc))
-
-mon_far <- gv%>%
-  dplyr::select(test_date, Village, farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc)%>%
-  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
-               cols = c(farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc))
   
 for (i in mon_villages){
   x_near <- mon_near%>%
