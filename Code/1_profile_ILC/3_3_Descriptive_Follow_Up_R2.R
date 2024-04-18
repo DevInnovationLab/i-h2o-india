@@ -100,9 +100,16 @@ overleaf <- function() {
 #------------------------ Load the data ----------------------------------------#
 df.temp.r1 <- read_dta(paste0(user_path(),"2_deidentified/1_5_Followup_R1_cleaned.dta" ))
 df.temp.r2 <- read_dta(paste0(user_path(),"2_deidentified/1_6_Followup_R2_cleaned.dta" ))
-df.baseline <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR2_watersource_4 mar 2024.xlsx"))
+df.baseline.r1 <- read_xlsx(paste0(user_path(),"99_Preload/Followup_watersource_20 Feb 2024.xlsx"))
+df.baseline.r2_1 <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR2_watersource_4 mar 2024.xlsx"))
+df.baseline.r2_2 <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR2_watersource_4 mar 2024 (1).xlsx"))
+df.baseline.r2_3 <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR2_watersource_4 mar 2024 (2).xlsx"))
+df.baseline.r2_4 <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR2_watersource_4 mar 2024 (3).xlsx"))
 
-
+df.baseline.r2 <- rbind(df.baseline.r2_1, df.baseline.r2_2)
+df.baseline.r2 <- rbind(df.baseline.r2, df.baseline.r2_3)
+df.baseline.r2 <- rbind(df.baseline.r2, df.baseline.r2_4)
+df.baseline.r2 <- df.baseline.r2 %>% unique()
 #---------------------------------------------------------------------#
 #-------------- Process Round 1 -------------#
 #---------------------------------------------------------------------#
@@ -131,7 +138,7 @@ df.label <- rbind(df.label, df.label.manual)
 #create a date variable
 df.temp.r1$datetime <- strptime(df.temp.r1$R_FU1_starttime, format = "%Y-%m-%d %H:%M:%S")
 
-df.temp.r1$date <- as.IDate(df.temp.r1$datetime) 
+df.temp.r1$date <- as.Date(df.temp.r1$datetime) 
 
 #filter out the testing dates
 df.temp.r1 <- df.temp.r1 %>% filter(date >= as.Date("2024-02-05"))
@@ -176,7 +183,7 @@ df.label <- rbind(df.label, df.label.manual)
 #create a date variable
 df.temp.r2$datetime <- strptime(df.temp.r2$R_FU2_starttime, format = "%Y-%m-%d %H:%M:%S")
 
-df.temp.r2$date <- as.IDate(df.temp.r2$datetime) 
+df.temp.r2$date <- as.Date(df.temp.r2$datetime) 
 
 #filter out the testing dates
 df.temp.r2 <- df.temp.r2 %>% filter(date >= as.Date("2024-03-05"))
@@ -310,16 +317,17 @@ ggplot2::ggsave( paste0(overleaf(),"Figure/Chlorine-concentration_treat_R2.png")
 
 #-------------Process Baseline variables for WASH-------------#
 
-df.baseline$R_Cen_a13_water_source_sec <- gsub("\\s+", " ", str_trim(df.baseline$R_Cen_a13_water_source_sec))
+#For preload from baseline for Round 1 of Follow Up Survey
+df.baseline.r1$R_Cen_a13_water_source_sec <- gsub("\\s+", " ", str_trim(df.baseline.r1$R_Cen_a13_water_source_sec))
 
-df.baseline.long <- str_split_fixed(df.baseline$R_Cen_a13_water_source_sec, " ", 2) %>% 
+df.baseline.r1.long <- str_split_fixed(df.baseline.r1$R_Cen_a13_water_source_sec, " ", 2) %>% 
   data.frame() %>% 
   rename(Sec_source_b1 = X1, Sec_source_b2 = X2) %>% 
-  cbind(df.baseline, .)
+  cbind(df.baseline.r1, .)
 
 
-var_lab(df.baseline.long$Sec_source_b1) = "Secondary drinking water source1"
-val_lab(df.baseline.long$Sec_source_b1) = num_lab("
+var_lab(df.baseline.r1.long$Sec_source_b1) = "Secondary drinking water source1"
+val_lab(df.baseline.r1.long$Sec_source_b1) = num_lab("
             1 Government provided household Taps (supply paani)
             2 Government provided community standpipe    
             3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
@@ -332,8 +340,8 @@ val_lab(df.baseline.long$Sec_source_b1) = num_lab("
             10 Household tap connections not connected to RWSS/Basudha/JJM tank
             -77 Other
             ")
-var_lab(df.baseline.long$Sec_source_b2) = "Secondary drinking water source2"
-val_lab(df.baseline.long$Sec_source_b2) = num_lab("
+var_lab(df.baseline.r1.long$Sec_source_b2) = "Secondary drinking water source2"
+val_lab(df.baseline.r1.long$Sec_source_b2) = num_lab("
             1 Government provided household Taps (supply paani)
             2 Government provided community standpipe    
             3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
@@ -348,7 +356,7 @@ val_lab(df.baseline.long$Sec_source_b2) = num_lab("
             ")
 
 
-df.baseline.long <- df.baseline.long %>% mutate(Prim_source_b = ifelse(R_Cen_a12_water_source_prim == "Government provided household Taps (supply paani)", 1, 
+df.baseline.r1.long <- df.baseline.r1.long %>% mutate(Prim_source_b = ifelse(R_Cen_a12_water_source_prim == "Government provided household Taps (supply paani)", 1, 
                                                                        ifelse(R_Cen_a12_water_source_prim == "Government provided community standpipe",2,
                                                                               ifelse(R_Cen_a12_water_source_prim =="Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",3,
                                                                                      ifelse(R_Cen_a12_water_source_prim == "Manual handpump",4,
@@ -360,8 +368,8 @@ df.baseline.long <- df.baseline.long %>% mutate(Prim_source_b = ifelse(R_Cen_a12
                                                                                                                                ifelse(R_Cen_a12_water_source_prim == "Household tap connections not connected to RWSS/Basudha/JJM tank", 10, -77)))))))))))
 
 
-var_lab(df.baseline.long$Prim_source_b) = "Primary drinking water source at baseline"
-val_lab(df.baseline.long$Prim_source_b) = num_lab("
+var_lab(df.baseline.r1.long$Prim_source_b) = "Primary drinking water source at baseline"
+val_lab(df.baseline.r1.long$Prim_source_b) = num_lab("
             1 Government provided household Taps (supply paani)
             2 Government provided community standpipe    
             3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
@@ -375,7 +383,78 @@ val_lab(df.baseline.long$Prim_source_b) = num_lab("
             -77 Other
             ")  
 
-df.baseline.long <- df.baseline.long %>% rename(unique_id_num = unique_id)
+df.baseline.r1.long <- df.baseline.r1.long %>% mutate(unique_id_num = as.numeric(unique_id))
+df.baseline.r1 <- df.baseline.r1 %>%mutate(unique_id_num = as.numeric(unique_id))
+
+#Now for preload from baseline for Round 2 of Follow Up Survey
+
+df.baseline.r2$R_Cen_a13_water_source_sec <- gsub("\\s+", " ", str_trim(df.baseline.r2$R_Cen_a13_water_source_sec))
+
+df.baseline.r2.long <- str_split_fixed(df.baseline.r2$R_Cen_a13_water_source_sec, " ", 2) %>% 
+  data.frame() %>% 
+  rename(Sec_source_b1 = X1, Sec_source_b2 = X2) %>% 
+  cbind(df.baseline.r2, .)
+
+
+var_lab(df.baseline.r2.long$Sec_source_b1) = "Secondary drinking water source1"
+val_lab(df.baseline.r2.long$Sec_source_b1) = num_lab("
+            1 Government provided household Taps (supply paani)
+            2 Government provided community standpipe    
+            3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
+            4	Manual handpump
+            5	Covered dug well
+            6	Directly fetched by surface water
+            7	Uncovered dug well
+            8	Private Surface well    
+            9 Borewell operated by electric pump
+            10 Household tap connections not connected to RWSS/Basudha/JJM tank
+            -77 Other
+            ")
+var_lab(df.baseline.r2.long$Sec_source_b2) = "Secondary drinking water source2"
+val_lab(df.baseline.r2.long$Sec_source_b2) = num_lab("
+            1 Government provided household Taps (supply paani)
+            2 Government provided community standpipe    
+            3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
+            4	Manual handpump
+            5	Covered dug well
+            6	Directly fetched by surface water
+            7	Uncovered dug well
+            8	Private Surface well    
+            9 Borewell operated by electric pump
+            10 Household tap connections not connected to RWSS/Basudha/JJM tank
+            -77 Other
+            ")
+
+
+df.baseline.r2.long <- df.baseline.r2.long %>% mutate(Prim_source_b = ifelse(R_Cen_a12_water_source_prim == "Government provided household Taps (supply paani)", 1, 
+                                                                             ifelse(R_Cen_a12_water_source_prim == "Government provided community standpipe",2,
+                                                                                    ifelse(R_Cen_a12_water_source_prim =="Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",3,
+                                                                                           ifelse(R_Cen_a12_water_source_prim == "Manual handpump",4,
+                                                                                                  ifelse(R_Cen_a12_water_source_prim == "Covered dug well",5,
+                                                                                                         ifelse(R_Cen_a12_water_source_prim == "Directly fetched by surface water",6,
+                                                                                                                ifelse(R_Cen_a12_water_source_prim == "Uncovered dug well",7,
+                                                                                                                       ifelse(R_Cen_a12_water_source_prim == "Private Surface well",8,
+                                                                                                                              ifelse(R_Cen_a12_water_source_prim == "Borewell operated by electric pump",9,
+                                                                                                                                     ifelse(R_Cen_a12_water_source_prim == "Household tap connections not connected to RWSS/Basudha/JJM tank", 10, -77)))))))))))
+
+
+var_lab(df.baseline.r2.long$Prim_source_b) = "Primary drinking water source at baseline"
+val_lab(df.baseline.r2.long$Prim_source_b) = num_lab("
+            1 Government provided household Taps (supply paani)
+            2 Government provided community standpipe    
+            3 Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
+            4	Manual handpump
+            5	Covered dug well
+            6	Directly fetched by surface water
+            7	Uncovered dug well
+            8	Private Surface well    
+            9 Borewell operated by electric pump
+            10 Household tap connections not connected to RWSS/Basudha/JJM tank
+            -77 Other
+            ")  
+
+df.baseline.r2.long <- df.baseline.r2.long %>% mutate(unique_id_num = as.numeric(unique_id))
+df.baseline.r2 <- df.baseline.r2 %>% mutate(unique_id_num = as.numeric(unique_id))
 
 #-------------Process WASH variables from Round 1-------------#
 
@@ -539,13 +618,13 @@ val_lab(df.wash.new$R_FU2_water_sec_yn) = num_lab("
 
 #-------------MERGE-------------#
 
-df.combine <- merge(df.wash.new.r1, df.baseline.long, by = "unique_id_num")
-df.combine <- merge(df.wash.new, df.combine, by = "unique_id_num")
+df.combine.r1 <- merge(df.baseline.r1.long,df.wash.new.r1, by = "unique_id_num")
+df.combine.r2 <- merge(df.baseline.r2.long,df.wash.new, by = "unique_id_num")
 
 
 
 # include here people who switched from Primary water to a different primary water source
-df.switch <- df.combine %>% filter(R_FU2_water_source_prim != Prim_source_b| R_FU1_water_source_prim != R_FU2_water_source_prim ) %>% select(Prim_source_b,R_FU1_water_source_prim, R_FU2_water_source_prim, R_FU2_r_cen_village_name_str )
+df.switch <- df.combine.r2 %>% filter(R_FU2_water_source_prim != Prim_source_b ) %>% select(Prim_source_b, R_FU2_water_source_prim, R_FU2_r_cen_village_name_str )
 
 df.switch$Prim_source_b <- factor(df.switch$Prim_source_b,
                                   levels = c(1,2,3,4,5,6,7,8,9,10,-77),
@@ -574,34 +653,21 @@ df.switch$R_FU2_water_source_prim <- factor(df.switch$R_FU2_water_source_prim,
                                                        "Borewell operated by electric pump",
                                                        "Household tap connections not connected to RWSS/Basudha/JJM tank",
                                                        "Other"))
-df.switch$R_FU1_water_source_prim <- factor(df.switch$R_FU1_water_source_prim,
-                                            levels = c(1,2,3,4,5,6,7,8,9,10,-77),
-                                            labels = c("Government provided household Taps (supply paani)",
-                                                       "Government provided community standpipe",    
-                                                       "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-                                                       "Manual handpump",
-                                                       "Covered dug well",
-                                                       "Directly fetched by surface water",
-                                                       "Uncovered dug well",
-                                                       "Private Surface well",    
-                                                       "Borewell operated by electric pump",
-                                                       "Household tap connections not connected to RWSS/Basudha/JJM tank",
-                                                       "Other"))
 
 df.switch <- df.switch %>%
-  rename("Round 2 primary source" = R_FU2_water_source_prim,"Round 1 primary source" = R_FU1_water_source_prim, "Baseline primary source" = Prim_source_b, Village = R_FU2_r_cen_village_name_str )
+  rename("Round 2 primary source" = R_FU2_water_source_prim, "Baseline primary source" = Prim_source_b, Village = R_FU2_r_cen_village_name_str )
 star.out <- stargazer(df.switch, summary=F, title= "WASH Section - Switch out of Government Provided Taps",float=F)
 
 star.out <- stargazer(df.switch, summary=F, title= "Switch in primary water source",float=F,rownames = F,
                       covariate.labels=NULL)
 
-star.out <- sub(" cccc"," |L|L|L|L|L|", star.out) 
+star.out <- sub(" ccc"," |L|L|L|L|", star.out) 
 
 starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_HH_Survey_R2.tex"))
 
 
 # Switch from baseline to Round 1
-df.switch <- df.combine %>%  mutate(Switched = ifelse(R_FU1_water_source_prim != Prim_source_b,1,0)) %>%
+df.switch <- df.combine.r1 %>%  mutate(Switched = ifelse(R_FU1_water_source_prim != Prim_source_b,1,0)) %>%
   mutate(Switched_from_jjm = ifelse(R_FU1_water_source_prim != Prim_source_b & Prim_source_b == 1 ,1,0)) %>% 
   mutate(Switched_to_jjm = ifelse(R_FU1_water_source_prim != Prim_source_b & R_FU1_water_source_prim == 1 ,1,0)) %>%
   select(Switched, Switched_from_jjm, Switched_to_jjm) 
@@ -640,10 +706,10 @@ for (i in var_names){
   df.append.switch <- rbind(df.append.switch, df.stat)
 }
 
-#Switch from Round 1 to Round 2
-df.switch.fu <- df.combine %>%  mutate(Switched = ifelse(R_FU2_water_source_prim != R_FU1_water_source_prim,1,0)) %>%
-  mutate(Switched_from_jjm = ifelse(R_FU2_water_source_prim != R_FU1_water_source_prim & R_FU1_water_source_prim == 1 ,1,0)) %>% 
-  mutate(Switched_to_jjm = ifelse(R_FU2_water_source_prim != R_FU1_water_source_prim & R_FU2_water_source_prim == 1 ,1,0)) %>%
+#Switch from Baseline to Round 2
+df.switch.fu <- df.combine.r2 %>%  mutate(Switched = ifelse(R_FU2_water_source_prim != Prim_source_b,1,0)) %>%
+  mutate(Switched_from_jjm = ifelse(R_FU2_water_source_prim != Prim_source_b & Prim_source_b == 1 ,1,0)) %>% 
+  mutate(Switched_to_jjm = ifelse(R_FU2_water_source_prim != Prim_source_b & R_FU2_water_source_prim == 1 ,1,0)) %>%
   select(Switched, Switched_from_jjm, Switched_to_jjm) 
 
 df.switch.fu$Switched <- factor(df.switch.fu$Switched,
@@ -683,14 +749,14 @@ for (i in var_names){
 df.append <- rbind(df.append.switch, df.append.switch.fu)
 
 df.append[1,1] <- "From Baseline to Round 1"
-df.append[11,1] <- "From Round 1 to Round 2"
+df.append[11,1] <- "From Baseline to Round 2"
 
 star.out <- stargazer(df.append, summary=F, title= "Switch in primary water source",float=F,rownames = F,
                       covariate.labels=NULL)
 
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_prop_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_prop_HH_Survey_R2.tex"))
 
 
 
@@ -699,7 +765,7 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Swit
 
 
 
-df.switch.sec <- df.combine %>% filter(Prim_source_b == 1 & 
+df.switch.sec <- df.combine.r2 %>% filter(Prim_source_b == 1 & 
                                          (Sec_source1 == 1 | Sec_source2 == 1| Sec_source3 == 1)) %>% 
   select(Prim_source_b,R_FU2_water_source_prim, Sec_source1, Sec_source2, Sec_source3, R_FU2_r_cen_village_name_str , R_FU2_tap_use_drinking)
 
@@ -787,9 +853,9 @@ star.out <- stargazer(df.switch.sec, summary=F, title= "WASH Section - Switch to
 
 star.out <- sub(" cccccccc"," |L|L|L|L|L|L|L|L|", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_prim_sec_prop_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Switch_prim_sec_prop_HH_Survey_R2.tex"))
 
-#-------------cooking issue stats-------------#
+#-------------cooking issue stats-------------# - needs to be recoded
 
 
 var_lab(df.temp.consent$R_FU2_cooking_issue) = "Any cooking issue experienced?"
@@ -933,13 +999,13 @@ star.out <- stargazer(df.append, summary=F, title= "WASH Section Summary",float=
 
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Wash_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Wash_HH_Survey_R2.tex"))
 
 
 
 #what treatment? 
 
-df.treat <- df.temp.consent %>% filter(R_FU2_water_treat == 1| R_FU2_water_stored == 1) %>% select(R_FU2_water_treat,R_FU2_water_stored, R_FU2_water_treat_type)
+df.treat <- df.temp.consent.r2 %>% filter(R_FU2_water_treat == 1| R_FU2_water_stored == 1) %>% select(R_FU2_water_treat,R_FU2_water_stored, R_FU2_water_treat_type)
 df.treat$R_FU2_water_treat_type <- ordered(df.treat$R_FU2_water_treat_type,
                                            levels = c(1,2,3,4, -77),
                                            labels = c("Filter the water through a cloth or sieve", 
@@ -957,12 +1023,12 @@ df.stat <- merge(freq_tab, prop_tab)
 df.stat$Prop <- round(proportions(df.stat$Freq), 2)
 df.stat <- df.stat %>% rename("Type of treatment" = Var1)
 stargazer(df.stat, summary=F, title= "WASH Section Summary",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_treat_HH_Survey_R1.tex"))
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_treat_HH_Survey_R2.tex"))
 
 #------------------------ Section B: Government Tap Specific Questions ----------------------------------------#
 
 
-df.tap<- df.temp.consent %>% select(R_FU2_tap_supply_freq, R_FU2_tap_function, R_FU2_tap_use_future)
+df.tap<- df.temp.consent.r2 %>% select(R_FU2_tap_supply_freq, R_FU2_tap_function, R_FU2_tap_use_future)
 #assign labels for each
 
 var_lab(df.tap$R_FU2_tap_supply_freq) = "How often is water supplied from government taps?"
@@ -1032,12 +1098,12 @@ star.out <- stargazer(df.append, summary=F, title= "Tap Section Summary",float=F
                       covariate.labels=NULL)
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Tap_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Tap_HH_Survey_R2.tex"))
 
 
 #------------------------ Section C: Chlorine Perceptions Questions ----------------------------------------#
 
-df.cl<- df.temp.consent %>% select(R_FU2_tap_taste_satisfied, 
+df.cl<- df.temp.consent.r2 %>% select(R_FU2_tap_taste_satisfied, 
                                    R_FU2_tap_trust)
 #assign labels for each
 var_lab(df.cl$R_FU2_tap_taste_satisfied) = "How satisfied are you with the taste of water from government taps?"
@@ -1103,12 +1169,12 @@ star.out <- stargazer(df.append, summary=F, title= "Chlorine Perceptions Section
                       covariate.labels=NULL)
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}c{2cm}c{2cm}c{2cm}", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_HH_Survey_R2.tex"))
 
 
 #Create a table on chlorine experience with treatment and drinking chlorinated water:
 
-df.cl.exp<- df.temp.consent %>% select( R_FU2_chlorine_yesno, R_FU2_chlorine_drank_yesno )
+df.cl.exp<- df.temp.consent.r2 %>% select( R_FU2_chlorine_yesno, R_FU2_chlorine_drank_yesno )
 var_lab(df.cl.exp$R_FU2_chlorine_yesno) = "Have you ever used chlorine as a method for treating drinking water?"
 val_lab(df.cl.exp$R_FU2_chlorine_yesno) = num_lab("
            1 Yes
@@ -1156,4 +1222,4 @@ star.out <- stargazer(df.exp, summary=F, title= "Chlorine Experience Summary",fl
                       covariate.labels=NULL)
 star.out <- sub(" ccc"," l{5cm}c{2cm}c{2cm}", star.out) 
 
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_Exp_HH_Survey_R1.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Chlorine_Exp_HH_Survey_R2.tex"))

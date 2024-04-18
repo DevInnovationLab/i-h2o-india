@@ -6,19 +6,7 @@
 
 #------------------------ Load the libraries ----------------------------------------#
 
-
-
-#install packages
-install.packages("RSQLite")
-install.packages("haven")
-install.packages("expss")
-install.packages("stargazer")
-install.packages("Hmisc")
-install.packages("labelled")
-install.packages("data.table")
-
 # load the libraries
-library(data.table)
 library(readxl) 
 library(googledrive)
 library(googlesheets4)
@@ -33,6 +21,7 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
+library(data.table)
 #library(xtable)
 
 #------------------------ setting user path ----------------------------------------#
@@ -53,8 +42,8 @@ user_path <- function() {
   else if (user=="akitokamei"){
     path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
   } 
-  else if (user == "Archi Gupta"){
-    path = "C:/Users/Archi Gupta/Box/Data/"
+  else if (user == ""){
+    path = ""
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -77,19 +66,19 @@ github_path <- function() {
   else if (user=="akitokamei"){
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
-  else if (user == "Archi Gupta") {
-    github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  else if (user == "") {
+    github = ""
   } 
   else {
     warning("No path found for current user (", user, ")")
     github = getwd()
   }
-  d
+  
   stopifnot(file.exists(github))
   return(github)
 }
 
-# setting overleaf directory
+# setting github directory
 overleaf <- function() {
   user <- Sys.info()["user"]
   if (user == "asthavohra") {
@@ -98,8 +87,8 @@ overleaf <- function() {
   else if (user=="akitokamei"){
     overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
-  else if (user == "Archi Gupta") {
-    overleaf = "C:/Users/Archi Gupta/Dropbox/Overleaf/"
+  else if (user == "") {
+    overleaf = ""
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -116,15 +105,14 @@ df.temp <- read_dta(paste0(user_path(),"2_deidentified/1_7_Followup_R3_cleaned.d
 df.preload <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR3_preload_5 Apr 2024.xlsx"))
 #------------------------ Apply the labels for variables  ----------------------------------------#
 
-View(df.temp)
 temp.labels <- lapply(df.temp , var_lab)
-View(temp.labels)
+
 #create a data with labels
 df.label <- as.data.frame(t(as.data.frame(do.call(cbind, temp.labels)))) 
 df.label<- tibble::rownames_to_column(df.label) 
 df.label <- df.label %>% rename(variable = rowname, label = V1)  
 auto_generated_labels <- c(df.label$variable)
-View(auto_generated_labels)
+
 #include labels given manually 
 df.label.manual <- read_xlsx(paste0(user_path(),"4_other/R_code_HH_Survey_labels.xlsx"))
 
@@ -137,21 +125,16 @@ df.label.manual <- df.label.manual %>% mutate(new_var = ifelse(Variable %in% aut
 df.label <- rbind(df.label, df.label.manual)
 # create a function that assigns the label to appropriate variable
 
+
 #create a date variable
 df.temp$datetime <- strptime(df.temp$R_FU3_starttime, format = "%Y-%m-%d %H:%M:%S")
 
 df.temp$date <- as.IDate(df.temp$datetime) 
 
-View(df.temp)
-
 #filter out the testing dates
 df.temp <- df.temp 
 
 #------------------------ Keep consented cases ----------------------------------------#
-
-#View the cases where consent != 1
-filtered_df <- subset(df.temp, R_FU3_consent != 1)
-View(filtered_df)
 
 df.temp.consent <- df.temp[which(df.temp$R_FU3_consent==1) ,]
 
@@ -312,7 +295,7 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Table_Dura
 
 df.dk.enum <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>%
   group_by(R_FU3_enum_name_label) %>% select(-R_FU3_fc_stored,-R_FU3_tc_stored, -R_FU3_wq_chlorine_storedfc_again, -R_FU3_wq_chlorine_storedtc_again,
-                                             -R_FU3_fc_tap, -R_FU3_tc_tap,-R_FU3_wq_tap_fc_again,-R_FU3_wq_tap_tc_again) %>%
+                                             -R_FU3_fc_tap, -R_FU3_tc_tap,-R_FU3_wq_tap_fc_again,-R_FU3_wq_tap_tc_again, -R_FU3_r_cen_a39_phone_name_1, - R_FU3_r_cen_a39_phone_name_2) %>%
   summarise_all(~sum(. == 999)) %>% 
   transmute(R_FU3_enum_name_label, sum_dk = rowSums(.[-1], na.rm = T)) %>% 
   rename(Enumerator = R_FU3_enum_name_label, "Count of DK" = sum_dk)
@@ -557,7 +540,7 @@ stargazer(df.count, summary=F, title= "Count of Testing not possible",float=F,ro
 #checking cases when people say they don't use JJM for drinking and their answers to the last time they used drinking water from JJM taps
 
 df.consistency <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU3_tap_use_drinking_yesno == 0 ) %>%
-  dplyr::select(R_FU3_r_cen_village_name_str, R_FU3_enum_name_label, R_FU3_tap_use_drinking  ) %>% 
+  dplyr::select(R_FU3_r_cen_village_name_str, R_FU3_enum_name_label, R_FU3_tap_use_drinking , unique_id_num ) %>% 
   mutate(R_FU3_tap_use_drinking = ifelse(R_FU3_tap_use_drinking == 1, "Today", 
                                          ifelse(R_FU3_tap_use_drinking == 2, "Yesterday", 
                                                 ifelse(R_FU3_tap_use_drinking == 3, "Earlier this week", 

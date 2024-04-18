@@ -17,10 +17,11 @@
 
 use "${DataPre}1_1_Census_cleaned_consented.dta", clear
 
-
+* Keeping relevant variables from Baseline Census dataset
 keep R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count R_Cen_a3_hhmember_name* R_Cen_a4_hhmember_gender* R_Cen_a5_hhmember_relation* R_Cen_a6_hhmember_age* R_Cen_a6_age_confirm2* R_Cen_a5_autoage* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_correct_age* R_Cen_a7_pregnant* R_Cen_a7_pregnant_month* R_Cen_a7_pregnant_hh* R_Cen_a7_pregnant_leave* R_Cen_a8_u5mother* R_Cen_u5mother_name* R_Cen_a9_school* R_Cen_a9_school_level*  R_Cen_a9_school_current* R_Cen_a9_read_write* unique_id
 
 
+* Converting this in long form for each member of the household
 reshape long R_Cen_a3_hhmember_name_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_  R_Cen_a9_school_current_ R_Cen_a9_read_write_ , i(unique_id) j(num)
 
 
@@ -31,9 +32,9 @@ preserve
 keep if R_Cen_a4_hhmember_gender_ == 2 & R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49
 rename  (R_Cen_a3_hhmember_name_ R_Cen_a6_hhmember_age_  R_Cen_a6_age_confirm2_  R_Cen_village_name R_Cen_a7_pregnant_ ) (name_woman age_woman  confirmed_age  village_woman is_last_preg )
 
+gen Mother_Name =  name_woman
 tempfile eligible_women_census
 save `eligible_women_census'
-
 restore
 
 * Assigning mother name to each child (right not it is only the index of the household member)
@@ -42,15 +43,36 @@ forval i = 1/17{
 	bys unique_id: replace mother = R_Cen_a3_hhmember_name_[`i'] if R_Cen_u5mother_name_ == `i'
 }
 
-* Create dataset of children under 5 with their mothers' name 
+* Create dataset of mothers with atleast one child u3  - why under 3, because the admin data on pregnancy listing goes back till 2022 as expected date of delivery
 preserve 
 
-keep if  R_Cen_a6_hhmember_age_ <= 5 
+keep if  R_Cen_a6_hhmember_age_ <= 3 
+gen Mother_Name =  mother
 tempfile child_u5_census
-save `child_u5_census'
-
+duplicates drop unique_id Mother_Name, force
+drop if Mother_Name == ""
+tempfile child_u3_census
+save `child_u3_census' 
 restore
 
+* Also adding variables for whenever we found a woman with a child u3 by merging child_u3_census data with eligible_women_census data
+
+use "`eligible_women_census'", clear
+drop if Mother_Name == "Pinky Kandagari" & age_woman == 22 
+merge 1:1 unique_id  Mother_Name using `child_u3_census'
+keep if _merge == 3
+tempfile women_with_childu3_census
+save `women_with_childu3_census'
+* out of 1617 women in eligible category, 782 don't have a child u3, but 834 have a child u3 
+
+* Also save the cases where the woman was pregnant during the Baseline Census
+use "`eligible_women_census'", clear
+keep if is_last_preg == 1
+gen id_woman = _n
+tempfile preg_woman_census
+replace Mother_Name = lower(Mother_Name)
+save `preg_woman_census' 
+* Contains 147 woman who were pregnant at baseline
 
 /*------------------------------------------------------------------------------
 	2 Mortality data preparations
@@ -58,7 +80,7 @@ restore
 
 * This file contains two important data information for only 3 villages
 * 1. Household rosters for when we didn't do roster during Census - need to create both eligible women and child under 5 rosters from this 
-* 2. Mortality data of all the sample, both census roster women and mortality roster women, need to create a separate data to capture the birth and death information of all these eligible women - separate dataset
+* 2. Mortality data of all the sample, both census roster women and mortality roster women, need to create a separate data to capture the birth and death information of all these eligible women's children - separate dataset
 
 use "${DataRaw}Mortality survey_cleaned vars.dta", clear
 
@@ -103,6 +125,7 @@ keep R_mor_block_name R_mor_village_name  R_mor_a1_resp_name  R_mor_a2_hhmember_
 merge 1:1 unique_id_num using "`mortality'"
 rename  unique_id unique_id_str
 rename unique_id_num unique_id
+
 //reshaping at woman level
 reshape long new_woman_name_ new_consent_woman_ new_no_consent_reason_ new_residence_yesno_ new_vill_woman_ new_last_5yrs_preg_ new_child_living_num_ new_child_away_num_ new_child_away_yn_ new_child_living_yn_ new_child_still_num_ new_child_still_yn_ new_child_died_yn_less24_ new_child_died_yn_more24_ new_child_died_num_more24_ new_child_died_num_less24_ new_name_child_ new_age_child_ new_unit_child_age_ new_date_birth_child_ new_date_death_child_ new_cause_death_diag_yn_ new_cause_death_child_ new_cause_death_oth_ new_miscarriage_yn_ R_mor_a3_hhmember_name_ R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_   R_mor_marital_ R_mor_a7_pregnant_ R_mor_a7_pregnant_month_, i(unique_id) j(num)
 
@@ -110,7 +133,6 @@ drop if new_woman_name_==""
 
 
 // separating out name and age
-
 gen name_new_woman = trim(substr(new_woman_name_, 1, strpos(new_woman_name_, " and") - 1))
 gen location  = strpos(new_woman_name_, " and") + 4
 gen age_new_woman = substr(new_woman_name_, location,  3)
@@ -138,13 +160,21 @@ decode village_resp, gen(village)
 drop village_resp
 rename village village_resp
 
+gen Mother_Name =  name_woman
 tempfile eligible_women_mortality
 save `eligible_women_mortality'
 
 restore
  
  
- 
+* Using the eligible women data from mortality, also create a match of women who had/ have a child u5, or were pregnant in last 5 yrs
+
+use "`eligible_women_mortality'", clear
+keep if is_last_5yrs_preg == "1" 
+tempfile women_with_childu5_mor
+save `women_with_childu5_mor'
+* 36 woman 
+
 
 * Now create data of children under 5 from the roster done during Mortality survey 
 
@@ -153,7 +183,7 @@ keep if R_mor_check_scenario == 0
 
 keep R_mor_block_name R_mor_village_name  R_mor_a1_resp_name  R_mor_a2_hhmember_count R_mor_a3_hhmember_name_* R_mor_a4_hhmember_gender_* R_mor_a5_hhmember_relation_*  R_mor_a6_hhmember_age_* R_mor_age_accurate_* R_mor_a5_autoage_* R_mor_marital_* R_mor_a7_pregnant_* unique_id_num 
 
-reshape long R_mor_a3_hhmember_name_ R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_   R_mor_marital_ R_mor_a7_pregnant_ R_mor_a7_pregnant_month_   R_Cen_a8_u5mother_       , i(unique_id_num) j(num)
+reshape long R_mor_a3_hhmember_name_ R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ R_mor_a6_hhmember_age_ R_mor_age_accurate_ R_mor_a5_autoage_   R_mor_marital_ R_mor_a7_pregnant_ R_mor_a7_pregnant_month_   R_Cen_a8_u3mother_       , i(unique_id_num) j(num)
 
 
 * Assigning mother name to each child (right not it is only the index of the household member)
@@ -164,51 +194,77 @@ forval i = 1/12{
 	bys unique_id_num: replace mother = "" if  R_mor_a5_hhmember_relation_ != 3 
 }
 rename unique_id_num unique_id
+
 * Create dataset of children under 5 with their mothers' name 
 preserve 
 
 keep if  R_mor_a6_hhmember_age_ < 5 
+gen Mother_Name =  mother
 tempfile child_u5_mortality
 save `child_u5_mortality'
 
 restore
 
 /*------------------------------------------------------------------------------
-	3 Full roster of eligible women and childU5
+	3 Full roster of eligible women and for woman who had/ have a child u3
 ------------------------------------------------------------------------------*/
 
-* Next step would be to combine Census and Mortality rosters in one dataset, so we have household ID of all the hhs in the village with their roster info. 
+* First, full sample of eligible women between 15 and 49 years of age: 
+* to combine Census and Mortality rosters in one dataset
 
 use "`eligible_women_census'", clear
 destring unique_id, replace
 destring confirmed_age, replace
 
-
 decode village_woman, gen(village_resp)
 drop village_woman
 gen village_woman = village_resp
 append using "`eligible_women_mortality'" 
+gen id_woman = _n
+
+keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman  name_woman age_woman confirmed_age R_Cen_a5_autoage_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_mor_block_name village_resp is_last_5yrs_preg age_resp auto_age id_woman Mother_Name
 
 tempfile final_eligible_women
 
+
 save `final_eligible_women'
 
+* this contains 1870 women of eligible age group across the census and mortality data
+
+* First, full sample of  women who had children u3 in eligible age between 15 and 49 years of age: 
+* to combine Census and Mortality rosters in one dataset
+
+use "`women_with_childu3_census'", clear
+destring unique_id, replace
+destring confirmed_age, replace
+
+decode village_woman, gen(village_resp)
+drop village_woman
+gen village_woman = village_resp
+append using "`women_with_childu5_mor'" 
+gen id_woman = _n
+
+keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman  name_woman age_woman confirmed_age R_Cen_a5_autoage_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_mor_block_name village_resp is_last_5yrs_preg age_resp auto_age id_woman Mother_Name
+
+replace Mother_Name = lower(Mother_Name)
+tempfile final_women_u3_cen_u5_mor
+save `final_women_u3_cen_u5_mor'
+* this contains 834 women from census and 36 from mortality survey, so total 870
+
+/*
+* Also add to this woman who were preg during baseline census 
+use "`preg_woman_census'", clear
+destring unique_id, replace
+destring confirmed_age, replace
+
+decode village_woman, gen(village_resp)
+drop village_woman
+gen village_woman = village_resp
+append using "`final_women_childu3'"
+*/
+
 /*------------------------------------------------------------------------------
-	4 Pregnancy history 
-------------------------------------------------------------------------------*/
-
-* Now we should merge mortality/ death data of children of eligible women to this roster. 
-
-unique_id num R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_
-
-rename (R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_) ()
-
-unique_id num R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_landmark R_Cen_address R_Cen_resp_available R_Cen_screen_u5child R_Cen_screen_preg R_Cen_instruction R_Cen_visit_num R_Cen_intro_dur_end R_Cen_enum_name_label R_Cen_consent R_Cen_a2_hhmember_count name_woman R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_ age_woman confirmed_age R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_ 
-
-R_mor_block_name village_resp R_mor_a1_resp_name R_mor_a2_hhmember_count name_resp R_mor_a4_hhmember_gender_ R_mor_a5_hhmember_relation_ age_resp auto_age R_mor_marital_ new_consent_woman_ new_no_consent_reason_ residence_yesno is_last_5yrs_preg dup
-
-/*------------------------------------------------------------------------------
-	5 Admin Data
+	4 Admin Data
 ------------------------------------------------------------------------------*/
 
 
@@ -219,6 +275,8 @@ import excel "${box}4_Admin data/rch_genderwise child report_master_2023-now.xls
 keep Block_Name Facility_Name Facility_Type RCH_ID New_Born_Name Gender Father_Name Mother_Name  Mobile_No DOB Address ANM_Name ASHA_Name Registration_Date Child_Death 
 egen parents = concat(Mother_Name Father_Name), punct(_)
 
+* remove duplicates in mother and father name 
+duplicates drop Mother_Name Father_Name, force
 tempfile cll
 save `cll'
 
@@ -228,11 +286,13 @@ keep Health_Block Health_Facility Health_SubFacility Village RCHID CaseNo Mother
 
 rename MotherName Mother_Name
 egen parents = concat(Mother_Name HusbandName), punct(_)
+duplicates drop Mother_Name HusbandName, force
 
 tempfile pll
 save `pll'
 
 merge m:m parents   using "`cll'"
+duplicates drop parents, force
 
 * Saving non match cases, = 
 preserve 
@@ -308,33 +368,114 @@ gen lmp_date = mdy(lmpmo1, lmpda1, lmpyr1)
 // Total match is 3786 between preg woman listing and child line listing
 
 drop _merge 
-
-
+replace Mother_Name = lower(Mother_Name)
+gen id_pwl_cl = _n
 tempfile pwl_cl
 save `pwl_cl'
 
-* keep relevant years of this too
 
 
+/*------------------------------------------------------------------------------
+	5 Fuzzy Match with Survey Data
+------------------------------------------------------------------------------*/
+
+* Fuzzy match with the matched pregnancy listing and child listing data from the admin
 
 
+* 1. Match cases where there is a child u3 with pregnancy and child listing data (denominator 870 from survey data)
+
+set seed 3859
+reclink Mother_Name  using `final_women_u3_cen_u5_mor', idm(id_pwl_cl) idu(id_woman) gen(myscore)
 
 
+keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id
+gen diff_age = MotherAge - age_woman
+keep if myscore  > .99 & myscore != . & (diff_age <= 5 & diff_age >= -5) 
+tempfile match_woman_pw_cl
+save `match_woman_pw_cl'
+
+use "`match_woman_pw_cl'", clear
+duplicates tag unique_id Mother_Name, gen(dup)
+tab dup
+*keep if dup == 0 & diff_age == 0 & Mother_Name == UMother_Name
+
+*262 matches that make sense with more than 99% match score, however only 154 cases where there are no duplicates and difference between survey age and admin age being only 5
+* Somewhat imperfect match rate of 17.7% (154/870)
+* There are a few cases where duplicates might make sense, but this needs better NLP methods to find the correct match 
 
 
+* 2. Match cases where there is a child u3 with pregnancy listing data only (denominator 147 from survey data)
+
+* Fuzzy match with the matched pregnancy listing only data (that didn't match with child listing) from the admin
+
+*restrict the years - in this case, since we are 
 
 
-
-
-* Create a data set with the pw who weren't matched
 use "`not_match'", clear
-keep if _merge == 1 
+keep if _merge == 1
+drop _merge
+
+generate str2 eddda1= substr(EDD,1,2)
+generate str2 eddmo1 = substr(EDD,4,5)
+generate str4 eddyr1 = substr(EDD,7,10)
+
+destring edd*, replace
+gen exp_del_date = mdy(eddmo1, eddda1, eddyr1)
+
+*also restrict the years, as pregnant woman from census are only recorded for about early 2023 till 2024 
+keep if eddyr1 == 2023
+gen id_pwl = _n
+replace Mother_Name = lower(Mother_Name)
+set seed 3859
+reclink Mother_Name using `preg_woman_census', idm(id_pwl) idu(id_woman) gen(myscore)
+
+keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id
+gen diff_age = MotherAge - age_woman
+keep if myscore  > .99 & myscore != . & (diff_age <= 5 & diff_age >= -5) 
+duplicates tag unique_id Mother_Name, gen(dup)
+tempfile match_woman_pw
+save `match_woman_pw'
+
+* out of 147 women, only 14 were found with the criteria that the match score was higher than 99% and difference in age is only upto 5 yrs and manually, they seem to have the correct name = 9.5% - Note this is subject to year selection, as we had survey data on pregnancy for only a few months, while the admin data is bigger. 
 
 
 
-* Create a data set with child who weren't matched
+
+* 3. Match cases where there is a child u3 with child listing data (870 denominator)
+
+
+* Fuzzy match with the matched child listing only data (that didn't match with preg woman listing) from the admin
+
+*restrict the years
+
 use "`not_match'", clear
 keep if _merge == 2
+drop _merge
+gen id_cl = _n
+generate str2 dobda1= substr(DOB,1,2)
+generate str2 dobmo1 = substr(DOB,4,5)
+generate str4 dobyr1 = substr(DOB,7,10)
+
+destring dob*, replace
+gen date_of_birth = mdy(dobmo1, dobda1, dobyr1)
+
+replace Mother_Name = lower(Mother_Name)
+
+set seed 3859
+reclink Mother_Name using `final_women_u3_cen_u5_mor', idm(id_cl) idu(id_woman) gen(myscore)
+keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id
+keep if myscore  > .99 & myscore != . 
+duplicates tag unique_id Mother_Name, gen(dup)
+
+
+ 
+* since we don't have mother's age in the child listing, one way to check is no longer available. 
+* There are 34 perfect matches, while 124 matches with match score greater than 99% and 0 duplicates in unique ID and Mother Name = 128/870 = 14.7%
+
+
+
+* Adding spouse name of women in survey data for section: woman in eligible category, would greatly increase match rate
+* Make sure we ask is pregnant in last 5 years 
 
 
 
