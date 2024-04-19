@@ -1,0 +1,266 @@
+---
+title: "Gram Vikas Monitoring - India ILC Pilot"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+
+
+```
+
+# Introduction
+
+This report summarizes key water quality variables for the India ILC Pilot. It summarizes data reported on mWater by Gram Vikas regarding chlorine testing and chlorine refills.
+
+
+
+```{r package loading, include=FALSE}
+
+library(rsurveycto)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(experiment)
+library(stargazer)
+library(readxl)
+library(haven)
+library(googlesheets4)
+library(ggsignif)
+library(patchwork)
+library(table1)
+
+
+
+```
+
+
+```{r dataset loading}
+
+#Jeremy's file path
+
+#gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
+
+gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
+
+village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
+
+
+```
+
+
+
+
+```{r Gram Vikas monitoring data cleaning}
+
+#OLD CODE for google sheet
+#Assigning more meaningful variable names
+#gv <- gv%>%
+ # rename_all(~stringr::str_replace(.,"Sample ","sample_"))%>%
+  #rename_all(~stringr::str_replace(.," - Free Chlorine (mg/L)","_fc"))%>%
+  #rename_all(~stringr::str_replace(.," - Total Chlorine (mg/L)","_tc"))%>%
+  #rename_all(~stringr::str_replace(.," - Location","_location"))
+  #rename(village = "r_cen_village_name_str")%>%
+
+
+
+### mWater Results ###
+
+#creating test date
+gv <- gv%>%
+  filter(is.na(Village) == FALSE)%>%
+  mutate(test_date = as_date(`valve_open (Time Answered)`))%>%
+  mutate(visit_date_alt = as_date(`Drafted On`))%>%
+  mutate(visit_date = as_date(`Date:`))
+
+#Replacing missing date values
+gv <- gv%>%
+  mutate(visit_date = coalesce(visit_date, visit_date_alt))
+
+#Selecting village names to repeat through in a for loop
+mon_villages <- unique(gv$Village)
+
+#Processing refill data
+gv <- gv%>%
+  mutate(refill = `Did you/the pump operator refill chlorine tablets since the last visit?`)%>%
+  mutate(ilc_device = `What device is installed?`)%>%
+  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)
+
+
+
+#Selecting nearest and farthest tap data to be displayed
+mon_near <- gv%>%
+  dplyr::select(test_date, Village, nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc))
+
+mon_far <- gv%>%
+  dplyr::select(test_date, Village, farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc))
+  
+
+
+```
+
+
+## Gram Vikas Chlorine Refills
+
+
+```{r Gram Vikas chlorine refills - results}
+
+#Filtering for chlorine refill data
+gv_refill <- gv%>%
+  filter(refill == "Yes")
+
+
+#Creating refill check dates - date-based method
+#We ultimately want to get to a place where we can estimate tablet decay rate in each village
+gv_refill <- gv_refill%>%
+  mutate(refill_date_1 = visit_date + 14)%>%
+  mutate(refill_date_2 = visit_date + 18)%>%
+  mutate(refill_date_3 = visit_date + 20)%>%
+  mutate(refill_date_0 = visit_date)
+
+
+#Selecting dates + village to display in a kable
+gv_refill <- gv_refill%>%
+  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
+
+#Selecting for the most recent village visits for each village
+gv_refill$Village <- factor(gv_refill$Village)
+
+gv_refill <- gv_refill%>%
+  group_by(Village)%>%
+  filter(refill_date_0 == max(refill_date_0))%>%
+  ungroup()
+  
+
+  
+#Renaming column names for the kable
+colnames(gv_refill) <- c("Village", "Refill Date", "Check Date #1", "Check Date #2",
+                         "Check Date #3")
+
+#Displaying Kable
+kbl(gv_refill, "latex")%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Baseline - Water Quality Test Results " = 5)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(3, background = "lightgreen")%>%
+  column_spec(4, background = "lightyellow")%>%
+  column_spec(5, background = "red")
+
+
+
+```
+
+
+
+## Gram Vikas Chlorine Monitoring Results
+
+
+
+```{r Gram Vikas Chlorine Monitoring Results, fig.width=9, fig.height=8}
+
+
+# 
+# #Creating plots for each village  
+# for (i in mon_villages){
+#   x_near <- mon_near%>%
+#     filter(Village == i)
+#   x_far <- mon_far%>%
+#     filter(Village == i)
+#   
+#   
+#   p1 <- ggplot(data = x_near) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 1),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p1)
+#   
+#   p2 <- ggplot(data = x_far) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 1),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p2)
+# 
+#   
+# }
+
+
+#Representing them on facet_wrap()
+
+#Selecting for chlorine data
+gv_cl <- gv%>%
+  dplyr::select(visit_date, Village, nearest_tap_fc, farthest_tap_fc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc))
+
+
+#Filtering for dates after April 8th for readability
+gv_cl <- gv_cl%>%
+  filter(visit_date > "2024-04-05")%>%
+  filter(Village != "Karnapadu") #and removing karnapadu
+
+
+
+  p1 <- ggplot(data = gv_cl) + 
+    geom_point(aes(x = visit_date, y = chlorine_concentration,
+                   color = chlorine_test))+
+    geom_line(aes(x = visit_date, y = chlorine_concentration,
+                  color = chlorine_test))+
+    geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+    geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("Gram Vikas ILC Chlorine Monitoring for 2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
+    facet_wrap(~Village, ncol = 3)
+  
+  print(p1)
+
+
+
+```
+
+
+
+
+
+
