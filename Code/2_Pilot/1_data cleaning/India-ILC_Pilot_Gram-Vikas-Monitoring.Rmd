@@ -10,8 +10,6 @@ knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = F
 
 ```
 
-# Introduction
-
 This report summarizes key water quality variables for the India ILC Pilot. It summarizes data reported on mWater by Gram Vikas regarding chlorine testing and chlorine refills.
 
 
@@ -110,6 +108,51 @@ mon_far <- gv%>%
 ```
 
 
+## Gram Vikas Weekly Plan
+
+```{r Gram Vikas weekly plan}
+
+#"2024-04-22", "2024-04-23", "2024-04-24", "2024-04-25",
+
+# Get the current date
+visit_date <- Sys.Date()
+
+# Calculate the start date of the current week (Monday)
+start_of_week <- visit_date - (wday(visit_date) - 2) %% 7
+
+# Create a sequence of dates for the current week
+visit_date <- seq.Date(start_of_week, length.out = 7, by = "day")
+
+#Creating date table for villages to be visited
+
+weekly_plan <- tibble(Date = date(visit_date),
+       Day = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+               "Saturday", "Sunday"),
+       Plan = c("Gopi Kankubadi, Tandipur", #Needs to be manually updated
+                "Tandipur, Badabangi",
+                "Tandipur, BNPur",
+                "Tandipur, BNPur, Nathma",
+                "Tandipur, BNPur, Nathma",
+                "Flexible Day",
+                "Flexible Day")
+       )
+
+
+#Displaying weekly plan
+
+kbl(weekly_plan)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Gram Vikas - Weekly Visit Plan " = 3)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE)
+
+
+
+
+```
+
+
+
 ## Gram Vikas Chlorine Refills
 
 
@@ -163,11 +206,12 @@ kbl(gv_refill, "latex")%>%
 
 
 
+
 ## Gram Vikas Chlorine Monitoring Results
 
 
 
-```{r Gram Vikas Chlorine Monitoring Results, fig.width=9, fig.height=8}
+```{r Gram Vikas Chlorine Monitoring Results, fig.width=9, fig.height=7}
 
 
 # 
@@ -234,7 +278,6 @@ gv_cl <- gv_cl%>%
   filter(Village != "Karnapadu") #and removing karnapadu
 
 
-
   p1 <- ggplot(data = gv_cl) + 
     geom_point(aes(x = visit_date, y = chlorine_concentration,
                    color = chlorine_test))+
@@ -260,6 +303,56 @@ gv_cl <- gv_cl%>%
 ```
 
 
+
+
+## Gram Vikas - Most Recent Chlorine Test Results
+
+
+```{r Gram Vikas - most recent chlorine test results}
+
+
+#Creating table of most 4 recent chlorine concentration measurements by the GV team for each village
+
+#Pivoting wider
+gv_cl <- gv_cl%>%
+  filter(is.na(chlorine_concentration) == FALSE)%>%
+  pivot_wider(names_from = chlorine_test, values_from = chlorine_concentration)%>%
+  filter(is.na(Village) == FALSE)
+
+mon_villages <- unique(gv_cl$Village)
+
+#initializing empty dataframe
+y <- gv_cl[0,]
+
+for (i in mon_villages){
+  #Selecting each village in the loop
+  x <- gv_cl%>%
+    filter(Village == i)
+  #sorting and filtering for 4 most recent tests
+  x <- x%>%
+    arrange(desc(visit_date))
+  x <- x[1:2,]
+  
+  #binding rows to table dataframe
+  y <- bind_rows(y,x)
+  
+}
+
+
+# Printing kable with 4 most recent test results
+  kbl(y)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Gram Vikas Chlorine Monitoring - Recent Measurements" = 4)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+  
+  
+
+
+
+
+```
 
 
 

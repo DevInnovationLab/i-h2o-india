@@ -858,6 +858,10 @@ idexx_r3 <- idexx_r3%>%
                                  end_comments == "Solar Tank Water"), 1, 0))%>%
   replace_na(solar_water, value = 0)
 
+#Filtering for R3 results after April 7th, 2024
+idexx_r3 <- idexx_r3%>%
+  filter()
+
 
 #Dropping lab blanks, field blanks, and duplicates
 #idexx_r3 <- idexx_r3%>%
@@ -1553,6 +1557,10 @@ idexx_r3 <- idexx_r3%>%
 idexx_r3 <- idexx_r3%>%
   filter(solar_water == 0)
 
+## Selecting ABR data
+idexx_r3_abr <- idexx_r3%>%
+  filter(abr == 1)
+
 # Calculate descriptive statistics by village
 village_stats <- idexx_r3%>%
   group_by(village, sample_type) %>%
@@ -1625,6 +1633,16 @@ kbl(all_stats)%>%
 idexx_r3 <- idexx_r3%>%
   filter(sample_type != "Blank")
 table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r3)
+
+
+
+
+#### ABR Results ####
+table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r3_abr)
+
+
+
+
 
 ```
 
@@ -1717,7 +1735,7 @@ mon_far <- mon%>%
 
 
 
-```{r JPAL Chlorine Monitoring Data Analysis}
+```{r JPAL Chlorine Monitoring Data Analysis, message=FALSE}
 
 
 #Creating time series plot of the data for each village
@@ -1791,9 +1809,61 @@ for (i in mon_villages){
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
+  
+  
+  
+
 
 
 ```
+
+
+
+
+```{r JPAL Chlorine Monitoring results - pt 2, message = FALSE, fig.height=8, fig.width=9}
+
+  
+#Representing them on facet_wrap()
+
+#Selecting for chlorine data
+mon_wide <- mon_wide%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc))
+
+
+#Filtering for dates after April 8th for readability
+mon_wide <- mon_wide%>%
+  filter(test_date > "2024-03-27")%>%
+  filter(village_name != "Karnapadu") #and removing karnapadu
+
+
+
+  p1 <- ggplot(data = mon_wide) + 
+    geom_point(aes(x = test_date, y = chlorine_concentration,
+                   color = chlorine_test))+
+    geom_line(aes(x = test_date, y = chlorine_concentration,
+                  color = chlorine_test))+
+    geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+    geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("JPAL ILC Chlorine Monitoring for 2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
+    facet_wrap(~village_name, ncol = 3)
+  
+  print(p1)
+
+
+
+```
+
+
 
 
 ```{r JPAL HH survey chlorine monitoring data analysis}
