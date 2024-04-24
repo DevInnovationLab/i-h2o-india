@@ -48,6 +48,10 @@ bl_raw <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Ba
 
 bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_2_Followup_cleaned.dta")
 
+el <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/1_8_Endline_Census.dta")
+
+
+
 census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
 
 r1 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_5_followup_R1_cleaned.dta")
