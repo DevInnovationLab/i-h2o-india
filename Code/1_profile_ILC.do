@@ -165,6 +165,8 @@ local string pregwoman
 cd "${DataRaw}"
 
 * (0) First apply SurveyCTO code cleaning do file
+do "${Do_pilot}0_Preparation_V2.do"
+
 do "${Do_pilot}0_Preparation.do"
 * Who: Akito
 * Akito to add descrioption
