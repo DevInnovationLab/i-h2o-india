@@ -46,23 +46,23 @@ forval i = 1/17{
 * Create dataset of mothers with atleast one child u3  - why under 3, because the admin data on pregnancy listing goes back till 2022 as expected date of delivery
 preserve 
 
-keep if  R_Cen_a6_hhmember_age_ <= 3 
+keep if  R_Cen_a6_hhmember_age_ <= 1 
 gen Mother_Name =  mother
 tempfile child_u5_census
 duplicates drop unique_id Mother_Name, force
 drop if Mother_Name == ""
-tempfile child_u3_census
-save `child_u3_census' 
+tempfile child_u1_census
+save `child_u1_census' 
 restore
 
 * Also adding variables for whenever we found a woman with a child u3 by merging child_u3_census data with eligible_women_census data
 
 use "`eligible_women_census'", clear
 drop if Mother_Name == "Pinky Kandagari" & age_woman == 22 
-merge 1:1 unique_id  Mother_Name using `child_u3_census'
+merge 1:1 unique_id  Mother_Name using `child_u1_census'
 keep if _merge == 3
-tempfile women_with_childu3_census
-save `women_with_childu3_census'
+tempfile women_with_childu1_census
+save `women_with_childu1_census'
 * out of 1617 women in eligible category, 782 don't have a child u3, but 834 have a child u3 
 
 * Also save the cases where the woman was pregnant during the Baseline Census
@@ -234,21 +234,21 @@ save `final_eligible_women'
 * First, full sample of  women who had children u3 in eligible age between 15 and 49 years of age: 
 * to combine Census and Mortality rosters in one dataset
 
-use "`women_with_childu3_census'", clear
+use "`women_with_childu1_census'", clear
 destring unique_id, replace
 destring confirmed_age, replace
 
 decode village_woman, gen(village_resp)
 drop village_woman
 gen village_woman = village_resp
-append using "`women_with_childu5_mor'" 
+*append using "`women_with_childu5_mor'" 
 gen id_woman = _n
 
-keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman  name_woman age_woman confirmed_age R_Cen_a5_autoage_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_mor_block_name village_resp is_last_5yrs_preg age_resp auto_age id_woman Mother_Name
+keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name village_woman  name_woman age_woman confirmed_age R_Cen_a5_autoage_ is_last_preg R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_  village_resp    id_woman Mother_Name
 
 replace Mother_Name = lower(Mother_Name)
-tempfile final_women_u3_cen_u5_mor
-save `final_women_u3_cen_u5_mor'
+tempfile final_women_u1_cen
+save `final_women_u1_cen'
 * this contains 834 women from census and 36 from mortality survey, so total 870
 
 /*
@@ -384,11 +384,17 @@ save `pwl_cl'
 
 * 1. Match cases where there is a child u3 with pregnancy and child listing data (denominator 870 from survey data)
 
+use "`pwl_cl'", clear
+keep if  (eddmo1 >= 9 & eddyr1 == 2022) | (eddmo1 <= 11 & eddyr1 == 2023) // to keep children u1
+tempfile pwl_cl_u1
+save `pwl_cl_u1'
+
+
 set seed 3859
-reclink Mother_Name  using `final_women_u3_cen_u5_mor', idm(id_pwl_cl) idu(id_woman) gen(myscore)
+reclink Mother_Name  using `final_women_u1_cen', idm(id_pwl_cl) idu(id_woman) gen(myscore)
 
 
-keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id
+keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id village_resp village_woman Village
 gen diff_age = MotherAge - age_woman
 keep if myscore  > .99 & myscore != . & (diff_age <= 5 & diff_age >= -5) 
 tempfile match_woman_pw_cl
@@ -411,9 +417,7 @@ tab dup
 *restrict the years - in this case, since we are 
 
 
-use "`not_match'", clear
-keep if _merge == 1
-drop _merge
+use "`pll'", clear
 
 generate str2 eddda1= substr(EDD,1,2)
 generate str2 eddmo1 = substr(EDD,4,5)
@@ -422,8 +426,9 @@ generate str4 eddyr1 = substr(EDD,7,10)
 destring edd*, replace
 gen exp_del_date = mdy(eddmo1, eddda1, eddyr1)
 
+
 *also restrict the years, as pregnant woman from census are only recorded for about early 2023 till 2024 
-keep if eddyr1 == 2023
+keep if eddyr1 == 2023 & eddmo1 <= 11
 gen id_pwl = _n
 replace Mother_Name = lower(Mother_Name)
 set seed 3859
@@ -444,13 +449,12 @@ save `match_woman_pw'
 * 3. Match cases where there is a child u3 with child listing data (870 denominator)
 
 
-* Fuzzy match with the matched child listing only data (that didn't match with preg woman listing) from the admin
+* Fuzzy match with the matched child listing only data from the admin
 
 *restrict the years
 
-use "`not_match'", clear
-keep if _merge == 2
-drop _merge
+use "`cll'", clear
+
 gen id_cl = _n
 generate str2 dobda1= substr(DOB,1,2)
 generate str2 dobmo1 = substr(DOB,4,5)
@@ -460,9 +464,10 @@ destring dob*, replace
 gen date_of_birth = mdy(dobmo1, dobda1, dobyr1)
 
 replace Mother_Name = lower(Mother_Name)
+keep if  (dobmo1 >= 9 & dobyr1 == 2022) | (dobmo1 <= 11 & dobyr1 == 2023) // to keep children u1
 
 set seed 3859
-reclink Mother_Name using `final_women_u3_cen_u5_mor', idm(id_cl) idu(id_woman) gen(myscore)
+reclink Mother_Name using `final_women_u1_cen', idm(id_cl) idu(id_woman) gen(myscore)
 keep Mother_Name UMother_Name age_woman MotherAge myscore unique_id
 keep if myscore  > .99 & myscore != . 
 duplicates tag unique_id Mother_Name, gen(dup)
