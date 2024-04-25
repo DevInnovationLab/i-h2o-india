@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta"
 local corrfile "Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW_corrections.csv"
 local note_fields1 ""
 local text_fields1 "n_out_ind2_cbw n_out_val2_cbw n_out_names_cbw n_med_treat_type_cbw n_med_treat_oth_cbw n_med_trans_cbw n_med_scheme_cbw n_med_illness_other_cbw n_tests_exp_loop_cbw_count"

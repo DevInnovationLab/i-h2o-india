@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.dta"
 local corrfile "Endline Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5_corrections.csv"
 local note_fields1 ""
 local text_fields1 "cen_tests_ind_u5 cen_tests_val_u5 cen_other_exp_u5"

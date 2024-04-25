@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-accompaniment-survey_member_names.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-accompaniment-survey_member_names.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-accompaniment-survey_member_names.dta"
 local corrfile "Endline Census-accompaniment-survey_member_names_corrections.csv"
 local note_fields1 ""
 local text_fields1 "surveynumber"

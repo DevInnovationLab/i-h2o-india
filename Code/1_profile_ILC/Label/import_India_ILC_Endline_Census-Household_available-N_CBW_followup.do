@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-Household_available-N_CBW_followup.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-N_CBW_followup.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-N_CBW_followup.dta"
 local corrfile "Endline Census-Household_available-N_CBW_followup_corrections.csv"
 local note_fields1 ""
 local text_fields1 "n_cbw_ind n_cen_women_status n_name_cbw_woman_earlier n_no_consent_reason n_no_consent_oth n_no_consent_comment n_preg_hus n_preg_current_village_oth n_preg_rch_id n_preg_rch_id_inc"

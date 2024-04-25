@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-N_u5child_start_eligible-N_caregiver_present-N_sought_med_care_U5-N_med_visits_not0_U5-N_prvdrs_exp_loop_U5.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-N_u5child_start_eligible-N_caregiver_present-N_sought_med_care_U5-N_med_visits_not0_U5-N_prvdrs_exp_loop_U5.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-N_u5child_start_eligible-N_caregiver_present-N_sought_med_care_U5-N_med_visits_not0_U5-N_prvdrs_exp_loop_U5.dta"
 local corrfile "Endline Census-N_u5child_start_eligible-N_caregiver_present-N_sought_med_care_U5-N_med_visits_not0_U5-N_prvdrs_exp_loop_U5_corrections.csv"
 local note_fields1 ""
 local text_fields1 "n_out_index2_u5 n_out_val2_u5 n_out_names_u5 n_med_treat_type_u5 n_med_treat_oth_u5 n_med_trans_u5 n_med_scheme_u5 n_med_illness_other_u5 n_tests_exp_loop_u5_count"

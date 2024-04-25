@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta"
 local corrfile "Endline Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat_corrections.csv"
 local note_fields1 ""
 local text_fields1 "n_name_child n_name_child_earlier n_fath_child n_dod_concat_cbw n_dob_concat_cbw n_dod_autoage n_year_cbw n_curr_year_cbw n_curr_mon_cbw n_age_years_cbw n_age_mon_cbw n_age_years_f_cbw"

@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-Household_available-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.dta"
 local corrfile "Endline Census-Household_available-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list_corrections.csv"
 local note_fields1 ""
 local text_fields1 "people_prim_index people_prim_value people_prim_label"

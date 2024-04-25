@@ -22,7 +22,7 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "Endline Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.csv"
-local dtafile "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta"
+local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta"
 local corrfile "Endline Census-Household_available-survey_start-consented-Cen_med_seek_lp_all_corrections.csv"
 local note_fields1 ""
 local text_fields1 "cen_med_seek_ind_all cen_med_seek_val_all cen_med_name_all cen_med_symp_all cen_med_symp_oth_all cen_med_where_all cen_med_where_oth_all cen_med_out_home_all cen_med_out_oth_all"
