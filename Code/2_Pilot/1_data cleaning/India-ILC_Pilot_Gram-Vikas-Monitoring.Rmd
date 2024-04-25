@@ -275,8 +275,12 @@ gv_cl <- gv%>%
 #Filtering for dates after April 8th for readability
 gv_cl <- gv_cl%>%
   filter(visit_date > "2024-04-05")%>%
-  filter(Village != "Karnapadu") #and removing karnapadu
+  filter(Village != "Karnapadu")%>% #and removing karnapadu
+  na.omit()
 
+#ordering by date
+#gv_cl <- gv_cl%>%
+ # arrange(chlorine_test, visit_date)
 
   p1 <- ggplot(data = gv_cl) + 
     geom_point(aes(x = visit_date, y = chlorine_concentration,
