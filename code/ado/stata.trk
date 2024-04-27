@@ -1,4 +1,4 @@
-* 000000103
+* 000000113
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -936,4 +936,20 @@ d Support: email mblasnik@@verizon.net
 d 
 f r/reclink.ado
 f r/reclink.hlp
+e
+S http://www.stata-journal.com/software/sj15-4
+N dm89_2.pkg
+D 26 Apr 2024
+U 11
+d SJ15-4 dm89_2. Update: Drop variables...
+d Update: Drop variables (observations) that are
+d   all missing
+d by Nicholas J. Cox, Department of Geography,
+d      Durham University, Durham City, UK
+d Support:  n.j.cox@@durham.ac.uk
+d {cmd:dropmiss} has been superseded by {cmd:missings}.
+d See {cmd:help missings} and
+d Cox (2015, {it:Stata Journal} 15: 1173-1184).
+f d/dropmiss.ado
+f d/dropmiss.hlp
 e

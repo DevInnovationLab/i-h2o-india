@@ -44,6 +44,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global box 		"/Users/akitokamei/Box Sync/India Water project/"
 		global github	"/Users/akitokamei/GitHub/i-h2o-india/"
 		global Overleaf "/Users/akitokamei/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 		
 	}
 		
