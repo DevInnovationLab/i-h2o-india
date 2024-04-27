@@ -44,7 +44,20 @@ tab R_FU3_r_cen_village_name_str
 set seed 123456789
 *local mylist2 BK_Padar Bhujbal Birnarayanpur Jaltar Mukundpur Naira Nathma Tandipur Sanagortha Kuljing 
 *Karlakana done already
-local mylist2  Barijhola  
+*Barijhola done
+*Dangalodi done
+*Kuljing  done
+*Nathma done
+*Birnarayanpur done
+*Gopi_Kankubadi done 
+*Mukundpur done
+*Tandipur done
+*BK_Padar done
+*Bhujbal done
+*Bichikote done
+*Gudiabandh done
+*Mariguda done
+local mylist2 Naira
 foreach j of local mylist2 {
 
 preserve
@@ -69,6 +82,8 @@ bys strata (unique_id): gen strata_random_hhsurvey= runiform(0,1)
 
 //selecting observations based on sampling criteria
 sort strata_random_hhsurvey
+//Bys R_FE3_enum (state random hhsurvey): gen sele (try it)
+
 bys R_FU3_enum_name: generate selected_hhsurvey = _n == 1
 
 
@@ -76,7 +91,15 @@ bys R_FU3_enum_name: generate selected_hhsurvey = _n == 1
 gen selected= 1 if selected_hhsurvey==1 
 //replacing ishadatta's ID 
 //kuljing ID
+
+replace selected = 1 if unique_id == 30701101005 
+replace selected = 1 if unique_id == 30602105023
+replace selected = 1 if unique_id == 30501111013
+replace selected = 1 if unique_id == 40202111072
  
+
+replace selected = 1 if unique_id == 40301113016
+
 
 tab R_FU3_enum_name selected
 
@@ -88,6 +111,8 @@ keep if selected==1
 set seed 863344
 
 *gsort -R_FU3_enum_name
+
+sort strata_random_hhsurvey
 
 
 gen enum = _n
@@ -112,7 +137,7 @@ label variable R_FU3_consent "HH survey consent"
 replace R_FU3_r_cen_village_name_str = "Gopi_Kankubadi" if R_FU3_r_cen_village_name_str == "Gopi Kankubadi" 
 replace R_FU3_r_cen_village_name_str = "BK_Padar" if R_FU3_r_cen_village_name_str == "BK Padar" 
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
-merge 1:1 unique_id using "${DataPr}selected_Barijhola_7thApr2024_for_R3_FollowupBC.dta"
+merge 1:1 unique_id using "${DataPr}selected_Naira_7thApr2024_for_R3_FollowupBC.dta"
 rename _merge merge_BC_select
 keep if merge_BC_select==3
 

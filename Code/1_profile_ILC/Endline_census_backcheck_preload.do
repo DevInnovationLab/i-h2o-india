@@ -19,35 +19,205 @@
 ***************************************************
 * Step 1: Cleaning  *
 ***************************************************
+
+use "C:\Users\Archi Gupta\Box\Data\1_raw\1_8_Endline\1_8_Endline_Census.dta", clear
+
+//some basic cleaning 
+gen submit_date = dofc(submissiondate)
+format submit_date %td 
+
+//survey start date - 21st apr 2024
+drop if submit_date < mdy(04,21,2024)
+
+drop if key == "uuid:54261fb3-0798-4528-9e85-3af458fdbad9" 
+
+//differentiating baseline census variables with existing variables now 
+
+ds cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 cen_fam_age6 cen_fam_age7 cen_fam_age8 cen_fam_age9 cen_fam_age10 cen_fam_age11 cen_fam_age12 cen_fam_age13 cen_fam_age14 cen_fam_age15 cen_fam_age16 cen_fam_age17 cen_fam_age18 cen_fam_age19 cen_fam_age20 cen_fam_gender1 cen_fam_gender2 cen_fam_gender3 cen_fam_gender4 cen_fam_gender5 cen_fam_gender6 cen_fam_gender7 cen_fam_gender8 cen_fam_gender9 cen_fam_gender10 cen_fam_gender11 cen_fam_gender12 cen_fam_gender13 cen_fam_gender14 cen_fam_gender15 cen_fam_gender16 cen_fam_gender17 cen_fam_gender18 cen_fam_gender19 cen_fam_gender20 cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_list_preload cen_num_hhmembers cen_num_noncri
+foreach i of varlist `r(varlist)'{
+rename `i' r_`i'
+}
+
+// Loop over all variables
+foreach var of varlist _all {
+    // Check if the variable name does not start with 'r_cen_'
+    if strpos("`var'", "r_cen_") == 0 {
+        // Rename the variable by adding prefix 'E_'
+        rename `var' E_`var'
+    }
+}
+
+rename E_unique_id unique_id
+rename (E_submissiondate E_starttime E_endtime E_submit_date) (submissiondate starttime endtime submit_date)
+
+replace r_cen_village_name_str = "Gopi_Kankubadi" if r_cen_village_name_str == "Gopi Kankubadi" 
+replace r_cen_village_name_str = "BK_Padar" if r_cen_village_name_str == "BK Padar" 
+drop if E_cen_resp_name == .
+
+local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma
+
+foreach j of local mylist2 {
+
+preserve
+keep r_cen_village_name_str unique_id  E_enum_name 	
+keep if r_cen_village_name_str== "`j'"	
+
+
+*keep if selected==1 
+
+egen strata= group(E_enum_name) 
+
+//Total number of BC surveys needed per enumerator - 10%
+gen count= 1
+bys E_enum_name: egen total= total(count)
+gen ten_perc_per_enum= 0.1*total
+*replace ten_perc_per_enum= round(ten_perc_per_enum)
+
+//Randomly generating numbers that are assigned to obervations
+bys strata (unique_id): gen strata_random_hhsurvey= runiform(0,1) 
+
+
+//selecting observations based on sampling criteria
+sort strata_random_hhsurvey
+//Bys R_FE3_enum (state random hhsurvey): gen sele (try it)
+
+bys E_enum_name: generate selected_hhsurvey = _n == 1
+
+
+//Final selection variable
+gen selected= 1 if selected_hhsurvey==1 
+//replacing ishadatta's ID 
+//kuljing ID
+
+
+
+tab E_enum_name selected
+
+
+
+*keep if selected==1 
+
+keep if selected==1
+set seed 863344
+
+*gsort -R_FU3_enum_name
+
+sort strata_random_hhsurvey
+
+
+gen enum = _n
+
+// Generate a random number for each observation
+gen random_number = runiform()
+
+// Sort the dataset by the random numbers
+
+
+// Reorder the enum variable based on the sorted random numbers
+egen rank = group(enum)
+save "${DataPr}selected_`j'_27thApr2024_for_endlineBC.dta", replace
+
+restore
+}
+
+
+use "C:\Users\Archi Gupta\Box\Data\1_raw\1_8_Endline\1_8_Endline_Census.dta", clear
+
+//some basic cleaning 
+gen submit_date = dofc(submissiondate)
+format submit_date %td 
+
+//survey start date - 21st apr 2024
+drop if submit_date < mdy(04,21,2024)
+
+drop if key == "uuid:54261fb3-0798-4528-9e85-3af458fdbad9" 
+
+//differentiating baseline census variables with existing variables now 
+
+ds cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 cen_fam_age6 cen_fam_age7 cen_fam_age8 cen_fam_age9 cen_fam_age10 cen_fam_age11 cen_fam_age12 cen_fam_age13 cen_fam_age14 cen_fam_age15 cen_fam_age16 cen_fam_age17 cen_fam_age18 cen_fam_age19 cen_fam_age20 cen_fam_gender1 cen_fam_gender2 cen_fam_gender3 cen_fam_gender4 cen_fam_gender5 cen_fam_gender6 cen_fam_gender7 cen_fam_gender8 cen_fam_gender9 cen_fam_gender10 cen_fam_gender11 cen_fam_gender12 cen_fam_gender13 cen_fam_gender14 cen_fam_gender15 cen_fam_gender16 cen_fam_gender17 cen_fam_gender18 cen_fam_gender19 cen_fam_gender20 cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_list_preload cen_num_hhmembers cen_num_noncri
+foreach i of varlist `r(varlist)'{
+rename `i' r_`i'
+}
+
+// Loop over all variables
+foreach var of varlist _all {
+    // Check if the variable name does not start with 'r_cen_'
+    if strpos("`var'", "r_cen_") == 0 {
+        // Rename the variable by adding prefix 'E_'
+        rename `var' E_`var'
+    }
+}
+
+rename E_unique_id unique_id
+rename (E_submissiondate E_starttime E_endtime E_submit_date) (submissiondate starttime endtime submit_date)
+
+replace r_cen_village_name_str = "Gopi_Kankubadi" if r_cen_village_name_str == "Gopi Kankubadi" 
+replace r_cen_village_name_str = "BK_Padar" if r_cen_village_name_str == "BK Padar" 
+drop if E_cen_resp_name == .
+
+*merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
+preserve
 clear
-cap program drop start_from_clean_file_Population
-program define   start_from_clean_file_Population
-  * Open clean file
-use  "${DataPre}1_1_Census_cleaned.dta", clear
-drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
-gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
-recode Merge_C_F 1=0 3=1
+local mylist2  Gopi_Kankubadi Kuljing Nathma
+use "${DataPr}selected_Birnarayanpur_27thApr2024_for_endlineBC.dta", replace
 
-*drop if  R_Cen_village_name==30501
+foreach j of local mylist2 {
+append using "${DataPr}selected_`j'_27thApr2024_for_endlineBC.dta"
 
-label var C_Screened  "Screened"
-	label variable R_Cen_consent "Census consent"
-	label variable R_FU_consent "HH survey consent"
-	label var Non_R_Cen_consent "Refused"
-	label var C_HH_not_available "Respondent not available"
+}
+save "${DataPr}selected_allvillages_27thApr2024_for_endlineBC.dta", replace
+restore
 
-end
+merge 1:1 unique_id using "${DataPr}selected_allvillages_27thApr2024_for_endlineBC.dta"
+rename _merge merge_BC_select
+keep if merge_BC_select==3
+
+sort r_cen_village_name_str rank
+gen previous_Respondent = ""
+//replacing with main respondnet name 
+forvalues i = 1/17 {
+replace previous_Respondent = r_cen_fam_name`i' if E_cen_resp_name == `i'
+}
 
 
-//Remove HHIDs with differences between census and HH survey
-start_from_clean_file_Population
-//why do we drop this?
-*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+export excel unique_id r_cen_village_name_str E_enum_name E_enum_name_label r_cen_a10_hhhead previous_Respondent r_cen_a39_phone_name_1 r_cen_a39_phone_num_1 r_cen_a39_phone_name_2 r_cen_a39_phone_num_2  r_cen_landmark r_cen_address r_cen_hamlet_name r_cen_saahi_name r_cen_a11_oldmale_name r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5 r_cen_fam_name6 r_cen_fam_name7 r_cen_fam_name8 r_cen_fam_name9 r_cen_fam_name10 r_cen_fam_name11 r_cen_fam_name12 r_cen_fam_name13 r_cen_fam_name14 r_cen_fam_name15 r_cen_fam_name16 r_cen_fam_name17 r_cen_fam_name18 r_cen_fam_name19 r_cen_fam_name20 E_n_fam_name1 E_n_fam_name2 E_n_fam_name3 E_n_fam_name4 E_n_fam_name5 E_n_fam_name6 E_n_fam_name7 E_n_fam_name8 E_n_fam_name9 E_n_fam_name10 E_n_fam_name11 E_n_fam_name12 E_n_fam_name13 E_n_fam_name14 E_n_fam_name15 E_n_fam_name16 E_n_fam_name17 E_n_fam_name18 E_n_fam_name19 E_n_fam_name20 water_source_prim using "${DataPre}Backcheck_Endline_preload_27thApr24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
-tempfile new
-save `new', replace
+
+***********************************************************************
+* Step 4: Generating tracking list for supervisors for BC survey *
+***********************************************************************
+
+tostring unique_id, force replace format(%15.0gc)
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+
+
+//Changing labels 
+	label variable ID "Unique ID"
+	label variable R_FU3_r_cen_village_name_str "Village Name"
+	label variable R_FU3_r_cen_hamlet_name "Hamlet name"
+	label variable R_FU3_r_cen_saahi_name"Saahi name"
+	label variable R_FU3_r_cen_landmark "Landmark"
+	label variable R_FU3_enum_name "Enumerator name"
+	
+
+*sort R_FU3_r_cen_village_name_str R_FU3_enum_name 
+*export excel ID R_FU3_enum_name R_FU3_r_cen_village_name_str R_FU3_r_cen_hamlet_name R_FU3_r_cen_saahi_name R_FU3_r_cen_landmark rank using "${pilot}Supervisor_BC_FU3_Tracker_checking_repl.xlsx" if selected_replacementBC==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+
+
+sort R_FU3_r_cen_village_name_str R_FU3_enum_name rank 
+export excel ID R_FU3_enum_name R_FU3_r_cen_village_name_str R_FU3_r_cen_hamlet_name R_FU3_r_cen_saahi_name R_FU3_r_cen_landmark rank R_FU3_chlorine_yesno R_FU3_chlorine_drank_yesno R_FU3_water_treat_when using "${pilot}Supervisor_BC_FU3_Tracker_checking.xlsx" , sheet("sheet1", replace) firstrow(varlabels) cell(A1) 
+
+
+*for check
+*drop unique_id
+*rename unique_id_num unique_id 
+*merge 1:1 unique_id using "${DataRaw}BC_Followup_Matching.dta", gen(merge_BC_match2)
+
+
+
 
 ************************************************************************
 * Step 2: Classifying households for Mortality survey based on Scenarios *
