@@ -1,4 +1,4 @@
-* 000000083
+* 000000093
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -874,4 +874,52 @@ f _/_gd2.ado
 f _/_grownvals.ado
 f _/_growsvals.ado
 f _/_gtruncdig.ado
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N reghdfe.pkg
+D 10 Apr 2024
+U 9
+d 'REGHDFE': module to perform linear or instrumental-variable regression absorbing any number of high-dimensional fixed effects
+d 
+d  reghdfe fits a linear or instrumental-variable regression
+d absorbing an arbitrary number of categorical factors and
+d factorial interactions Optionally, it saves the estimated fixed
+d effects.
+d 
+d KW: regression
+d KW: instrumental variables
+d KW: fixed effects
+d KW: high dimension fixed effects
+d 
+d Requires: Stata version 11.2
+d 
+d Distribution-Date: 20230821
+d 
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
+d 
+f r/reghdfe.ado
+f r/reghdfe.mata
+f r/reghdfe3.ado
+f r/reghdfe_p.ado
+f r/reghdfe3_p.ado
+f r/reghdfe5.ado
+f r/reghdfe5_p.ado
+f r/reghdfe_estat.ado
+f r/reghdfe3_estat.ado
+f r/reghdfe5_estat.ado
+f r/reghdfe_parse.ado
+f r/reghdfe5_parse.ado
+f r/reghdfe_footnote.ado
+f r/reghdfe3_footnote.ado
+f r/reghdfe5_footnote.ado
+f e/estfe.ado
+f r/reghdfe_header.ado
+f r/reghdfe5_header.ado
+f r/reghdfe5_parse.ado
+f r/reghdfe.sthlp
+f r/reghdfe3.sthlp
+f r/reghdfe5.sthlp
+f r/reghdfe.mata
+f r/reghdfe_programming.sthlp
 e
