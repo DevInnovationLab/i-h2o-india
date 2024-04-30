@@ -18,7 +18,6 @@ cap program drop key_creation
 program define   key_creation
 
 	drop key
-	unique parent_key
 	split parent_key, p("/" "[" "]")
 	rename parent_key1 key
 	
@@ -34,11 +33,64 @@ program define   prefix_rename
 
 end
 
-/*------------------------------------------------------------------------------
-	1_8_Endline_11_13.dta
-------------------------------------------------------------------------------*/
 
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_all-N_tests_exp_loop_alldta.dta", clear
+* Master
+use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
+rename cen_malesabove15_list_preload cen_malesabove15_lp
+keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
+          cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
+		  cen_num_hhmembers cen_num_noncri
+//Renaming vars with prefix R_E
+foreach x of var * {
+	rename `x' R_E_r_`x'  
+	}
+	rename R_E_r_key R_E_key
+	
+save "${DataTemp}1_8_Endline_Census_additional_pre.dta", replace
+
+
+* ID 25
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
+* Key creation
+key_creation
+* ID 26
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
+
+
+
+/*------------------------------------------------------------------------------
+	1_8_Endline_21_24.dta
+------------------------------------------------------------------------------*/
+* ID 22
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+* Key creation
+key_creation
+keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence
+bys key: gen Num=_n
+reshape wide  n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
+prefix_rename
+save "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", replace
+
+* ID 21
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+drop if cen_name_cbw_woman_earlier==""
+* Key creation
+key_creation
+keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier
+destring cen_preg_index, replace
+
+bys key: gen Num=_n
+reshape wide cen_preg_index cen_resp_avail_cbw cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier, i(key) j(Num)
+prefix_rename
+save "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", replace
+
+* Bit strange with _merge==2 for N=1
+use "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", clear
+merge  1:1 R_E_key using "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", nogen
+save "${DataFinal}1_8_Endline_21_24.dta", replace
+
+/*N=0?
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta", clear
 * Key creation
 key_creation
 
@@ -46,6 +98,39 @@ global keepvar n_med_otherpay_all
 keep key $keepvar
 collapse (sum) $keepvar, by(key)
 
+prefix_rename
+save "${DataTemp}1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW_HH.dta", replace
+
+*/
+
+/*------------------------------------------------------------------------------
+	ID: 1_8_Endline_11_13.dta
+------------------------------------------------------------------------------*/
+
+
+* ID 15
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_CBW-N_tests_exp_loop_CBW.dta", clear
+key_creation
+
+global keepvar n_med_otherpay_cbw
+keep key $keepvar
+collapse (sum) $keepvar, by(key)
+prefix_rename
+save "${DataTemp}1_8_Endline_Census-N_prvdrs_notnull_CBW-N_tests_exp_loop_CBW_HH.dta", replace
+
+
+/*------------------------------------------------------------------------------
+	1_8_Endline_11_13.dta
+------------------------------------------------------------------------------*/
+
+* ID 13
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_all-N_tests_exp_loop_alldta.dta", clear
+* Key creation
+key_creation
+
+global keepvar n_med_otherpay_all
+keep key $keepvar
+collapse (sum) $keepvar, by(key)
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-N_prvdrs_notnull_all-N_tests_exp_loop_alldta_HH.dta", replace
 
@@ -219,16 +304,33 @@ merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_24.dta", nogen
 
-END
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
 
 *******Final variable creation for clean data
 
+//Renaming vars with prefix R_E
+foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 cen_fam_age6 cen_fam_age7 cen_fam_age8 cen_fam_age9 cen_fam_age10 ///
+	   cen_fam_age11 cen_fam_age12 cen_fam_age13 cen_fam_age14 cen_fam_age15 cen_fam_age16 cen_fam_age17 cen_fam_age18 cen_fam_age19 cen_fam_age20 ///
+	   cen_fam_gender1 cen_fam_gender2 cen_fam_gender3 cen_fam_gender4 cen_fam_gender5 cen_fam_gender6 cen_fam_gender7 cen_fam_gender8 cen_fam_gender9 cen_fam_gender10 ///
+	   cen_fam_gender11 cen_fam_gender12 cen_fam_gender13 cen_fam_gender14 cen_fam_gender15 cen_fam_gender16 cen_fam_gender17 cen_fam_gender18 cen_fam_gender19 cen_fam_gender20 ///
+		{
+	rename R_E_`x'  `x'
+	rename `x' R_E_r_`x'  
+	}	
+	
+merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep(1 3) nogen
+
 save "${DataPre}1_8_Endline_XXX.dta", replace
 savesome using "${DataPre}1_1_Endline_XXX_consented.dta" if R_E_consent==1, replace
+
+foreach i in 1_8_Endline_4_6.dta 1_8_Endline_7_8.dta 1_8_Endline_9_10.dta 1_8_Endline_11_13.dta {
+		erase "${DataFinal}`i'"
+}
+
 
 /*
 ** Drop ID information
