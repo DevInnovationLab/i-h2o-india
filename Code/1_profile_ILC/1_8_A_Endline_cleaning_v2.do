@@ -59,35 +59,37 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-c
 
 
 /*------------------------------------------------------------------------------
-	1_8_Endline_21_24.dta
+	1_8_Endline_21_22.dta
 ------------------------------------------------------------------------------*/
 * ID 22
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 * Key creation
 key_creation
-keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence
+keep if n_cbw_consent==1
+keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus
 bys key: gen Num=_n
-reshape wide  n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
+reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", replace
 
 * ID 21
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
 drop if cen_name_cbw_woman_earlier==""
+keep if cen_cbw_consent==1
 * Key creation
 key_creation
-keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier
+keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier 
 destring cen_preg_index, replace
 
 bys key: gen Num=_n
-reshape wide cen_preg_index cen_resp_avail_cbw cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier, i(key) j(Num)
+reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier, i(key) j(Num)
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", replace
 
 * Bit strange with _merge==2 for N=1
 use "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", clear
 merge  1:1 R_E_key using "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", nogen
-save "${DataFinal}1_8_Endline_21_24.dta", replace
+save "${DataFinal}1_8_Endline_21_22.dta", replace
 
 /*N=0?
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta", clear
@@ -304,7 +306,7 @@ merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_24.dta", nogen
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
@@ -326,6 +328,7 @@ merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep
 
 save "${DataPre}1_8_Endline_XXX.dta", replace
 savesome using "${DataPre}1_1_Endline_XXX_consented.dta" if R_E_consent==1, replace
+
 
 foreach i in 1_8_Endline_4_6.dta 1_8_Endline_7_8.dta 1_8_Endline_9_10.dta 1_8_Endline_11_13.dta {
 		erase "${DataFinal}`i'"
