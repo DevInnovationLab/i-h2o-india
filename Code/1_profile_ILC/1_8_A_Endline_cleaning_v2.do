@@ -220,7 +220,7 @@ merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen
 
-END
+*END
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
 ------------------------------------------------------------------------------*/
