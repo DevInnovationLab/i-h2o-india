@@ -79,9 +79,10 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	* Box 
 	global pilot     "${box}2_Pilot/Data/"
 				if c(username) == "Archi Gupta" {		
-		global box 		"C:\Users\Archi Gupta\Box\Data\"
+		global box 		"C:\Users\Archi Gupta\Box\Data"
 		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
 		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
+		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw"
 	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
 	}
     

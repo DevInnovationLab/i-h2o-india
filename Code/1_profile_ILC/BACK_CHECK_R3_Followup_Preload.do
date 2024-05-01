@@ -57,11 +57,7 @@ set seed 123456789
 *Bichikote done
 *Gudiabandh done
 *Mariguda done
-*Naira done
-*Karnapadu done
-*Badabangi done
-*Jaltar done
-local mylist2 Sanagortha
+local mylist2 Naira
 foreach j of local mylist2 {
 
 preserve
@@ -101,7 +97,7 @@ replace selected = 1 if unique_id == 30602105023
 replace selected = 1 if unique_id == 30501111013
 replace selected = 1 if unique_id == 40202111072
  
-replace selected = 1 if unique_id == 20201113088
+
 replace selected = 1 if unique_id == 40301113016
 
 
@@ -141,7 +137,7 @@ label variable R_FU3_consent "HH survey consent"
 replace R_FU3_r_cen_village_name_str = "Gopi_Kankubadi" if R_FU3_r_cen_village_name_str == "Gopi Kankubadi" 
 replace R_FU3_r_cen_village_name_str = "BK_Padar" if R_FU3_r_cen_village_name_str == "BK Padar" 
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
-merge 1:1 unique_id using "${DataPr}selected_Sanagortha_7thApr2024_for_R3_FollowupBC.dta"
+merge 1:1 unique_id using "${DataPr}selected_Naira_7thApr2024_for_R3_FollowupBC.dta"
 rename _merge merge_BC_select
 keep if merge_BC_select==3
 
