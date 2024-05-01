@@ -1903,8 +1903,12 @@ r2_cl <- r2%>%
   dplyr::select(village_name, assignment, fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg)%>%
   mutate(round = "r2")
 
+r3_cl <- r3%>%
+  dplyr::select(village_name, assignment, fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg)%>%
+  mutate(round = "r3")
 
-hh_survey_cl <- bind_rows(bl_cl, r1_cl, r2_cl)
+
+hh_survey_cl <- bind_rows(bl_cl, r1_cl, r2_cl, r3_cl)
 
 
 
