@@ -1,6 +1,6 @@
 ---
 title: "Endline Census - High Frequency Check"
-author: "Jeremy Lowe"
+author: "Jeremy Lowe, Archi Gupta"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
