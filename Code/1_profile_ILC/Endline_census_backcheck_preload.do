@@ -51,7 +51,7 @@ replace R_E_r_cen_village_name_str = "Gopi_Kankubadi" if R_E_r_cen_village_name_
 replace R_E_r_cen_village_name_str = "BK_Padar" if R_E_r_cen_village_name_str == "BK Padar" 
 drop if R_E_cen_resp_name == .
 
-local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma
+local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi
 
 foreach j of local mylist2 {
 
@@ -149,7 +149,7 @@ drop if R_E_cen_resp_name == .
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
 preserve
 clear
-local mylist2  Gopi_Kankubadi Kuljing Nathma
+local mylist2  Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi 
 use "${DataPr}selected_Birnarayanpur_27thApr2024_for_endlineBC.dta", replace
 
 foreach j of local mylist2 {

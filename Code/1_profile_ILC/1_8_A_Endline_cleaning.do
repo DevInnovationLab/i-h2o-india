@@ -52,7 +52,7 @@ format   unique_id_num %15.0gc
 	
 	generate C_starthour = hh(R_E_starttime) 
 	gen C_startmin= mm(R_E_starttime)
-	gen diff_minutes = clockdiff(R_E_starttime, R_E_endtime, "minute")
+	cap gen diff_minutes = clockdiff(R_E_starttime, R_E_endtime, "minute")
     
     drop if End_date < mdy(4,21,2024)
 	format End_date  %d
