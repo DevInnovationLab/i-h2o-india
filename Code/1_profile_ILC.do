@@ -90,6 +90,12 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global DataRaw  "C:\Users\Archi Gupta\Box\Data\1_raw\"
 	}
 
+
+	
+	global Endline   "${DataRaw}1_8_Endline/"
+				if c(username) == "Archi Gupta" {		
+		global Endline   "C:\Users\Archi Gupta\Box\Data\1_raw\1_8_Endline\"
+	}
 	
 	global DataDeid  "${pilot}2_deidentified/"
 					if c(username) == "Archi Gupta" {		
