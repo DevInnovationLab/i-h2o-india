@@ -870,14 +870,14 @@ idexx_r3 <- idexx_r3%>%
   #filter(duplicate < 1)
 
 #Checking IDs which do not match between survey data and lab data
-idexx_ids <- idexx_r3$sample_ID
-r3_sample_ids <- r3_for_idexx$sample_ID
-idexx_id_check <- idexx_r3%>%
-  filter(!(sample_ID %in% r3_sample_ids))%>%
-  filter(sample_ID != 0)%>%
-  filter(date_processed < "4/23/2024")
-x <- r3%>%
-  filter(village_ID == idexx_id_check$village)
+# idexx_ids <- idexx_r3$sample_ID
+# r3_sample_ids <- r3_for_idexx$sample_ID
+# idexx_id_check <- idexx_r3%>%
+#   filter(!(sample_ID %in% r3_sample_ids))%>%
+#   filter(sample_ID != 0)%>%
+#   filter(date_processed < "4/23/2024")
+# x <- r3%>%
+#   filter(village_ID == idexx_id_check$village)
 
 #combining idexx results to survey results
 r3_for_idexx$sample_ID <- as.numeric(r3_for_idexx$sample_ID)
@@ -953,7 +953,7 @@ idexx_r3 <- idexx_r3%>%
                             cf_log >= 0 ~ cf_log))
 #Make - inf values be 0
 
-#write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/r3_idexx_master_cleaned.csv")
+#write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv")
 
 
 
