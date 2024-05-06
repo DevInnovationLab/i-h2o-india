@@ -75,16 +75,19 @@ save "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", 
 * ID 21
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
 drop if cen_name_cbw_woman_earlier==""
-keep if cen_cbw_consent==1
 * Key creation
 key_creation
+save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long1.dta", replace
+
+keep if cen_cbw_consent==1
+save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long2.dta", replace
 keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier 
 destring cen_preg_index, replace
 
 bys key: gen Num=_n
-reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier, i(key) j(Num)
+reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier cen_resp_avail_cbw, i(key) j(Num)
 prefix_rename
-save "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", replace
+
 
 * Bit strange with _merge==2 for N=1
 use "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", clear
@@ -313,6 +316,59 @@ merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen
 ------------------------------------------------------------------------------*/
 
 *******Final variable creation for clean data
+
+* Sarita Bhatra (unique ID: 20201108018) - This is the training
+drop if unique_id=="20201108018"
+
+drop if unique_id=="20201108018"
+
+*renaming some duration vars becuase their names were slightly off and was not in accordance with the section in surveycto
+rename R_E_intro_dur_end       R_E_final_consent_duration
+rename R_E_consent_duration    R_E_final_intro_dur_end
+rename R_E_roster_duration     R_E_census_roster_duration
+rename R_E_roster_end_duration R_E_new_roster_duration
+
+drop R_E_wash_duration
+
+rename R_E_healthcare_duration  R_E_wash_duration
+rename R_E_resp_health_duration R_E_noncri_health_duration
+rename R_E_resp_health_new_duration R_E_CenCBW_health_duration
+rename R_E_child_census_duration R_E_NewCBW_health_duration
+rename R_E_child_new_duration R_E_CenU5_health_duration
+rename R_E_sectiong_dur_end R_E_NewU5_health_duration
+
+foreach  var in  R_E_final_intro_dur_end R_E_final_consent_duration R_E_census_roster_duration R_E_new_roster_duration R_E_wash_duration R_E_noncri_health_duration R_E_CenCBW_health_duration R_E_NewCBW_health_duration R_E_CenU5_health_duration R_E_NewU5_health_duration R_E_survey_end_duration {
+destring `var', replace
+gen `var'_s = `var'/60
+sum `var'_s
+}
+
+* Commenting off for Archi
+* cap gen diff_minutes_orig = clockdiff(R_E_starttime, R_E_endtime, "minute")
+* gen diff_hours=diff_minutes/60
+* sum diff_hours,de
+
+gen R_E_Dur_final_consent_duration=R_E_final_consent_duration/60
+gen R_E_Dur_census_roster_duration=(R_E_census_roster_duration-R_E_final_consent_duration)/60
+gen R_E_Dur_new_roster_duration=(R_E_new_roster_duration-R_E_census_roster_duration)/60
+gen R_E_Dur_wash_duration=(R_E_wash_duration-R_E_new_roster_duration)/60
+gen R_E_Dur_noncri_health_duration=(R_E_noncri_health_duration-R_E_wash_duration)/60
+gen R_E_Dur_CenCBW_health_duration=(R_E_CenCBW_health_duration-R_E_noncri_health_duration)/60
+gen R_E_Dur_NewCBW_health_duration=(R_E_NewCBW_health_duration-R_E_CenCBW_health_duration)/60
+gen R_E_Dur_CenU5_health_duration=(R_E_CenU5_health_duration-R_E_NewCBW_health_duration)/60
+gen R_E_Dur_NewU5_health_duration=(R_E_NewU5_health_duration-R_E_CenU5_health_duration)/60
+gen R_E_Dur_survey_end_duration=(R_E_survey_end_duration-R_E_NewU5_health_duration)/60
+* R_E_Dur_survey_end_duration: It is okay that this is extremely short: (R_E_NewU5_health_duration: Line 1176 and R_E_survey_end_duration: Line 1178 in SurveyCTO)
+ 
+ * Replacing the value of negative value since they are most likely gone back
+ foreach i in R_E_Dur_noncri_health_duration R_E_Dur_NewCBW_health_duration R_E_Dur_CenU5_health_duration R_E_Dur_NewU5_health_duration R_E_Dur_survey_end_duration {
+ replace `i'=. if `i'<0	
+ }
+ 
+ gen Total_time= R_E_Dur_final_consent_duration+R_E_Dur_census_roster_duration+R_E_Dur_new_roster_duration+ ///
+                R_E_Dur_wash_duration+R_E_Dur_noncri_health_duration+R_E_Dur_CenCBW_health_duration+ ///
+				R_E_Dur_NewCBW_health_duration+R_E_Dur_CenU5_health_duration+R_E_Dur_NewU5_health_duration+ ///
+				R_E_Dur_survey_end_duration
 
 //Renaming vars with prefix R_E
 foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 cen_fam_age6 cen_fam_age7 cen_fam_age8 cen_fam_age9 cen_fam_age10 ///

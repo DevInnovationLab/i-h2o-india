@@ -1,50 +1,6 @@
 
 
 use "${DataPre}1_1_Endline_XXX_consented.dta", clear
-
-*renaming some duration vars becuase their names were slightly off and was not in accordance with the section in surveycto
-
-rename R_E_intro_dur_end       R_E_final_consent_duration
-rename R_E_consent_duration    R_E_final_intro_dur_end
-rename R_E_roster_duration     R_E_census_roster_duration
-rename R_E_roster_end_duration R_E_new_roster_duration
-
-drop R_E_wash_duration
-
-rename R_E_healthcare_duration  R_E_wash_duration
-rename R_E_resp_health_duration R_E_noncri_health_duration
-rename R_E_resp_health_new_duration R_E_CenCBW_health_duration
-rename R_E_child_census_duration R_E_NewCBW_health_duration
-rename R_E_child_new_duration R_E_CenU5_health_duration
-rename R_E_sectiong_dur_end R_E_NewU5_health_duration
-
-foreach  var in  R_E_final_intro_dur_end R_E_final_consent_duration R_E_census_roster_duration R_E_new_roster_duration R_E_wash_duration R_E_noncri_health_duration R_E_CenCBW_health_duration R_E_NewCBW_health_duration R_E_CenU5_health_duration R_E_NewU5_health_duration R_E_survey_end_duration {
-destring `var', replace
-gen `var'_s = `var'/60
-sum `var'_s
-}
-
-* Commenting off for Archi
-* cap gen diff_minutes_orig = clockdiff(R_E_starttime, R_E_endtime, "minute")
-* gen diff_hours=diff_minutes/60
-* sum diff_hours,de
-
-gen R_E_Dur_final_consent_duration=R_E_final_consent_duration/60
-gen R_E_Dur_census_roster_duration=(R_E_census_roster_duration-R_E_final_consent_duration)/60
-gen R_E_Dur_new_roster_duration=(R_E_new_roster_duration-R_E_census_roster_duration)/60
-gen R_E_Dur_wash_duration=(R_E_wash_duration-R_E_new_roster_duration)/60
-gen R_E_Dur_noncri_health_duration=(R_E_noncri_health_duration-R_E_wash_duration)/60
-gen R_E_Dur_CenCBW_health_duration=(R_E_CenCBW_health_duration-R_E_noncri_health_duration)/60
-gen R_E_Dur_NewCBW_health_duration=(R_E_NewCBW_health_duration-R_E_CenCBW_health_duration)/60
-gen R_E_Dur_CenU5_health_duration=(R_E_CenU5_health_duration-R_E_NewCBW_health_duration)/60
-gen R_E_Dur_NewU5_health_duration=(R_E_NewU5_health_duration-R_E_CenU5_health_duration)/60
-gen R_E_Dur_survey_end_duration=(R_E_survey_end_duration-R_E_NewU5_health_duration)/60
-* R_E_Dur_survey_end_duration: It is okay that this is extremely short: (R_E_NewU5_health_duration: Line 1176 and R_E_survey_end_duration: Line 1178 in SurveyCTO)
- 
- * Replacing the value of negative value since they are most likely gone back
- foreach i in R_E_Dur_noncri_health_duration R_E_Dur_NewCBW_health_duration R_E_Dur_CenU5_health_duration R_E_Dur_NewU5_health_duration R_E_Dur_survey_end_duration {
- replace `i'=. if `i'<0	
- }
  
 *no of households = 179
 destring R_E_cen_num_hhmembers, replace
@@ -124,9 +80,6 @@ gen num_new_CBW = r(mean)
 *avg census child bearing women (Census + new)
 gen AVG_CBW_all = num_cen_CBW + num_new_CBW
 
-
-
-
 //U5 CHILD 
 
 *num of U5 CHILD
@@ -159,50 +112,79 @@ tab `var'
 gen treat = 1 
 replace treat = 0 if inlist(R_E_r_cen_village_name_str, "Barijhola" ,  "Dangalodi" , "Kuljing")
 
+label var R_E_n_new_members "Any new member in the household"
+label var R_E_water_treat "Any water treatment in the last one month"
+label var R_E_water_sec_yn "Secondary water source"
+label var R_E_jjm_drinking "Use JJM for drinking"
+label var R_E_cen_resp_avail_cbw "Find CBWwoman"
+label var R_E_consent "Consent"
 
 save "${DataTemp}Temp.dta", replace
-
-tab N_HHmember_count
 
 ******************************************
         * Survey duration table * 
 ******************************************
-global DurVar R_E_Dur_final_consent_duration R_E_Dur_census_roster_duration R_E_Dur_new_roster_duration R_E_Dur_wash_duration R_E_Dur_noncri_health_duration R_E_Dur_CenCBW_health_duration R_E_Dur_NewCBW_health_duration R_E_Dur_CenU5_health_duration R_E_Dur_NewU5_health_duration R_E_Dur_survey_end_duration
-					 
+use "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long2.dta", clear
+rename key R_E_key
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(R_E_enum_name) keep(1 3)
+keep cen_preg_status cen_last_5_years_pregnant cen_med_seek_care_cbw cen_cbw_consent cen_preg_status cen_last_5_years_pregnant cen_med_seek_care_cbw R_E_enum_name
+/*
+foreach i in cen_preg_status cen_last_5_years_pregnant cen_med_seek_care_cbw cen_cbw_consent cen_preg_status cen_last_5_years_pregnant cen_med_seek_care_cbw {
+	sum `i'
+	cibar `i', over(R_E_enum_name) graphopt(yline(`r(mean)'))
+	graph export "${Figure}`i'_enum.eps", replace  
+}
+*/
+
+label var cen_cbw_consent "Consent"
+label var cen_med_seek_care_cbw "CBW seek medical care (1 months)"
+label var cen_last_5_years_pregnant "CBW pregnant in the last 5 years"
+label var cen_preg_status "Is CBW earlier still pregnant?"
+
+save "${DataTemp}Temp.dta", replace
+
+
+use "${DataTemp}Temp.dta", clear
+
+global CencbsVar cen_cbw_consent cen_preg_status cen_last_5_years_pregnant cen_med_seek_care_cbw
+local  CencbsVar "Statistics at CBW level"
+
+foreach k in CencbsVar {
+
 * Mean
-	eststo  model0: estpost summarize $DurVar
+	eststo  model0: estpost summarize $`k'
 * Median
-	foreach i in $DurVar {
-	egen i_`i'=median(`i')
-	replace `i'=i_`i'
+	foreach i in $`k' {
+	egen m_`i'=median(`i')
+	replace `i'=m_`i'
 	}
-	eststo  model1: estpost summarize $DurVar
+	eststo  model1: estpost summarize $`k'
 
 * Min
 	use "${DataTemp}Temp.dta", clear
-	foreach i in $DurVar {
+	foreach i in $`k' {
 	egen i_`i'=min(`i')
 	replace `i'=i_`i'
 	}
 
-	eststo  model6: estpost summarize $DurVar
+	eststo  model6: estpost summarize $`k'
 * Max
 	use "${DataTemp}Temp.dta", clear
-	foreach i in $DurVar {
+	foreach i in $`k' {
 	egen a_`i'=max(`i')
 	replace `i'=a_`i'
 	}
-	eststo  model7: estpost summarize $DurVar
+	eststo  model7: estpost summarize $`k'
 * Missing 
 	use "${DataTemp}Temp.dta", clear
-	foreach i in $DurVar {
+	foreach i in $`k' {
 	egen `i'_s=rowmiss(`i')
 	egen s_`i'=sum(`i'_s)
 	replace `i'=s_`i'
 	}
-	eststo  model8: estpost summarize $DurVar
+	eststo  model8: estpost summarize $`k'
 
-esttab model0 model1 model6 model7 model8 using "${Table}Enr_Duration.tex", title("Survey duration of each sections" \label{DurTable}) ///
+esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("`k'" \label{DurTable}) ///
 	   cell("mean (fmt(2) label(_))") stats(N, fmt("%9.0fc") label(Observations) ) /// 
 	   mtitles("Mean" "Median" "Min" "Max" "Number missing") nonum ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{0.87\linewidth}}{\footnotesize" ///
@@ -211,8 +193,96 @@ esttab model0 model1 model6 model7 model8 using "${Table}Enr_Duration.tex", titl
 				   ) ///
 	   label  note("`note`k''")  ///
 	   replace 
+	   }
 
 
 
+use "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long1.dta", clear
+rename key R_E_key
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(R_E_enum_name)
+ 
+ * Create Dummy
+	foreach v in cen_resp_avail_cbw {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+foreach i in cen_resp_avail_cbw_1 {
+	sum `i'
+	cibar `i', over(R_E_enum_name) graphopt(yline(`r(mean)'))
+	graph export "${Figure}`i'_enum.eps", replace  
+} 
 
+
+use "${DataTemp}Temp.dta", clear
+foreach i in Total_time R_E_n_new_members R_E_water_sec_yn R_E_jjm_drinking {
+	* graph bar `i', over(R_E_enum_name, label(angle(90)))
+	sum `i'
+	cibar `i', over(R_E_enum_name) graphopt(yline(`r(mean)'))
+	graph export "${Figure}`i'_enum.eps", replace  
+} 
+
+ reg Total_time i.R_E_enum_code i.R_E_n_new_members i.R_E_water_sec_yn i.R_E_jjm_drinking
+ * 134: Tend to be long
+
+use "${DataTemp}Temp.dta", clear
+
+* N_HHmember_age: Add this, Cen_CBW_consent
+global SkipVar R_E_consent R_E_n_new_members R_E_water_sec_yn R_E_water_treat R_E_jjm_drinking
+
+global DurVar R_E_Dur_final_consent_duration R_E_Dur_census_roster_duration R_E_Dur_new_roster_duration R_E_Dur_wash_duration R_E_Dur_noncri_health_duration R_E_Dur_CenCBW_health_duration R_E_Dur_NewCBW_health_duration R_E_Dur_CenU5_health_duration R_E_Dur_NewU5_health_duration R_E_Dur_survey_end_duration Total_time
+
+local SkipVar "Varaibles with skippint pattern"
+local DurVar "Survey duration"
+					 
+foreach k in DurVar SkipVar {
+* Mean
+	eststo  model0: estpost summarize $`k'
+* Median
+	foreach i in $`k' {
+	egen m_`i'=median(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model1: estpost summarize $`k'
+
+* Min
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen i_`i'=min(`i')
+	replace `i'=i_`i'
+	}
+
+	eststo  model6: estpost summarize $`k'
+* Max
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen a_`i'=max(`i')
+	replace `i'=a_`i'
+	}
+	eststo  model7: estpost summarize $`k'
+* Missing 
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen `i'_s=rowmiss(`i')
+	egen s_`i'=sum(`i'_s)
+	replace `i'=s_`i'
+	}
+	eststo  model8: estpost summarize $`k'
+
+esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("`k'" \label{DurTable}) ///
+	   cell("mean (fmt(2) label(_))") stats(N, fmt("%9.0fc") label(Observations) ) /// 
+	   mtitles("Mean" "Median" "Min" "Max" "Number missing") nonum ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{0.87\linewidth}}{\footnotesize" ///
+				   "&           _&           _&           _&           _&           _\\" "" ///
+				   "-0 " "0" ///
+				   ) ///
+	   label  note("`note`k''")  ///
+	   replace 
+	   }
+	   
 erase "${DataTemp}Temp.dta"
