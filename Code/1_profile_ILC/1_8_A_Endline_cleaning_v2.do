@@ -304,7 +304,7 @@ erase "${DataTemp}1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_a
 /*------------------------------------------------------------------------------
 	1 Merging with cleaned 1_8_Endline_Census
 ------------------------------------------------------------------------------*/
-use "${DataPre}1_8_Endline/1_8_Endline_Census_cleaned.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", clear
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen 
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
 merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
