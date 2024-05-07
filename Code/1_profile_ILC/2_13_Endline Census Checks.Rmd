@@ -146,9 +146,8 @@ df.preload <- read_stata(paste0(user_path(),"99_Preload/1_8_Endline_XXX.dta"))
 #Loading/saving most recent cleaned data
 #Lazy coding, didn't want to change Astha's Stata code and break it yet
 
-df.temp <- read_stata(paste0(user_path(),"99_Preload/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
-write_dta(df.temp, paste0(user_path(),"2_deidentified/1_8_Endline/1_8_Endline_Census_cleaned.dta"))
-df.temp <- read_stata(paste0(user_path(),"2_deidentified/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
+df.temp <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
+
 
 
 
@@ -188,7 +187,9 @@ df.var <- as.data.frame(names(df.temp)) #List of variables in the data
 #create a date variable
 df.temp$datetime <- strptime(df.temp$R_E_starttime, format = "%Y-%m-%d %H:%M:%S")
 
-df.temp$date <- as.IDate(df.temp$datetime) 
+df.temp$date <- as_date(df.temp$datetime) 
+
+df.temp$End_date <- as_date(df.temp$End_date)
 
 #filter out the testing dates
 df.temp <- df.temp
@@ -205,10 +206,17 @@ df.temp <- df.temp
 df.temp.consent <- df.temp[which(df.temp$R_E_consent==1) ,]
 
 
-#------------------------ Assign the correct treatment to villages ----------------------------------------#
+#------------ Assign the correct treatment to villages---------------------------#
 
 df.temp.consent <- df.temp.consent %>% mutate(Treatment = ifelse(R_E_r_cen_village_name_str %in%
                                                                    c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "T", "C"))
+
+
+
+
+
+
+
 ```
 
 

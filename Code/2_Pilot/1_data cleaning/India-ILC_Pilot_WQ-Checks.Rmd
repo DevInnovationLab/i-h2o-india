@@ -284,8 +284,14 @@ abr <- abr%>%
 
 #log transforming data
 idexx <- idexx%>%
-  mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                            ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                            cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
+
+#write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
 
 abr <- abr%>%
   mutate(ec_log = log(ec_mpn, base = 10))%>%
@@ -477,15 +483,15 @@ idexx_r1 <- idexx_r1%>%
 
 #log transforming data
 idexx_r1 <- idexx_r1%>%
-  mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))%>%
-  mutate(ec_log = case_when(ec_log < 0 ~ 0.5,
-                            ec_log >= 0 ~ ec_log))%>%
-  mutate(cf_log = case_when(cf_log < 0 ~ 0.5,
-                            cf_log >= 0 ~ cf_log))
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                            ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                            cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
 
-
+#write_csv(idexx_r1,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv")
 
 
 ```
@@ -705,12 +711,12 @@ idexx_r2 <- idexx_r2%>%
 
 #log transforming data
 idexx_r2 <- idexx_r2%>%
-  mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))%>%
-  mutate(ec_log = case_when(ec_log < 0 ~ 0.5,
-                            ec_log >= 0 ~ ec_log))%>%
-  mutate(cf_log = case_when(cf_log < 0 ~ 0.5,
-                            cf_log >= 0 ~ cf_log))
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                            ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                            cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
 
 #write_csv(idexx_r2,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv")
@@ -948,13 +954,14 @@ idexx_r3 <- idexx_r3%>%
 
 
 #log transforming data
+#Making nondetects == 0.5 MPN/100 mL so the data can be log-transformed#
 idexx_r3 <- idexx_r3%>%
-  mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))%>%
-  mutate(ec_log = case_when(ec_log < 0 ~ 0.5,
-                            ec_log >= 0 ~ ec_log))%>%
-  mutate(cf_log = case_when(cf_log < 0 ~ 0.5,
-                            cf_log >= 0 ~ cf_log))
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                            ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                            cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
 
 #write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv")
@@ -1056,6 +1063,9 @@ idexx$assignment <- factor(idexx$assignment)
 idexx$assignment <- fct_recode(idexx$assignment,
                                   "Control" = "C", 
                                   "Treatment" = "T")
+
+idexx <- idexx%>%
+  filter(is.na(assignment) == FALSE) #Removing results from Hathikamba
 
 # Calculate descriptive statistics by village
 village_stats <- idexx%>%
@@ -1878,13 +1888,14 @@ idexx_total <- rbind(idexx_total_bl, idexx_total_r1, idexx_total_r2, idexx_total
 
 #Displaying boxplot results
 p_total_boxplot <- ggplot(data = idexx_total) + 
-  geom_boxplot(aes(x = data_round, y = ec_log, fill = sample_type)) +
+  geom_boxplot(aes(x = data_round, y = ec_log, fill = assignment)) +
+  facet_wrap(~sample_type)+
   scale_y_continuous(
                      limits = c(0, 4),
                      expand = c(0,0))+
   labs(x = "Data Collection Round", 
        y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
-       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = )")))+
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160 per round)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
