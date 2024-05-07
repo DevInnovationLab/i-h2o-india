@@ -48,9 +48,9 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		
 	}
 		
-	else if c(username) == "jeremylowe" {		
-		global box 		"/Users/jerem/Box/India Water project/"
-		global github	"/Users/jerem/Documents/i-h2o-india/"
+	else if c(username) == "j_lowe" {		
+		global box 		"//Client/C$/Users/jerem/Box/India Water project/"
+		global github	"//Client/C$/Users/jerem/Documents/i-h2o-india/"
 		*global Overleaf "/Users/jerem/Apps/Overleaf"
 		global DataRaw  "${box}01. 2_Pilot/Data/1_raw/"
 	}
