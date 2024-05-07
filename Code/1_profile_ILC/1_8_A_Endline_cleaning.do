@@ -227,8 +227,8 @@ tempfile main
 save `main', replace
 
 
-save "${DataPre}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
-savesome using "${DataPre}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta" if R_E_consent==1, replace
+save "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
+savesome using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta" if R_E_consent==1, replace
 
 /*
 ** Drop ID information
