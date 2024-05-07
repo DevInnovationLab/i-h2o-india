@@ -17,9 +17,9 @@ set seed 758235657 // Just in case
 cap program drop key_creation
 program define   key_creation
 
-	drop key
-	split parent_key, p("/" "[" "]")
-	rename parent_key1 key
+	split  key, p("/" "[" "]")
+	rename key key_original
+	rename key1 key
 	
 end
 
@@ -55,8 +55,6 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-c
 key_creation
 * ID 26
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
-
-
 
 /*------------------------------------------------------------------------------
 	1_8_Endline_21_22.dta
@@ -264,8 +262,10 @@ save "${DataTemp}1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_al
 
 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta", clear
+drop if cen_med_seek_val_all==""
 key_creation
 global keepvar cen_med_work_who_all_* cen_med_where_all_* cen_med_symp_all_* cen_med_out_home_all_*
+
 * HH level (37 HH)
 collapse (sum) $keepvar, by(key)
 
