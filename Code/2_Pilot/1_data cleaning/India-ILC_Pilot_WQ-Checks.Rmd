@@ -774,12 +774,6 @@ r3 <- r3%>%
   #rename(tc_tap = R_FU_tc_tap)%>%
   #rename(sample_ID_stored = R_FU_sample_ID_stored)
 
-#Correcting sample IDs in r3 dataset? Need to check
-#for(i in (1:length(r3$unique_id))){
- # if(r3$unique_id[i] == 50301106013){
-  #  r3$sample_ID_stored[i] = 20290
-#  }
-#}
 
 #Renamed control vs treatment assignment
 r3$assignment <- factor(r3$assignment)%>%
@@ -876,22 +870,25 @@ idexx_r3 <- idexx_r3%>%
   #filter(duplicate < 1)
 
 #Checking IDs which do not match between survey data and lab data
- idexx_ids <- idexx_r3$sample_ID
- r3_sample_ids <- r3_for_idexx$sample_ID
- idexx_id_check <- idexx_r3%>%
-   filter(!(sample_ID %in% r3_sample_ids))%>%
-   filter(sample_ID != 0)
+ #idexx_ids <- idexx_r3$sample_ID
+ #r3_sample_ids <- r3_for_idexx$sample_ID
+ #idexx_id_check <- idexx_r3%>%
+  # filter(!(sample_ID %in% r3_sample_ids))%>%
+   #filter(sample_ID != 0)
  #x <- r3%>%
   # filter(village_ID == idexx_id_check$village)
 #Checking which villages have missing IDEXX data
- xx <- unique(idexx_r3$village_name)
- village_check <- r3_for_idexx%>%
-    filter(!(village_name %in% xx))%>%
-    filter(sample_ID != 0)
+ #xx <- unique(idexx_r3$village_name.x)
+ #village_check <- r3_for_idexx%>%
+    #filter(!(village_name %in% xx))%>%
+    #filter(sample_ID != 0)
+ 
+#Updating sample ID for 10141
+
 
 #combining idexx results to survey results
 r3_for_idexx$sample_ID <- as.numeric(r3_for_idexx$sample_ID)
-idexx_r3 <- inner_join(idexx_r3, r3_for_idexx, by = "sample_ID")
+idexx_r3 <- left_join(idexx_r3, r3_for_idexx, by = "sample_ID")
 
 #abr$sample_ID <- as.character(abr$sample_ID)
 #abr <- inner_join(abr, bl_idexx, by = "sample_ID")
@@ -1777,8 +1774,10 @@ idexx_r3 <- idexx_r3%>%
   filter(sample_type != "Blank")
 table1(~ ec_pa + cf_pa + fc_tap_avg | sample_type*assignment, data = idexx_r3)
 
-
-
+#Noting samples per village
+idexx_r3 <- idexx_r3%>%
+  filter(sample_type != "Blank")
+table1(~ village | sample_type, data = idexx_r3)
 
 
 
