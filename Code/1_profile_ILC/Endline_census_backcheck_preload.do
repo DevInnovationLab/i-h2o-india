@@ -20,6 +20,7 @@
 * Step 1: Cleaning  *
 ************************************************
 
+do "${github}0_Preparation_V2.do"
 do "${github}1_8_A_Endline_cleaning.do"
 do "${github}1_8_A_Endline_cleaning_v2.do"
 
@@ -51,7 +52,23 @@ replace R_E_r_cen_village_name_str = "Gopi_Kankubadi" if R_E_r_cen_village_name_
 replace R_E_r_cen_village_name_str = "BK_Padar" if R_E_r_cen_village_name_str == "BK Padar" 
 drop if R_E_cen_resp_name == .
 
-local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi
+
+preserve
+
+import delimited "${DataRaw}Endline Census BackCheck_WIDE.csv", clear
+format unique_id %15.0gc
+keep unique_id
+rename unique_id unique_id_num
+save "${DataRaw}Endline_BC_data_for_merge.dta", replace
+restore
+
+cap drop _merge 
+merge 1:1 unique_id_num using "${DataRaw}Endline_BC_data_for_merge.dta"
+drop if _merge == 3
+drop _merge 
+
+local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda 
+
 
 foreach j of local mylist2 {
 
@@ -90,11 +107,12 @@ gen selected= 1 if selected_hhsurvey==1
 
 tab R_E_enum_name selected
 
-
+replace selected = 1 if R_E_enum_name == 111 |  R_E_enum_name == 135 | R_E_enum_name == 122 | R_E_enum_name == 108 | R_E_enum_name == 117
 
 *keep if selected==1 
 
-keep if selected==1
+*keep if selected==1 & ( R_E_enum_name_label == "Jitendra Bagh" | R_E_enum_name_label == "Basanta kousalya" | R_E_enum_name_label == "Sumitra lakra" )
+keep if selected==1 
 
 gen rand_num = .
 replace rand_num = runiform() if selected_hhsurvey
@@ -146,10 +164,24 @@ replace R_E_r_cen_village_name_str = "Gopi_Kankubadi" if R_E_r_cen_village_name_
 replace R_E_r_cen_village_name_str = "BK_Padar" if R_E_r_cen_village_name_str == "BK Padar" 
 drop if R_E_cen_resp_name == .
 
+preserve
+
+import delimited "${DataRaw}Endline Census BackCheck_WIDE.csv", clear
+format unique_id %15.0gc
+keep unique_id
+rename unique_id unique_id_num
+save "${DataRaw}Endline_BC_data_for_merge.dta", replace
+restore
+
+cap drop _merge 
+merge 1:1 unique_id_num using "${DataRaw}Endline_BC_data_for_merge.dta"
+drop if _merge == 3
+drop _merge 
+
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
 preserve
 clear
-local mylist2  Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi 
+local mylist2  Gopi_Kankubadi Kuljing Nathma Bichikote Dangalodi  Gudiabandh Barijhola  Karlakana  Karnapadu Mariguda
 use "${DataPr}selected_Birnarayanpur_27thApr2024_for_endlineBC.dta", replace
 
 foreach j of local mylist2 {
@@ -159,7 +191,7 @@ append using "${DataPr}selected_`j'_27thApr2024_for_endlineBC.dta"
 save "${DataPr}selected_allvillages_27thApr2024_for_endlineBC.dta", replace
 restore
 
-drop _merge
+cap drop _merge
 merge 1:1 unique_id using "${DataPr}selected_allvillages_27thApr2024_for_endlineBC.dta"
 rename _merge merge_BC_select
 keep if merge_BC_select==3
