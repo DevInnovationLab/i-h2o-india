@@ -391,6 +391,82 @@ foreach i in 1_8_Endline_4_6.dta 1_8_Endline_7_8.dta 1_8_Endline_9_10.dta 1_8_En
 }
 
 
+/* ---------------------------------------------------------------------------
+* Adding pre-loading info requested
+* 2024/05/07
+ ---------------------------------------------------------------------------*/
+
+
+
+/* ---------------------------------------------------------------------------
+* ID 26
+ ---------------------------------------------------------------------------*/
+* New household members
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
+key_creation 
+keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name key key3 n_hhmember_name namenumber
+
+br if key=="uuid:0b09e54d-a47a-414a-8c3c-ba16ed4d9db9"
+save "${DataTemp}temp0.dta", replace
+
+
+/* ---------------------------------------------------------------------------
+* ID 22
+ ---------------------------------------------------------------------------*/
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+key_creation 
+drop if n_resp_avail_cbw==.
+keep n_not_curr_preg key key3
+save "${DataTemp}temp1.dta", replace
+
+use "${DataTemp}temp0.dta", clear
+merge 1:1 key key3 using "${DataTemp}temp1.dta"
+* N=141
+gen Type=1
+save "${DataTemp}Requested_long_backcheck1.dta", replace
+
+
+/* ---------------------------------------------------------------------------
+* ID 25
+ ---------------------------------------------------------------------------*/
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
+key_creation 
+keep cen_still_a_member key key3 name_from_earlier_hh
+br if key=="uuid:00241596-007f-45dd-9698-12b5c418e3e7"
+save "${DataTemp}temp0.dta", replace
+
+/* ---------------------------------------------------------------------------
+* ID 21
+ ---------------------------------------------------------------------------*/
+ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+ key_creation 
+ drop if  cen_name_cbw_woman_earlier==""
+ * keep if cen_resp_avail_cbw==1
+ keep cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence key key3
+ save "${DataTemp}temp1.dta", replace
+ 
+ use "${DataTemp}temp0.dta", clear
+ merge 1:1 key key3 using "${DataTemp}temp1.dta"
+gen Type=2
+save "${DataTemp}Requested_long_backcheck2.dta", replace
+
+use "${DataTemp}Requested_long_backcheck1.dta", clear
+append using "${DataTemp}Requested_long_backcheck2.dta"
+
+merge m:1 key using "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", keepusing(unique_id) keep(3) nogen
+bys unique_id: gen Num=_n
+
+drop  _merge Type  key key3
+reshape wide namenumber n_hhmember_name n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother n_u5mother_name n_u5father_name n_not_curr_preg name_from_earlier_hh cen_still_a_member cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence, i(unique_id) j(Num)
+sort cen_name_cbw_woman_earlier1
+save  "${DataTemp}Requested_wide_backcheck.dta", replace
+unique Type key key3
+
+erase "${DataTemp}Requested_long_backcheck1.dta"
+erase "${DataTemp}Requested_long_backcheck2.dta"
+
+
+
 /*
 ** Drop ID information
 
