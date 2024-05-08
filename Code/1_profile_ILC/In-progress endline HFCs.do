@@ -1,5 +1,9 @@
 
 
+do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do"
+do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do"
+do "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning_v2.do"
+
 use "${DataPre}1_1_Endline_XXX_consented.dta", clear
 
 *renaming some duration vars becuase their names were slightly off and was not in accordance with the section in surveycto
@@ -135,6 +139,17 @@ gen num_new_U5 = r(mean)
 gen AVG_U5_all = num_cen_U5 + num_new_U5
 
 
+//TOTAL UNAVAILABLE SUVEYS PER HHID & PER SURVEYOR
+
+preserve
+do "${Do_lab}import_India_ILC_Endline_Census-Household_available-Cen_CBW_followup.do"
+save "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", replace
+
+
+drop if parent_key == "uuid:54261fb3-0798-4528-9e85-3af458fdbad9" 
+
+
+tab cen_resp_avail_cbw
 
 
 
@@ -144,23 +159,6 @@ gen AVG_U5_all = num_cen_U5 + num_new_U5
 
 
 
-
-
-
-
-
-
-
-
-
-egen temp_group = group(unique_id_num)
-egen T_Cen_M = rowtotal(R_E_Count_cm_out_home_all_*)
-drop temp_group
-
-ds R_E_Count_cm_symp_all_*
-foreach var of varlist `r(varlist)'{
-tab `var'
-}
 
 
 gen treat = 1 
