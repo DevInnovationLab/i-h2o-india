@@ -50,6 +50,7 @@ library(haven)
 library(ggsignif)
 library(patchwork)
 library(table1)
+library(gtsummary)
 #library(xtable)
 
 
@@ -578,6 +579,28 @@ kbl(df.shadow)%>%
 #stargazer(df.shadow, summary=F, title= "Check instances of shadowing of enumerators during survey, by enumerator, by village",float=F,rownames = F,         covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_shadow_HH_Survey_R3.tex"))
 
 
+#Summarizing a few key village characteristics
+
+df.temp.consent$R_E_cen_num_hhmembers <- as.numeric(df.temp.consent$R_E_cen_num_hhmembers)
+df.temp.consent$R_E_cen_num_childbelow5 <- as.numeric(df.temp.consent$R_E_cen_num_childbelow5)
+df.temp.consent$R_E_visit_num <- to_label(df.temp.consent$R_E_visit_num)
+
+
+tab <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>%
+  dplyr::select(R_E_enum_name_label,R_E_r_cen_village_name_str, R_E_cen_num_hhmembers, R_E_cen_num_childbelow5, R_E_visit_num) %>%
+  rename(Visit_Number = R_E_visit_num,
+         Number_of_children = R_E_cen_num_childbelow5,
+         Number_of_HH_members = R_E_cen_num_hhmembers)
+
+table1(data = tab, ~ Visit_Number + Number_of_children + Number_of_HH_members)
+
+
+
+
+
+
+
+
 # WASH Questions ----------------------------------------------#
 
 #JJM drinking from tap
@@ -589,75 +612,66 @@ tab <- df.temp.consent%>%
   rename(Village = R_E_r_cen_village_name_str, JJM_Drinking_Percent = mean)
 #Kable Output
 kbl(tab)%>%
-  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
   add_header_above(c("JJM Drinking from Tap - Endline Census " = 2)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
 
+#Selecting WASH Variables and cleaning
+tab <- df.temp.consent%>%
+  dplyr::select(R_E_r_cen_village_name_str, R_E_water_source_prim, R_E_sec_source_reason_999,
+                R_E_sec_source_reason__77, R_E_water_sec_yn, R_E_water_sec_freq)%>%
+  group_by(R_E_r_cen_village_name_str) %>% 
+  rename(Village = R_E_r_cen_village_name_str)
+
+tab$R_E_water_source_prim <- to_label(tab$R_E_water_source_prim)
+tab$R_E_water_sec_yn <- to_label(tab$R_E_water_sec_yn)
+tab$R_E_water_sec_freq <- to_label(tab$R_E_water_sec_freq)
+
 #Primary Source Use
-#tab <- df.temp.consent%>%
- # dplyr::select(R_E_r_cen_village_name_str, R_E_water_source_prim)%>%
-  #group_by(R_E_r_cen_village_name_str) %>% 
-  #rename(Village = R_E_r_cen_village_name_str)
-#tab$R_E_water_source_prim <- to_label(tab$R_E_water_source_prim)
+
+#summarizing categories
+#tab <- tab%>%
+ # group_by(Village, R_E_water_source_prim) %>% 
+  #dplyr::summarise(n = n()
+   #                 ) %>%
+  #mutate(freq = n / sum(n))%>%
+  #rename(Primary_Water_Source_Percent = freq)
+
+#Summarizing using gt_summary()
+tab_2 <-tab%>%
+  dplyr::select(Village, R_E_water_source_prim) %>%
+  tbl_summary()%>%
+  add_n() %>%
+  as_kable_extra()
+#Outputting Kable
+tab_2%>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
+  add_header_above(c("JJM Drinking from Tap - Endline Census " = 3)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
 #Table1 Output
-#table1(data = tab, ~ Village | R_E_water_source_prim)
+#table1(data = tab, ~ R_E_water_source_prim  | Village)
+
+
+
+
+#Secondary Source Use
+#
+tab_2 <-tab%>%
+  dplyr::select(Village, R_E_water_sec_yn, R_E_water_sec_freq, R_E_sec_source_reason_999, R_E_sec_source_reason__77) 
+
+#Table1 output
+table1(data = tab_2, ~ R_E_water_sec_yn + R_E_water_sec_freq + R_E_sec_source_reason_999 + R_E_sec_source_reason__77)
 
 
 
 
 
-
-
-#OLD CODE -----------------------------------------------#
-
-#checking cases when people say they don't use JJM for drinking and their answers to the last time they used drinking water from JJM taps
-
-
-# df.consistency <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>% filter(R_E_jjm_drinking == 0 )%>%
-#   dplyr::select(R_E_r_cen_village_name_str, R_E_enum_name_label, R_E_jjm_drinking, unique_id_num ) %>% 
-#   mutate(R_E_tap_use_drinking = ifelse(R_E_tap_use_drinking == 1, "Today", 
-#                                          ifelse(R_E_tap_use_drinking == 2, "Yesterday", 
-#                                                 ifelse(R_E_tap_use_drinking == 3, "Earlier this week", 
-#                                                        ifelse(R_E_tap_use_drinking == 4, "Earlier this month", 
-#                                                               ifelse(R_E_tap_use_drinking == 5,"Not used for drinking", 
-#                                                                      ifelse(R_E_tap_use_drinking == -77,"Other", NA))))))) %>%
-#   rename(Village = R_E_r_cen_village_name_str,"Last time collected water from the JJM tap" = R_E_tap_use_drinking ) %>% 
-#   unique()
-# 
-# df.consistency_the_other_way <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>% filter(R_E_tap_use_drinking_yesno == 1 & R_E_tap_use_drinking == 5) %>%
-#   dplyr::select(R_E_r_cen_village_name_str, R_E_enum_name_label, R_E_tap_use_drinking  ) %>% 
-#   mutate(R_E_tap_use_drinking = ifelse(R_E_tap_use_drinking == 1, "Today", 
-#                                          ifelse(R_E_tap_use_drinking == 2, "Yesterday", 
-#                                                 ifelse(R_E_tap_use_drinking == 3, "Earlier this week", 
-#                                                        ifelse(R_E_tap_use_drinking == 4, "Earlier this month", 
-#                                                               ifelse(R_E_tap_use_drinking == 5,"Not used for drinking", 
-#                                                                      ifelse(R_E_tap_use_drinking == -77,"Other", NA))))))) %>%
-#   rename(Village = R_E_r_cen_village_name_str,"Last time collected water from the JJM tap" = R_E_tap_use_drinking ) %>% 
-#   unique()
-# stargazer(df.consistency, summary=F, title= "Check for not using drinking water, and last time they used drinking water from JJM taps",float=F,rownames = F,
-#           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_consistency_HH_Survey_R3.tex"))
-
-
-# #count of cases when they were supposed to be sample collection but wasn't possible due to available_jjm being 3 or 4 
-# df.sample.collection <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>% filter(R_E_ecoli_yn == 1 & (R_E_available_jjm ==3 | R_E_available_jjm == 4)) %>%
-#   mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
-#   dplyr::select(R_E_r_cen_village_name_str, Count_of_Sample, R_E_enum_name_label ) %>% 
-#   rename(Village = R_E_r_cen_village_name_str, "Count-Sample collection not possible" = Count_of_Sample ) %>% 
-#   unique()
-# 
-# #count of cases when they were supposed to be chlorine testing but wasn't possible 
-# df.water.testing <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>% filter( R_E_water_qual_test == 0) %>%
-#   mutate(Count_of_Sample = n()) %>% ungroup()  %>% 
-#   dplyr::select(R_E_r_cen_village_name_str, Count_of_Sample, R_E_enum_name_label, R_E_no_test_reason  ) %>% 
-#   rename(Village = R_E_r_cen_village_name_str, "Count-Chlorine testing not possible" = Count_of_Sample, "Reason for no test" = R_E_no_test_reason ) %>% 
-#   unique()
-# 
-# df.count <- left_join(df.water.testing, df.sample.collection)
-# stargazer(df.count, summary=F, title= "Count of Testing not possible",float=F,rownames = F,
-#           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_test_not_possible_HH_Survey_R3.tex"))
 
 
 
