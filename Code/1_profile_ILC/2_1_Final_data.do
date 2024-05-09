@@ -495,29 +495,39 @@ drop if C_total_U5child_hh==0
 
 
 * Creating diarrhea vars
+gen     C_diarrhea_prev_child_1day=0
+replace C_diarrhea_prev_child_1day=1  if R_Cen_a29_child_diarr_day_==1 
 gen     C_diarrhea_prev_child_1week=0
 replace C_diarrhea_prev_child_1week=1  if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1)
 gen     C_diarrhea_prev_child_2weeks=0
 replace C_diarrhea_prev_child_2weeks=1 if (R_Cen_a29_child_diarr_day_==1 | R_Cen_a29_child_diarr_week_==1 | R_Cen_a29_child_diarr_2week_==1) 
 
 *Using loose & watery stool vars
+gen     C_loosestool_child_1day=0
+replace C_loosestool_child_1day=1  if R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1
 gen     C_loosestool_child_1week=0
 replace C_loosestool_child_1week=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1) 
 gen     C_loosestool_child_2weeks=0
 replace C_loosestool_child_2weeks=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1 | R_Cen_a31_child_stool_2week_==1)
 
 *generating new vars using both vars for diarrhea
+gen    C_diarrhea_comb_U5_1day=0
+replace C_diarrhea_comb_U5_1day=1 if C_diarrhea_prev_child_1day==1 | C_loosestool_child_1day==1
+
 gen    C_diarrhea_comb_U5_1week=0
 replace C_diarrhea_comb_U5_1week=1 if C_diarrhea_prev_child_1week==1 | C_loosestool_child_1week==1
 
 gen    C_diarrhea_comb_U5_2weeks=0
 replace C_diarrhea_comb_U5_2weeks=1 if C_diarrhea_prev_child_2weeks==1 | C_loosestool_child_2weeks==1
 
+label var C_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
 label var C_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
-label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)" 
+label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
+label var C_loosestool_child_1day "Loose stool- U5 (1 day)" 
 label var C_loosestool_child_1week "Loose stool- U5 (1 week)" 
 label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
 
+label var C_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
 label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
 label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
@@ -538,29 +548,39 @@ drop if R_Cen_a23_wom_diarr_day_==. & R_Cen_a23_wom_diarr_week_==. & R_Cen_a23_w
 drop if C_total_pregnant_hh==0
 
 * Creating diarrhea vars
+gen     C_diarrhea_prev_wom_1day=0
+replace C_diarrhea_prev_wom_1day=1  if R_Cen_a23_wom_diarr_day_==1 
 gen     C_diarrhea_prev_wom_1week=0
 replace C_diarrhea_prev_wom_1week=1  if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1)
 gen     C_diarrhea_prev_wom_2weeks=0
 replace C_diarrhea_prev_wom_2weeks=1 if (R_Cen_a23_wom_diarr_day_==1 | R_Cen_a23_wom_diarr_week_==1 | R_Cen_a23_wom_diarr_2week_==1)
 
 *Using loose & watery stool vars
+gen     C_loosestool_wom_1day=0
+replace C_loosestool_wom_1day=1 if R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1  
 gen     C_loosestool_wom_1week=0
 replace C_loosestool_wom_1week=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1) 
 gen     C_loosestool_wom_2weeks=0
 replace C_loosestool_wom_2weeks=1 if (R_Cen_a25_wom_stool_24h_==1 | R_Cen_a25_wom_stool_yest_==1 | R_Cen_a25_wom_stool_week_==1 | R_Cen_a25_wom_stool_2week_==1)
 
 *generating new vars using both vars for diarrhea
+gen    C_diarrhea_comb_wom_1day=0
+replace C_diarrhea_comb_wom_1day=1 if C_diarrhea_prev_wom_1day==1 | C_loosestool_wom_1day==1
+
 gen    C_diarrhea_comb_wom_1week=0
 replace C_diarrhea_comb_wom_1week=1 if C_diarrhea_prev_wom_1week==1 | C_loosestool_wom_1week==1
 
 gen    C_diarrhea_comb_wom_2weeks=0
 replace C_diarrhea_comb_wom_2weeks=1 if C_diarrhea_prev_wom_2weeks==1 | C_loosestool_wom_2weeks==1
 
+label var C_diarrhea_prev_wom_1day "Diarrhea- preg woman (1 day)" 
 label var C_diarrhea_prev_wom_1week "Diarrhea- preg woman (1 week)" 
 label var C_diarrhea_prev_wom_2weeks "Diarrhea- preg woman (2 weeks)" 
+label var C_loosestool_wom_1day "Loose stool- preg woman (1 day)"
 label var C_loosestool_wom_1week "Loose stool- preg woman (1 week)" 
 label var C_loosestool_wom_2weeks "Loose stool- preg woman (2 weeks)" 
 
+label var C_diarrhea_comb_wom_1day "Diarrhea/Loose- preg woman (1 day)"
 label var C_diarrhea_comb_wom_1week "Diarrhea/Loose- preg woman (1 week)" 
 label var C_diarrhea_comb_wom_2weeks "Diarrhea/Loose- preg woman (2 weeks)" 
 
