@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = F
 
 This RMarkdown document was created to perform high frequency data checks for the India ILC Endline Census in May 2024. This document was created to generate pdf reports, but it does not automatically sync to the online Overleaf Latex document.
 
-## Also, I could reference the 2_2_Checks.do file for the baseline census HFC, but this one for Follow-up R3 seems to have more variables captured
+Also, I could reference the 2_2_Checks.do file for the baseline census HFC, but this one for Follow-up R3 seems to have more variables captured
 
 ```{r package load}
 
@@ -157,8 +157,25 @@ df.temp <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_c
 ```
 
 
+
+```{r defining functions}
+
+labelmaker <- function(x){
+  z <- colnames(x)
+  for(i in z){
+    labels <-  val_labels(x[i])
+    if(is.na(labels) == FALSE){
+      x[i] <- to_label(x[i])
+    }
+  }
+}
+
+```
+
+
+
 ```{r changing variable names}
-#------------------------ Apply the labels for variables ----------------------------------------#
+#------------------------ Apply the labels for variables---------------------#
 
 temp.labels <- lapply(df.temp , var_lab)
 
@@ -330,7 +347,7 @@ kbl(df.progress)%>%
 
 ```{r enumerator productivity tables}
 
-#------------------------ Distribution of surveys by dates & villages ----------------------------------------#
+#------------------------ Distribution of surveys by dates & villages --------------------#
 date.plt<- df.temp %>% filter(R_E_consent == 1) %>%
   filter(date >= as.Date("2024-04-15")) %>%
   group_by( R_E_r_cen_village_name_str, date) %>%
@@ -603,6 +620,11 @@ table1(data = tab, ~ Visit_Number + Number_of_children + Number_of_HH_members)
 
 # WASH Questions ----------------------------------------------#
 
+#Using labelmaker to make transfer labels for the whole dataset
+labelmaker(df.temp.consent)
+
+
+
 #JJM drinking from tap
 tab <- df.temp.consent%>%
   dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking)%>%
@@ -629,6 +651,7 @@ tab <- df.temp.consent%>%
 tab$R_E_water_source_prim <- to_label(tab$R_E_water_source_prim)
 tab$R_E_water_sec_yn <- to_label(tab$R_E_water_sec_yn)
 tab$R_E_water_sec_freq <- to_label(tab$R_E_water_sec_freq)
+
 
 #Primary Source Use
 
