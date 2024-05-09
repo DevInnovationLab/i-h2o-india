@@ -698,14 +698,14 @@ esttab model16 model17 model18 model19 using "${Table}Frequency of treatment_sto
 * 3) diarrhea incidence- preg women and children
 ----------------------------------------------*/
 
-global diarrhea_U5 C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
-                         C_loosestool_child_1week     C_loosestool_child_2weeks ///
-						 C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks
+global diarrhea_U5 C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
+                         C_loosestool_child_1day C_loosestool_child_1week     C_loosestool_child_2weeks ///
+						 C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks   
 						 
 						 
-global diarrhea_preg C_diarrhea_prev_wom_1week C_diarrhea_prev_wom_2weeks ///
-                         C_loosestool_wom_1week     C_loosestool_wom_2weeks ///
-						 C_diarrhea_comb_wom_1week     C_diarrhea_comb_wom_2weeks
+global diarrhea_preg C_diarrhea_prev_wom_1day C_diarrhea_prev_wom_1week C_diarrhea_prev_wom_2weeks ///
+                         C_loosestool_wom_1day C_loosestool_wom_1week     C_loosestool_wom_2weeks ///
+						 C_diarrhea_comb_wom_1day C_diarrhea_comb_wom_1week     C_diarrhea_comb_wom_2weeks   
 						 
 local diarrhea_U5 "Diarrhea_U5"
 local diarrhea_preg "Diarrhea_Preg"
@@ -1097,13 +1097,13 @@ replace tap_trust= 1 if R_FU_tap_trust==1 | R_FU_tap_trust==2
 gen tap_use_future= 0
 replace tap_use_future= 1 if R_FU_tap_use_future==1 | R_FU_tap_use_future==2
 gen stored_rc=0
-replace stored_rc=1 if R_FU_fc_stored>0.1 & R_FU_fc_stored!=.
+replace stored_rc=1 if R_FU_fc_stored>0.14 & R_FU_fc_stored!=.
 gen tap_rc=0
-replace tap_rc=1 if R_FU_fc_tap>0.1 & R_FU_fc_tap!=.
+replace tap_rc=1 if R_FU_fc_tap>0.14 & R_FU_fc_tap!=.
 gen stored_tc=0
-replace stored_tc=1 if R_FU_tc_stored>0.1 & R_FU_tc_stored!=.
+replace stored_tc=1 if R_FU_tc_stored>0.14 & R_FU_tc_stored!=.
 gen tap_tc=0
-replace tap_tc=1 if R_FU_tc_tap>0.1 & R_FU_tc_tap!=.
+replace tap_tc=1 if R_FU_tc_tap>0.14 & R_FU_tc_tap!=.
 
 
 gen secondary_water_source_JJM= 0
@@ -1245,7 +1245,8 @@ eststo clear
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at baseline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-import delimited "/Users/michellecherian/Downloads/BL_idexx_master_cleaned.csv", clear
+
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv", clear
 drop if assignment=="NA"
 drop if date=="2024-02-20T00:00:00Z"
 
@@ -1287,18 +1288,44 @@ sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
 reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
 
+
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
 reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
 
+sum ec_log if sample_type=="Tap" & treatment==1
+sum ec_log if sample_type=="Tap" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+
+sum ec_log if sample_type=="Stored" & treatment==1
+sum ec_log if sample_type=="Stored" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+
+
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village)  
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village)
 
+sum cf_log if sample_type=="Tap" & treatment==1
+sum cf_log if sample_type=="Tap" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+
+
+sum cf_log if sample_type=="Stored" & treatment==1
+sum cf_log if sample_type=="Stored" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+
+//log10 transformed density plots
+
+twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90)
+
+twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90) replace
 
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1476,7 +1503,7 @@ eststo clear
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at followup R1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-import delimited "/Users/michellecherian/Downloads/R1_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv", clear
 
 split date, parse("-")
 replace date3 = substr(date3, 1, 2)
@@ -1492,11 +1519,13 @@ keep if dup>0
 export excel using "${pilot}Duplicates in Ecoli data_Followup R1.xlsx", sheet("data") firstrow(var) cell(A1) sheetreplace
 */
 bys sample_id (date_comb), sort: keep if _n == _N 
+duplicates report sample_id 
 
 gen positive_ecoli=1 if ec_mpn>0
 replace positive_ecoli=0 if ec_mpn==0
 gen positive_totalcoliform=1 if cf_mpn>0
 replace positive_totalcoliform=0 if cf_mpn==0
+
 
 gen treatment= 1 if assignment=="Treatment"
 replace treatment=0 if assignment=="Control"
@@ -1522,11 +1551,19 @@ restore
 ******regressions and ttests
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)  
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
 reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+
+sum ec_log if sample_type=="Tap" & treatment==1
+sum ec_log if sample_type=="Tap" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)
+
+sum ec_log if sample_type=="Stored" & treatment==1
+sum ec_log if sample_type=="Stored" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
@@ -1536,6 +1573,22 @@ sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
 reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
 
+sum cf_log if sample_type=="Tap" & treatment==1
+sum cf_log if sample_type=="Tap" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+
+sum cf_log if sample_type=="Stored" & treatment==1
+sum cf_log if sample_type=="Stored" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+
+
+//log10 transformed density plots
+
+twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
+
+twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *Follow-up R2 survey data
@@ -1707,7 +1760,7 @@ eststo clear
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at followup R2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-import delimited "/Users/michellecherian/Downloads/R2_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv", clear
 
 split submissiondate, parse("/")
 replace submissiondate3 = substr(submissiondate3, 1, 4)
@@ -1715,7 +1768,8 @@ egen date_comb= concat(submissiondate2 submissiondate1 submissiondate3)
 gen date_comb_num = date(date_comb, "DMY")
 format date_comb_num %td
 
-drop if sample_id==0
+drop if field_blank ==1
+drop if lab_blank==1
 duplicates report sample_id
 
 
@@ -1723,6 +1777,9 @@ gen positive_ecoli=1 if ec_mpn>0
 replace positive_ecoli=0 if ec_mpn==0
 gen positive_totalcoliform=1 if cf_mpn>0
 replace positive_totalcoliform=0 if cf_mpn==0
+
+*gen ecoli_log10= log10(ec_mpn)
+*gen tc_log10= log10(cf_mpn)
 
 gen treatment= 1 if assignment=="T"
 replace treatment=0 if assignment=="C"
@@ -1748,6 +1805,14 @@ sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
 reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
 
+sum ec_log if sample_type=="Tap" & treatment==1
+sum ec_log if sample_type=="Tap" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)  
+
+sum ec_log if sample_type=="Stored" & treatment==1
+sum ec_log if sample_type=="Stored" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
+
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
 reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village) 
@@ -1756,8 +1821,195 @@ sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
 reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
 
+sum cf_log if sample_type=="Tap" & treatment==1
+sum cf_log if sample_type=="Tap" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+
+sum cf_log if sample_type=="Stored" & treatment==1
+sum cf_log if sample_type=="Stored" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
 
 
+//log10 transformed density plots
+
+twoway histogram ec_log if sample_type=="Tap" || kdensity ec_log if sample_type=="Tap", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
+
+twoway histogram ec_log if sample_type=="Stored" || kdensity ec_log if sample_type=="Stored", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
+
+
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*Follow-up R3 survey data
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+use "${DataPre}1_1_Census_cleaned.dta", clear 
+merge 1:1 unique_id_num using "${DataDeid}1_7_Followup_R3_cleaned.dta", gen(Merge_C_F) 
+keep if Merge_C_F==3
+keep if R_FU3_consent ==1
+tab R_FU3_r_cen_village_name_str
+
+**doing some chlorine data cleaning
+replace R_FU3_fc_tap=. if R_FU3_fc_tap==999
+replace R_FU3_tc_tap=. if R_FU3_tc_tap==999
+replace R_FU3_tc_stored=. if R_FU3_tc_stored==999
+replace R_FU3_fc_stored=. if R_FU3_fc_stored==999
+
+
+**creating new vars
+gen taste_satisfy=0
+replace taste_satisfy=1 if R_FU3_tap_taste_satisfied==1 | R_FU3_tap_taste_satisfied==2
+gen tap_trust=0
+replace tap_trust= 1 if R_FU3_tap_trust==1 | R_FU3_tap_trust==2
+gen tap_use_future= 0
+replace tap_use_future= 1 if R_FU3_tap_use_future==1 | R_FU3_tap_use_future==2
+gen stored_rc=0
+replace stored_rc=1 if R_FU3_fc_stored>0.1 & R_FU3_fc_stored!=.
+gen tap_rc=0
+replace tap_rc=1 if R_FU3_fc_tap>0.1 & R_FU3_fc_tap!=.
+gen stored_tc=0
+replace stored_tc=1 if R_FU3_tc_stored>0.1 & R_FU3_tc_stored!=.
+gen tap_tc=0
+replace tap_tc=1 if R_FU3_tc_tap>0.1 & R_FU3_tc_tap!=.
+
+gen secondary_water_source_JJM= 0
+replace secondary_water_source_JJM= 1 if R_FU3_water_source_sec_1==1
+tab secondary_water_source_JJM
+
+gen sec_jjm_use=0
+replace sec_jjm_use=1 if R_FU3_water_source_sec_1==1 & R_FU3_water_source_prim!=1
+tab secondary_water_source_JJM
+tab sec_jjm_use
+
+gen panchayat_village=0
+replace panchayat_village=1 if R_FU3_r_cen_village_name_str=="Asada" | R_FU3_r_cen_village_name_str=="Jaltar" | R_FU3_r_cen_village_name_str=="BK Padar" | R_FU3_r_cen_village_name_str=="Mukundpur" | R_FU3_r_cen_village_name_str=="Gudiabandh" | R_FU3_r_cen_village_name_str=="Naira" | R_FU3_r_cen_village_name_str=="Dangalodi" | R_FU3_r_cen_village_name_str=="Karlakana" 
+
+**assign treatment
+
+gen treatment= 1 if R_FU3_r_cen_village_name_str== "Birnarayanpur" | R_FU3_r_cen_village_name_str=="Nathma"|R_FU3_r_cen_village_name_str== "Badabangi"| R_FU3_r_cen_village_name_str=="Naira"| R_FU3_r_cen_village_name_str== "Bichikote"|R_FU3_r_cen_village_name_str== "Karnapadu"| R_FU3_r_cen_village_name_str=="Mukundpur"|R_FU3_r_cen_village_name_str== "Tandipur"|R_FU3_r_cen_village_name_str== "Gopi Kankubadi"|R_FU3_r_cen_village_name_str== "Asada" 
+
+replace treatment=0 if treatment==.
+                                                                  
+gen control= 1 if treatment==0
+replace control=0 if treatment==1
+
+
+foreach i in R_FU3_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+foreach v in R_FU3_water_source_prim R_FU3_tap_use_drinking_yesno R_FU3_water_treat taste_satisfy tap_trust tap_use_future {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+
+
+tempfile followup3
+save `followup3', replace
+
+
+save "${DataDeid}Followup R3 survey_cleaned_additional vars.dta", replace
+
+gen round=3
+rename R_FU3_water_source_prim_1 R_FU_water_source_prim_1 
+rename R_FU3_tap_use_drinking_yesno_1 R_FU_tap_use_drinking_yesno_1 
+rename R_FU3_water_treat_1 R_FU_water_treat_1 
+
+save "${DataDeid}Followup R3 survey_for pooling data.dta", replace
+
+************ TTests and regressions
+use "${DataDeid}Followup R3 survey_cleaned_additional vars.dta", clear
+local followup3 R_FU3_water_source_prim_1 sec_jjm_use R_FU3_tap_use_drinking_yesno_1 R_FU3_water_treat_1 taste_satisfy_1 tap_trust_1 tap_use_future_1 tap_tc stored_tc tap_rc stored_rc
+
+/*
+foreach k of local followup {
+	
+ttest `k', by(treatment) 
+}
+*/ 
+
+foreach k of local followup3 {
+	sum `k' if treatment==1
+	sum `k' if treatment==0
+reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_FU3_r_cen_village_name_str) 
+}
+
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*E.coli results at followup R3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv", clear
+
+
+duplicates report sample_id
+keep if abr==0
+drop if sample_id==0
+drop if sample_id==20344 & cf_95hi=="NA"
+
+
+gen positive_ecoli=1 if ec_mpn>0
+replace positive_ecoli=0 if ec_mpn==0
+gen positive_totalcoliform=1 if cf_mpn>0
+replace positive_totalcoliform=0 if cf_mpn==0
+
+*gen ecoli_log10= log10(ec_mpn)
+*gen tc_log10= log10(cf_mpn)
+
+gen treatment= 1 if assignment=="Treatment"
+replace treatment=0 if assignment=="Control"
+
+gen control= 1 if treatment==0
+replace control= 0 if treatment==1
+
+gen panchayat_village=0
+replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana"
+
+save "${DataDeid}Ecoli results followup R3_cleaned.dta", replace
+*merge m:1 village_name using "${DataDeid}Village & block list.dta", force
+gen round=3
+destring block_code, replace
+save "${DataDeid}Ecoli results followup R3_for pooling.dta", replace
+********Regressions
+
+sum positive_ecoli if sample_type=="Tap" & treatment==1
+sum positive_ecoli if sample_type=="Tap" & treatment==0
+reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name) 
+
+sum positive_ecoli if sample_type=="Stored" & treatment==1
+sum positive_ecoli if sample_type=="Stored" & treatment==0
+reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+
+sum ec_log if sample_type=="Tap" & treatment==1
+sum ec_log if sample_type=="Tap" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name)  
+
+sum ec_log if sample_type=="Stored" & treatment==1
+sum ec_log if sample_type=="Stored" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name) 
+
+
+sum positive_totalcoliform if sample_type=="Tap" & treatment==1
+sum positive_totalcoliform if sample_type=="Tap" & treatment==0
+reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village_name) 
+
+sum positive_totalcoliform if sample_type=="Stored" & treatment==1
+sum positive_totalcoliform if sample_type=="Stored" & treatment==0
+reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village_name) 
+
+sum cf_log if sample_type=="Tap" & treatment==1
+sum cf_log if sample_type=="Tap" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name) 
+
+sum cf_log if sample_type=="Stored" & treatment==1
+sum cf_log if sample_type=="Stored" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+
+
+ 
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *Pooled Follow-up rounds survey data
@@ -1765,6 +2017,7 @@ reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_t
 
 use "${DataDeid}Followup R1 survey_for pooling data.dta", clear
 append using "${DataDeid}Followup R2 survey_for pooling data.dta"
+append using "${DataDeid}Followup R3 survey_for pooling data.dta"
 
 
 local followup R_FU_water_source_prim_1 sec_jjm_use R_FU_tap_use_drinking_yesno_1 R_FU_water_treat_1 taste_satisfy_1 tap_trust_1 tap_use_future_1 tap_tc stored_tc tap_rc stored_rc
@@ -1783,6 +2036,7 @@ reg `k' treatment panchayat_village i.R_Cen_block_name i.round, cluster(R_Cen_vi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 use "${DataDeid}Ecoli results followup R1_for pooling.dta", clear
 append using "${DataDeid}Ecoli results followup R2_for pooling.dta", force
+append using "${DataDeid}Ecoli results followup R3_for pooling.dta", force
 
 
 sum positive_ecoli if sample_type=="Tap" & treatment==1
@@ -1793,6 +2047,14 @@ sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
 reg positive_ecoli treatment panchayat_village i.block_code i.round if sample_type=="Stored", cluster(village_name) 
 
+sum ec_log if sample_type=="Tap" & treatment==1
+sum ec_log if sample_type=="Tap" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name)  
+
+sum ec_log if sample_type=="Stored" & treatment==1
+sum ec_log if sample_type=="Stored" & treatment==0
+reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
 reg positive_totalcoliform treatment panchayat_village i.block_code i.round  if sample_type=="Tap", cluster(village_name) 
@@ -1802,5 +2064,12 @@ sum positive_totalcoliform if sample_type=="Stored" & treatment==0
 reg positive_totalcoliform treatment panchayat_village i.block_code i.round if sample_type=="Stored", cluster(village_name) 
 
 
+sum cf_log if sample_type=="Tap" & treatment==1
+sum cf_log if sample_type=="Tap" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name) 
+
+sum cf_log if sample_type=="Stored" & treatment==1
+sum cf_log if sample_type=="Stored" & treatment==0
+reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
 
 
