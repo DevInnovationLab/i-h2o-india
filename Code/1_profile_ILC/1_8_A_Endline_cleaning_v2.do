@@ -460,7 +460,6 @@ drop  _merge Type  key key3
 reshape wide namenumber n_hhmember_name n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother n_u5mother_name n_u5father_name n_not_curr_preg name_from_earlier_hh cen_still_a_member cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence, i(unique_id) j(Num)
 sort cen_name_cbw_woman_earlier1
 save  "${DataTemp}Requested_wide_backcheck.dta", replace
-*unique Type key key3
 
 erase "${DataTemp}Requested_long_backcheck1.dta"
 erase "${DataTemp}Requested_long_backcheck2.dta"
