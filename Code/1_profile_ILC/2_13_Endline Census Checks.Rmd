@@ -166,8 +166,10 @@ labelmaker <- function(x){
     labels <-  val_labels(x[i])
     if(is.na(labels) == FALSE){
       x[i] <- to_label(x[i])
+      
     }
   }
+  return(x)
 }
 
 ```
@@ -231,6 +233,9 @@ df.temp.consent <- df.temp.consent %>% mutate(Treatment = ifelse(R_E_r_cen_villa
 
 
 
+#Using labelmaker to make transfer labels for the whole dataset
+df.temp.consent <- labelmaker(df.temp.consent)
+
 
 
 
@@ -277,6 +282,15 @@ consented <- df.temp  %>%
   unique() %>% 
   arrange(R_E_r_cen_village_name_str)
 
+audio_consent <- df.temp  %>% 
+  filter(R_E_audio_consent == 1) %>%
+  dplyr::select(R_E_r_cen_village_name_str) %>%
+  group_by(R_E_r_cen_village_name_str) %>%
+  mutate(audio_consent=n()) %>%
+  ungroup()  %>% 
+  unique() %>% 
+  arrange(R_E_r_cen_village_name_str)
+
 refused <- df.temp %>% 
   filter(R_E_consent != 1) %>%
   dplyr::select(R_E_r_cen_village_name_str) %>%
@@ -300,6 +314,7 @@ df.progress <- left_join(submissions,resp_available)%>%
   left_join(resp_notavailable) %>% 
   #left_join(replacements) %>% 
   left_join(consented) %>% 
+  left_join(audio_consent)%>%
   left_join(refused)  %>% 
   rename(Village = R_E_r_cen_village_name_str)
 
@@ -329,7 +344,7 @@ df.progress<- rbind(df.progress, Total)
 
 kbl(df.progress)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Overall Progress - Endline Census " = 6)) %>%
+  add_header_above(c("Overall Progress - Endline Census " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
@@ -596,7 +611,7 @@ kbl(df.shadow)%>%
 #stargazer(df.shadow, summary=F, title= "Check instances of shadowing of enumerators during survey, by enumerator, by village",float=F,rownames = F,         covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_shadow_HH_Survey_R3.tex"))
 
 
-#Summarizing a few key village characteristics
+#Summarizing a few key village characteristics -- number of households member and visit #
 
 df.temp.consent$R_E_cen_num_hhmembers <- as.numeric(df.temp.consent$R_E_cen_num_hhmembers)
 df.temp.consent$R_E_cen_num_childbelow5 <- as.numeric(df.temp.consent$R_E_cen_num_childbelow5)
@@ -604,13 +619,21 @@ df.temp.consent$R_E_visit_num <- to_label(df.temp.consent$R_E_visit_num)
 
 
 tab <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>%
-  dplyr::select(R_E_enum_name_label,R_E_r_cen_village_name_str, R_E_cen_num_hhmembers, R_E_cen_num_childbelow5, R_E_visit_num) %>%
+  dplyr::select(R_E_enum_name_label,R_E_r_cen_village_name_str, R_E_cen_num_hhmembers, R_E_cen_num_childbelow5, R_E_visit_num, R_E_n_new_members, R_E_n_hhmember_count, R_E_n_num_allmembers_h, R_E_n_num_childbelow5) %>%
   rename(Visit_Number = R_E_visit_num,
          Number_of_children = R_E_cen_num_childbelow5,
          Number_of_HH_members = R_E_cen_num_hhmembers)
 
-table1(data = tab, ~ Visit_Number + Number_of_children + Number_of_HH_members)
+table1(data = tab, ~ R_E_enum_name_label + Visit_Number + Number_of_children + Number_of_HH_members + R_E_n_new_members + R_E_n_hhmember_count + R_E_n_num_childbelow5)
 
+
+#Summarizing comparison of respondent names between baseline and endline
+
+#df.temp.consent$R_E_r_cen_a1_resp_name
+#df.temp.consent$R_E_cen_resp_name
+#df.temp.consent$R_E_cen_resp_label
+#df.temp.consent$R_E_n_new_members
+#df.temp.consent$R_E_n_num_allmembers_h
 
 
 
@@ -620,37 +643,32 @@ table1(data = tab, ~ Visit_Number + Number_of_children + Number_of_HH_members)
 
 # WASH Questions ----------------------------------------------#
 
-#Using labelmaker to make transfer labels for the whole dataset
-labelmaker(df.temp.consent)
+
 
 
 
 #JJM drinking from tap
-tab <- df.temp.consent%>%
-  dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking)%>%
-  group_by(R_E_r_cen_village_name_str) %>% 
-  dplyr::summarise(mean = round(mean(R_E_jjm_drinking),2), 
-                    ) %>%
-  rename(Village = R_E_r_cen_village_name_str, JJM_Drinking_Percent = mean)
+#tab <- df.temp.consent%>%
+ # dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking)%>%
+  #group_by(R_E_r_cen_village_name_str) %>% 
+  #dplyr::summarise(mean = round(mean(R_E_jjm_drinking),2), 
+   #                 ) %>%
+  #rename(Village = R_E_r_cen_village_name_str, JJM_Drinking_Percent = mean)
 #Kable Output
-kbl(tab)%>%
-  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
-  add_header_above(c("JJM Drinking from Tap - Endline Census " = 2)) %>%
-  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
-  column_spec(1, bold = TRUE) %>%
-  column_spec(2, width = "75px")
+#kbl(tab)%>%
+ # kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
+  #add_header_above(c("JJM Drinking from Tap - Endline Census " = 2)) %>%
+  #row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  #column_spec(1, bold = TRUE) %>%
+  #column_spec(2, width = "75px")
 
 
 #Selecting WASH Variables and cleaning
 tab <- df.temp.consent%>%
-  dplyr::select(R_E_r_cen_village_name_str, R_E_water_source_prim, R_E_sec_source_reason_999,
-                R_E_sec_source_reason__77, R_E_water_sec_yn, R_E_water_sec_freq)%>%
-  group_by(R_E_r_cen_village_name_str) %>% 
+  dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking, R_E_jjm_yes, R_E_jjm_stored, R_E_jjm_use__77, R_E_jjm_use_999, R_E_tap_issues, R_E_tap_issues_type__77, R_E_tap_issues_type_1, R_E_water_source_prim, R_E_water_source_kids, R_E_water_prim_source_kids, R_E_water_source_preg, R_E_water_prim_source_preg, R_E_sec_source_reason_999,
+                R_E_sec_source_reason__77, R_E_water_sec_yn, R_E_water_sec_freq, R_E_water_treat, R_E_water_treat_kids, R_E_water_treat_type__77, R_E_water_treat_type_999, R_E_water_treat_freq__77, R_E_water_stored)%>%
   rename(Village = R_E_r_cen_village_name_str)
 
-tab$R_E_water_source_prim <- to_label(tab$R_E_water_source_prim)
-tab$R_E_water_sec_yn <- to_label(tab$R_E_water_sec_yn)
-tab$R_E_water_sec_freq <- to_label(tab$R_E_water_sec_freq)
 
 
 #Primary Source Use
@@ -664,32 +682,36 @@ tab$R_E_water_sec_freq <- to_label(tab$R_E_water_sec_freq)
   #rename(Primary_Water_Source_Percent = freq)
 
 #Summarizing using gt_summary()
-tab_2 <-tab%>%
-  dplyr::select(Village, R_E_water_source_prim) %>%
-  tbl_summary()%>%
-  add_n() %>%
-  as_kable_extra()
-#Outputting Kable
-tab_2%>%
-  kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
-  add_header_above(c("JJM Drinking from Tap - Endline Census " = 3)) %>%
-  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
-  column_spec(1, bold = TRUE) %>%
-  column_spec(2, width = "75px")
+# tab_2 <-tab%>%
+#   dplyr::select(Village, R_E_water_source_prim) %>%
+#   tbl_summary()%>%
+#   add_n() %>%
+#   as_kable_extra()
+# #Outputting Kable
+# tab_2%>%
+#   kable_styling(bootstrap_options = "striped", full_width = FALSE) %>%
+#   add_header_above(c("JJM Drinking from Tap - Endline Census " = 3)) %>%
+#   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+#   column_spec(1, bold = TRUE) %>%
+#   column_spec(2, width = "75px")
 
 #Table1 Output
-#table1(data = tab, ~ R_E_water_source_prim  | Village)
+table1(data = tab, ~ R_E_water_source_prim + R_E_water_source_kids + R_E_water_source_preg)
 
-
+#JJM Taps
+#Table1 Output
+table1(data = tab, ~ R_E_jjm_drinking + R_E_jjm_yes + R_E_jjm_stored + R_E_jjm_use__77 + R_E_jjm_use_999 + R_E_tap_issues+ R_E_tap_issues_type__77 + R_E_tap_issues_type_1)
 
 
 #Secondary Source Use
 #
-tab_2 <-tab%>%
-  dplyr::select(Village, R_E_water_sec_yn, R_E_water_sec_freq, R_E_sec_source_reason_999, R_E_sec_source_reason__77) 
+
+#Update secondary source variables
+tab$R_E_sec_source_reason_999 <- factor(tab$R_E_sec_source_reason_999)
+tab$R_E_sec_source_reason__77 <- factor(tab$R_E_sec_source_reason__77)
 
 #Table1 output
-table1(data = tab_2, ~ R_E_water_sec_yn + R_E_water_sec_freq + R_E_sec_source_reason_999 + R_E_sec_source_reason__77)
+table1(data = tab, ~ R_E_water_sec_yn + R_E_water_sec_freq + R_E_sec_source_reason_999 + R_E_sec_source_reason__77)
 
 
 
@@ -702,6 +724,8 @@ table1(data = tab_2, ~ R_E_water_sec_yn + R_E_water_sec_freq + R_E_sec_source_re
 
 
 ```{r}
+
+
 
 ```
 
