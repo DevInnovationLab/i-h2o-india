@@ -1862,19 +1862,19 @@ p_ec_bl + p_ec_r1 + p_ec_r2 + p_ec_r3
 
 #Combining all 4 IDEXX datasets into 1
 idexx_total_bl <- idexx%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "BL")
 
 idexx_total_r1 <- idexx_r1%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "R1")
 
 idexx_total_r2 <- idexx_r2%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "R2")
 
 idexx_total_r3 <- idexx_r3%>%
-  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "R3")%>%
   mutate(village_name = village_name.x)%>%
   dplyr::select(!(village_name.x))
@@ -1894,6 +1894,26 @@ p_total_boxplot <- ggplot(data = idexx_total) +
                      expand = c(0,0))+
   labs(x = "Data Collection Round", 
        y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160 per round)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_total_boxplot
+
+
+
+#Displaying boxplot results -- Log Scale
+idexx_total <- idexx_total%>%
+  filter(is.na(ec_mpn) == FALSE)%>%
+  filter(is.na(data_round) == FALSE)%>%
+  filter(is.na(assignment) == FALSE)
+
+p_total_boxplot <- ggplot(data = idexx_total) + 
+  geom_boxplot(aes(x = data_round, y = ec_mpn, fill = assignment)) +
+  facet_wrap(~sample_type)+
+  scale_y_continuous(trans = "log10")+
+  labs(x = "Data Collection Round", 
+       y = expression(paste("MPN ",italic("E. coli"), "/100 mL)")),
        title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160 per round)")))+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))

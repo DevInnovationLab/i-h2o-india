@@ -87,8 +87,10 @@ forvalues i = 1/2 {
 export excel unique_id BC_name r_cen_a1_resp_name interview_before_label eligible_Main_resp_T BC_Main_Respondent diff_resp_baseline  using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(Resp_diff) sheetreplace 
 export excel unique_id BC_name b_hhmember_name_1 b_hhmember_name_2 r_cen_fam_name1 r_cen_fam_name2 r_cen_fam_name3 r_cen_fam_name4 r_cen_fam_name5 r_cen_fam_name6 r_cen_fam_name7 r_cen_fam_name8 r_cen_fam_name9 r_cen_fam_name10 r_cen_fam_name11 r_cen_fam_name12 r_cen_fam_name13 r_cen_fam_name14 r_cen_fam_name15 r_cen_fam_name16 r_cen_fam_name17 r_cen_fam_name18 r_cen_fam_name19 r_cen_fam_name20 r_e_n_fam_name1 r_e_n_fam_name2 r_e_n_fam_name3 r_e_n_fam_name4 r_e_n_fam_name5 r_e_n_fam_name6 r_e_n_fam_name7 r_e_n_fam_name8 r_e_n_fam_name9 r_e_n_fam_name10 r_e_n_fam_name11 r_e_n_fam_name12 r_e_n_fam_name13 r_e_n_fam_name14 r_e_n_fam_name15 r_e_n_fam_name16 r_e_n_fam_name17 r_e_n_fam_name18 r_e_n_fam_name19 r_e_n_fam_name20 mismatch_1 mismatch_2  using "$In_progress_files/BC_Endline_differences" if mismatch_1 != 0 | mismatch_2 != 0, firstrow(varlabels) sheet(new_memebers_diff) sheetreplace 
 
+
+*cen_still_a_member_1 cen_still_a_member_2 cen_still_a_member_3 cen_still_a_member_4 cen_still_a_member_5 cen_still_a_member_6 cen_still_a_member_7 cen_still_a_member_8 cen_still_a_member_9 cen_still_a_member_10 n_hhmember_gender_1 n_hhmember_gender_2 n_hhmember_gender_3 n_hhmember_gender_4 n_hhmember_relation_1 n_hhmember_relation_2 n_hhmember_relation_3 n_hhmember_relation_4 n_hhmember_age_1 n_hhmember_age_2 n_hhmember_age_3 n_hhmember_age_4 n_u5mother_1 n_u5mother_name_1 n_u5mother_2 n_u5mother_name_2 n_u5mother_3 n_u5mother_name_3 n_u5mother_4 n_u5mother_name_4 n_u5father_name_1 n_u5father_name_2 n_u5father_name_3 n_u5father_name_4 cen_preg_status_1 cen_preg_status_2 cen_preg_status_3 cen_preg_status_4 cen_preg_status_5 cen_preg_status_6 cen_preg_status_7 cen_preg_status_8 cen_preg_status_9 cen_preg_status_10 cen_preg_status_11 cen_preg_status_12 cen_preg_status_13 cen_preg_status_14 cen_preg_status_15 cen_preg_status_16 cen_preg_status_17 cen_not_curr_preg_1 cen_not_curr_preg_2 cen_not_curr_preg_3 cen_not_curr_preg_4 cen_not_curr_preg_5 cen_not_curr_preg_6 cen_not_curr_preg_7 cen_not_curr_preg_8 cen_not_curr_preg_9 cen_not_curr_preg_10 cen_not_curr_preg_11 cen_not_curr_preg_12 cen_not_curr_preg_13 cen_not_curr_preg_14 cen_not_curr_preg_15 cen_not_curr_preg_16 cen_not_curr_preg_17 cen_preg_residence_1 cen_preg_residence_2 cen_preg_residence_3 cen_preg_residence_4 cen_preg_residence_5 cen_preg_residence_6 cen_preg_residence_7 cen_preg_residence_8 cen_preg_residence_9 cen_preg_residence_10 cen_preg_residence_11 cen_preg_residence_12 cen_preg_residence_13 cen_preg_residence_14 cen_preg_residence_15 cen_preg_residence_16 cen_preg_residence_17 n_preg_status_1 n_not_curr_preg_1 n_preg_residence_1
 global id unique_id
-global t1vars cen_still_a_member_1 cen_still_a_member_2 cen_still_a_member_3 cen_still_a_member_4 cen_still_a_member_5 cen_still_a_member_6 cen_still_a_member_7 cen_still_a_member_8 cen_still_a_member_9 cen_still_a_member_10 n_hhmember_gender_1 n_hhmember_gender_2 n_hhmember_gender_3 n_hhmember_gender_4 n_hhmember_relation_1 n_hhmember_relation_2 n_hhmember_relation_3 n_hhmember_relation_4 n_hhmember_age_1 n_hhmember_age_2 n_hhmember_age_3 n_hhmember_age_4 n_u5mother_1 n_u5mother_name_1 n_u5mother_2 n_u5mother_name_2 n_u5mother_3 n_u5mother_name_3 n_u5mother_4 n_u5mother_name_4 n_u5father_name_1 n_u5father_name_2 n_u5father_name_3 n_u5father_name_4  water_source_prim water_sec_yn water_source_sec_1 water_source_sec_2 water_source_sec_3 water_source_sec_4 water_source_sec_5 water_source_sec_6 water_source_sec_7 water_source_sec_8 water_source_sec_9 water_source_sec_10 water_source_sec__77 water_source_main_sec where_prim_locate where_prim_locate_enum_obs water_treat water_treat_type water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_freq water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 jjm_drinking tap_supply_freq cen_preg_status_1 cen_preg_status_2 cen_preg_status_3 cen_preg_status_4 cen_preg_status_5 cen_preg_status_6 cen_preg_status_7 cen_preg_status_8 cen_preg_status_9 cen_preg_status_10 cen_preg_status_11 cen_preg_status_12 cen_preg_status_13 cen_preg_status_14 cen_preg_status_15 cen_preg_status_16 cen_preg_status_17 cen_not_curr_preg_1 cen_not_curr_preg_2 cen_not_curr_preg_3 cen_not_curr_preg_4 cen_not_curr_preg_5 cen_not_curr_preg_6 cen_not_curr_preg_7 cen_not_curr_preg_8 cen_not_curr_preg_9 cen_not_curr_preg_10 cen_not_curr_preg_11 cen_not_curr_preg_12 cen_not_curr_preg_13 cen_not_curr_preg_14 cen_not_curr_preg_15 cen_not_curr_preg_16 cen_not_curr_preg_17 cen_preg_residence_1 cen_preg_residence_2 cen_preg_residence_3 cen_preg_residence_4 cen_preg_residence_5 cen_preg_residence_6 cen_preg_residence_7 cen_preg_residence_8 cen_preg_residence_9 cen_preg_residence_10 cen_preg_residence_11 cen_preg_residence_12 cen_preg_residence_13 cen_preg_residence_14 cen_preg_residence_15 cen_preg_residence_16 cen_preg_residence_17 n_preg_status_1 n_not_curr_preg_1 n_preg_residence_1
+global t1vars  water_source_prim water_sec_yn water_source_sec_1 water_source_sec_2 water_source_sec_3 water_source_sec_4 water_source_sec_5 water_source_sec_6 water_source_sec_7 water_source_sec_8 water_source_sec_9 water_source_sec_10 water_source_sec__77 water_source_main_sec where_prim_locate where_prim_locate_enum_obs water_treat water_treat_type water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_freq water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 jjm_drinking tap_supply_freq 
 
 
 rename r_cen_village_name_str BC_village_name
@@ -135,6 +137,9 @@ merge 1:1 unique_id using "$In_progress_files/BC_for_merging_with_endline.dta"
  //import follow up cleaned data again
 use "$In_progress_files/endline_census_interim.dta", clear
 
+destring unique_id, replace
+
+
 global id unique_id
 
 rename r_cen_village_name_str survey_village
@@ -155,66 +160,33 @@ save "$In_progress_files/endline_census_for_matching.dta", replace
 *****************************after cleaning is done*********************************
 
 clear 
-ssc install bcstats
+*ssc install bcstats
 //BC stats
 cd "${DataRaw}Endline BackCheck output"
  set matsize 600
  set emptycells drop
-bcstats, surveydata("$In_progress_files/endline_census_for_matching.dta") bcdata("$In_progress_files/BC_Endline_for_matching.dta") id($id) t1vars($t1vars) ttest(water_source_prim)  enumerator(enum_name) backchecker(BC_name) keepsurvey(survey_village surveydate)  keepbc(BC_surveydate BC_village_name  BC_Main_Respondent sec_source_days_ago treat_days_ago) showid(5) showall full lower trim filename(BC_Endline_bctstas.csv) replace 
+bcstats, surveydata("$In_progress_files/endline_census_for_matching.dta") bcdata("$In_progress_files/BC_Endline_for_matching.dta") id($id) t1vars($t1vars)  enumerator(enum_name) backchecker(BC_name) keepsurvey(Endline_resp_name survey_village surveydate)  keepbc(BC_surveydate BC_village_name  BC_Main_Respondent sec_source_days_ago treat_days_ago) showid(5) showall full lower trim filename(BC_Endline_bctstas.csv) replace 
  
 
-*t2vars($t2vars) t3vars($t3vars)	  
- 	/*t2vars(`t2vars') signrank(`signrank') */ 
-	/* 3vars(`t3vars') ttest(`ttest') */ 
-//to do- I am not sure how can i run stability tests on type 1 and type 2 variables so if you do help bcstats it will show a couple of tests like signrank etc so i want to incorporate that 
-//so bcstats does create an excel file but it doesnt export error percentage and all other important error rates so how can we incorporate that and export everything 	
 
 	
 return list 
 
-foreach i in r(enum1) r(enum2) r(backchecker1) r(backchecker2) r(var1) r(var2) r(ttest2){
-matrix list `i'
-}
-
-//AG: You firstly need to display the stored results in order to export it
-
-putexcel set "$In_progress_files\outputR3.xlsx", sheet("error rate1") replace
-putexcel A1 = "Error rate enum wise type 1 variables"
-putexcel A2 = matrix(r(enum1))
-putexcel set outputR2, modify sheet(error rate2)
-putexcel A1 = "Error rate enum wise type 2 variables"
-putexcel A2 = matrix(r(enum2))
-putexcel set outputR2, modify sheet(error rate3)
-putexcel A1 = "Error rate type 1 variables for BC"
-putexcel A2 = matrix(r(backchecker1))
-putexcel set outputR2, modify sheet(error rate4)
-putexcel A1 = "Error rate type 2 variables for BC"
-putexcel A2 = matrix(r(backchecker2))
-putexcel set outputR2, modify sheet(error rate5)
-putexcel A1 = "Error rate type 1 variables"
-putexcel A2 = matrix(r(var1))
-putexcel set outputR2, modify sheet(error rate6)
-putexcel A1 = "Error rate type 2 variables"
-putexcel A2 = matrix(r(var2))
-putexcel set outputR2, modify sheet(error rate7)
-putexcel A1 = "T-test results"
-putexcel A2 = matrix(r(ttest2))
-putexcel set outputR2, modify sheet(ttest)
 
 
 //ANALYSIS //////////////////////////////////////////////////////////
 
 clear
-global In_progress_files "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
-import delimited "$In_progress_files/BC_FollowupR3_diffs.csv", bindquote(strict) clear
+global In_progress_files "${DataRaw}Endline BackCheck output"
+
+import delimited "$In_progress_files/BC_Endline_bctstas.csv", bindquote(strict) clear
 
 format  unique_id %15.0gc
-drop if survey == "" & back_check == ""
-drop if survey == "." & back_check == "."
-drop if survey == "" & back_check == "."
-drop if survey == "." & back_check == ""
-rename bc_followup_resp followup_respondent
-replace followup_respondent = lower(followup_respondent)
+*drop if survey == "" & back_check == ""
+*drop if survey == "." & back_check == "."
+*drop if survey == "" & back_check == "."
+*drop if survey == "." & back_check == ""
+replace endline_resp_name = lower(endline_resp_name)
 replace bc_bc_main_respondent = lower(bc_bc_main_respondent)
 
 
@@ -232,13 +204,13 @@ label variable surveydate "Followup date"
 label variable bc_bc_surveydate "BC date" 
 label variable survey_village "Village"
 label variable bc_bc_main_respondent "BC_respondent"
-export excel unique_id variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent u_alldiffs total_diffs u_diffs_ratio using "$In_progress_files/R3_BC_Followup_wise_differences", firstrow(varlabels) sheet(unqiue_diff_ratios) sheetreplace 
+export excel unique_id variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village endline_resp_name bc_bc_main_respondent u_alldiffs total_diffs u_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(unqiue_diff_ratios) sheetreplace 
 
 *global Variables unique_id variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent u_alldiffs total_diffs u_diffs_ratio
 
-global Variables unique_id variable survey back_check u_alldiffs total_diffs u_diffs_ratio
+/*global Variables unique_id variable survey back_check u_alldiffs total_diffs u_diffs_ratio
 texsave $Variables using "$In_progress_files/R3_unique_diff_ratios.tex", ///
-        title("Unique ID wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Unique_ID}")
+        title("Unique ID wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Unique_ID}")*/
 
 restore
 
@@ -258,13 +230,13 @@ graph bar var_diffs_ratio, over(variable, label(labsize(vsmall) angle(45))) ///
 label variable total_alldiffs "Total observations for this variable"
 label variable total_diffs "Total differences"
 label variable var_diffs_ratio "Percentages"
-export excel variable total_alldiffs total_diffs var_diffs_ratio using "$In_progress_files/R3_BC_Followup_wise_differences", firstrow(varlabels) sheet(var_diff_ratios) sheetreplace 
+export excel variable total_alldiffs total_diffs var_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(var_diff_ratios) sheetreplace 
 
 *global Variables variable total_alldiffs total_diffs var_diffs_ratio 
 	
-global Variables variable total_alldiffs total_diffs var_diffs_ratio 
+/*global Variables variable total_alldiffs total_diffs var_diffs_ratio 
 texsave $Variables using "$In_progress_files/R3_var_diff_ratios.tex", ///
-        title("Variable wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")
+        title("Variable wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")*/
 
 restore
 
@@ -283,10 +255,11 @@ collapse total_diffs_enum  total_not0diffs_enum percenatge_not0diffs, by (enum_n
 label variable total_diffs_enum "Total observations for each enum"
 label variable total_not0diffs_enum "Total differences for each enum"
 label variable percenatge_not0diffs "Percentages"
-export excel enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs using "$In_progress_files/R3_BC_Followup_wise_differences", firstrow(varlabels) sheet(enumwise_ratios) sheetreplace 	
-global Variables enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs
+export excel enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(enumwise_ratios) sheetreplace 	
+
+/*global Variables enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs
 texsave $Variables using "$In_progress_files/R3_enum_diff_ratios.tex", ///
-        title("Enumerator wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Enumeartors}")
+        title("Enumerator wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Enumeartors}")*/
 
 restore
 
@@ -305,12 +278,13 @@ bysort variable: gen keyvar_diffs_ratio = (not0keytotal_diffs/keytotal_alldiffs)
 label variable keytotal_alldiffs "Total observations for each variable (only key vars)"
 label variable not0keytotal_diffs "Total differences for each variable (only key vars)"
 label variable keyvar_diffs_ratio " Percentages (only key vars)"
-export excel variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio using "$In_progress_files/R3_BC_Followup_wise_differences", firstrow(varlabels) sheet(variable_values) sheetreplace 
+export excel variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village endline_resp_name bc_bc_main_respondent keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(variable_values) sheetreplace 
 *global Variables variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio
 
-global Variables variable survey back_check keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio
+/*global Variables variable survey back_check keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio
 texsave $Variables using "$In_progress_files/R3_var_values_diff_ratios.tex", ///
-        title("Variable wise differences (With variable values)") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")
+        title("Variable wise differences (With variable values)") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")*/
+		
 restore
 
 
@@ -331,22 +305,286 @@ label variable villagetotals "Total observations for each village"
 label variable not0_villagetotals "Total differences for each village"
 rename percentage_not0_villagetotals Percentages
 label variable Percentages "Percentages"
-export excel village villagetotals not0_villagetotals Percentages using "$In_progress_files/R3_BC_Followup_wise_differences", firstrow(varlabels) sheet(village_wise_differences) sheetreplace
+export excel village villagetotals not0_villagetotals Percentages using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(village_wise_differences) sheetreplace
 
-global Variables village villagetotals not0_villagetotals Percentages
+/*global Variables village villagetotals not0_villagetotals Percentages
 texsave $Variables using "$In_progress_files/R3_village_diff_ratios.tex", ///
-        title("Village wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Villages}")
+        title("Village wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Villages}")*/
 
 restore
 
 
 
 
+/***************************************************************
+/*INDIVIDUAL LEVEL DATASET AND VARIABLES*/
+***************************************************************/
+
+use "${pilot}99_temp\Requested_wide_backcheck.dta", clear
+
+destring unique_id, replace
+
+preserve
+
+global In_progress_files "${DataRaw}Endline BackCheck output"
+
+use "$In_progress_files/endline_census_for_matching.dta", clear
+
+keep unique_id unique_id_num enum_name survey_village Endline_resp_name submit_date
+
+save "$In_progress_files/endline_individual_level_dataset", replace
+
+restore
+
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\1_raw\Endline BackCheck output\endline_individual_level_dataset.dta"
+
+drop _merge 
+
+global id unique_id
+
+rename submit_date surveydate
+
+
+
+save "$In_progress_files/endline_individual_dataset_for_BC", replace
+
+
+
+use "$In_progress_files/BC_Endline_for_matching.dta", clear
+
+
+forvalues i = 1/10 {
+rename cen_still_a_member_`i' cen_still_a_member`i'
+}
+
+forvalues i = 1/4 {
+rename n_hhmember_gender_`i' n_hhmember_gender`i'
+}
+
+forvalues i = 1/4 {
+rename n_hhmember_relation_`i' n_hhmember_relation`i'
+}
+
+forvalues i = 1/4 {
+rename n_hhmember_age_`i' n_hhmember_age`i'
+}
+
+forvalues i = 1/4 {
+rename n_u5mother_name_`i' n_u5mother_name`i'
+}
+
+forvalues i = 1/4 {
+rename n_u5mother_name_oth_`i' n_u5mother_name_oth`i'
+}
+
+forvalues i = 1/4 {
+rename n_u5father_name_`i' n_u5father_name`i'
+}
+
+forvalues i = 1/4 {
+rename n_u5father_name_oth_`i' n_u5father_name_oth`i'
+}
+
+forvalues i = 1/17 {
+rename cen_preg_status_`i' cen_preg_status`i'
+}
+
+forvalues i = 1/17 {
+rename cen_not_curr_preg_`i' cen_not_curr_preg`i'
+}
+
+forvalues i = 1/17 {
+rename cen_preg_residence_`i' cen_preg_residence`i'
+}
+
+forvalues i = 1/1 {
+rename n_preg_status_`i' n_preg_status`i'
+rename n_not_curr_preg_`i' n_not_curr_preg`i'
+rename n_preg_residence_`i' n_preg_residence`i'
+}
+
+forvalues i = 1/4 {
+rename n_u5mother_`i' n_u5mother`i'
+}
+
+ds n_u5father_name1 n_u5father_name2 n_u5father_name3 n_u5father_name4
+
+
+forvalues i = 1/4 {
+rename n_u5father_name`i' n_u5father_name_num_`i'
+}
+
+forvalues i = 1/4 {
+gen n_u5father_name`i' = ""
+}
 
 
 
 
+forvalues i = 1/4 {
+forvalues j = 1/20 {
+replace n_u5father_name`i' = r_cen_fam_name`j' if n_u5father_name_num_`i' == `j'
+      }
+}
 
+
+
+*n_preg_status1 n_not_curr_preg1 n_preg_residence1 yet to be added
+
+
+/*forvalues i = 1/4{
+tostring n_u5father_name`i', replace
+}*/
+
+global t1vars cen_still_a_member1 cen_still_a_member2 cen_still_a_member3 cen_still_a_member4 cen_still_a_member5 cen_still_a_member6 cen_still_a_member7 cen_still_a_member8 cen_still_a_member9 cen_still_a_member10 n_hhmember_gender1 n_hhmember_gender2 n_hhmember_gender3 n_hhmember_gender4  n_hhmember_relation1 n_hhmember_relation2 n_hhmember_relation3 n_hhmember_relation4 n_hhmember_age1 n_hhmember_age2 n_hhmember_age3 n_hhmember_age4 n_u5mother1 n_u5mother_name1 n_u5mother2 n_u5mother_name2 n_u5mother3 n_u5mother_name3 n_u5mother4 n_u5mother_name4 n_u5father_name1 n_u5father_name2 n_u5father_name3 n_u5father_name4 cen_preg_status1 cen_preg_status2 cen_preg_status3 cen_preg_status4 cen_preg_status5 cen_preg_status6 cen_preg_status7 cen_preg_status8 cen_preg_status9 cen_preg_status10 cen_preg_status11 cen_preg_status12 cen_preg_status13 cen_preg_status14 cen_preg_status15 cen_preg_status16 cen_preg_status17 cen_not_curr_preg1  cen_not_curr_preg2  cen_not_curr_preg3  cen_not_curr_preg4  cen_not_curr_preg5  cen_not_curr_preg6  cen_not_curr_preg7  cen_not_curr_preg8  cen_not_curr_preg9  cen_not_curr_preg10  cen_not_curr_preg11  cen_not_curr_preg12  cen_not_curr_preg13  cen_not_curr_preg14  cen_not_curr_preg15  cen_not_curr_preg16  cen_not_curr_preg17  cen_preg_residence1 cen_preg_residence2 cen_preg_residence3 cen_preg_residence4 cen_preg_residence5 cen_preg_residence6 cen_preg_residence7 cen_preg_residence8 cen_preg_residence9 cen_preg_residence10 cen_preg_residence11 cen_preg_residence12 cen_preg_residence13 cen_preg_residence14 cen_preg_residence15 cen_preg_residence16 cen_preg_residence17 
+save "$In_progress_files/BC_Endline_for_matching_changed.dta", replace
+
+clear 
+*ssc install bcstats
+//BC stats
+cd "${DataRaw}Endline BackCheck output"
+ set matsize 600
+ set emptycells drop
+bcstats, surveydata("$In_progress_files/endline_individual_dataset_for_BC.dta") bcdata("$In_progress_files/BC_Endline_for_matching_changed.dta") id($id) t1vars($t1vars)  enumerator(enum_name) backchecker(BC_name) keepsurvey(Endline_resp_name survey_village surveydate)  keepbc(BC_surveydate BC_village_name  BC_Main_Respondent) showid(5) showall full lower trim filename(BC_Endline_bctstas_individual_level.csv) replace 
+
+
+
+clear
+global In_progress_files "${DataRaw}Endline BackCheck output"
+
+import delimited "$In_progress_files/BC_Endline_bctstas_individual_level.csv", bindquote(strict) clear
+
+format  unique_id %15.0gc
+*drop if survey == "" & back_check == ""
+*drop if survey == "." & back_check == "."
+*drop if survey == "" & back_check == "."
+*drop if survey == "." & back_check == ""
+replace endline_resp_name = lower(endline_resp_name)
+replace bc_bc_main_respondent = lower(bc_bc_main_respondent)
+
+
+//Unique_ID_wise
+preserve
+*drop if follow_respondent != bc_bc_resp_name
+bysort unique_id: gen u_alldiffs = _N
+drop if diff == 0
+bysort unique_id: gen total_diffs = _N
+bysort unique_id: gen u_diffs_ratio = (total_diffs/u_alldiffs)*100
+label variable u_alldiffs "Total observations"
+label variable total_diffs "Total differences"
+label variable u_diffs_ratio "Percentages"
+label variable surveydate "Followup date" 
+label variable bc_bc_surveydate "BC date" 
+label variable survey_village "Village"
+label variable bc_bc_main_respondent "BC_respondent"
+export excel unique_id variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village endline_resp_name bc_bc_main_respondent u_alldiffs total_diffs u_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(I_unqiue_diff_ratios) sheetreplace 
+
+*global Variables unique_id variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent u_alldiffs total_diffs u_diffs_ratio
+
+/*global Variables unique_id variable survey back_check u_alldiffs total_diffs u_diffs_ratio
+texsave $Variables using "$In_progress_files/R3_unique_diff_ratios.tex", ///
+        title("Unique ID wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Unique_ID}")*/
+
+restore
+
+//VARIABLE WISE
+preserve
+//same resp only
+//drop if follow_respondent != bc_bc_resp_name
+bysort variable: gen total_alldiffs = _N //it includes even cases where difference is 0
+drop if diff == 0
+bysort variable: gen total_diffs = _N
+bysort variable: gen var_diffs_ratio = (total_diffs/total_alldiffs)*100
+collapse total_alldiffs var_diffs_ratio total_diffs, by (variable)
+graph bar var_diffs_ratio, over(variable, label(labsize(vsmall) angle(45))) ///
+    graphregion(c(white)) xsize(7) ylab(0(10)60, labsize(medsmall) angle(0)) ///
+	ytitle("Variable wise % of obs with differnces to total obs") bar(1, fc(eltblue%80))
+	graph export "$In_progress_files/diff_ratios.png" , replace	
+label variable total_alldiffs "Total observations for this variable"
+label variable total_diffs "Total differences"
+label variable var_diffs_ratio "Percentages"
+export excel variable total_alldiffs total_diffs var_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(I_var_diff_ratios) sheetreplace 
+
+*global Variables variable total_alldiffs total_diffs var_diffs_ratio 
+	
+/*global Variables variable total_alldiffs total_diffs var_diffs_ratio 
+texsave $Variables using "$In_progress_files/R3_var_diff_ratios.tex", ///
+        title("Variable wise differences") footnote("Notes: Responses of only same respondents across survey and back cehcks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")*/
+
+restore
+
+
+
+///ENUM WISE 
+preserve
+//Total variables
+//contains non differences too
+//drop if follow_respondent != bc_bc_resp_name
+bysort enum_name: gen total_diffs_enum = _N
+drop if diff == 0
+bysort enum_name: gen total_not0diffs_enum = _N
+bysort enum_name: gen percenatge_not0diffs = (total_not0diffs_enum/total_diffs_enum)*100
+collapse total_diffs_enum  total_not0diffs_enum percenatge_not0diffs, by (enum_name)
+label variable total_diffs_enum "Total observations for each enum"
+label variable total_not0diffs_enum "Total differences for each enum"
+label variable percenatge_not0diffs "Percentages"
+export excel enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(I_enumwise_ratios) sheetreplace 	
+
+/*global Variables enum_name total_diffs_enum total_not0diffs_enum percenatge_not0diffs
+texsave $Variables using "$In_progress_files/R3_enum_diff_ratios.tex", ///
+        title("Enumerator wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Enumeartors}")*/
+
+restore
+
+
+
+**Variable wise- exporting var values too***
+preserve
+*drop if follow_respondent != bc_bc_resp_name
+*keep if variable == "water_sec_yn" | variable == "water_treat" | variable == "water_source_prim" | variable == "tap_use_drinking_yesno" | variable == "chlorine_drank_yesno" | variable == "chlorine_yesno" | variable == "water_source_sec"
+//all keyvariable wise
+bysort variable: gen keytotal_alldiffs = _N //it includes even cases where difference is 0
+drop if diff == 0
+//key variable wise
+bysort variable: gen not0keytotal_diffs = _N
+bysort variable: gen keyvar_diffs_ratio = (not0keytotal_diffs/keytotal_alldiffs)*100
+label variable keytotal_alldiffs "Total observations for each variable (only key vars)"
+label variable not0keytotal_diffs "Total differences for each variable (only key vars)"
+label variable keyvar_diffs_ratio " Percentages (only key vars)"
+export excel variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village endline_resp_name bc_bc_main_respondent keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(I_variable_values) sheetreplace 
+*global Variables variable survey back_check diff enum_name bc_name surveydate bc_bc_surveydate survey_village followup_respondent bc_bc_main_respondent keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio
+
+/*global Variables variable survey back_check keytotal_alldiffs not0keytotal_diffs keyvar_diffs_ratio
+texsave $Variables using "$In_progress_files/R3_var_values_diff_ratios.tex", ///
+        title("Variable wise differences (With variable values)") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Variables}")*/
+		
+restore
+
+
+
+//VILLAGE WISE for key
+
+preserve
+*drop if follow_respondent != bc_bc_resp_name
+*replace bc_bc_village_name = "Gopi Kankubadi" if bc_bc_village_name == "Gopi_Kankubadi"
+*keep if variable == "water_sec_yn" | variable == "water_treat" | variable == "water_source_prim" | variable == "tap_use_drinking_yesno" | variable == "chlorine_drank_yesno" | variable == "chlorine_yesno" | variable == "water_source_sec"
+clonevar village = survey_village
+bysort village: gen villagetotals=_N
+drop if diff == 0
+bysort village: gen not0_villagetotals=_N
+bysort village: gen percentage_not0_villagetotals= (not0_villagetotals/villagetotals)*100
+collapse villagetotals not0_villagetotals percentage_not0_villagetotals, by ( village)
+label variable villagetotals "Total observations for each village"
+label variable not0_villagetotals "Total differences for each village"
+rename percentage_not0_villagetotals Percentages
+label variable Percentages "Percentages"
+export excel village villagetotals not0_villagetotals Percentages using "$In_progress_files/BC_Endline_differences", firstrow(varlabels) sheet(I_village_wise_differences) sheetreplace
+
+/*global Variables village villagetotals not0_villagetotals Percentages
+texsave $Variables using "$In_progress_files/R3_village_diff_ratios.tex", ///
+        title("Village wise differences") footnote("Notes: Responses of only same respondents across survey and back checks are taken into account") replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Villages}")*/
+
+restore
 
 
 
