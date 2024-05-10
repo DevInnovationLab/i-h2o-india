@@ -1,4 +1,4 @@
-* 000000123
+* 000000203
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -981,4 +981,449 @@ d Support: email staudtlex@@live.de
 d 
 f c/cibar.ado
 f c/cibar.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/r
+N reghdfe.pkg
+D 10 May 2024
+U 13
+d 'REGHDFE': module to perform linear or instrumental-variable regression absorbing any number of high-dimensional fixed effects
+d 
+d  reghdfe fits a linear or instrumental-variable regression
+d absorbing an arbitrary number of categorical factors and
+d factorial interactions Optionally, it saves the estimated fixed
+d effects.
+d 
+d KW: regression
+d KW: instrumental variables
+d KW: fixed effects
+d KW: high dimension fixed effects
+d 
+d Requires: Stata version 11.2
+d 
+d Distribution-Date: 20230821
+d 
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
+d 
+f r/reghdfe.ado
+f r/reghdfe.mata
+f r/reghdfe3.ado
+f r/reghdfe_p.ado
+f r/reghdfe3_p.ado
+f r/reghdfe5.ado
+f r/reghdfe5_p.ado
+f r/reghdfe_estat.ado
+f r/reghdfe3_estat.ado
+f r/reghdfe5_estat.ado
+f r/reghdfe_parse.ado
+f r/reghdfe5_parse.ado
+f r/reghdfe_footnote.ado
+f r/reghdfe3_footnote.ado
+f r/reghdfe5_footnote.ado
+f e/estfe.ado
+f r/reghdfe_header.ado
+f r/reghdfe5_header.ado
+f r/reghdfe5_parse.ado
+f r/reghdfe.sthlp
+f r/reghdfe3.sthlp
+f r/reghdfe5.sthlp
+f r/reghdfe.mata
+f r/reghdfe_programming.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/f
+N ftools.pkg
+D 10 May 2024
+U 14
+d 'FTOOLS': module to provide alternatives to common Stata commands optimized for large datasets
+d 
+d  ftools consists of a Mata file and several Stata commands: The
+d Mata file creates identifiers (factors) from variables by using
+d hash functions instead of sorting the data, so it runs in time
+d O(N) and not in O(N log N). The Stata commands exploit this to
+d avoid sort operations,  at the cost of being slower for small
+d datasets (mainly because of the cost involved in moving data from
+d Stata to Mata). Implemented commands are fcollapse, fegen group,
+d and fsort. Note that most of the capabilities of levels and
+d contract are already supported by these commands. Possible
+d commands include more egen functions and merge and reshape
+d alternatives.
+d 
+d KW: levels
+d KW: collapse
+d KW: contract
+d KW: egen
+d KW: sort
+d KW: factor variables
+d KW: Mata
+d 
+d Requires: Stata version 11.2
+d 
+d Distribution-Date: 20230821
+d 
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
+d 
+f f/ftools.ado
+f f/ftools.mata
+f f/ftools.sthlp
+f f/fcollapse.ado
+f f/fcollapse.sthlp
+f f/fegen.ado
+f f/fegen_group.ado
+f f/fegen.sthlp
+f f/fisid.ado
+f f/fisid.sthlp
+f f/flevelsof.ado
+f f/flevelsof.sthlp
+f f/fmerge.ado
+f f/fmerge.sthlp
+f f/freshape.ado
+f f/fsort.ado
+f f/fsort.sthlp
+f f/ftab.ado
+f j/join.ado
+f j/join.sthlp
+f l/local_inlist.ado
+f l/local_inlist.sthlp
+f f/fcollapse_functions.mata
+f f/fcollapse_main.mata
+f f/ftools_type_aliases.mata
+f f/ftools.mata
+f f/ftools_common.mata
+f f/ftools_hash1.mata
+f f/ftools_main.mata
+f f/ftools_experimental.mata
+f f/ftools_plugin.mata
+f f/ftools_type_aliases.mata
+f m/ms_compile_mata.ado
+f m/ms_expand_varlist.ado
+f m/ms_fvstrip.ado
+f m/ms_fvstrip.sthlp
+f m/ms_fvunab.ado
+f m/ms_get_version.ado
+f m/ms_parse_absvars.ado
+f m/ms_parse_varlist.ado
+f m/ms_parse_vce.ado
+f m/ms_add_comma.ado
+e
+S http://fmwww.bc.edu/repec/bocode/p
+N parmest.pkg
+D 10 May 2024
+U 15
+d 'PARMEST': module to create new data set with one observation per parameter of most recent model
+d 
+d   The parmest package has 4 modules: parmest, parmby,
+d parmcip and metaparm. parmest creates an output dataset, with 1
+d observation per parameter of the most recent estimation results,
+d and variables corresponding to parameter names, estimates,
+d standard errors, z- or t-test statistics, P-values, confidence
+d limits and other parameter attributes. parmby is a quasi-byable
+d extension to parmest, which calls an estimation command, and
+d creates a new dataset, with 1 observation per parameter if the
+d by() option is unspecified, or 1 observation per parameter per
+d by-group if the by() option is specified. parmcip inputs
+d variables containing estimates, standard errors and (optionally)
+d degrees of freedom, and computes new variables containing
+d confidence intervals and P-values. metaparm inputs a parmest-type
+d dataset with 1 observation for each of a set of
+d independently-estimated parameters, and outputs a dataset with 1
+d observation for each of a set of linear combinations of these
+d parameters, with confidence intervals and P-values, as for a
+d meta-analysis. The output datasets created by parmest, parmby or
+d metaparm  may be listed to the Stata log and/or saved to a file
+d and/or retained in memory (overwriting any pre-existing dataset).
+d The confidence intervals, P-values and other parameter attributes
+d in the dataset may be listed and/or plotted and/or tabulated.
+d 
+d 
+d Requires: Stata version 16.0
+d 
+d Distribution-Date: 20220711
+d 
+d Author: Roger Newson, Imperial College London
+d Support: email r.newson@@imperial.ac.uk
+d 
+f p/parmest.ado
+f p/parmest.sthlp
+f m/metaparm_content_opts.sthlp
+f m/metaparm_outdest_opts.sthlp
+f m/metaparm_resultssets.sthlp
+f m/metaparm.ado
+f m/metaparm.sthlp
+f p/parmby_only_opts.sthlp
+f p/parmby.ado
+f p/parmby.sthlp
+f p/parmcip_opts.sthlp
+f p/parmcip.ado
+f p/parmcip.sthlp
+f p/parmest_ci_opts.sthlp
+f p/parmest_outdest_opts.sthlp
+f p/parmest_resultssets.sthlp
+f p/parmest_varadd_opts.sthlp
+f p/parmest_varmod_opts.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/c
+N carryforward.pkg
+D 10 May 2024
+U 16
+d 'CARRYFORWARD': module to carry forward previous observations
+d 
+d  carryforward will carry values forward from one observation to
+d the next, filling in missing values with the previous value. This
+d is not intended for imputing missing values; it is regarded as a
+d bad choice for missing-value imputation. The intent is, rather,
+d to fill in "holes", where a value should  naturally prevail from
+d one observation to the next. The holes may be artifacts of data
+d management operations such as merging.
+d 
+d KW: carryforward
+d KW: carry
+d KW: forward
+d KW: missing
+d KW: fill
+d KW: replace
+d KW: cascade
+d 
+d Requires: Stata version 8.2
+d 
+d Distribution-Date: 20160212
+d 
+d Author: David Kantor
+d Support: email  kantor.d@@att.net
+d 
+f c/carryforward.ado
+f c/carryforward.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/e
+N egenmore.pkg
+D 10 May 2024
+U 17
+d 'EGENMORE': modules to extend the generate function
+d 
+d  This package includes various -egen- functions. For full
+d details, please read the help file (ssc type egenmore.sthlp).
+d Some of these routines are updates of those published in STB-50.
+d _gfilter, _ggroup2, _gegroup and _gcorr require Stata 7.
+d _gminutes, _grepeat and _gseconds require Stata 8.  _gcorr and
+d _gnoccur were written by Nick Winter
+d (nwinter@policystudies.com). _grsum2 was written by Steven
+d Stillman (s.stillman@verizon.net). _gdhms, _gelap, _gelap2,
+d _ghms, _gtod and _gtruncdig were written by Kit Baum
+d (baum@bc.edu).
+d 
+d KW: egen
+d KW: grouping
+d KW: graphing
+d KW: strings
+d KW: dates
+d KW: first
+d KW: last
+d KW: random
+d KW: row
+d 
+d Requires: Stata version 6.0 (7.0 for _gfilter7, _ggroup2, _gegroup, _gsieve, _gnoccur; 8.2 for _gcorr, _grepeat, _gminutes, _gseconds, _gfilter, _gaxis, _gdensity, _gxtile, _gtotal0, _gmixnorm, _gw
+d 
+d 
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+d Distribution-Date: 20190124
+d 
+f e/egenmore.sthlp
+f _/_gclsst.ado
+f _/_gnmiss.ado
+f _/_ggmean.ado
+f _/_ghmean.ado
+f _/_grall.ado
+f _/_grany.ado
+f _/_grcount.ado
+f _/_grndsub.ado
+f _/_grndint.ado
+f _/_gfilter.ado
+f _/_gifirst.ado
+f _/_gilast.ado
+f _/_gncyear.ado
+f _/_ghmm.ado
+f _/_ghmmss.ado
+f _/_gincss.ado
+f _/_gfirst.ado
+f _/_glastnm.ado
+f _/_gnss.ado
+f _/_gbom.ado
+f _/_gbomd.ado
+f _/_geom.ado
+f _/_geomd.ado
+f _/_gnwords.ado
+f _/_gwordof.ado
+f _/_gnvals.ado
+f _/_gridit.ado
+f _/_gsemean.ado
+f _/_gmsub.ado
+f _/_gston.ado
+f _/_gntos.ado
+f _/_gewma.ado
+f _/_grecord.ado
+f _/_gbase.ado
+f _/_gdecimal.ado
+f _/_ggroup2.ado
+f _/_gsumoth.ado
+f _/_gegroup.ado
+f _/_gcorr.ado
+f _/_grsum2.ado
+f _/_gsieve.ado
+f _/_gdhms.ado
+f _/_ghms.ado
+f _/_gtod.ado
+f _/_gelap.ado
+f _/_gelap2.ado
+f _/_gnoccur.ado
+f _/_gwtfreq.ado
+f _/_gvar.ado
+f _/_gminutes.ado
+f _/_gseconds.ado
+f _/_grepeat.ado
+f _/_gaxis.ado
+f _/_gdensity.ado
+f _/_gxtile.ado
+f _/_gtotal0.ado
+f _/_gmixnorm.ado
+f _/_gadjl.ado
+f _/_gadju.ado
+f _/_gdayofyear.ado
+f _/_gfoy.ado
+f _/_goutside.ado
+f _/_gmlabvpos.ado
+f _/_giso3166.ado
+f _/_growmedian.ado
+f _/_gwpctile.ado
+f _/_gd2.ado
+f _/_grownvals.ado
+f _/_growsvals.ado
+f _/_gtruncdig.ado
+e
+S http://fmwww.bc.edu/repec/bocode/s
+N strdist.pkg
+D 10 May 2024
+U 18
+d 'STRDIST': module to calculate the Levenshtein distance, or edit distance, between strings
+d 
+d  strdist calculates the Levenshtein distance, or edit distance,
+d between strings. It is implemented in Mata, and does not require
+d a C plugin. ustrdist handles Unicode strings.
+d 
+d KW: edit distance
+d KW: Levenshtein distance
+d KW: string comparison
+d KW: data management
+d 
+d Requires: Stata version 10 (version 14 for ustrdist)
+d 
+d Distribution-Date: 20171213
+d 
+d Author: Michael Barker, Georgetown University
+d Support: email michael.barker96@@gmail.com
+d 
+d Author: Felix Pöge, Max Planck Institute for Innovation and Competition
+d Support: email felix.poege@@ip.mpg.de
+d 
+f s/strdist.ado
+f s/strdist.sthlp
+f u/ustrdist.ado
+f u/ustrdist.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/x
+N xtevent.pkg
+D 10 May 2024
+U 19
+d 'XTEVENT': module to estimate and visualize linear panel event-study models
+d 
+d  -xtevent- provides commands to estimate linear panel event-study
+d models, create event-study plots, and conduct hypothesis tests
+d after estimation. It implements the plotting suggestions and many
+d of the estimators discussed in Freyaldenhoven et al. (2021).
+d 
+d KW: panel data
+d KW: event studies
+d KW: graphics
+d 
+d Requires: Stata version 11.2 and ivreghdfe, reghdfe, ftools, ivreg2, ranktest from SSC (q.v.)
+d 
+d Distribution-Date: 20230318
+d 
+d Author: Simon Freyaldenhoven, Federal Reserve Bank of Philadelphia
+d Support: email simon.freyaldenhoven@@phil.frb.org
+d 
+d Author: Christian Hansen, University of Chicago, Booth School of Business
+d Support: email chansen1@@chicagobooth.edu
+d 
+d Author: Jorge Eduardo Perez Perez, Banco de México
+d Support: email  jorgepp@@banxico.org.mx
+d 
+d Author: Jesse Shapiro, Brown University
+d Support: email  jesse_shapiro_1@@brown.edu
+d 
+f x/xtevent.ado
+f _/_eventgenvars.ado
+f _/_eventiv.ado
+f _/_eventivstatic.ado
+f _/_eventols.ado
+f _/_eventolsstatic.ado
+f x/xtevent.sthlp
+f g/get_unit_time_effects.ado
+f g/get_unit_time_effects.sthlp
+f x/xteventplot.ado
+f x/xteventplot.sthlp
+f x/xteventtest.ado
+f x/xteventtest.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/i
+N iefieldkit.pkg
+D 10 May 2024
+U 20
+d 'IEFIELDKIT': module providing Stata commands for primary data collection and cleaning
+d 
+d  iefieldkit provides a set of commands that enable a reproducible
+d primary data collection and cleaning workflow. The package is
+d developed to facilitate a workflow including (1) data collection
+d (in particular using opendatakit.org, more specifically
+d surveycto.com); (2) basic data cleaning, such as labeling and
+d recoding; (3) reconciling survey rounds; (4) preparing codebooks
+d to document data sets. iefieldkit was developed to standardize
+d and simplify best practices for high-quality primary data
+d collection across the World Bank's Development Research Group
+d Impact Evaluations team (DIME). The commands can also be used
+d independently, and are developed to be applicable to many other
+d contexts as well. See https://github.com/worldbank/iefieldkit for
+d more details.
+d 
+d KW:  impact evaluations
+d KW: field work
+d KW: ODK
+d KW: survey data
+d KW: primary data collection
+d KW: SurveyCTO
+d KW: data cleaning
+d KW: survey harmonization
+d KW: duplicates
+d KW: codebooks
+d 
+d Requires: Stata version 11
+d 
+d Distribution-Date: 20230802
+d 
+d Author: DIME Analytics, The World Bank, DECIE
+d Support: email  lcardosodeandrad@@worldbank.org
+d 
+f i/iefieldkit.ado
+f i/iefieldkit.sthlp
+f i/iecodebook.ado
+f i/iecodebook.sthlp
+f i/iecompdup.ado
+f i/iecompdup.sthlp
+f i/iecorrect.ado
+f i/iecorrect.sthlp
+f i/ieduplicates.ado
+f i/ieduplicates.sthlp
+f i/ietestform.ado
+f i/ietestform.sthlp
 e
