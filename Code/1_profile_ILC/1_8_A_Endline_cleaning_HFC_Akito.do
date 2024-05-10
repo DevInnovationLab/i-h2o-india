@@ -33,7 +33,57 @@ program define   prefix_rename
 
 end
 
+cap program drop Variable_Consistent
+program define   Variable_Consistent
+
+	foreach var of varlist cen* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen", "comb", 1)
+    rename `var' `newname'
+	}
+end
+
+
 * Cen_Typel 1 "n_all" 2 "n_cbw" 3 "cen_cbw" 4 "cen_u5" 5 "n_u5" 6 "cen_all", modify
+
+
+* This is the general population
+use "${DataTemp}Medical_expenditure_person.dta", clear
+ keep key comb_med_seek_val_comb
+ gen flag=1
+ collapse  (sum) flag, by(key)
+ save "${DataTemp}Medical_expenditure_person_HH.dta", replace
+
+use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
+* Available for intervew
+* HH is 392
+
+foreach var of varlist R_E_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "R_E_", "", 1)
+    rename `var' `newname'
+}
+
+gen     Any_seek=1
+
+replace Any_seek=0 if (cen_med_seek_all=="" | cen_med_seek_all=="21") & (n_med_seek_all=="" | n_med_seek_all=="21")
+keep Any_seek cen_med_seek_all cen_med_seek_all key
+br
+merge 1:1 key using "${DataTemp}Medical_expenditure_person_HH.dta", gen(Merge_MasterSick)
+tab Merge_MasterSick Any_seek,m
+replace Any_seek=2 if Any_seek==0 & Merge_MasterSick==3
+tab Any_seek
+
+* This is the general population
+ 
+ use "${DataTemp}Medical_expenditure_5_11.dta", clear
+ keep key key3 comb_med_out_home_comb_1 comb_med_out_home_comb_2 comb_med_out_home_comb_3 comb_med_out_home_comb_4 comb_med_out_home_comb_5 comb_med_out_home_comb_6 comb_med_out_home_comb_7 comb_med_out_home_comb_8 comb_med_out_home_comb_9 comb_med_out_home_comb_999 comb_med_out_home_comb__77 key
+ duplicates drop key key3, force
+ rename comb_med_out_home_comb__77 comb_med_out_home_comb_77
+reshape long comb_med_out_home_comb_, i(key key3) j(Num) 
+keep if comb_med_out_home_comb_==1
+
+
 
 /* ---------------------------------------------------------------------------
 * ID 19 and 20: Mortality info
@@ -41,11 +91,16 @@ end
  * ID 19
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta", clear
 key_creation 
-foreach var of varlist cen* {
+foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen", "comb", 1)
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
     rename `var' `newname'
 }
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=3
 save "${DataTemp}temp.dta", replace
 
 * ID 20
@@ -56,34 +111,134 @@ foreach var of varlist n_* {
     local newname = subinstr("`var'", "n_", "comb_", 1)
     rename `var' `newname'
 }
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=2
 append using "${DataTemp}temp.dta"
 save "${DataTemp}Mortality_19_20.dta", replace
 
 /* ---------------------------------------------------------------------------
-* ID 23 and 24: Morbidity for children U5
+* ID 21, 22, 23 and 24: Morbidity for children U5
  ---------------------------------------------------------------------------*/
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
+* Respondent available for an interview 
+keep if cen_child_caregiver_present==1
+key_creation
 foreach var of varlist cen* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen", "comb", 1)
     rename `var' `newname'
 }
+foreach var of varlist *_u5*  {
+	local newname = subinstr("`var'", "_u5", "_comb", 1)
+    rename `var' `newname'
+}
 gen Cen_Type=4
 save "${DataTemp}temp.dta", replace
- * ID 24
- 
+
+* ID 24
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
+key_creation
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_u5*  {
+	local newname = subinstr("`var'", "_u5", "_comb", 1)
     rename `var' `newname'
 }
 gen Cen_Type=5
 append using "${DataTemp}temp.dta"
 drop if comb_child_caregiver_present==.
 tab Cen_Type,m
-save "${DataTemp}Morbidity_23_24.dta", replace
+save "${DataTemp}U5_Child_23_24.dta", replace
+savesome using "${DataTemp}Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
+
+/* ---------------------------------------------------------------------------
+* ID of the data 5 and 11, 21 and 22
+* Out of the 105 HHH 134 sample shows records of  medical care in the past months
+* Unit: This is medical care incidence level
+* Cen/N and all/CBW
+ ---------------------------------------------------------------------------*/
+* ID 22 
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+drop if n_resp_avail_cbw==.
+key_creation 
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+    }
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=2
+save "${DataTemp}temp1.dta", replace
+
+* ID 21
+ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+ drop if  cen_name_cbw_woman_earlier==""
+ key_creation
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+    }
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=3
+save "${DataTemp}temp2.dta", replace
+
+* ID 5
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta", clear
+key_creation
+drop if cen_med_seek_val_all==""
+// List all variables starting with "cen"
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_all* {
+	local newname = subinstr("`var'", "_all", "_comb", 1)
+    rename `var' `newname'
+}
+gen Cen_Type=6
+save "${DataTemp}temp3.dta", replace
+
+* ID 11
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_med_seek_lp_all.dta", clear
+key_creation
+drop if n_med_seek_val_all==""
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_all* {
+	local newname = subinstr("`var'", "_all", "_comb", 1)
+    rename `var' `newname'
+}
+gen Cen_Type=1
+append using "${DataTemp}temp1.dta"
+append using "${DataTemp}temp2.dta"
+append using "${DataTemp}temp3.dta"
+drop comb_med_seek_ind_comb
+unique key
+save "${DataTemp}Medical_expenditure_5_11_21_22.dta", replace
+
+use           "${DataTemp}Medical_expenditure_5_11_21_22.dta", clear
+append using  "${DataTemp}Morbidity_23_24.dta"
+save "${DataTemp}Medical_expenditure_person.dta", replace
+
 
 /* ---------------------------------------------------------------------------
 * Long indivual data from the roster
@@ -107,6 +262,7 @@ use "${DataTemp}temp0.dta", clear
 merge 1:1 key key3 using "${DataTemp}temp1.dta"
 * N=141
 gen Type=1
+unique key key3
 save "${DataTemp}Requested_long_backcheck1.dta", replace
 
 * ID 25
@@ -127,6 +283,7 @@ save "${DataTemp}temp0.dta", replace
  use "${DataTemp}temp0.dta", clear
  merge 1:1 key key3 using "${DataTemp}temp1.dta"
 gen Type=2
+unique key key3
 save "${DataTemp}Requested_long_backcheck2.dta", replace
 
 use "${DataTemp}Requested_long_backcheck1.dta", clear
@@ -173,7 +330,7 @@ foreach var of varlist n_* {
     local newname = subinstr("`var'", "n_", "comb_", 1)
     rename `var' `newname'
 }
-foreach var of varlist *_cbw {
+foreach var of varlist *_cbw* {
 	local newname = subinstr("`var'", "_cbw", "_comb", 1)
     rename `var' `newname'
 }
@@ -191,49 +348,6 @@ replace comb_med_otherpay_comb=. if comb_med_otherpay_comb==999
 collapse (sum) comb_med_otherpay_comb, by(key Cen_Type key3 key6) 
 * Now it is collapsed at incidence wise: 71 incidence
 save "${DataTemp}Medical_expenditure_6_15.dta", replace
-
-/* ---------------------------------------------------------------------------
-* ID of the data 5 and 11
-* Out of the 105 HHH 134 sample shows records of  medical care in the past months
-* Unit: This is medical care incidence level
-* Cen all and N all
- ---------------------------------------------------------------------------*/
-* ID 5
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta", clear
-key_creation
-// List all variables starting with "cen"
-foreach var of varlist cen* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen", "comb", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_all {
-	local newname = subinstr("`var'", "_all", "_comb", 1)
-    rename `var' `newname'
-}
-gen Cen_Type=6
-save "${DataTemp}temp.dta", replace
-
-* ID 11
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_med_seek_lp_all.dta", clear
-key_creation
-// List all variables starting with "n_"
-foreach var of varlist n_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "n_", "comb_", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_all {
-	local newname = subinstr("`var'", "_all", "_comb", 1)
-    rename `var' `newname'
-}
-gen Cen_Type=1
-append using "${DataTemp}temp.dta", gen(Cen)
-
-drop if comb_med_seek_val_comb==""
-drop comb_med_seek_ind_comb
-unique key
-save "${DataTemp}Medical_expenditure_5_11.dta", replace
 
 /* ---------------------------------------------------------------------------
 * ID 8, 10,  13, and 17
@@ -329,8 +443,6 @@ append using "${DataTemp}temp1.dta"
 save "${DataTemp}Medical_expenditure_8_10_13_17.dta", replace
 
 
-
-
 /* ---------------------------------------------------------------------------
 * ID of the data 4 and 7and 12 and 14 and 18
 * Unit: Numeber of individual experienced medical care times Location that they seeked care
@@ -340,6 +452,7 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_u5child_start_eligible-N_caregiv
 drop if n_out_val2_u5==""
 drop if n_out_names_u5==""
 key_creation
+unique key
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -357,6 +470,7 @@ save "${DataTemp}temp4.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_u5child_nonull-Cen_caregiver_present-Cen_sought_med_care_U5-Cen_med_visits_not0_U5-Cen_prvdrs_exp_loop_U5.dta", clear
 drop if cen_out_val2_u5==""
 key_creation
+unique key
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
@@ -373,6 +487,7 @@ save "${DataTemp}temp3.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_sought_med_care_CBW-Cen_med_visits_not0_CBW-Cen_prvdrs_exp_loop_CBW.dta", clear
 drop if cen_out_val2_cbw==""
 key_creation
+unique key
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
@@ -389,7 +504,9 @@ save "${DataTemp}temp2.dta", replace
  * ID 14
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta", clear
 drop if n_out_val2_cbw==""
+* 5 HH
 key_creation
+unique key
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -407,6 +524,7 @@ save "${DataTemp}temp1.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.dta", clear
 drop if cen_out_val2_all==""
 key_creation
+* 100 HH
 unique key
 unique parent_key
 duplicates tag parent_key, gen(Dup)
@@ -507,12 +625,18 @@ drop if Merge_othermed1==2
 duplicates drop key Cen_Type key3 key6,force
 merge 1:1 key Cen_Type key3 key6 using "${DataTemp}Medical_expenditure_8_10_13_17.dta", gen(Merge_othermed2)
 drop if Merge_othermed2==2
-merge m:1 key using "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", keepusing(unique_id enum_name) keep(3) nogen
+rename key R_E_key
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name) keep(3) nogen
+rename R_E_key  key
 * N=148: Number of incidnce times Location they seeked care
 savesome using "${DataTemp}Medical_expenditure_person_case.dta" if comb_out_val2_comb!="", replace
 collapse (sum) comb_med_time, by(key Cen_Type key3)
-* N=134: Number of incidnce
-merge 1:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_5_11.dta"
+unique  key key3
+* N=134: Number of incidnce for the general population
+* Come back
+tab Cen_Type,m
+merge 1:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_person.dta", gen(Merge_Person_Case) keep(3)
+
 
 * Create Dummy
 	foreach v in Cen_Type {
@@ -524,20 +648,30 @@ merge 1:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_5_11.dta"
 		label var `v'_`value' "`: label (`v') `value''"
 	}
 	}
+	
+label var comb_med_symp_comb_1 "Fever"
+label var comb_med_symp_comb_3 "Coughing/respiratory illness"
+label var comb_med_symp_comb_12 "Body pain/ache (headache, knee pain, back pain, etc)"
+label var comb_med_symp_comb__77 "Other"
 
-save "${DataTemp}Medical_expenditure_person.dta", replace
+save "${DataTemp}Medical_expenditure_person_clean.dta", replace
 
 
-use "${DataTemp}Medical_expenditure_person.dta", clear
+use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 * N_HHmember_age: Add this, Cen_CBW_consent
 global PerVar ///
-       Cen_Type_1 Cen_Type_2 Cen_Type_3 Cen_Type_4 Cen_Type_5 Cen_Type_6
+	   comb_med_symp_comb_1 comb_med_symp_comb_2 comb_med_symp_comb_3 comb_med_symp_comb_4 comb_med_symp_comb_5 ///
+	   comb_med_symp_comb_6 comb_med_symp_comb_7 comb_med_symp_comb_8 comb_med_symp_comb_9 comb_med_symp_comb_10 ///
+	   comb_med_symp_comb_11 comb_med_symp_comb_12 comb_med_symp_comb_13 comb_med_symp_comb__77
 
 local PerVar "Number of people reporting any sickness"
 					 
 foreach k in PerVar {
 * Mean
 	eststo  model0: estpost summarize $`k'
+	eststo  model01: estpost summarize $`k' if Cen_Type_1==1 | Cen_Type_6==1
+	eststo  model02: estpost summarize $`k' if Cen_Type_2==1 | Cen_Type_3==1
+	eststo  model03: estpost summarize $`k' if Cen_Type_4==1 | Cen_Type_5==1
 * Median
 	foreach i in $`k' {
 	egen m_`i'=median(`i')
@@ -546,7 +680,7 @@ foreach k in PerVar {
 	eststo  model1: estpost summarize $`k'
 
 * Min
-	use "${DataTemp}Medical_expenditure_person.dta", clear
+	use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 	foreach i in $`k' {
 	egen i_`i'=min(`i')
 	replace `i'=i_`i'
@@ -554,14 +688,14 @@ foreach k in PerVar {
 
 	eststo  model6: estpost summarize $`k'
 * Max
-	use "${DataTemp}Medical_expenditure_person.dta", clear
+	use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 	foreach i in $`k' {
 	egen a_`i'=max(`i')
 	replace `i'=a_`i'
 	}
 	eststo  model7: estpost summarize $`k'
 * Missing 
-	use "${DataTemp}Medical_expenditure_person.dta", clear
+	use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 	foreach i in $`k' {
 	egen `i'_s=rowmiss(`i')
 	egen s_`i'=sum(`i'_s)
@@ -569,9 +703,9 @@ foreach k in PerVar {
 	}
 	eststo  model8: estpost summarize $`k'
 
-esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("``k''" \label{`Label`k''}) ///
+esttab model0  model01  model02  model03 model8 using "${Table}Enr_`k'.tex", title("``k''" \label{`Label`k''}) ///
 	   cell("mean (fmt(2) label(_))") stats(N, fmt("%9.0fc") label(Observations) ) /// 
-	   mtitles("Mean" "Median" "Min" "Max" "Number missing") nonum ///
+	   mtitles("Mean" "All" "CBW" "U5" "Number missing") nonum ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{0.87\linewidth}}{\footnotesize" ///
 				   "&           _&           _&           _&           _&           _\\" "" ///
 				   "-0 " "0" ///
@@ -582,7 +716,7 @@ esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("``
 
 use "${DataTemp}Medical_expenditure_person_case.dta", clear
 
-br unique_id enum_name if comb_med_doctor_fees_comb>2000 & comb_med_doctor_fees_comb!=.
+* br unique_id enum_name if comb_med_doctor_fees_comb>2000 & comb_med_doctor_fees_comb!=.
 
 * N_HHmember_age: Add this, Cen_CBW_consent
 global MedVar ///
