@@ -136,8 +136,8 @@ merge 1:1 unique_id using "$In_progress_files/BC_for_merging_with_endline.dta"
 
  //import follow up cleaned data again
 use "$In_progress_files/endline_census_interim.dta", clear
-
 destring unique_id, replace
+format  unique_id %15.0gc
 
 
 global id unique_id
@@ -151,6 +151,7 @@ format surveydate %td
 rename r_cen_a10_hhhead  survey_hhead
 
 rename cen_resp_label Endline_resp_name
+drop if Endline_resp_name == ""
 
 
 save "$In_progress_files/endline_census_for_matching.dta", replace
@@ -182,12 +183,42 @@ global In_progress_files "${DataRaw}Endline BackCheck output"
 import delimited "$In_progress_files/BC_Endline_bctstas.csv", bindquote(strict) clear
 
 format  unique_id %15.0gc
-*drop if survey == "" & back_check == ""
-*drop if survey == "." & back_check == "."
-*drop if survey == "" & back_check == "."
-*drop if survey == "." & back_check == ""
+replace survey = "" if back_check == "" & survey  == "."
+replace survey = "." if back_check == "." & survey  == ""
+
 replace endline_resp_name = lower(endline_resp_name)
 replace bc_bc_main_respondent = lower(bc_bc_main_respondent)
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+list unique_id if dup_HHID > 0
+
+
+//checking for same respondents 
+
+/*preserve
+
+keep if dup_HHID == 1
+keep unique_id bc_bc_main_respondent 
+clonevar unique_id_num = unique_id
+rename unique_id unique_id_A
+rename bc_bc_main_respondent endline_resp_name
+replace endline_resp_name = lower(endline_resp_name)
+save "$In_progress_files/Endline_BC_date_for_fuzzy1.dta", replace
+restore
+
+preserve
+keep if dup_HHID == 1
+clonevar unique_id_num = unique_id
+rename unique_id unique_id_B
+replace endline_resp_name = lower(endline_resp_name)
+clonevar orig_endline_resp_name = endline_resp_name 
+reclink endline_resp_name unique_id_num using "$In_progress_files/Endline_BC_date_for_fuzzy1.dta", idmaster(unique_id_B) idusing(unique_id_A) required (unique_id_num) gen(fuzzy) minscore(.5)
+br unique_id_A unique_id_B fuzzy endline_resp_name Uendline_resp_name bc_bc_main_respondent  orig_endline_resp_name
+restore*/
+
+
 
 
 //Unique_ID_wise
@@ -344,6 +375,7 @@ global id unique_id
 
 rename submit_date surveydate
 
+drop if Endline_resp_name == ""
 
 
 save "$In_progress_files/endline_individual_dataset_for_BC", replace
@@ -455,13 +487,16 @@ global In_progress_files "${DataRaw}Endline BackCheck output"
 import delimited "$In_progress_files/BC_Endline_bctstas_individual_level.csv", bindquote(strict) clear
 
 format  unique_id %15.0gc
-*drop if survey == "" & back_check == ""
-*drop if survey == "." & back_check == "."
-*drop if survey == "" & back_check == "."
-*drop if survey == "." & back_check == ""
+replace survey = "" if back_check == "" & survey  == "."
+replace survey = "." if back_check == "." & survey  == ""
 replace endline_resp_name = lower(endline_resp_name)
 replace bc_bc_main_respondent = lower(bc_bc_main_respondent)
 
+forvalues i = 1/17{
+drop if variable == "cen_not_curr_preg`i'" & (survey == "." | survey == "")
+drop if variable == "cen_preg_residence`i'" & (survey == "." | survey == "")
+drop if variable == "cen_preg_status`i'" & (survey == "." | survey == "")
+} 
 
 //Unique_ID_wise
 preserve
