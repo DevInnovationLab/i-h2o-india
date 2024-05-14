@@ -293,6 +293,7 @@ export excel unique_id R_Cen_non_cri_mem_1 R_Cen_non_cri_mem_2 R_Cen_non_cri_mem
 
 preserve
 keep unique_id unique_id_num R_Cen_a3_hhmember_name_1 R_Cen_a6_hhmember_age_1
+clonevar final_resp_name = R_Cen_a3_hhmember_name_1 
 rename R_Cen_a3_hhmember_name_1 R_Cen_a1_resp_name
 rename unique_id_num unique_id_C
 replace R_Cen_a1_resp_name = lower(R_Cen_a1_resp_name)
@@ -304,11 +305,12 @@ keep R_Cen_a1_resp_name unique_id R_Cen_a6_hhmember_age_1 R_Cen_a4_hhmember_gend
 rename unique_id_num unique_id_B
 clonevar orig_resp_name = R_Cen_a1_resp_name
 replace R_Cen_a1_resp_name = lower(R_Cen_a1_resp_name)
-reclink R_Cen_a1_resp_name unique_id using "${DataPre}Endline_resp_fuzzymatch.dta", idmaster(unique_id_B) idusing(unique_id_C) required (unique_id) gen(fuzzy) minscore(.9)
+reclink R_Cen_a1_resp_name unique_id using "${DataPre}Endline_resp_fuzzymatch.dta", idmaster(unique_id_B) idusing(unique_id_C) required (unique_id) gen(fuzzy) minscore(.5)
+br unique_id unique_id_B unique_id_C R_Cen_a1_resp_name UR_Cen_a1_resp_name final_resp_name fuzzy
+rename final_resp_name R_Cen_final_resp_name
 
-
-
-
+export excel unique_id R_Cen_final_resp_name using "${DataPre}Endline_census_updated_resp_preload.xlsx", sheet("Sheet1", replace) firstrow(variables) cell(A1)
+restore
 
 
 
