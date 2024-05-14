@@ -33,17 +33,7 @@ program define   prefix_rename
 
 end
 
-cap program drop Variable_Consistent
-program define   Variable_Consistent
-
-	foreach var of varlist cen* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen", "comb", 1)
-    rename `var' `newname'
-	}
-end
-
-
+* Variable label
 * Cen_Typel 1 "n_all" 2 "n_cbw" 3 "cen_cbw" 4 "cen_u5" 5 "n_u5" 6 "cen_all", modify
 
 
@@ -55,9 +45,14 @@ use "${DataTemp}Medical_expenditure_person.dta", clear
  save "${DataTemp}Medical_expenditure_person_HH.dta", replace
 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
+split R_E_cen_resp_label, p(" and ")
+keep R_E_r_cen_a1_resp_name R_E_cen_resp_label1
+gen Name_Same=0
+replace Name_Same=1 if R_E_r_cen_a1_resp_name==R_E_cen_resp_label1
+
+use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
 * Available for intervew
 * HH is 392
-
 foreach var of varlist R_E_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "R_E_", "", 1)
@@ -65,10 +60,8 @@ foreach var of varlist R_E_* {
 }
 
 gen     Any_seek=1
-
 replace Any_seek=0 if (cen_med_seek_all=="" | cen_med_seek_all=="21") & (n_med_seek_all=="" | n_med_seek_all=="21")
 keep Any_seek cen_med_seek_all cen_med_seek_all key
-br
 merge 1:1 key using "${DataTemp}Medical_expenditure_person_HH.dta", gen(Merge_MasterSick)
 tab Merge_MasterSick Any_seek,m
 replace Any_seek=2 if Any_seek==0 & Merge_MasterSick==3
@@ -122,6 +115,9 @@ save "${DataTemp}Mortality_19_20.dta", replace
  ---------------------------------------------------------------------------*/
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
+* Questions to Archi
+tab cen_child_caregiver_present
+tab cen_child_act_age
 * Respondent available for an interview 
 keep if cen_child_caregiver_present==1
 key_creation
@@ -152,7 +148,9 @@ foreach var of varlist *_u5*  {
 gen Cen_Type=5
 append using "${DataTemp}temp.dta"
 drop if comb_child_caregiver_present==.
-tab Cen_Type,m
+rename key R_E_key
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
+rename R_E_key  key
 save "${DataTemp}U5_Child_23_24.dta", replace
 savesome using "${DataTemp}Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
 
@@ -235,6 +233,9 @@ save "${DataTemp}Medical_expenditure_5_11_21_22.dta", replace
 
 use           "${DataTemp}Medical_expenditure_5_11_21_22.dta", clear
 append using  "${DataTemp}Morbidity_23_24.dta"
+rename key R_E_key
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
+rename R_E_key  key
 save "${DataTemp}Medical_expenditure_person.dta", replace
 
 
@@ -244,53 +245,78 @@ save "${DataTemp}Medical_expenditure_person.dta", replace
 * ID 26
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
 key_creation 
-keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name key key3 n_hhmember_name namenumber
-
-br if key=="uuid:0b09e54d-a47a-414a-8c3c-ba16ed4d9db9"
+keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
+      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
 save "${DataTemp}temp0.dta", replace
 
 * ID 22
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 key_creation 
 drop if n_resp_avail_cbw==.
-keep n_not_curr_preg key key3
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
 save "${DataTemp}temp1.dta", replace
 
 use "${DataTemp}temp0.dta", clear
 merge 1:1 key key3 using "${DataTemp}temp1.dta"
+gen Cen_Type=2
 * N=141
-gen Type=1
 unique key key3
 save "${DataTemp}Requested_long_backcheck1.dta", replace
 
 * ID 25
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 key_creation 
-keep cen_still_a_member key key3 name_from_earlier_hh
-br if key=="uuid:00241596-007f-45dd-9698-12b5c418e3e7"
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
 save "${DataTemp}temp0.dta", replace
 
 * ID 21
  use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
  key_creation 
  drop if  cen_name_cbw_woman_earlier==""
- * keep if cen_resp_avail_cbw==1
- keep cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence key key3
+ // List all variables starting with "n_"
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
  save "${DataTemp}temp1.dta", replace
  
+ * Archi: For some reason 48 women cannot be merged back to the loop
  use "${DataTemp}temp0.dta", clear
- merge 1:1 key key3 using "${DataTemp}temp1.dta"
-gen Type=2
+ merge 1:1 key key3 using "${DataTemp}temp1.dta", keep(1 3)
 unique key key3
+gen Cen_Type=3
 save "${DataTemp}Requested_long_backcheck2.dta", replace
 
 use "${DataTemp}Requested_long_backcheck1.dta", clear
 append using "${DataTemp}Requested_long_backcheck2.dta"
 * Adding unique ID
-merge m:1 key using "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", keepusing(unique_id) keep(3) nogen
-unique Type key key3
-unique key
-save  "${DataTemp}Endline_Long_Indiv.dta", replace
+rename key R_E_key
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name R_E_enum_code) keep(3) nogen
+save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 
 erase "${DataTemp}Requested_long_backcheck1.dta"
 erase "${DataTemp}Requested_long_backcheck2.dta"
@@ -579,25 +605,7 @@ append using "${DataTemp}temp4.dta"
 replace comb_med_time=comb_med_time_mins_comb if comb_med_time_comb==1
 replace comb_med_time=comb_med_time_hrs_comb if comb_med_time_comb==2
 replace comb_med_time=. if comb_med_time_comb==999
-
-label var comb_med_time "Travel time to seek care (mins)" 
-label var comb_med_treat_type_comb_1 "Treat: Allopathy (english medicines)"
-label var comb_med_treat_type_comb_2 "Treat: Indian system of medicine"
-label var comb_med_treat_type_comb_3 "Treat: Homoeopathy"
-label var comb_med_treat_type_comb_4 "Treat: Yoga and Naturopathy"
-label var comb_med_treat_type_comb__77 "Treat: Other"
-label var comb_med_treat_type_comb_999 "Treat: Do not know"
-
-label var comb_med_scheme_comb_1 "Expenditure sch: Gov funded insurance"
-label var comb_med_scheme_comb_4 "Expenditure sch: Not covered"
-label var comb_med_scheme_comb_999 "Expenditure sch: Do not know"
-
-label var comb_med_doctor_fees_comb "doctor fees all: What did .... This is how much?"
 drop key2 key4 key5
-unique key
-unique key key3 Cen_Type
-unique key key3 key6 Cen_Type
-mdesc  Cen_Type
 save "${DataTemp}Medical_expenditure_4_7_12_14_18.dta", replace
 
 /* ---------------------------------------------------------------------------
@@ -624,16 +632,23 @@ duplicates drop key Cen_Type key3 key6,force
 merge 1:1 key Cen_Type key3 key6 using "${DataTemp}Medical_expenditure_8_10_13_17.dta", gen(Merge_othermed2)
 drop if Merge_othermed2==2
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name) keep(3) nogen
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
 rename R_E_key  key
 * N=148: Number of incidnce times Location they seeked care
+
+label var comb_med_trans_comb_1 "Walking"
+label var comb_med_trans_comb_2 "Bus"
+label var comb_med_trans_comb_3 "Car"
+label var comb_med_trans_comb_4 "Auto"
+label var comb_med_trans_comb_5 "Motorbike"
+
 savesome using "${DataTemp}Medical_expenditure_person_case.dta" if comb_out_val2_comb!="", replace
-collapse (sum) comb_med_time, by(key Cen_Type key3)
+collapse comb_med_time_comb_3 (sum) comb_med_time, by(key Cen_Type key3)
 unique  key key3
 * N=134: Number of incidnce for the general population
 * Come back
 tab Cen_Type,m
-merge 1:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_person.dta", gen(Merge_Person_Case) keep(3)
+merge m:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_person.dta", gen(Merge_Person_Case) keep(3)
 
 
 * Create Dummy
@@ -649,7 +664,45 @@ merge 1:1 key Cen_Type key3 using "${DataTemp}Medical_expenditure_person.dta", g
 	
 label var comb_med_symp_comb_1 "Fever"
 label var comb_med_symp_comb_3 "Coughing/respiratory illness"
-label var comb_med_symp_comb_12 "Body pain/ache (headache, knee pain, back pain, etc)"
+label var comb_med_symp_comb_12 "Body pain/ache"
+label var comb_med_symp_comb_13 "Diarrhea"
 label var comb_med_symp_comb__77 "Other"
+label var comb_med_where_comb_1 "Home"
+label var comb_med_where_comb_2 "Outside of home"
+
+label var comb_med_out_home_comb_1 "Chemist"
+label var comb_med_out_home_comb_5 "Community Health Workers"
+label var comb_med_out_home_comb_6 "PHC/dispensary/CHC/mobile medical unit"
+label var comb_med_out_home_comb_7 "public hospital"
+label var comb_med_out_home_comb_8 "private doctor/clinic"
+
+label var comb_med_work_comb "Anyone changed the work/housework"
 
 save "${DataTemp}Medical_expenditure_person_clean.dta", replace
+
+merge 1:m key Cen_Type key3 using "${DataTemp}Medical_expenditure_person_case.dta", nogen
+
+replace comb_med_time_comb=3   if comb_med_where_comb=="1" & (comb_med_time_comb==999 | comb_med_time_comb==.)
+replace comb_med_time_comb_999=0 if comb_med_time_comb==3
+replace comb_med_time_comb_3=1 if comb_med_time_comb==3
+replace comb_med_time=. if comb_med_time_comb==3
+replace comb_med_time=. if comb_med_time_comb==999
+mdesc comb_med_time_comb_3
+
+label var comb_med_time "Travel time to seek care (mins)" 
+label var comb_med_time_comb_3 "Missing (treatment only at home)" 
+label var comb_med_treat_type_comb_1 "Treat: Allopathy (english medicines)"
+label var comb_med_treat_type_comb_2 "Treat: Indian system of medicine"
+label var comb_med_treat_type_comb_3 "Treat: Homoeopathy"
+label var comb_med_treat_type_comb_4 "Treat: Yoga and Naturopathy"
+label var comb_med_treat_type_comb__77 "Treat: Other"
+label var comb_med_treat_type_comb_999 "Treat: Do not know"
+
+label var comb_med_scheme_comb_1 "Expenditure sch: Gov funded insurance"
+label var comb_med_scheme_comb_4 "Expenditure sch: Not covered"
+label var comb_med_scheme_comb_999 "Expenditure sch: Do not know"
+
+label var comb_med_doctor_fees_comb "doctor fees all: What did .... This is how much?"
+
+
+save "${DataTemp}Medical_expenditure_person_case_clean.dta", replace

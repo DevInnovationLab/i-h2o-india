@@ -149,7 +149,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
     adopath ++  BASE
 //Note: Install package ssc install ietoolkit	
 	* Set initial configurations as much as allowed by Stata version
-	ieboilstart, v(16.0)
+	ieboilstart, v(15.1)
 	`r(version)'
 	set scheme s2color
 	
