@@ -16,8 +16,11 @@ install.packages("stargazer")
 install.packages("Hmisc")
 install.packages("labelled")
 install.packages("data.table")
+install.packages("haven")
+
 
 # load the libraries
+library(haven)
 library(data.table)
 library(readxl) 
 library(googledrive)
@@ -346,22 +349,309 @@ stargazer(df.888.enum, summary=F, title= "Count of Permanent filters by enumerat
 
 #------------------------ Consistency Checks ------------------------  
 
+View(df.temp.consent)
 
-#checking cases when people say they don't use JJM for drinking and their answers to the last time they used drinking water from JJM taps
+
+# Convert labelled columns to factors
+df.temp.consent <- df.temp.consent %>%
+  mutate(across(where(is.labelled), as_factor))
 
 
-df.consistency_the_other_way <- df.temp.consent %>% filter(date >= as.Date("2024-02-15")) %>% filter(R_FU3_tap_use_drinking_yesno == 1 & R_FU3_tap_use_drinking == 5) %>%
-  dplyr::select(R_FU3_r_cen_village_name_str, R_FU3_enum_name_label, R_FU3_tap_use_drinking  ) %>% 
-  mutate(R_FU3_tap_use_drinking = ifelse(R_FU3_tap_use_drinking == 1, "Today", 
-                                         ifelse(R_FU3_tap_use_drinking == 2, "Yesterday", 
-                                                ifelse(R_FU3_tap_use_drinking == 3, "Earlier this week", 
-                                                       ifelse(R_FU3_tap_use_drinking == 4, "Earlier this month", 
-                                                              ifelse(R_FU3_tap_use_drinking == 5,"Not used for drinking", 
-                                                                     ifelse(R_FU3_tap_use_drinking == -77,"Other", NA))))))) %>%
-  rename(Village = R_FU3_r_cen_village_name_str,"Last time collected water from the JJM tap" = R_FU3_tap_use_drinking ) %>% 
-  unique()
-stargazer(df.consistency, summary=F, title= "Check for not using drinking water, and last time they used drinking water from JJM taps",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_consistency_endline.tex"))
+
+df.temp.consent$R_E_water_source_prim <- ifelse(df.temp.consent$R_E_water_source_prim == "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM", "JJM", 
+                                                ifelse(df.temp.consent$R_E_water_source_prim == "Government provided community standpipe (connected to piped system, through Vasu", "Govt provided community standpipe", 
+                                                       ifelse(df.temp.consent$R_E_water_source_prim == "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)", "Gram Panchayat/other community standpipe", 
+                                                              ifelse(df.temp.consent$R_E_water_source_prim == "Manual handpump", "Manual handpump", 
+                                                                     ifelse(df.temp.consent$R_E_water_source_prim == "Covered dug well", "Covered dug well", 
+                                                                            ifelse(df.temp.consent$R_E_water_source_prim == "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c", "surface water",
+                                                                                   ifelse(df.temp.consent$R_E_water_source_prim == "Uncovered dug well", "Uncovered dug well", 
+                                                                                          ifelse(df.temp.consent$R_E_water_source_prim == "Private Surface well", "Private Surface well", 
+                                                                                                 ifelse(df.temp.consent$R_E_water_source_prim == "Borewell operated by electric pump", "Borewell", 
+                                                                                                        ifelse(df.temp.consent$R_E_water_source_prim == "Household tap connections not connected to RWSS/Basudha/JJM tank", "Non-JJM household tap connections", 
+                                                                                                               df.temp.consent$R_E_water_source_prim))))))))))
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# PRIMARY WATER SOURCE DISTRIBUTION BY ENUM 
+#-------------------------------------------------------------------------------------------------------------------
+
+# Group and count occurrences
+counts <- df.temp.consent %>%
+  group_by(R_E_enum_name_label, R_E_water_source_prim) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Calculate total counts for each enumerator
+total_counts <- counts %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(total = sum(count), .groups = 'drop')
+
+# Join the total counts with the counts and calculate percentages
+percentage_df <- counts %>%
+  left_join(total_counts, by = "R_E_enum_name_label") %>%
+  mutate(percentage = (count / total) * 100) %>%
+  select(R_E_enum_name_label, R_E_water_source_prim, percentage)
+
+
+
+View(percentage_df)
+
+stargazer(percentage_df, summary=F, title= "Primary water source by enumerator",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_primwater_enum_endline.tex"))
+
+
+#-------------------------------------------
+
+
+# Create the bar plot with adjusted legend size and increased plot size
+
+
+water_prim_enum <- ggplot(percentage_df, aes(x = R_E_enum_name_label, y = percentage, fill = R_E_water_source_prim)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Percentage of Water Source Choices by Enumerator",
+       x = "Enumerator",
+       y = "Percentage",
+       fill = "Water Source") +
+  scale_fill_brewer(palette = "Set2") +  # Use a colorblind-friendly palette
+  theme_minimal() +
+  theme(
+    legend.text = element_text(size = 8),      # Reduce legend text size
+    legend.title = element_text(size = 10),    # Reduce legend title size
+    legend.key.size = unit(0.5, "cm"),         # Reduce legend key size
+    plot.title = element_text(size = 14),      # Increase plot title size
+    axis.title = element_text(size = 12),      # Increase axis titles size
+    axis.text = element_text(size = 13),       # Increase axis text size
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Tilt x-axis labels
+    legend.position = "right",                 # Position legend to the right
+    legend.justification = "center",           # Center the legend vertically
+    legend.box.margin = margin(0, 0, 0, 10)    # Add margin to move the legend outside
+  )
+
+print(water_prim_enum)
+
+ggplot2::ggsave( paste0(overleaf(),"Figure/water_source_prim_enum_endline.png"), water_prim_enum, bg = "white", width = 15, height= 10,dpi=200)
+
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# PRIMARY WATER SOURCE DISTRIBUTION IN GENERAL
+#-------------------------------------------------------------------------------------------------------------------
+
+# Group and count occurrences
+
+water_source_percentage <- df.temp.consent %>%
+  group_by(R_E_water_source_prim) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)
+
+
+View(water_source_percentage)
+
+stargazer(water_source_percentage, summary=F, title= "Primary water source breakdown",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Prim_source_endline.tex"))
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# SECONDARY WATER SOURCE DISTRIBUTION IN GENERAL
+#-------------------------------------------------------------------------------------------------------------------
+
+names(df.temp.consent)
+
+var_label(df.temp.consent$R_E_water_source_sec_1) <- "JJM"
+var_label(df.temp.consent$R_E_water_source_sec_2) <- "Govt provided community standpipe"
+var_label(df.temp.consent$R_E_water_source_sec_3) <- "Gram Panchayat/other community standpipe"
+var_label(df.temp.consent$R_E_water_source_sec_4) <- "Manual handpump"
+var_label(df.temp.consent$R_E_water_source_sec_5) <- "Covered dug well"
+var_label(df.temp.consent$R_E_water_source_sec_6) <- "surface water"
+var_label(df.temp.consent$R_E_water_source_sec_7) <- "Uncovered dug well"
+var_label(df.temp.consent$R_E_water_source_sec_8) <- "Private Surface well"
+var_label(df.temp.consent$R_E_water_source_sec_9) <- "Borewell"
+var_label(df.temp.consent$R_E_water_source_sec_10) <- "Non-JJM household tap connections"
+var_label(df.temp.consent$R_E_water_source_sec__77) <- "Other secondary source"
+
+
+variables <- c("R_E_water_source_sec_1", 
+               "R_E_water_source_sec_2", 
+               "R_E_water_source_sec_3", 
+               "R_E_water_source_sec_4", 
+               "R_E_water_source_sec_5", 
+               "R_E_water_source_sec_6", 
+               "R_E_water_source_sec_7", 
+               "R_E_water_source_sec_8", 
+               "R_E_water_source_sec_9", 
+               "R_E_water_source_sec_10", 
+               "R_E_water_source_sec__77")
+
+
+sums <- df.temp.consent %>%
+  summarise(across(all_of(variables), sum, na.rm = TRUE))
+
+sums_long <- sums %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Sum")
+
+print(sums_long)
+
+View(sums_long)
+
+# Calculate the total sum of all the variables
+total_sum <- sum(sums_long$Sum)
+
+# Add a percentage column
+sums_long <- sums_long %>%
+  mutate(Percentage = (Sum / total_sum) * 100)
+
+# Print the results
+print(sums_long)
+
+
+sums_long$Variable <- sapply(sums_long$Variable, function(x) var_label(df.temp.consent[[x]]))
+
+
+# Generate the LaTeX table
+stargazer(sums_long, 
+          summary = FALSE, 
+          title = "Secondary water source breakdown", 
+          float = FALSE, 
+          rownames = FALSE, 
+          out = paste0(overleaf(), "Table/Sec_source_endline.tex"))
+
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# SECONDARY WATER SOURCE DISTRIBUTION BY ENUM
+#-------------------------------------------------------------------------------------------------------------------
+
+# Group by enumerator and calculate the sums for each secondary water source
+enum_sums <- df.temp.consent %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(across(all_of(variables), sum, na.rm = TRUE))
+
+
+
+# Convert to long format for better readability
+enum_sums_long <- enum_sums %>%
+  pivot_longer(cols = -R_E_enum_name_label, names_to = "Secondary_Water_Source", values_to = "Sum")
+
+# Calculate the total sum of secondary water sources for each enumerator
+enum_totals <- enum_sums_long %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(Total_Sum = sum(Sum))
+
+# Merge the totals back with the long format data
+enum_sums_long <- enum_sums_long %>%
+  left_join(enum_totals, by = "R_E_enum_name_label")
+
+# Calculate the percentage of each secondary water source within each enumerator group
+enum_sums_long <- enum_sums_long %>%
+  mutate(Percentage = (Sum / Total_Sum) * 100)
+
+# Print the results
+print(enum_sums_long)
+
+View(enum_sums_long)
+
+
+enum_sums_long$Secondary_Water_Source <- sapply(enum_sums_long$Secondary_Water_Source, function(x) var_label(df.temp.consent[[x]]))
+
+
+
+# Create the bar plot with adjusted legend size and increased plot size
+enum_sums_long_filtered <- enum_sums_long %>%
+  filter(Percentage > 0)
+
+water_sec_enum <- ggplot(enum_sums_long_filtered, aes(x = R_E_enum_name_label, y = Percentage, fill = Secondary_Water_Source)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Percentage of Secondary water Source Choices by Enumerator",
+       x = "Enumerator",
+       y = "Percentage",
+       fill = "Sec Water Source") +
+  scale_fill_brewer(palette = "Set2") +  # Use a colorblind-friendly palette
+  theme_minimal() +
+  theme(
+    legend.text = element_text(size = 8),      # Reduce legend text size
+    legend.title = element_text(size = 10),    # Reduce legend title size
+    legend.key.size = unit(0.5, "cm"),         # Reduce legend key size
+    plot.title = element_text(size = 14),      # Increase plot title size
+    axis.title = element_text(size = 12),      # Increase axis titles size
+    axis.text = element_text(size = 13),       # Increase axis text size
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Tilt x-axis labels
+    legend.position = "right",                 # Position legend to the right
+    legend.justification = "center",           # Center the legend vertically
+    legend.box.margin = margin(0, 0, 0, 10)    # Add margin to move the legend outside
+  )
+
+print(water_sec_enum)
+
+ggplot2::ggsave( paste0(overleaf(),"Figure/water_source_sec_enum_endline.png"), water_sec_enum, bg = "white", width = 15, height= 10,dpi=200)
+
+
+
+names(df.temp.consent)
+
+#-------------------------------------------------------------------------------------------------------------------
+# CHECKING IF PRIMARY SOURCE AND SECONDARY SPURCE ARE SAME AT THE SAME TIME UNIQUE ID WISE
+#-------------------------------------------------------------------------------------------------------------------
+
+# Create a logical condition to flag matching primary and secondary sources
+df.temp.flag <- df.temp.consent %>%
+  rowwise() %>%
+  mutate(flag = any(c_across(all_of(variables)) == R_E_water_source_prim))
+
+View(df.temp.flag)
+# Filter and list out the flagged cases
+flagged_cases <- df.temp.flag %>%
+  filter(flag == TRUE)
+
+View(flagged_cases)
+# Print the flagged cases
+print(flagged_cases)
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# WATER COLLECTION
+#-------------------------------------------------------------------------------------------------------------------
+
+browse <- df.temp.consent %>% select(R_E_collect_resp, R_E_where_prim_locate, R_E_where_prim_locate_enum_obs )
+
+ View(browse)
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# LOCATION OF PRIMARY SOURCE
+#-------------------------------------------------------------------------------------------------------------------
+
+
+df.temp.consent$R_E_where_prim_locate<- ifelse(df.temp.consent$R_E_where_prim_locate == 1, "In own dwelling", 
+                                                ifelse(df.temp.consent$R_E_where_prim_locate == 2, "In own yard/plot", 
+                                                       ifelse(df.temp.consent$R_E_where_prim_locate == 3, "Elsewhere", 
+                                                              df.temp.consent$R_E_where_prim_locate)))
+
+df.temp.consent$R_E_where_prim_locate_enum_obs<- ifelse(df.temp.consent$R_E_where_prim_locate_enum_obs == 1, "In own dwelling", 
+                                               ifelse(df.temp.consent$R_E_where_prim_locate_enum_obs == 2, "In own yard/plot", 
+                                                      ifelse(df.temp.consent$R_E_where_prim_locate_enum_obs == 3, "Elsewhere", 
+                                                             df.temp.consent$R_E_where_prim_locate_enum_obs)))
+
+# Create the dataframe
+result_df <- df.temp.consent %>%
+  filter(R_E_where_prim_locate != R_E_where_prim_locate_enum_obs) %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(
+    total_count = n(),
+    R_E_where_prim_locate = list(R_E_where_prim_locate),
+    R_E_where_prim_locate_enum_obs = list(R_E_where_prim_locate_enum_obs)
+  )
+
+# Print the result
+View(result_df)
+
+stargazer(result_df, 
+          summary = FALSE, 
+          title = "Different locations of primary source", 
+          float = FALSE, 
+          rownames = FALSE, 
+          out = paste0(overleaf(), "Table/location_prim_endline.tex"))
 
 
 #Counting people accompanying to shadow enumerators
