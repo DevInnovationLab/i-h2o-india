@@ -694,9 +694,9 @@ esttab model16 model17 model18 model19 using "${Table}Frequency of treatment_sto
 
 
 
-/*----------------------------------------------
-* 3) diarrhea incidence- preg women and children
-----------------------------------------------*/
+/*------------------------------------------------------------------------------------------
+* 3) diarrhea incidence- preg women and children (Amy's table sent by email in May 2024)
+------------------------------------------------------------------------------------------*/
 
 global diarrhea_U5 C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
                          C_loosestool_child_1day C_loosestool_child_1week     C_loosestool_child_2weeks ///
