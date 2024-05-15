@@ -2,11 +2,17 @@
 title: "Endline Census - High Frequency Check"
 author: "Jeremy Lowe, Archi Gupta"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  pdf_document:
+    
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/1_8_Endline") })
+  
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+
 
 ```
 
@@ -58,6 +64,9 @@ library(gtsummary)
 ```
 
 
+
+
+
 ```{r profile}
 #------------------------ setting user path ----------------------------------------#
 
@@ -66,6 +75,7 @@ user_path <- function() {
   # Return a hardcoded path that depends on the current user, or the current 
   # working directory for an unrecognized user. If the path isn't readable,
   # stop.
+  #
   
   user <- Sys.info()["user"]
   
@@ -132,9 +142,28 @@ github_path <- function() {
 #   stopifnot(file.exists(overleaf))
 #   return(overleaf)
 # }
+
+
+
+
+#Setting the output folder for the pdf report
+
+#setwd("C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC")
+#knitr::opts_knit$set(out.dir = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/")
+
+
+
+
 ```
 
 
+
+
+
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_cleaned.dta")) })
+
+---
 
 ```{r loading data}
 #------------------------ Load the data ----------------------------------------#
@@ -234,6 +263,7 @@ df.temp.consent <- df.temp.consent %>% mutate(Treatment = ifelse(R_E_r_cen_villa
 
 
 #Using labelmaker to make transfer labels for the whole dataset
+df.temp <- labelmaker(df.temp)
 df.temp.consent <- labelmaker(df.temp.consent)
 
 
@@ -256,7 +286,7 @@ submissions <- df.temp  %>%
   arrange(R_E_r_cen_village_name_str)
 
 resp_available <- df.temp %>%  
-  filter(R_E_resp_available == 1) %>% 
+  filter(R_E_resp_available == "Household available for an interview and opened the door") %>% 
   dplyr::select(R_E_r_cen_village_name_str) %>%
   group_by(R_E_r_cen_village_name_str) %>% 
   mutate("OG Found" =n()) %>%
@@ -265,7 +295,7 @@ resp_available <- df.temp %>%
   arrange(R_E_r_cen_village_name_str)
 
 resp_notavailable <- df.temp %>%
-  filter(R_E_resp_available != 1  ) %>% 
+  filter(R_E_resp_available != "Household available for an interview and opened the door"  ) %>% 
   dplyr::select(R_E_r_cen_village_name_str) %>%
   group_by(R_E_r_cen_village_name_str) %>%
   mutate("NOT Found" =n()) %>%
@@ -274,7 +304,7 @@ resp_notavailable <- df.temp %>%
   arrange(R_E_r_cen_village_name_str)
 
 consented <- df.temp  %>% 
-  filter(R_E_consent == 1) %>%
+  filter(R_E_consent == "Yes") %>%
   dplyr::select(R_E_r_cen_village_name_str) %>%
   group_by(R_E_r_cen_village_name_str) %>%
   mutate(Consented=n()) %>%
@@ -283,7 +313,7 @@ consented <- df.temp  %>%
   arrange(R_E_r_cen_village_name_str)
 
 audio_consent <- df.temp  %>% 
-  filter(R_E_audio_consent == 1) %>%
+  filter(R_E_audio_consent == "Yes") %>%
   dplyr::select(R_E_r_cen_village_name_str) %>%
   group_by(R_E_r_cen_village_name_str) %>%
   mutate(audio_consent=n()) %>%
@@ -292,7 +322,7 @@ audio_consent <- df.temp  %>%
   arrange(R_E_r_cen_village_name_str)
 
 refused <- df.temp %>% 
-  filter(R_E_consent != 1) %>%
+  filter(R_E_consent != "Yes") %>%
   dplyr::select(R_E_r_cen_village_name_str) %>%
   group_by(R_E_r_cen_village_name_str) %>%
   mutate(Refused=n()) %>%
@@ -350,6 +380,11 @@ kbl(df.progress)%>%
   column_spec(2, width = "75px")
 
 
+#Representing Progress in Table1 output
+
+table1(data = df.temp, ~ R_E_resp_available + R_E_consent + R_E_audio_consent)
+
+
 
 
 ```
@@ -363,7 +398,7 @@ kbl(df.progress)%>%
 ```{r enumerator productivity tables}
 
 #------------------------ Distribution of surveys by dates & villages --------------------#
-date.plt<- df.temp %>% filter(R_E_consent == 1) %>%
+date.plt<- df.temp %>% filter(R_E_consent == "Yes") %>%
   filter(date >= as.Date("2024-04-15")) %>%
   group_by( R_E_r_cen_village_name_str, date) %>%
   dplyr::summarise(Date_N=n()) %>%
@@ -389,21 +424,21 @@ kbl(tab)%>%
 #stargazer(tab,out= paste0(overleaf(), "Table/Table_survey_by_date_village_R3.tex"), summary=F, float=F,rownames = F, covariate.labels=NULL)
 
 
-#------------------------ Distribution of surveys by Enumerator, dates & villages ----------------------------------------#
+#------------------------ Distribution of surveys by Enumerator, villages ----------------------------------------#
 
 date.plt<- df.temp %>% 
-  filter(R_E_consent == 1)%>%
+  filter(R_E_consent == "Yes")%>%
   filter(date >= as.Date("2024-04-15")) %>%
-  group_by( R_E_r_cen_village_name_str,R_E_enum_name_label,  date) %>%
+  group_by( R_E_r_cen_village_name_str, R_E_enum_name_label) %>%
   dplyr:: summarise(Date_N=n()) %>%
   ungroup()
 
 
 # CONVERT TO TABLE
-tab<- spread(date.plt,key = "date", value = "Date_N")
-tab <- tab %>% dplyr::mutate(total=rowSums(across(-c(1, 2)),na.rm = T))
+tab<- spread(date.plt,key = "R_E_r_cen_village_name_str", value = "Date_N")
+tab <- tab %>% dplyr::mutate(total=rowSums(across(-c(1)),na.rm = T))
 tab[is.na(tab)] <- 0 
-tab <- tab %>% rename(Village = R_E_r_cen_village_name_str, Enumerator =R_E_enum_name_label  )
+tab <- tab %>% rename(Enumerator =R_E_enum_name_label  )
 
 
 #Printing Kable output
@@ -529,6 +564,28 @@ kbl(df.888.enum)%>%
 
 #Old stargazer output
 #stargazer(df.888.enum, summary=F, title= "Count of DK by enumerator",float=F,rownames = F,          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_888_enum_HH_Survey_R3.tex"))
+
+
+
+
+#4. Count of 666 used by enumerators across all
+
+df.666.enum <- df.temp.consent %>% filter(date >= as.Date("2024-04-15")) %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise_all(~sum(. == 666)) %>% 
+  transmute(R_E_enum_name_label, sum_dk = rowSums(.[-1], na.rm = T)) %>% 
+  rename(Enumerator = R_E_enum_name_label, "Count of 666" = sum_dk)
+
+#Kable Output
+kbl(df.666.enum)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Enumerator 666 Use - Endline Census " = 2)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
 
 ```
 
@@ -665,8 +722,9 @@ table1(data = tab, ~ R_E_enum_name_label + Visit_Number + Number_of_children + N
 
 #Selecting WASH Variables and cleaning
 tab <- df.temp.consent%>%
-  dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking, R_E_jjm_yes, R_E_jjm_stored, R_E_jjm_use__77, R_E_jjm_use_999, R_E_tap_issues, R_E_tap_issues_type__77, R_E_tap_issues_type_1, R_E_water_source_prim, R_E_water_source_kids, R_E_water_prim_source_kids, R_E_water_source_preg, R_E_water_prim_source_preg, R_E_sec_source_reason_999,
-                R_E_sec_source_reason__77, R_E_water_sec_yn, R_E_water_sec_freq, R_E_water_treat, R_E_water_treat_kids, R_E_water_treat_type__77, R_E_water_treat_type_999, R_E_water_treat_freq__77, R_E_water_stored)%>%
+  dplyr::select(R_E_r_cen_village_name_str, R_E_jjm_drinking, R_E_jjm_yes, R_E_jjm_stored, R_E_jjm_use__77, R_E_jjm_use_999, R_E_tap_issues, R_E_tap_issues_type__77, R_E_tap_issues_type_1, 
+                R_E_water_source_prim, R_E_water_source_kids, R_E_water_prim_source_kids, R_E_water_source_preg,  R_E_water_prim_source_preg, R_E_quant, 
+                R_E_sec_source_reason_999, R_E_sec_source_reason__77, R_E_water_sec_yn, R_E_water_sec_freq, R_E_water_treat, R_E_water_treat_kids, R_E_water_treat_type__77, R_E_water_treat_type_999, R_E_water_treat_freq__77, R_E_water_stored)%>%
   rename(Village = R_E_r_cen_village_name_str)
 
 
@@ -696,7 +754,7 @@ tab <- df.temp.consent%>%
 #   column_spec(2, width = "75px")
 
 #Table1 Output
-table1(data = tab, ~ R_E_water_source_prim + R_E_water_source_kids + R_E_water_source_preg)
+table1(data = tab, ~ R_E_water_source_prim + R_E_water_source_kids + R_E_water_source_preg + R_E_quant)
 
 #JJM Taps
 #Table1 Output
@@ -724,8 +782,6 @@ table1(data = tab, ~ R_E_water_sec_yn + R_E_water_sec_freq + R_E_sec_source_reas
 
 
 ```{r}
-
-
 
 ```
 
