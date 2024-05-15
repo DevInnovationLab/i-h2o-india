@@ -485,7 +485,7 @@ cap program drop start_from_clean_file_ChildLevel
 program define   start_from_clean_file_ChildLevel
   * Open clean file
 start_from_clean_file_Census  
-keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_village_name R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
+keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_block_name R_Cen_village_name R_Cen_village_str R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
 reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ ///
          R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
 * Drop the case where there is no children
@@ -540,7 +540,7 @@ cap program drop start_from_clean_file_PregDiarr
 program define   start_from_clean_file_PregDiarr
   * Open clean file
 start_from_clean_file_Census  
-keep R_Cen_a23_wom_diarr*  unique_id* C_total_pregnant_hh R_Cen_village_name R_Cen_a25_wom_stool*
+keep R_Cen_a23_wom_diarr*  unique_id* C_total_pregnant_hh R_Cen_block_name R_Cen_village_name R_Cen_village_str R_Cen_a25_wom_stool*
 reshape long R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a25_wom_stool_24h_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_, i(unique_id) j(num)
 * Drop the case where there is no preg women
 drop if R_Cen_a23_wom_diarr_day_==. & R_Cen_a23_wom_diarr_week_==. & R_Cen_a23_wom_diarr_2week_==.

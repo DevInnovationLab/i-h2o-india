@@ -1946,6 +1946,7 @@ import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Wate
 
 
 duplicates report sample_id
+//ABR testing was done and so we have duplicates. We keep only data without the ABR test duplicates
 keep if abr==0
 drop if sample_id==0
 drop if sample_id==20344 & cf_95hi=="NA"
@@ -2071,5 +2072,125 @@ reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", clust
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
 reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+
+
+
+/*----------------------------------------------------
+*Comparing data between baseline and endline census
+------------------------------------------------------*/
+
+use "${DataPre}1_1_Census_cleaned.dta", clear
+tab R_Cen_consent
+keep if R_Cen_consent==1
+drop if R_Cen_village_str=="Badaalubadi" | R_Cen_village_str=="Hatikhamba"
+
+
+//panchayat_village
+gen panchayat_village=0
+replace panchayat_village=1 if R_Cen_village_str=="Asada" | R_Cen_village_str=="Jaltar" | R_Cen_village_str=="BK Padar" | R_Cen_village_str=="Mukundpur" | R_Cen_village_str=="Gudiabandh" | R_Cen_village_str=="Naira" | R_Cen_village_str=="Dangalodi" | R_Cen_village_str=="Karlakana" 
+
+
+//assign treatment
+
+gen treatment= 1 if R_Cen_village_str== "Birnarayanpur" | R_Cen_village_str=="Nathma"|R_Cen_village_str== "Badabangi"| R_Cen_village_str=="Naira"| R_Cen_village_str== "Bichikote"|R_Cen_village_str== "Karnapadu"| R_Cen_village_str=="Mukundpur"|R_Cen_village_str== "Tandipur"|R_Cen_village_str== "Gopi Kankubadi"|R_Cen_village_str== "Asada" 
+
+replace treatment=0 if treatment==.
+
+gen control= 1 if treatment==0
+replace control=0 if treatment==1
+
+
+//generating relevant vars
+gen sec_jjm_use=0
+replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_source_prim!=1
+tab sec_jjm_use
+
+foreach i in R_Cen_a12_water_source_prim  {
+	replace `i'=77 if `i'==-77
+}
+
+
+foreach v in R_Cen_a16_water_treat R_Cen_a12_water_source_prim R_Cen_a18_jjm_drinking  {
+	levelsof `v'
+	foreach value in `r(levels)' {
+		gen     `v'_`value'=0
+		replace `v'_`value'=1 if `v'==`value'
+		replace `v'_`value'=. if `v'==.
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+	
+
+//CODE FOR DESCRIPTIVE TABLE FOR WATER USE AND TREATMENT
+local baseline R_Cen_a12_water_source_prim_1 sec_jjm_use R_Cen_a18_jjm_drinking_1 R_Cen_a16_water_treat_1
+
+foreach k of local baseline {
+	sum `k' if treatment==1
+	sum `k' if treatment==0
+reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_Cen_village_str) 
+}
+
+
+//CODE FOR DIARRHEA PREVELANCE
+***Note: Run 2_1_Final_data code once before this section to generate the datasets for the diarrhea prevelance
+
+local diarrhea_U5 C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
+                         C_loosestool_child_1day C_loosestool_child_1week     C_loosestool_child_2weeks ///
+						 C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks   
+						 
+						 
+local diarrhea_preg C_diarrhea_prev_wom_1day C_diarrhea_prev_wom_1week C_diarrhea_prev_wom_2weeks ///
+                         C_loosestool_wom_1day C_loosestool_wom_1week     C_loosestool_wom_2weeks ///
+						 C_diarrhea_comb_wom_1day C_diarrhea_comb_wom_1week     C_diarrhea_comb_wom_2weeks   
+						 
+
+
+**U2 diarrhea
+start_from_clean_file_ChildLevel
+//panchayat_village
+gen panchayat_village=0
+replace panchayat_village=1 if R_Cen_village_str=="Asada" | R_Cen_village_str=="Jaltar" | R_Cen_village_str=="BK Padar" | R_Cen_village_str=="Mukundpur" | R_Cen_village_str=="Gudiabandh" | R_Cen_village_str=="Naira" | R_Cen_village_str=="Dangalodi" | R_Cen_village_str=="Karlakana" 
+
+
+//assign treatment
+
+gen treatment= 1 if R_Cen_village_str== "Birnarayanpur" | R_Cen_village_str=="Nathma"|R_Cen_village_str== "Badabangi"| R_Cen_village_str=="Naira"| R_Cen_village_str== "Bichikote"|R_Cen_village_str== "Karnapadu"| R_Cen_village_str=="Mukundpur"|R_Cen_village_str== "Tandipur"|R_Cen_village_str== "Gopi Kankubadi"|R_Cen_village_str== "Asada" 
+
+replace treatment=0 if treatment==.
+
+//keeping children under age 2
+keep if R_Cen_a6_hhmember_age_<2
+
+foreach k of local diarrhea_U5 {
+	sum `k' if treatment==1
+	sum `k' if treatment==0
+reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_Cen_village_str) 
+}
+
+
+**U5 diarrhea
+start_from_clean_file_ChildLevel
+//panchayat_village
+gen panchayat_village=0
+replace panchayat_village=1 if R_Cen_village_str=="Asada" | R_Cen_village_str=="Jaltar" | R_Cen_village_str=="BK Padar" | R_Cen_village_str=="Mukundpur" | R_Cen_village_str=="Gudiabandh" | R_Cen_village_str=="Naira" | R_Cen_village_str=="Dangalodi" | R_Cen_village_str=="Karlakana" 
+
+
+//assign treatment
+
+gen treatment= 1 if R_Cen_village_str== "Birnarayanpur" | R_Cen_village_str=="Nathma"|R_Cen_village_str== "Badabangi"| R_Cen_village_str=="Naira"| R_Cen_village_str== "Bichikote"|R_Cen_village_str== "Karnapadu"| R_Cen_village_str=="Mukundpur"|R_Cen_village_str== "Tandipur"|R_Cen_village_str== "Gopi Kankubadi"|R_Cen_village_str== "Asada" 
+
+replace treatment=0 if treatment==.
+
+local diarrhea_U5 C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
+                         C_loosestool_child_1day C_loosestool_child_1week     C_loosestool_child_2weeks ///
+						 C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week     C_diarrhea_comb_U5_2weeks   
+						 
+
+foreach k of local diarrhea_U5 {
+	sum `k' if treatment==1
+	sum `k' if treatment==0
+reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_Cen_village_str) 
+}
+
 
 
