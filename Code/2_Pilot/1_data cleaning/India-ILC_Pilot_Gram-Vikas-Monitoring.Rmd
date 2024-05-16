@@ -272,7 +272,7 @@ gv_cl <- gv%>%
                cols = c(nearest_tap_fc, farthest_tap_fc))
 
 
-#Filtering for dates after April 8th for readability
+#Filtering for dates after April 5th for readability
 gv_cl <- gv_cl%>%
   filter(visit_date > "2024-04-05")%>%
   filter(Village != "Karnapadu")%>% #and removing karnapadu
@@ -282,6 +282,13 @@ gv_cl <- gv_cl%>%
 #gv_cl <- gv_cl%>%
  # arrange(chlorine_test, visit_date)
 
+#Recoding chlorine concentration sample types
+gv_cl$chlorine_test <- factor(gv_cl$chlorine_test)
+gv_cl$chlorine_test <- fct_recode(gv_cl$chlorine_test,
+                                  "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
+                                  "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
+
+#Generating plot
   p1 <- ggplot(data = gv_cl) + 
     geom_point(aes(x = visit_date, y = chlorine_concentration,
                    color = chlorine_test))+
@@ -294,7 +301,7 @@ gv_cl <- gv_cl%>%
                      expand = c(0,0))+
     labs(x = "Date", 
        y = "Chlorine Concentration (mg/L)",
-       fill = "Sample Type",
+       color = "Sample Type",
        title = (paste("Gram Vikas ILC Chlorine Monitoring for 2024")))+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+

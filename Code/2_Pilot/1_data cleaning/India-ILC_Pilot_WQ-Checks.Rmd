@@ -33,6 +33,8 @@ library(googlesheets4)
 library(ggsignif)
 library(patchwork)
 library(table1)
+library(gtsummary)
+library(gt)
 
 
 
@@ -291,6 +293,14 @@ idexx <- idexx%>%
   mutate(ec_log = log(ec_mpn_2, base = 10))%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
 
+
+#Adding in WHO risk levels
+idexx <- idexx%>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                                ec_mpn > 100 ~ "High Risk"))
+
 #write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
 
 abr <- abr%>%
@@ -491,6 +501,14 @@ idexx_r1 <- idexx_r1%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
 
+
+#Adding in WHO risk levels
+idexx_r1 <- idexx_r1%>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                                ec_mpn > 100 ~ "High Risk"))
+
 #write_csv(idexx_r1,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv")
 
 
@@ -647,7 +665,7 @@ idexx_r2 <- idexx_r2%>%
  # filter(!(sample_ID %in% r2_sample_ids))
 
 #combining idexx results to survey results
-#r2_for_idexx$sample_ID <- as.character(r2_for_idexx$sample_ID)
+#r2_for_idexx$sample_ID <- as.numeric(r2_for_idexx$sample_ID)
 #idexx_r2 <- inner_join(idexx_r2, r2_for_idexx, by = "sample_ID")
 #abr$sample_ID <- as.character(abr$sample_ID)
 #abr <- inner_join(abr, bl_idexx, by = "sample_ID")
@@ -718,6 +736,13 @@ idexx_r2 <- idexx_r2%>%
   mutate(ec_log = log(ec_mpn_2, base = 10))%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
+
+#Adding in WHO risk levels
+idexx_r2 <- idexx_r2%>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                                ec_mpn > 100 ~ "High Risk"))
 
 #write_csv(idexx_r2,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv")
 
@@ -961,6 +986,14 @@ idexx_r3 <- idexx_r3%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
 #Make - inf values be 0
 
+
+#Adding in WHO risk levels
+idexx_r3 <- idexx_r3%>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                                ec_mpn > 100 ~ "High Risk"))
+
 #write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv")
 
 
@@ -1109,6 +1142,14 @@ all_stats <- idexx%>%
   )
 
 
+
+#Creating risk level stats for WHO Risk plot
+risk_stats <- idexx%>%
+  group_by(assignment, ec_risk)%>%
+  summarize(count = n())%>%
+  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
+
+
 # Print the table
 kbl(village_stats)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
@@ -1247,6 +1288,25 @@ p_cf_bl + p_ec_bl
 
 
 
+
+#Making WHO risk plot
+p_ec_risk_bl <- ggplot(data = risk_stats) + 
+  geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Assignment", 
+       y = expression(paste("% for each risk category")),
+       fill = expression(paste(italic("E. coli"), " Risk Categories")),
+       title = "BL"
+       #title = expression(paste(" BL - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+
 ```
 
 
@@ -1371,6 +1431,11 @@ all_stats <- idexx_r1%>%
     "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
   )
 
+#Creating risk level stats for WHO Risk plot
+risk_stats <- idexx_r1%>%
+  group_by(assignment, ec_risk)%>%
+  summarize(count = n())%>%
+  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 # Print the table
 kbl(village_stats)%>%
@@ -1394,6 +1459,8 @@ kbl(all_stats)%>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
+
+
 
 
 #Plotting chlorine concentrations against e. coli presence/absence
@@ -1528,6 +1595,23 @@ tap_ec <- fisher.test(x = idexx_r1_tap$assignment, y=idexx_r1_tap$ec_pa)
 idexx_r1_signif <- data.frame(stored_cf$p.value, stored_ec$p.value, tap_cf$p.value, tap_ec$p.value)
 
 
+
+#Making WHO risk plot
+p_ec_risk_r1 <- ggplot(data = risk_stats) + 
+  geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Assignment", 
+       y = expression(paste("% for each risk category")),
+       fill = expression(paste(italic("E. coli"), " Risk Categories")),
+       title = "R1"
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
 ```
 
 \newpage
@@ -1592,6 +1676,12 @@ all_stats <- idexx_r2%>%
     "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
     #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
   )
+
+#Creating risk level stats for WHO Risk plot
+risk_stats <- idexx_r2%>%
+  group_by(assignment, ec_risk)%>%
+  summarize(count = n())%>%
+  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 
 # Print the table
@@ -1663,6 +1753,24 @@ p_cf_r2 <- ggplot(data = tc_stats) +
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p_cf_r2 + p_ec_r2
+
+
+
+
+#Making WHO risk plot
+p_ec_risk_r2 <- ggplot(data = risk_stats) + 
+  geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Assignment", 
+       y = expression(paste("% for each risk category")),
+       fill = expression(paste(italic("E. coli"), " Risk Categories")),
+       title = "R2"
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 ```
 
@@ -1745,6 +1853,12 @@ all_stats <- idexx_r3%>%
     "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
   )
 
+#Creating risk level stats for WHO Risk plot
+risk_stats <- idexx_r3%>%
+  group_by(assignment, ec_risk)%>%
+  summarize(count = n())%>%
+  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
+
 
 # Print the table
 kbl(village_stats)%>%
@@ -1780,6 +1894,9 @@ idexx_r3 <- idexx_r3%>%
 table1(~ village | sample_type, data = idexx_r3)
 
 
+#removing lab blanks from tc_stats
+tc_stats <- tc_stats%>%
+  filter(sample_type != "Blank")
 
 #Plotting treatment/control stats on a bar plot
 p_ec_r3 <- ggplot(data = tc_stats) + 
@@ -1823,14 +1940,20 @@ p_cf_r3 + p_ec_r3
 
 
 
-
-
-
-
-
-
-
-
+#Making WHO risk plot
+p_ec_risk_r3 <- ggplot(data = risk_stats) + 
+  geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Assignment", 
+       y = expression(paste("% for each risk category")),
+       fill = expression(paste(italic("E. coli"), " Risk Categories")),
+       title = "R3"
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 
 
@@ -1858,23 +1981,27 @@ table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r3_abr)
 p_ec_bl + p_ec_r1 + p_ec_r2 + p_ec_r3
 
 
+#combining WHO risk plots from all data collection rounds
+
+p_ec_risk_bl + p_ec_risk_r1 + p_ec_risk_r2 + p_ec_risk_r3
+
 
 
 #Combining all 4 IDEXX datasets into 1
 idexx_total_bl <- idexx%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "BL")
 
 idexx_total_r1 <- idexx_r1%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "R1")
 
 idexx_total_r2 <- idexx_r2%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "R2")
 
 idexx_total_r3 <- idexx_r3%>%
-  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "R3")%>%
   mutate(village_name = village_name.x)%>%
   dplyr::select(!(village_name.x))
@@ -1920,6 +2047,61 @@ p_total_boxplot <- ggplot(data = idexx_total) +
 
 p_total_boxplot
 
+
+
+#Displaying total IDEXX results in a table
+tap_total_stats <- idexx_total%>%
+  filter(sample_type == "Tap")%>%
+  group_by(assignment, data_round) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Median MPN E. coli/100 mL" = median(ec_mpn)#,
+    #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+stored_total_stats <- idexx_total%>%
+  filter(sample_type == "Stored")%>%
+  group_by(assignment, data_round) %>%
+  summarize(
+    "Number of Samples" = n(),
+    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+      (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    "Median MPN E. coli/100 mL" = median(ec_mpn)#,
+    #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+#Creating table using gt summary
+
+#tab <- idexx_total%>%
+ # dplyr::select(data_round, assignment, cf_pa, ec_pa)%>%
+  #tbl_strata(by = data_round,
+   #          .tbl_fun =
+    #           ~ .x %>%
+     #   tbl_summary(by = assignment, missing = "no")%>%
+      #  add_n(),
+       # .header = "**{strata}**, N = {n}")
+
+
+
+tab <- table1(data = tap_total_stats, ~ `% Positive for Total Coliform` + `% Positive for E. coli` | data_round*assignment)
 
 
 ```
@@ -2116,11 +2298,41 @@ mon_wide <- mon_wide%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
                cols = c(nearest_tap_fc, farthest_tap_fc))
 
+#Making a plot for Karnapadu
+#mon_karnapadu <- mon_wide%>%
+ # filter(village_name == "Karnapadu")
 
-#Filtering for dates after April 8th for readability
+# p1 <- ggplot(data = mon_karnapadu) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+#     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 2.0),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("JPAL ILC Chlorine Monitoring in Karnapadu Village")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p1)
+
+
+#Filtering for dates after April 5th for readability
 mon_wide <- mon_wide%>%
-  filter(test_date > "2024-03-15")%>%
-  filter(village_name != "Karnapadu") #and removing karnapadu
+  filter(test_date > "2024-04-05")%>%
+  filter(village_name != "Karnapadu")%>% #and removing karnapadu
+  filter(is.na(chlorine_concentration) == FALSE)
+
+#Recoding chlorine concentration sample types
+mon_wide$chlorine_test <- factor(mon_wide$chlorine_test)
+mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
+                                  "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
+                                  "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
 
 
 
@@ -2132,11 +2344,11 @@ mon_wide <- mon_wide%>%
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
     scale_y_continuous(
-                     limits = c(0, 1),
+                     limits = c(0, 2.0),
                      expand = c(0,0))+
     labs(x = "Date", 
        y = "Chlorine Concentration (mg/L)",
-       fill = "Sample Type",
+       color = "Sample Type",
        title = (paste("JPAL ILC Chlorine Monitoring for 2024")))+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
