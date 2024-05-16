@@ -29,7 +29,7 @@ use "${DataPre}1_1_Endline_XXX_consented.dta", clear
 //some basic cleaning 
 gen submit_date = dofc(R_E_submissiondate)
 format submit_date %td 
-
+drop if R_E_consent != 1
 //survey start date - 21st apr 2024
 drop if submit_date < mdy(04,21,2024)
 
@@ -67,7 +67,7 @@ merge 1:1 unique_id_num using "${DataRaw}Endline_BC_data_for_merge.dta"
 drop if _merge == 3
 drop _merge 
 
-local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda 
+local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar
 
 
 foreach j of local mylist2 {
@@ -181,7 +181,7 @@ drop _merge
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
 preserve
 clear
-local mylist2  Gopi_Kankubadi Kuljing Nathma Bichikote Dangalodi  Gudiabandh Barijhola  Karlakana  Karnapadu Mariguda
+local mylist2  Gopi_Kankubadi Kuljing Nathma Bichikote Dangalodi  Gudiabandh Barijhola  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar
 use "${DataPr}selected_Birnarayanpur_27thApr2024_for_endlineBC.dta", replace
 
 foreach j of local mylist2 {
@@ -253,8 +253,8 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	
 
 
-sort R_E_r_cen_village_name_str R_E_enum_name rank 
-export excel ID R_E_enum_name R_E_r_cen_village_name_str R_E_r_cen_hamlet_name R_E_r_cen_saahi_name R_E_r_cen_landmark previous_Respondent using "${pilot}Supervisor_BC_endline_Tracker_checking.xlsx" , sheet("sheet1", replace) firstrow(varlabels) cell(A1) 
+sort  R_E_r_cen_village_name_str R_E_enum_name rank 
+export excel ID submit_date R_E_enum_name R_E_r_cen_village_name_str R_E_r_cen_hamlet_name R_E_r_cen_saahi_name R_E_r_cen_landmark previous_Respondent using "${pilot}Supervisor_BC_endline_Tracker_checking.xlsx" , sheet("sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 *for check

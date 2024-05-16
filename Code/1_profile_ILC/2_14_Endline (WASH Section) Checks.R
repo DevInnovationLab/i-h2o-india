@@ -613,7 +613,7 @@ print(flagged_cases)
 # WATER COLLECTION
 #-------------------------------------------------------------------------------------------------------------------
 
-browse <- df.temp.consent %>% select(R_E_collect_resp, R_E_where_prim_locate, R_E_where_prim_locate_enum_obs )
+browse <- df.temp.consent %>% select(R_E_collect_resp, R_E_where_prim_locate, R_E_where_prim_locate_enum_obs, R_E_sec_source_reason_999 )
 
  View(browse)
 
@@ -652,6 +652,152 @@ stargazer(result_df,
           float = FALSE, 
           rownames = FALSE, 
           out = paste0(overleaf(), "Table/location_prim_endline.tex"))
+
+
+#--------------------------------------------------------------------------------
+#Consistency of  collect_prim_freq with quant
+#-----------------------------------------------------------------------------
+
+#option 1 2 3 in  collect_prim_freq  shouldnt be with 2  in quant
+#option 4 5 in  collect_prim_freq shouldnt be with more than 5 in quant
+
+browse <- df.temp.consent %>% select(R_E_quant , R_E_collect_prim_freq, R_E_water_sec_yn )
+View(browse)
+
+#part 1
+
+filtered_df <- df.temp.consent %>%
+  filter(R_E_quant %in% c("Less than half of it", "None of it (0%)") & R_E_collect_prim_freq > 5)
+
+View(filtered_df)
+
+result <- filtered_df %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(
+    total_cases = n(),
+    unique_id = paste(unique_id, collapse = ", "),
+    R_E_quant = paste(R_E_quant, collapse = ", "),
+    R_E_collect_prim_freq = paste(R_E_collect_prim_freq, collapse = ", ")
+  )
+
+View(result)
+
+stargazer(result, summary=F, title= "Inconsistency between 'how much of your drinking watercame from your primary drinking water source' and 'In the past week, how many times did you collect drinking water from your primary water source ?'",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/collect_quant_endline.tex"))
+
+
+#part 2
+
+filtered_df <- df.temp.consent %>%
+  filter(R_E_quant %in% c("All of it (100%)", "More than half of it", "Half of it (50%)" ) & R_E_collect_prim_freq < 3)
+
+View(filtered_df)
+
+result <- filtered_df %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(
+    total_cases = n(),
+    unique_id = paste(unique_id, collapse = ", "),
+    R_E_quant = paste(R_E_quant, collapse = ", "),
+    R_E_collect_prim_freq = paste(R_E_collect_prim_freq, collapse = ", ")
+  )
+
+View(result)
+
+stargazer(result, summary=F, title= "Inconsistency between 'how much of your drinking watercame from your primary drinking water source' and 'In the past week, how many times did you collect drinking water from your primary water source ?'",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/collect_quant2_endline.tex"))
+
+
+
+#--------------------------------------------------------------------------------
+#Consistency of  secondary source with quant
+#-----------------------------------------------------------------------------
+
+
+filtered_df <- df.temp.consent %>%
+  filter(R_E_quant %in% c("Half of it (50%)", "Less than half of it", "None of it (0%)") & R_E_water_sec_yn == "No")
+
+View(filtered_df)
+
+result <- filtered_df %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(
+    total_cases = n(),
+    unique_id = paste(unique_id, collapse = ", "),
+    R_E_quant = paste(R_E_quant, collapse = ", "),
+    R_E_water_sec_yn = paste(R_E_water_sec_yn, collapse = ", ")
+  )
+
+View(result)
+
+
+#--------------------------------------------------------------------------------
+#Consistency of  sec_source_reason and water_sec_freq
+#-----------------------------------------------------------------------------
+
+#to check- check if enum has marked dont know in sec_source_reason even though they gave an asnwer to water_sec_freq
+
+names(df.temp.consent)
+
+filtered_df <- df.temp.consent %>%
+  filter(R_E_sec_source_reason_999 == 1 & R_E_water_sec_yn == "No")
+
+View(filtered_df)
+
+result <- filtered_df %>%
+  group_by(R_E_enum_name_label) %>%
+  summarise(
+    total_cases = n(),
+    unique_id = paste(unique_id, collapse = ", "),
+    R_E_quant = paste(R_E_quant, collapse = ", "),
+    R_E_water_sec_yn = paste(R_E_water_sec_yn, collapse = ", ")
+  )
+
+View(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #Counting people accompanying to shadow enumerators

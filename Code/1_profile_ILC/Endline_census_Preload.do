@@ -292,11 +292,20 @@ export excel unique_id R_Cen_non_cri_mem_1 R_Cen_non_cri_mem_2 R_Cen_non_cri_mem
 
 
 preserve
-keep unique_id unique_id_num R_Cen_a3_hhmember_name_1 R_Cen_a6_hhmember_age_1
+
+replace R_Cen_a3_hhmember_name_1  = "Jagannath kadraka" if  R_Cen_a3_hhmember_name_1  == "Pramila kadraka" & unique_id == "40401110083" & R_Cen_key == "uuid:b65b8a09-64c8-4558-be7b-7c230f884ad9" 
+
+replace R_Cen_a3_hhmember_name_1  = "Gudia Pardi" if  R_Cen_a3_hhmember_name_1  == "Rohini Pardi" & unique_id == "30501107052" & R_Cen_key == "uuid:75dc8967-76f8-4fc1-93a4-f082aaa003a7" 
+
+replace R_Cen_a6_hhmember_age_1 = . if R_Cen_a3_hhmember_name_1 == "Gudia Pardi" & unique_id == "30501107052" & R_Cen_key == "uuid:75dc8967-76f8-4fc1-93a4-f082aaa003a7" 
+
+keep unique_id unique_id_num R_Cen_a3_hhmember_name_1 R_Cen_a6_hhmember_age_1 R_Cen_key
+
 clonevar final_resp_name = R_Cen_a3_hhmember_name_1 
 rename R_Cen_a3_hhmember_name_1 R_Cen_a1_resp_name
 rename unique_id_num unique_id_C
 replace R_Cen_a1_resp_name = lower(R_Cen_a1_resp_name)
+
 save "${DataPre}Endline_resp_fuzzymatch.dta", replace
 restore
 
@@ -306,10 +315,16 @@ rename unique_id_num unique_id_B
 clonevar orig_resp_name = R_Cen_a1_resp_name
 replace R_Cen_a1_resp_name = lower(R_Cen_a1_resp_name)
 reclink R_Cen_a1_resp_name unique_id using "${DataPre}Endline_resp_fuzzymatch.dta", idmaster(unique_id_B) idusing(unique_id_C) required (unique_id) gen(fuzzy) minscore(.5)
+assert fuzzy > 0.9 //
 br unique_id unique_id_B unique_id_C R_Cen_a1_resp_name UR_Cen_a1_resp_name final_resp_name fuzzy
 rename final_resp_name R_Cen_final_resp_name
+sort fuzzy
+gen years = "years"
+egen R_Cen_a6_hhmember_age_1_y = concat(R_Cen_a6_hhmember_age_1 years), p(" ")
 
-export excel unique_id R_Cen_final_resp_name using "${DataPre}Endline_census_updated_resp_preload.xlsx", sheet("Sheet1", replace) firstrow(variables) cell(A1)
+egen R_Cen_main_resp_with_age = concat(R_Cen_final_resp_name R_Cen_a6_hhmember_age_1_y), p(" and ")
+
+export excel unique_id R_Cen_main_resp_with_age using "${DataPre}Endline_census_updated_resp_preload.xlsx", sheet("Sheet1", replace) firstrow(variables) cell(A1)
 restore
 
 
