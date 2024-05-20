@@ -1002,6 +1002,69 @@ idexx_r3 <- idexx_r3%>%
 ```
 
 
+\newpage
+
+# Gram Vikas Data Cleaning
+
+```{r Gram Vikas Data cleaning}
+
+
+#creating test date
+gv <- gv%>%
+  filter(is.na(Village) == FALSE)%>%
+  mutate(test_date = as_date(`valve_open (Time Answered)`))%>%
+  mutate(visit_date_alt = as_date(`Drafted On`))%>%
+  mutate(visit_date = as_date(`Date:`))
+
+#Replacing missing date values
+gv <- gv%>%
+  mutate(visit_date = coalesce(visit_date, visit_date_alt))
+
+#Selecting village names to repeat through in a for loop
+mon_villages <- unique(gv$Village)
+
+#Processing refill data
+gv <- gv%>%
+  mutate(refill = `Did you/the pump operator refill chlorine tablets since the last visit?`)%>%
+  mutate(ilc_device = `What device is installed?`)%>%
+  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)
+
+
+
+#Selecting nearest and farthest tap data to be displayed
+mon_near <- gv%>%
+  dplyr::select(test_date, Village, nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc))
+
+mon_far <- gv%>%
+  dplyr::select(test_date, Village, farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc))
+  
+
+
+
+#Selecting refill data
+gv_refill <- gv%>%
+  filter(refill == "Yes")
+
+#Creating refill check dates - date-based method
+#We ultimately want to get to a place where we can estimate tablet decay rate in each village
+gv_refill <- gv_refill%>%
+  mutate(refill_date_1 = visit_date + 14)%>%
+  mutate(refill_date_2 = visit_date + 18)%>%
+  mutate(refill_date_3 = visit_date + 20)%>%
+  mutate(refill_date_0 = visit_date)
+#Selecting dates
+gv_refill <- gv_refill%>%
+  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
+#making this dataset compatible with the plot below
+gv_refill <- gv_refill%>%
+  mutate(village_name = Village)%>%
+  mutate(village_name = ifelse(village_name == "Gopikankubadi", "GopiKankubadi", village_name))
+
+```
 
 
 
@@ -1998,7 +2061,8 @@ idexx_total_r1 <- idexx_r1%>%
 
 idexx_total_r2 <- idexx_r2%>%
   dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log)%>%
-  mutate(data_round = "R2")
+  mutate(data_round = "R2")%>%
+  mutate(fc_tap_avg = NA)
 
 idexx_total_r3 <- idexx_r3%>%
   dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
@@ -2352,7 +2416,19 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
        title = (paste("JPAL ILC Chlorine Monitoring for 2024")))+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
-    facet_wrap(~village_name, ncol = 3)
+    facet_wrap(~village_name, ncol = 3)+
+    geom_vline(data = gv_refill, aes(xintercept = refill_date_0),
+               linetype = "dashed", color = "darkgreen")+
+      #annotate("text", x = as.Date("2024-04-08"), y = 0.1, label = "Refill",
+       #        angle = 0, vjust = -0.5, size = 3, color = "darkgreen")
+    #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
+     #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-10"), y = 1.5), 
+            label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-14"), y = 1.7), 
+            label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
   
   print(p1)
 
@@ -2518,51 +2594,51 @@ mon_far <- gv%>%
 
 
   
-for (i in mon_villages){
-  x_near <- mon_near%>%
-    filter(Village == i)
-  x_far <- mon_far%>%
-    filter(Village == i)
-  
-  
-  p1 <- ggplot(data = x_near) + 
-    geom_point(aes(x = test_date, y = chlorine_concentration,
-                   color = chlorine_test))+
-    geom_line(aes(x = test_date, y = chlorine_concentration,
-                  color = chlorine_test))+
-    geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
-    scale_y_continuous(
-                     limits = c(0, 1),
-                     expand = c(0,0))+
-    labs(x = "Date", 
-       y = "Chlorine Concentration (mg/L)",
-       fill = "Sample Type",
-       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-  
-  print(p1)
-  
-  p2 <- ggplot(data = x_far) + 
-    geom_point(aes(x = test_date, y = chlorine_concentration,
-                   color = chlorine_test))+
-    geom_line(aes(x = test_date, y = chlorine_concentration,
-                  color = chlorine_test))+
-    geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
-    scale_y_continuous(
-                     limits = c(0, 1),
-                     expand = c(0,0))+
-    labs(x = "Date", 
-       y = "Chlorine Concentration (mg/L)",
-       fill = "Sample Type",
-       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-  
-  print(p2)
-
-  
-}
+# for (i in mon_villages){
+#   x_near <- mon_near%>%
+#     filter(Village == i)
+#   x_far <- mon_far%>%
+#     filter(Village == i)
+#   
+#   
+#   p1 <- ggplot(data = x_near) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 1),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p1)
+#   
+#   p2 <- ggplot(data = x_far) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.14, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 1),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p2)
+# 
+#   
+# }
 
 
 

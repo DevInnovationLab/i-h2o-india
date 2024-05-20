@@ -270,13 +270,31 @@ gv_cl <- gv%>%
   dplyr::select(visit_date, Village, nearest_tap_fc, farthest_tap_fc)%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
                cols = c(nearest_tap_fc, farthest_tap_fc))
+#Selecting for refill data
+#Filtering for chlorine refill data
+gv_refill <- gv%>%
+  filter(refill == "Yes")
 
+#Creating refill check dates - date-based method
+#We ultimately want to get to a place where we can estimate tablet decay rate in each village
+gv_refill <- gv_refill%>%
+  mutate(refill_date_1 = visit_date + 14)%>%
+  mutate(refill_date_2 = visit_date + 18)%>%
+  mutate(refill_date_3 = visit_date + 20)%>%
+  mutate(refill_date_0 = visit_date)
+#Selecting dates
+gv_refill <- gv_refill%>%
+  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
 
 #Filtering for dates after April 5th for readability
 gv_cl <- gv_cl%>%
   filter(visit_date > "2024-04-05")%>%
   filter(Village != "Karnapadu")%>% #and removing karnapadu
   na.omit()
+
+#Removing NAs
+gv_refill <- gv_refill%>%
+  filter(Village %in% unique(gv_cl$Village))
 
 #ordering by date
 #gv_cl <- gv_cl%>%
@@ -297,7 +315,7 @@ gv_cl$chlorine_test <- fct_recode(gv_cl$chlorine_test,
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
     scale_y_continuous(
-                     limits = c(0, 1),
+                     limits = c(0, 2.0),
                      expand = c(0,0))+
     labs(x = "Date", 
        y = "Chlorine Concentration (mg/L)",
@@ -305,7 +323,22 @@ gv_cl$chlorine_test <- fct_recode(gv_cl$chlorine_test,
        title = (paste("Gram Vikas ILC Chlorine Monitoring for 2024")))+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
-    facet_wrap(~Village, ncol = 3)
+    facet_wrap(~Village, ncol = 3)+
+    geom_vline(data = gv_refill, aes(xintercept = refill_date_0),
+               linetype = "dashed", color = "darkgreen")+
+      #annotate("text", x = as.Date("2024-04-08"), y = 0.1, label = "Refill",
+       #        angle = 0, vjust = -0.5, size = 3, color = "darkgreen")
+    #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
+     #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
+    geom_text(data = filter(gv_cl, Village == "Badabangi"), 
+            aes(x = as.Date("2024-04-10"), y = 1.5), 
+            label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
+    geom_text(data = filter(gv_cl, Village == "Badabangi"), 
+            aes(x = as.Date("2024-04-14"), y = 1.7), 
+            label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
+
+
+
   
   print(p1)
 
