@@ -26,6 +26,7 @@ do "${github}1_8_A_Endline_cleaning_v2.do"
 
 use "${DataPre}1_1_Endline_XXX_consented.dta", clear
 
+set seed 23456
 //some basic cleaning 
 gen submit_date = dofc(R_E_submissiondate)
 format submit_date %td 
@@ -57,6 +58,12 @@ preserve
 
 import delimited "${DataRaw}Endline Census BackCheck_WIDE.csv", clear
 format unique_id %15.0gc
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+list unique_id if dup_HHID > 0
+drop if  key ==  "uuid:72cedcf8-3973-4b3f-a427-c5690b9a8df1"
+drop if key == "uuid:89e1b78f-c2e3-4539-bd1d-cca689f2ea6c"
 keep unique_id
 rename unique_id unique_id_num
 save "${DataRaw}Endline_BC_data_for_merge.dta", replace
@@ -67,7 +74,7 @@ merge 1:1 unique_id_num using "${DataRaw}Endline_BC_data_for_merge.dta"
 drop if _merge == 3
 drop _merge 
 
-local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar
+local mylist2  Birnarayanpur Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar  Tandipur Sanagortha Naira Mukundpur    
 
 
 foreach j of local mylist2 {
@@ -95,7 +102,7 @@ bys strata (unique_id): gen strata_random_hhsurvey= runiform(0,1)
 sort strata_random_hhsurvey
 //Bys R_FE3_enum (state random hhsurvey): gen sele (try it)
 
-bys R_E_enum_name (strata_random_hhsurvey): generate selected_hhsurvey = _n <= 2
+bys R_E_enum_name (strata_random_hhsurvey): generate selected_hhsurvey = _n <= 4
 
 
 //Final selection variable
@@ -107,7 +114,7 @@ gen selected= 1 if selected_hhsurvey==1
 
 tab R_E_enum_name selected
 
-replace selected = 1 if R_E_enum_name == 111 |  R_E_enum_name == 135 | R_E_enum_name == 122 | R_E_enum_name == 108 | R_E_enum_name == 117
+*replace selected = 1 if R_E_enum_name == 111 |  R_E_enum_name == 135 | R_E_enum_name == 122 | R_E_enum_name == 108 | R_E_enum_name == 117
 
 *keep if selected==1 
 
@@ -115,7 +122,7 @@ replace selected = 1 if R_E_enum_name == 111 |  R_E_enum_name == 135 | R_E_enum_
 keep if selected==1 
 
 gen rand_num = .
-replace rand_num = runiform() if selected_hhsurvey
+replace rand_num = runiform() if selected
 
 * Sort by enumerator and the random number
 sort R_E_enum_name rand_num
@@ -134,14 +141,14 @@ bysort  assigned_number: gen enum = _n
 // Reorder the enum variable based on the sorted random numbers
 egen rank = group(enum)
 
-save "${DataPr}selected_`j'_27thApr2024_for_endlineboth.dta", replace
-keep if assigned_number == 1
+*save "${DataPr}selected_`j'_27thApr2024_for_endlineboth.dta", replace
+*keep if assigned_number == 1
 save "${DataPr}selected_`j'_27thApr2024_for_endlineBC.dta", replace
 
-use "${DataPr}selected_`j'_27thApr2024_for_endlineboth.dta", clear
-keep if assigned_number == 2
+*use "${DataPr}selected_`j'_27thApr2024_for_endlineboth.dta", clear
+*keep if assigned_number == 2
 
-save "${DataPr}selected_`j'_27thApr2024_for_endlineAudioaudits.dta", replace
+*save "${DataPr}selected_`j'_27thApr2024_for_endlineAudioaudits.dta", replace
 
 restore
 }
@@ -168,6 +175,12 @@ preserve
 
 import delimited "${DataRaw}Endline Census BackCheck_WIDE.csv", clear
 format unique_id %15.0gc
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+list unique_id if dup_HHID > 0
+drop if  key ==  "uuid:72cedcf8-3973-4b3f-a427-c5690b9a8df1"
+drop if key == "uuid:89e1b78f-c2e3-4539-bd1d-cca689f2ea6c"
 keep unique_id
 rename unique_id unique_id_num
 save "${DataRaw}Endline_BC_data_for_merge.dta", replace
@@ -181,7 +194,7 @@ drop _merge
 *merge 1:1 unique_id using "${DataPr}selected_Karlakana_8thmar2024_for_R2_FollowupBC.dta", gen(merge_BC_select)
 preserve
 clear
-local mylist2  Gopi_Kankubadi Kuljing Nathma Bichikote Dangalodi  Gudiabandh Barijhola  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar
+local mylist2 Gopi_Kankubadi Kuljing Nathma Barijhola Bichikote Dangalodi  Gudiabandh  Karlakana  Karnapadu Mariguda BK_Padar  Bhujbal Asada Jaltar  Tandipur Sanagortha Naira Mukundpur    
 use "${DataPr}selected_Birnarayanpur_27thApr2024_for_endlineBC.dta", replace
 
 foreach j of local mylist2 {
@@ -202,6 +215,9 @@ gen previous_Respondent = ""
 forvalues i = 1/20 {
 replace previous_Respondent = R_E_r_cen_fam_name`i' if R_E_cen_resp_name == `i'
 }
+
+split R_E_cen_resp_label, generate(R_E_cen_resp_label_split) parse(" and ")
+rename R_E_cen_resp_label_split1 previous_resp_updated
 
 //phone numbers and lankmark r_cen_address r_cen_hamlet_name r_cen_a11_oldmale_name r_cen_saahi_name
 
@@ -228,7 +244,7 @@ drop temp_group
 
 
 
-export excel unique_id R_E_r_cen_village_name_str R_E_cen_resp_name R_E_r_cen_a1_resp_name R_E_r_cen_hamlet_name R_E_r_cen_landmark R_E_r_cen_saahi_name R_E_r_cen_address R_E_r_cen_a10_hhhead R_E_r_cen_a11_oldmale_name R_E_r_cen_a39_phone_name_1 R_E_r_cen_a39_phone_num_1 R_E_r_cen_a39_phone_name_2 R_E_r_cen_a39_phone_num_2 R_E_n_hhmember_count R_E_n_fam_name1 R_E_n_fam_name2 R_E_n_fam_name3 R_E_n_fam_name4 R_E_n_fam_name5 R_E_n_fam_name6 R_E_n_fam_name7 R_E_n_fam_name8 R_E_n_fam_name9 R_E_n_fam_name10 R_E_n_fam_name11 R_E_n_fam_name12 R_E_n_fam_name13 R_E_n_fam_name14 R_E_n_fam_name15 R_E_n_fam_name16 R_E_n_fam_name17 R_E_n_fam_name18 R_E_n_fam_name19 R_E_n_fam_name20 R_E_n_name_cbw_woman_earlier1 R_E_n_preg_residence1 R_E_n_fam_age1 R_E_n_fam_age2 R_E_n_fam_age3 R_E_n_fam_age4 R_E_n_fam_age5 R_E_n_fam_age6 R_E_n_fam_age7 R_E_n_fam_age8 R_E_n_fam_age9 R_E_n_fam_age10 R_E_n_fam_age11 R_E_n_fam_age12 R_E_n_fam_age13 R_E_n_fam_age14 R_E_n_fam_age15 R_E_n_fam_age16 R_E_n_fam_age17 R_E_n_fam_age18 R_E_n_fam_age19 R_E_n_fam_age20 R_E_cen_name_cbw_woman_earlier1 R_E_cen_name_cbw_woman_earlier2 R_E_cen_name_cbw_woman_earlier3 R_E_cen_name_cbw_woman_earlier4 R_E_cen_preg_status1 R_E_cen_preg_status2 R_E_cen_preg_status3 R_E_cen_preg_status4  R_E_cen_not_curr_preg1 R_E_cen_not_curr_preg2 R_E_cen_not_curr_preg3 R_E_cen_not_curr_preg4  R_E_cen_preg_residence1 R_E_cen_preg_residence2 R_E_cen_preg_residence3 R_E_cen_preg_residence4  R_E_n_female_above12 R_E_n_num_femaleabove12 R_E_n_male_above12 R_E_n_num_maleabove12 R_E_n_adults_hh_above12 R_E_n_num_adultsabove12 R_E_n_children_below12 R_E_n_num_childbelow12 R_E_n_female_15to49 R_E_n_num_female_15to49 R_E_n_children_below5 R_E_n_num_childbelow5 R_E_n_allmembers_h  R_E_n_num_allmembers_h E_N_num_noncri_care E_N_num_CBW previous_Respondent R_E_cen_resp_label using "${DataPre}Backcheck_Endline_preload_27thApr24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_E_r_cen_village_name_str R_E_cen_resp_name R_E_r_cen_a1_resp_name R_E_r_cen_hamlet_name R_E_r_cen_landmark R_E_r_cen_saahi_name R_E_r_cen_address R_E_r_cen_a10_hhhead R_E_r_cen_a11_oldmale_name R_E_r_cen_a39_phone_name_1 R_E_r_cen_a39_phone_num_1 R_E_r_cen_a39_phone_name_2 R_E_r_cen_a39_phone_num_2 R_E_n_hhmember_count R_E_n_fam_name1 R_E_n_fam_name2 R_E_n_fam_name3 R_E_n_fam_name4 R_E_n_fam_name5 R_E_n_fam_name6 R_E_n_fam_name7 R_E_n_fam_name8 R_E_n_fam_name9 R_E_n_fam_name10 R_E_n_fam_name11 R_E_n_fam_name12 R_E_n_fam_name13 R_E_n_fam_name14 R_E_n_fam_name15 R_E_n_fam_name16 R_E_n_fam_name17 R_E_n_fam_name18 R_E_n_fam_name19 R_E_n_fam_name20 R_E_n_name_cbw_woman_earlier1 R_E_n_preg_residence1 R_E_n_fam_age1 R_E_n_fam_age2 R_E_n_fam_age3 R_E_n_fam_age4 R_E_n_fam_age5 R_E_n_fam_age6 R_E_n_fam_age7 R_E_n_fam_age8 R_E_n_fam_age9 R_E_n_fam_age10 R_E_n_fam_age11 R_E_n_fam_age12 R_E_n_fam_age13 R_E_n_fam_age14 R_E_n_fam_age15 R_E_n_fam_age16 R_E_n_fam_age17 R_E_n_fam_age18 R_E_n_fam_age19 R_E_n_fam_age20 R_E_cen_name_cbw_woman_earlier1 R_E_cen_name_cbw_woman_earlier2 R_E_cen_name_cbw_woman_earlier3 R_E_cen_name_cbw_woman_earlier4 R_E_cen_preg_status1 R_E_cen_preg_status2 R_E_cen_preg_status3 R_E_cen_preg_status4  R_E_cen_not_curr_preg1 R_E_cen_not_curr_preg2 R_E_cen_not_curr_preg3 R_E_cen_not_curr_preg4  R_E_cen_preg_residence1 R_E_cen_preg_residence2 R_E_cen_preg_residence3 R_E_cen_preg_residence4  R_E_n_female_above12 R_E_n_num_femaleabove12 R_E_n_male_above12 R_E_n_num_maleabove12 R_E_n_adults_hh_above12 R_E_n_num_adultsabove12 R_E_n_children_below12 R_E_n_num_childbelow12 R_E_n_female_15to49 R_E_n_num_female_15to49 R_E_n_children_below5 R_E_n_num_childbelow5 R_E_n_allmembers_h  R_E_n_num_allmembers_h E_N_num_noncri_care E_N_num_CBW previous_Respondent R_E_cen_resp_label previous_resp_updated using "${DataPre}Backcheck_Endline_preload_27thApr24.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
 ***********************************************************************
