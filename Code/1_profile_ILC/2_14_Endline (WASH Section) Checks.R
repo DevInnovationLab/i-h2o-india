@@ -234,9 +234,43 @@ Total$Village <- "Total"
 df.progress<- rbind(df.progress, Total)
 
 View(df.progress)
+
+
+
 #output to tex 
 stargazer(df.progress, summary=F, title= "Overall Progress: Endline Census Survey",float=F,rownames = F,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Progress_Endline_Census.tex"))
+
+
+
+star.out <- stargazer(df.progress, 
+                      summary = FALSE, 
+                      title = "Overall Progress: Endline Census Surve", 
+                      float = FALSE,
+                      rownames = FALSE,
+                      covariate.labels = NULL,
+                      type = "latex")
+
+
+star.out <- sub("cccccccc", " |L|L|L|L|L|L|L|L|L|", star.out)
+
+star.out <- sub("cccccccc", "lccccccc", star.out)
+
+
+starpolishr::star_tex_write(star.out, file = paste0(overleaf(), "Table/Table_Progress_Endline_Census.tex"))
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1237,6 +1271,9 @@ names(df.temp.consent)
 issues <- df.temp.consent %>% filter(R_E_enum_name_label == "Pabitra Sahoo" & R_E_tap_issues == "Yes")
 View(issues)
 issues <- issues %>% select(R_E_r_cen_village_name_str, R_E_water_source_prim, R_E_tap_issues, R_E_water_source_sec, R_E_jjm_drinking, R_E_jjm_yes)
+issues <- df.temp.consent %>% filter( R_E_tap_issues == "Yes")
+
+issues <- issues %>% select(R_E_enum_name_label, R_E_tap_issues_type, R_E_tap_issues_type_oth, unique_id)
 
 # Apply the function to each variable
 outliers_list <- lapply(outliers_vars, find_outliers, data = df.temp.consent)

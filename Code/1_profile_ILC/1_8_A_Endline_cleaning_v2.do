@@ -39,7 +39,7 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
 rename cen_malesabove15_list_preload cen_malesabove15_lp
 keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
           cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
-		  cen_num_hhmembers cen_num_noncri
+		  cen_num_hhmembers cen_num_noncri 
 //Renaming vars with prefix R_E
 foreach x of var * {
 	rename `x' R_E_r_`x'  
