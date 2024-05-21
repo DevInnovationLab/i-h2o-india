@@ -39,7 +39,11 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
 rename cen_malesabove15_list_preload cen_malesabove15_lp
 keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
           cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
-		  cen_num_hhmembers cen_num_noncri resp_available instruction instruction_oth
+		  cen_num_hhmembers cen_num_noncri resp_available instruction instruction_oth 
+		  
+//AG: Added resp_available instruction instruction_oth 
+
+		  
 //Renaming vars with prefix R_E
 foreach x of var * {
 	rename `x' R_E_r_`x'  
@@ -63,8 +67,10 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-c
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 * Key creation
 key_creation
+//AG- Commented out the command below to include unavailable cases too 
 *keep if n_cbw_consent==1
 keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth
+//AG: Added n_resp_avail_cbw n_resp_avail_cbw_oth above
 bys key: gen Num=_n
 reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence n_resp_avail_cbw n_resp_avail_cbw_oth, i(key) j(Num)
 prefix_rename
@@ -82,6 +88,7 @@ save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long2.dta", rep
 keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth 
 destring cen_preg_index, replace
 
+//AG: added cen_resp_avail_cbw cen_resp_avail_cbw_oth  above
 bys key: gen Num=_n
 reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth, i(key) j(Num)
 prefix_rename
@@ -687,6 +694,7 @@ use "${DataTemp}U5_Child_23_24.dta", clear
 tab comb_child_caregiver_present
 
 
+//dropping cases where survey was done already, U5 child has permanently left or value is missing
 drop if comb_child_caregiver_present == . | comb_child_caregiver_present == 2 | comb_child_caregiver_present == 1
 
 
@@ -694,16 +702,18 @@ duplicates list unique_id
 
 bys unique_id: gen Num=_n
 
-
+//these are the required vars for preload 
 keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Num
 
+//reshaping 
 reshape wide comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label, i(unique_id) j(Num)
 
 duplicates list unique_id
 
-
+//I wish to merge this with baseline census dataset to get additional identifiers 
 save "${DataPre}Endline_U5_level_revisit_merge.dta", replace
 
+//importing baseline data 
 clear
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
@@ -734,11 +744,8 @@ start_from_clean_file_Population
 tempfile new
 save `new', replace
 
-************************************************************************
-* Step 2: Classifying households for Mortality survey based on Scenarios *
-************************************************************************
 
-// Create scenarios 
+// keeing only screend cases  
 keep if C_Screened == 1
 drop if R_Cen_a1_resp_name == "" 
 
@@ -750,7 +757,9 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ////////////////////////////////////////////////////////////////
 
 
+//merging with U5 wide dataset created 
 merge 1:1 unique_id using "${DataPre}Endline_U5_level_revisit_merge.dta"
+
 
 keep if _merge == 3
 
@@ -758,14 +767,14 @@ keep if _merge == 3
 keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_landmark R_Cen_address R_Cen_enum_name_label R_Cen_a1_resp_name R_Cen_a11_oldmale R_Cen_a11_oldmale_name R_Cen_a10_hhhead R_Cen_a10_hhhead_gender comb_combchild_index* comb_combchild_status* comb_child_comb_name_label* comb_child_caregiver_present* comb_child_care_pres_oth* comb_child_caregiver_name* comb_child_residence* comb_child_comb_caregiver_label* 
 
 
-
+//check for duplicates
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 list unique_id if dup_HHID > 0
 
 
-
+//creating preload
 export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
@@ -806,43 +815,9 @@ export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village
 
 ***************************************************************/
 
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
-drop if n_resp_avail_cbw==.
-key_creation 
-foreach var of varlist n_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "n_", "comb_", 1)
-    rename `var' `newname'
-    }
-foreach var of varlist *_cbw* {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
-gen Cen_Type=2
-save "${DataTemp}temp1.dta", replace
-
-* ID 21
- use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
- drop if  cen_name_cbw_woman_earlier==""
- key_creation
-foreach var of varlist cen_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen_", "comb_", 1)
-    rename `var' `newname'
-    }
-foreach var of varlist *_cbw* {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
-gen Cen_Type=3
-save "${DataTemp}temp2.dta", replace
-
-append using "${DataTemp}temp1.dta"
-drop if comb_resp_avail_comb == . 
-
 /////////////////////////////////////////////////
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 
-use "${DataTemp}Medical_expenditure_person.dta", clear
 
 tab comb_resp_avail_comb
 
@@ -852,25 +827,27 @@ label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2
 label values comb_resp_avail_comb comb_resp_avail_comb_ex
 
 
+//droppinh cases that won't be re-visited 
 drop if comb_resp_avail_comb == . | comb_resp_avail_comb == 2 | comb_resp_avail_comb == 1 | comb_resp_avail_comb == 7 | comb_resp_avail_comb == 8 | comb_resp_avail_comb == -98 | comb_resp_avail_comb == 9
 
-drop if unique_id == "" //Akito to clarify this
+*drop if unique_id == "" //Akito to clarify this (clarified)
 
 bys unique_id: gen Num=_n
 
 duplicates list unique_id
 
 
+//keeping only relevant vars 
+keep comb_resp_avail_comb comb_resp_avail_comb_oth comb_name_comb_woman_earlier unique_id Num
 
-keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Num
-
-reshape wide comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label, i(unique_id) j(Num)
+reshape wide comb_resp_avail_comb comb_resp_avail_comb_oth comb_name_comb_woman_earlier, i(unique_id) j(Num)
 
 duplicates list unique_id
 
+//creating a dataset to be merged with baselin ecnsus one 
+save "${DataPre}Endline_CBW_level_revisit_merge.dta", replace
 
-save "${DataPre}Endline_U5_level_revisit_merge.dta", replace
-
+//importing baseline census data 
 clear
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
@@ -901,11 +878,7 @@ start_from_clean_file_Population
 tempfile new
 save `new', replace
 
-************************************************************************
-* Step 2: Classifying households for Mortality survey based on Scenarios *
-************************************************************************
-
-// Create scenarios 
+//keeping only screend cases 
 keep if C_Screened == 1
 drop if R_Cen_a1_resp_name == "" 
 
@@ -917,12 +890,15 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ////////////////////////////////////////////////////////////////
 
 
-merge 1:1 unique_id using "${DataPre}Endline_U5_level_revisit_merge.dta"
+
+merge 1:1 unique_id using "${DataPre}Endline_CBW_level_revisit_merge.dta"
 
 keep if _merge == 3
 
 
-keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_landmark R_Cen_address R_Cen_enum_name_label R_Cen_a1_resp_name R_Cen_a11_oldmale R_Cen_a11_oldmale_name R_Cen_a10_hhhead R_Cen_a10_hhhead_gender comb_combchild_index* comb_combchild_status* comb_child_comb_name_label* comb_child_caregiver_present* comb_child_care_pres_oth* comb_child_caregiver_name* comb_child_residence* comb_child_comb_caregiver_label* 
+ 
+
+keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_landmark R_Cen_address R_Cen_enum_name_label R_Cen_a1_resp_name R_Cen_a11_oldmale R_Cen_a11_oldmale_name R_Cen_a10_hhhead R_Cen_a10_hhhead_gender comb_resp_avail_comb* comb_resp_avail_comb_oth* comb_name_comb_woman_earlier* 
 
 
 
@@ -931,9 +907,9 @@ count if dup_HHID > 0
 tab dup_HHID
 list unique_id if dup_HHID > 0
 
+//creating preload
 
-
-export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel using "${DataPre}Endline_Revisit_Preload_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 //supervisor tracking sheet
@@ -960,7 +936,7 @@ sort R_Cen_village_str R_Cen_enum_name_label
 
 //add enum names of endline enums 
 
-export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1 comb_child_comb_name_label2 comb_child_comb_caregiver_label2 comb_child_residence2 comb_child_comb_name_label3 comb_child_comb_caregiver_label3 comb_child_residence3  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_name_comb_woman_earlier1 comb_resp_avail_comb1 comb_name_comb_woman_earlier2 comb_resp_avail_comb2 comb_name_comb_woman_earlier3 comb_resp_avail_comb3 comb_name_comb_woman_earlier4 comb_resp_avail_comb4  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 
