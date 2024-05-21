@@ -131,6 +131,8 @@ foreach var of varlist *_u5*  {
     rename `var' `newname'
 }
 gen Cen_Type=4
+//AG
+destring comb_child_care_pres_oth, replace
 save "${DataTemp}temp.dta", replace
 
 * ID 24

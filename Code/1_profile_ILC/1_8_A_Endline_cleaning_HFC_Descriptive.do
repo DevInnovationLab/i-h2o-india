@@ -17,7 +17,7 @@ set seed 758235657 // Just in case
 
 use "${DataTemp}U5_Child_23_24.dta", clear
 
-END
+*END
 
 use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 
@@ -33,7 +33,7 @@ br unique_id comb_hhmember_name New_member_111 if New_member_111==1
 
 
 
-DE
+*DE
 /* ----------------------------------------------------
 * Name of the new mother and father exported in excel
  ----------------------------------------------------*/
