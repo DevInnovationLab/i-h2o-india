@@ -477,7 +477,6 @@ erase "${DataTemp}Requested_long_backcheck2.dta"
 
 
 
-
 //////////////////////////////////////////////
 ////////////////////////////////////////////
 
@@ -487,6 +486,7 @@ use "${DataPre}1_8_Endline_XXX.dta", clear
 
 //we will not re-visit those cases where HH has left permannetly 
 drop if R_E_resp_available == . 
+br if unique_id == ""
 // I am creating this as HH level preload so I am not exporting those cases where HH was available for survey 
 drop if R_E_resp_available == 1 | R_E_resp_available == 2
 
@@ -550,6 +550,7 @@ merge 1:1 unique_id using "${DataPre}Endline_HH_level_revisit_merge.dta"
 
 keep if _merge == 3
 
+export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 tostring unique_id, force replace format(%15.0gc)
@@ -653,8 +654,10 @@ merge 1:1 unique_id using "${DataPre}Endline_Main_Resp_level_revisit_merge.dta"
 
 keep if _merge == 3
 
+gen WASH_applicable = 1
+
 //preload for main resp
-export excel unique_id R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${DataPre}Endline_Revisit_Preload_Main_resp_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel unique_id R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name WASH_applicable using "${DataPre}Endline_Revisit_Preload_Main_resp_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 //Supervisor tracking sheet
@@ -697,7 +700,7 @@ tab comb_child_caregiver_present
 //dropping cases where survey was done already, U5 child has permanently left or value is missing
 drop if comb_child_caregiver_present == . | comb_child_caregiver_present == 2 | comb_child_caregiver_present == 1
 
-
+br if  unique_id == ""
 duplicates list unique_id
 
 bys unique_id: gen Num=_n
@@ -773,9 +776,31 @@ count if dup_HHID > 0
 tab dup_HHID
 list unique_id if dup_HHID > 0
 
+//finding some total values 
+egen temp_group = group(unique_id) //temp_group ensures that rowtotal is done based on unqiue id and inter-mingling doesn't happen
+ds comb_child_comb_name_label*
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if `var' == "999"
+replace `var' = "" if `var' == "-98"
+}
+
+ds comb_child_comb_name_label*
+foreach var of varlist `r(varlist)'{
+gen num_`var' = 1 if `var' != ""
+}
+
+forvalues i = 1/4{
+cap rename num_comb_child_comb_name_label`i' num_child_comb`i'
+}
+
+
+egen total_U5_Child_comb = rowtotal(num_child_comb*)
+drop temp_group
+
+
 
 //creating preload
-export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 //supervisor tracking sheet
@@ -802,7 +827,9 @@ sort R_Cen_village_str R_Cen_enum_name_label
 
 //add enum names of endline enums 
 
-export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1 comb_child_comb_name_label2 comb_child_comb_caregiver_label2 comb_child_residence2 comb_child_comb_name_label3 comb_child_comb_caregiver_label3 comb_child_residence3  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+//AG: Now it is not showing any values in label 2 ? How come? (investigate more)
+
+export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 
@@ -907,9 +934,33 @@ count if dup_HHID > 0
 tab dup_HHID
 list unique_id if dup_HHID > 0
 
+
+//finding some total values 
+egen temp_group = group(unique_id) //temp_group ensures that rowtotal is done based on unqiue id and inter-mingling doesn't happen
+ds comb_name_comb_woman_earlier*
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if `var' == "999"
+replace `var' = "" if `var' == "-98"
+}
+
+forvalues i = 1/4{
+cap rename comb_name_comb_woman_earlier`i' comb_name_CBW`i'
+}
+
+ds comb_name_CBW*
+foreach var of varlist `r(varlist)'{
+gen num_`var' = 1 if `var' != ""
+}
+
+
+
+egen total_CBW_comb = rowtotal(num_comb_name_CBW*)
+drop temp_group
+
+
 //creating preload
 
-export excel using "${DataPre}Endline_Revisit_Preload_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel using "${DataPre}Endline_Revisit_Preload_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 //supervisor tracking sheet
@@ -936,22 +987,51 @@ sort R_Cen_village_str R_Cen_enum_name_label
 
 //add enum names of endline enums 
 
-export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_name_comb_woman_earlier1 comb_resp_avail_comb1 comb_name_comb_woman_earlier2 comb_resp_avail_comb2 comb_name_comb_woman_earlier3 comb_resp_avail_comb3 comb_name_comb_woman_earlier4 comb_resp_avail_comb4  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_name_CBW1 comb_resp_avail_comb1 comb_name_CBW2 comb_resp_avail_comb2 comb_name_CBW3 comb_resp_avail_comb3 comb_name_CBW4 comb_resp_avail_comb4  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 
 
+//comining all the preloads 
 
 
+//main resp preload 
+import excel "${DataPre}Endline_Revisit_Preload_Main_resp_level.xlsx", sheet("Sheet1") firstrow clear
+keep unique_id R_Cen_a1_resp_name WASH_applicable
+save "${DataPre}stata_Endline_revisit_main_resp.dta", replace
+
+//U5 preload
+import excel "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx", sheet("Sheet1") firstrow clear
+keep unique_id comb_child_comb_name_label1 comb_child_caregiver_present1 comb_child_caregiver_name1 comb_child_residence1 comb_child_comb_caregiver_label1 total_U5_Child_comb
+save "${DataPre}stata_Endline_revisit_U5_child.dta", replace
 
 
+//CBW preload 
+import excel "${DataPre}Endline_Revisit_Preload_CBW_level.xlsx", sheet("Sheet1") firstrow clear
+merge 1:1 unique_id using "${DataPre}stata_Endline_revisit_U5_child.dta"
+gen match_CBW_U5_child = ""
+replace match_CBW_U5_child = "CBW and U5" if _merge == 3
+replace match_CBW_U5_child = "only U5" if _merge == 2
+replace match_CBW_U5_child = "only CBW" if _merge == 1
+drop _merge
+merge 1:1 unique_id using "${DataPre}stata_Endline_revisit_main_resp.dta"
+gen match_CBW_main = ""
+replace match_CBW_main = "both" if _merge == 3
+replace match_CBW_main = "Only main" if _merge == 2
+replace match_CBW_main = "Only CBW" if _merge == 1
+replace match_CBW_main = "CBW and U5" if match_CBW_U5_child == "CBW and U5" & _merge == 1
+replace match_CBW_main = "Only U5" if match_CBW_U5_child == "only U5" & _merge == 1
+keep unique_id R_Cen_a1_resp_name comb_name_CBW1 comb_name_CBW2 comb_name_CBW3 total_CBW_comb comb_child_comb_name_label1 total_U5_Child_comb WASH_applicable match_CBW_U5_child match_CBW_main
 
+forvalues i= 1/3{
+rename comb_name_CBW`i' Woman_name`i'
+}
 
+forvalues i= 1/1{
+rename comb_child_comb_name_label`i' Child_name`i'
+}
 
-
-
-
-
+export excel using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 

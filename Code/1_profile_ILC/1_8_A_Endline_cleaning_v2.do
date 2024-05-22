@@ -39,7 +39,7 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
 rename cen_malesabove15_list_preload cen_malesabove15_lp
 keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
           cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
-		  cen_num_hhmembers cen_num_noncri 
+		  cen_num_hhmembers cen_num_noncri resp_available instruction instruction_oth  
 //Renaming vars with prefix R_E
 foreach x of var * {
 	rename `x' R_E_r_`x'  
@@ -63,8 +63,8 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-c
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 * Key creation
 key_creation
-keep if n_cbw_consent==1
-keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus
+*keep if n_cbw_consent==1 //Akito to apply this later 
+keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth above
 bys key: gen Num=_n
 reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
 prefix_rename
@@ -79,11 +79,12 @@ save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long1.dta", rep
 
 keep if cen_cbw_consent==1
 save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long2.dta", replace
-keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier 
+keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth 
 destring cen_preg_index, replace
 
+//AG: added cen_resp_avail_cbw cen_resp_avail_cbw_oth  above
 bys key: gen Num=_n
-reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier cen_resp_avail_cbw, i(key) j(Num)
+reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth, i(key) j(Num)
 prefix_rename
 
 

@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "Endline Census-Household_available-Cen_CBW_followup" (ID: India_ILC_Endline_Census) data.
 *
-*	Inputs:  "Endline Census-Household_available-Cen_CBW_followup.csv"
-*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-Cen_CBW_followup.dta"
+*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup.csv"
+*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup.dta"
 *
-*	Output by SurveyCTO April 23, 2024 3:03 PM.
+*	Output by SurveyCTO May 22, 2024 3:35 PM.
 
 * initialize Stata
 clear all
@@ -21,12 +21,12 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "Endline Census-Household_available-Cen_CBW_followup.csv"
-local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-Cen_CBW_followup.dta"
-local corrfile "Endline Census-Household_available-Cen_CBW_followup_corrections.csv"
+local csvfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup.csv"
+local dtafile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup.dta"
+local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup_corrections.csv"
 local note_fields1 ""
-local text_fields1 "cen_preg_index cen_name_cbw_woman_earlier cen_name_cbw_preg cen_no_consent_reason cen_no_consent_oth cen_no_consent_comment cen_preg_hus cen_preg_current_village_oth cen_preg_rch_id"
-local text_fields2 "cen_preg_rch_id_inc cen_anti_preg_purpose cen_anti_preg_purpose_oth cen_num_living_null cen_num_notliving_null cen_num_stillborn_null cen_num_less24_null cen_num_more24_null"
+local text_fields1 "cen_preg_index cen_name_cbw_woman_earlier cen_name_cbw_preg cen_resp_avail_cbw_oth cen_no_consent_reason cen_no_consent_oth cen_no_consent_comment cen_preg_hus cen_preg_current_village_oth"
+local text_fields2 "cen_preg_rch_id cen_preg_rch_id_inc cen_anti_preg_purpose cen_anti_preg_purpose_oth cen_num_living_null cen_num_notliving_null cen_num_stillborn_null cen_num_less24_null cen_num_more24_null"
 local text_fields3 "cen_child_died_lessmore_24_num cen_child_died_u5_count cen_child_died_repeat_count cen_med_symp_cbw cen_med_symp_oth_cbw cen_med_where_cbw cen_med_where_oth_cbw cen_med_out_home_cbw"
 local text_fields4 "cen_med_out_oth_cbw cen_prvdrs_exp_loop_cbw_count cen_med_work_who_cbw"
 local date_fields1 ""
@@ -122,8 +122,21 @@ if _N>0 {
 
 	label variable cen_resp_avail_cbw "C2) Did you find \${Cen_name_CBW_woman_earlier} to interview?"
 	note cen_resp_avail_cbw: "C2) Did you find \${Cen_name_CBW_woman_earlier} to interview?"
-	label define cen_resp_avail_cbw 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 7 "Respondent died or is no longer a member of the household" 8 "Respondent no longer falls in the criteria (15-49 years)"
+	label define cen_resp_avail_cbw 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 7 "Respondent died or is no longer a member of the household" 8 "Respondent no longer falls in the criteria (15-49 years)" -98 "Refused to answer" -77 "Other, please specify"
 	label values cen_resp_avail_cbw cen_resp_avail_cbw
+
+	label variable cen_resp_avail_cbw_oth "B1.1) Please specify other"
+	note cen_resp_avail_cbw_oth: "B1.1) Please specify other"
+
+	label variable cen_resp_gen_v_cbw "Was gender of \${Cen_name_CBW_woman_earlier} correct in the baseline census? (If"
+	note cen_resp_gen_v_cbw: "Was gender of \${Cen_name_CBW_woman_earlier} correct in the baseline census? (If she is female and was recorded as female in the baseline please say 'Yes' and if they are male but was recorded as female in the baseline please say 'No')"
+	label define cen_resp_gen_v_cbw 1 "Yes" 0 "No"
+	label values cen_resp_gen_v_cbw cen_resp_gen_v_cbw
+
+	label variable cen_age_ch_cbw "Was age of \${Cen_name_CBW_woman_earlier} correct during baseline census? (If re"
+	note cen_age_ch_cbw: "Was age of \${Cen_name_CBW_woman_earlier} correct during baseline census? (If respondent's actual age is out of the criteria (15-49 years) in reality but during baseline census she was recorded in the criteria (15-49 years) please 'No'. If her age was correctly recorded please select 'Yes'"
+	label define cen_age_ch_cbw 1 "Yes" 0 "No"
+	label values cen_age_ch_cbw cen_age_ch_cbw
 
 	label variable cen_resp_age_v_cbw "Did you verify \${Cen_name_CBW_woman_earlier} age with adhaar card or any other "
 	note cen_resp_age_v_cbw: "Did you verify \${Cen_name_CBW_woman_earlier} age with adhaar card or any other official identity document ?"
@@ -435,6 +448,11 @@ if _N>0 {
 	label define cen_translator 1 "Yes" 0 "No"
 	label values cen_translator cen_translator
 
+	label variable cen_hh_prsnt "Was there any Household member (other than the \${Cen_name_CBW_woman_earlier}) p"
+	note cen_hh_prsnt: "Was there any Household member (other than the \${Cen_name_CBW_woman_earlier}) present during the survey?"
+	label define cen_hh_prsnt 1 "Yes" 0 "No"
+	label values cen_hh_prsnt cen_hh_prsnt
+
 
 
 
@@ -477,7 +495,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  Endline Census-Household_available-Cen_CBW_followup_corrections.csv
+*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-Cen_CBW_followup_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
