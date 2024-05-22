@@ -93,7 +93,6 @@ bys key: gen Num=_n
 reshape wide cen_preg_index cen_preg_status cen_preg_residence cen_not_curr_preg cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth, i(key) j(Num)
 prefix_rename
 
-
 * Bit strange with _merge==2 for N=1
 use "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", clear
 merge  1:1 R_E_key using "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", nogen
@@ -312,11 +311,11 @@ erase "${DataTemp}1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_a
 	1 Merging with cleaned 1_8_Endline_Census
 ------------------------------------------------------------------------------*/
 use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", clear
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen 
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen keep(1 3)
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
@@ -480,27 +479,28 @@ erase "${DataTemp}Requested_long_backcheck2.dta"
 //////////////////////////////////////////////
 ////////////////////////////////////////////
 
-*CREATING PRELOAD FOR RE-VISIT (HH LEVEL)
+* CREATING PRELOAD FOR RE-VISIT (HH LEVEL)
 
 use "${DataPre}1_8_Endline_XXX.dta", clear
 
-//we will not re-visit those cases where HH has left permannetly 
+* This is zero case
 drop if R_E_resp_available == . 
+// we will not re-visit those cases where HH has left permannetly 
 br if unique_id == ""
 // I am creating this as HH level preload so I am not exporting those cases where HH was available for survey 
 drop if R_E_resp_available == 1 | R_E_resp_available == 2
 
 * HH unavailable for re-visits 
 
-//checking for duplicates 
-duplicates list unique_id
+//checking unique ID is unique
+isid unique_id
 
 //merging it with the main census file 
 keep unique_id
 
 save "${DataPre}Endline_HH_level_revisit_merge.dta", replace
 
-clear
+
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
@@ -545,21 +545,14 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
 
-
-merge 1:1 unique_id using "${DataPre}Endline_HH_level_revisit_merge.dta"
-
-keep if _merge == 3
-
+merge 1:1 unique_id using "${DataPre}Endline_HH_level_revisit_merge.dta", keep(3)
 export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
-
 
 tostring unique_id, force replace format(%15.0gc)
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-
-
 
 //Changing labels 
 	label variable ID "Unique ID"
@@ -570,34 +563,24 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	label variable R_Cen_landmark "Landmark"
 	label variable R_Cen_enum_name_label "Enumerator name"
 	
-
 //59 IDs
+* Akito to Archi: Just add description of how this data is used.
 sort R_Cen_village_str R_Cen_enum_name_label  
 export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
-
-
-
 
 //////////////////////////////////////////////
 ////////////////////////////////////////////
 
-*CREATING PRELOAD FOR RE-VISIT (MAIN RESPONDENT LEVEL)
-
-
+* CREATING PRELOAD FOR RE-VISIT (MAIN RESPONDENT LEVEL)
 use "${DataPre}1_8_Endline_XXX.dta", clear
 
-//we will not re-visit those cases where HH has left permannetly 
-drop if R_E_resp_available == . 
-
+* We are selecting the case where houehold was visited (R_E_resp_available), BUT the main respondent was not found
 keep if R_E_resp_available == 1
-
-replace R_E_instruction = 6 if R_E_instruction == 7
-
 tab R_E_instruction
-
+replace R_E_instruction = 6 if R_E_instruction == 7
 keep if R_E_instruction != 1
 
-duplicates list unique_id
+isid unique_id
 
 //merging it with the main census file 
 keep unique_id
@@ -648,11 +631,7 @@ drop if R_Cen_a1_resp_name == ""
 PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
-
-
-merge 1:1 unique_id using "${DataPre}Endline_Main_Resp_level_revisit_merge.dta"
-
-keep if _merge == 3
+merge 1:1 unique_id using "${DataPre}Endline_Main_Resp_level_revisit_merge.dta", keep(3)
 
 gen WASH_applicable = 1
 
@@ -667,8 +646,6 @@ gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 
-
-
 //Changing labels 
 	label variable ID "Unique ID"
 	label variable R_Cen_village_str "Village Name"
@@ -678,7 +655,6 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	label variable R_Cen_landmark "Landmark"
 	label variable R_Cen_enum_name_label "Enumerator name"
 	
-
 sort R_Cen_village_str R_Cen_enum_name_label  
 export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_Main_resp_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
@@ -688,23 +664,20 @@ export excel ID R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_h
 
 
 /***************************************************************
-INDIVIDUAL LEVEL DATASETS 
+	INDIVIDUAL LEVEL DATASETS 
 ****************************************************************/
 
 
 *CREATING PRELOAD FOR RE-VISIT (U5 LEVEL)
 use "${DataTemp}U5_Child_23_24.dta", clear
-tab comb_child_caregiver_present
-
-
-//dropping cases where survey was done already, U5 child has permanently left or value is missing
+fre comb_child_caregiver_present
+//dropping cases where survey was done already conducted, U5 child has permanently left or value is missing
 drop if comb_child_caregiver_present == . | comb_child_caregiver_present == 2 | comb_child_caregiver_present == 1
 
-br if  unique_id == ""
 duplicates list unique_id
 
+* Akito to Archi: This data is already wide for me: Why are we making this reshaped? It seems you have 2nd child (Is this because you have more updated data?)
 bys unique_id: gen Num=_n
-
 //these are the required vars for preload 
 keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Num
 
@@ -752,25 +725,18 @@ save `new', replace
 keep if C_Screened == 1
 drop if R_Cen_a1_resp_name == "" 
 
-
 ///////////////////////////////////////////////////////////////
 /***************************************************************
 PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
 
-
 //merging with U5 wide dataset created 
-merge 1:1 unique_id using "${DataPre}Endline_U5_level_revisit_merge.dta"
-
-
-keep if _merge == 3
-
+merge 1:1 unique_id using "${DataPre}Endline_U5_level_revisit_merge.dta", keep(3)
 
 keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_landmark R_Cen_address R_Cen_enum_name_label R_Cen_a1_resp_name R_Cen_a11_oldmale R_Cen_a11_oldmale_name R_Cen_a10_hhhead R_Cen_a10_hhhead_gender comb_combchild_index* comb_combchild_status* comb_child_comb_name_label* comb_child_caregiver_present* comb_child_care_pres_oth* comb_child_caregiver_name* comb_child_residence* comb_child_comb_caregiver_label* 
 
-
-//check for duplicates
+//check for duplicates: Akito to Archi: Can we simply use this command? "isid unique_id"
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
@@ -797,14 +763,10 @@ cap rename num_comb_child_comb_name_label`i' num_child_comb`i'
 egen total_U5_Child_comb = rowtotal(num_child_comb*)
 drop temp_group
 
-
-
 //creating preload
 export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
-
 //supervisor tracking sheet
-
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
@@ -820,20 +782,13 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	label variable R_Cen_saahi_name "Saahi name"
 	label variable R_Cen_landmark "Landmark"
 	label variable R_Cen_enum_name_label "Enumerator name"
-	
 
 sort R_Cen_village_str R_Cen_enum_name_label 
-
-
 //add enum names of endline enums 
 
 //AG: Now it is not showing any values in label 2 ? How come? (investigate more)
 
 export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
-
-
-
-
 
 
 /***************************************************************
@@ -845,24 +800,18 @@ export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village
 /////////////////////////////////////////////////
 use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 
-
-tab comb_resp_avail_comb
-
+tab comb_resp_avail_comb,m
 label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
  
 label values comb_resp_avail_comb comb_resp_avail_comb_ex
 
-
 //droppinh cases that won't be re-visited 
+* Akito to Archi: Most of the case is missing. Can you describe what those are? They are simply data from non-main respondent?
 drop if comb_resp_avail_comb == . | comb_resp_avail_comb == 2 | comb_resp_avail_comb == 1 | comb_resp_avail_comb == 7 | comb_resp_avail_comb == 8 | comb_resp_avail_comb == -98 | comb_resp_avail_comb == 9
 
-*drop if unique_id == "" //Akito to clarify this (clarified)
-
 bys unique_id: gen Num=_n
-
 duplicates list unique_id
-
 
 //keeping only relevant vars 
 keep comb_resp_avail_comb comb_resp_avail_comb_oth comb_name_comb_woman_earlier unique_id Num
@@ -916,19 +865,11 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
 
-
-
-merge 1:1 unique_id using "${DataPre}Endline_CBW_level_revisit_merge.dta"
-
-keep if _merge == 3
-
-
- 
+merge 1:1 unique_id using "${DataPre}Endline_CBW_level_revisit_merge.dta", keep(3)
 
 keep unique_id R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_enum_name R_Cen_enum_code R_Cen_landmark R_Cen_address R_Cen_enum_name_label R_Cen_a1_resp_name R_Cen_a11_oldmale R_Cen_a11_oldmale_name R_Cen_a10_hhhead R_Cen_a10_hhhead_gender comb_resp_avail_comb* comb_resp_avail_comb_oth* comb_name_comb_woman_earlier* 
 
-
-
+* Akito to Archi: Can we simply replace the following code to "isid unique_id"?
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
@@ -959,18 +900,13 @@ drop temp_group
 
 
 //creating preload
-
 export excel using "${DataPre}Endline_Revisit_Preload_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
-
 //supervisor tracking sheet
-
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
 gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-
-
 
 //Changing labels 
 	label variable ID "Unique ID"
@@ -980,17 +916,13 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 	label variable R_Cen_saahi_name "Saahi name"
 	label variable R_Cen_landmark "Landmark"
 	label variable R_Cen_enum_name_label "Enumerator name"
-	
 
 sort R_Cen_village_str R_Cen_enum_name_label 
 
 
 //add enum names of endline enums 
 
-export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_name_CBW1 comb_resp_avail_comb1 comb_name_CBW2 comb_resp_avail_comb2 comb_name_CBW3 comb_resp_avail_comb3 comb_name_CBW4 comb_resp_avail_comb4  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
-
-
-
+export excel ID R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_name_comb_woman_earlier1 comb_resp_avail_comb1 comb_name_comb_woman_earlier2 comb_resp_avail_comb2 comb_name_comb_woman_earlier3 comb_resp_avail_comb3 comb_name_comb_woman_earlier4 comb_resp_avail_comb4  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_CBW_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 //comining all the preloads 
 
@@ -1032,6 +964,3 @@ rename comb_child_comb_name_label`i' Child_name`i'
 }
 
 export excel using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
-
-
-

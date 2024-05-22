@@ -1,7 +1,7 @@
 *=========================================================================* 
 * Project information at:https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
-****** Purpose: 
+****** Purpose: This do file conduct descriptive statistics using endline survey
 ****** Created by: DIL
 ****** Used by:  DIL
 ****** Input data : 
@@ -11,13 +11,15 @@
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
 
-clear all               
-set seed 758235657 // Just in case
+/*--------------------------------------------
+    Recreating baseline child level data
 
-* Baseline child level data
+	
 * N=1,123 
 * start_from_clean_file_ChildLevel
 * save "${DataTemp}Baseline_ChildLevel.dta", replace
+  --------------------------------------------*/
+
 
 * The list of data for analysis
 use "${DataTemp}U5_Child_23_24.dta", clear
@@ -104,53 +106,159 @@ save "${DataTemp}U5_Child_23_24_clean.dta", replace
 
 * Start with Baseline
 use "${DataTemp}Baseline_ChildLevel.dta", clear
- unique  R_Cen_village_name
+rename R_Cen_village_name village
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 gen Cen_Type=4
-foreach i in C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks {
+foreach i in C_diarr* C_loose* {
 	rename `i' B_`i'
 }
-
-merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks village Treat_V End_date) update
-replace R_Cen_village_name=village if R_Cen_village_name==.
-drop village
-tab Merge_Baseline_CL Cen_Type,m
-
+* 446 children not followed
+* 97 children newly appeared
+* 677 children are matched
+merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village Treat_V End_date Panchatvillage BlockCode comb_child_age) update
 label var Treat_V "Treatment"
-label var B_C_diarrhea_comb_U5_1day "Reported diarrhea in the baseline"
-local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$."
+label var B_C_diarrhea_comb_U5_1day "Baseline"
+label var B_C_diarrhea_prev_child_1day "Baseline"
+label var B_C_loosestool_child_1day "Baseline"
+
+save "${DataTemp}U5_Child_Diarrhea_data.dta", replace
+
+* Main specification: Combined diarrhea with U5
+use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
+mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
+
+global U5COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
+global U5DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
+global U5STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
+local U5COMB "Probability of experiencing diarrhea/loose stool among children U5"
+local U5DIA "Probability of experiencing diarrhea among children U5"
+local U5STOOL "Probability of experiencing loose stool among children U5"
+local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
+local RENAMEU5COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
+local RENAMEU5DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
+local RENAMEU5STOOL  "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
+
 * local     diarrhea_2w_c_1 "Experience of diarrhea within 2 weeks for children under age 5"
 
-keep *_U5_1day *_U5_1week *U5_2weeks Treat_V R_Cen_village_name Merge_Baseline_CL unique_id
-sort Merge_Baseline_CL
-sort unique_id
+foreach k in U5COMB U5DIA U5STOOL {	
+foreach i in $`k' {
+	
+eststo: reg `i' Treat_V , cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
 
-unique R_Cen_village_name
-unique R_Cen_village_name if Merge_Baseline_CL==3
+eststo: reg `i' Treat_V B_`i', cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+}
+esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
+             indicate("Stratification FE= *Panchatvillage *BlockCode") ///
+			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
+			 rename(`RENAME`k'') ///
+			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
+			 substitute("{l}{\footnotesize" "{p{1\linewidth}}{\footnotesize" ///
+			 ) ///
+			 addnote("`Notediarrhea'") ///	
+			 replace
+eststo clear
+}
+
+* Main specification: Combined diarrhea with U2
+use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
+keep if comb_child_age<2
+mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
+
+global U2COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
+global U2DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
+global U2STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
+local U2COMB "Probability of experiencing diarrhea/loose stool among children U2"
+local U2DIA "Probability of experiencing diarrhea among children U2"
+local U2STOOL "Probability of experiencing loose stool among children U2"
+local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
+local RENAMEU2COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
+local RENAMEU2DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
+local RENAMEU2STOOL "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
+
+foreach k in U2COMB U2DIA U2STOOL {	
+foreach i in $`k' {
+	
+eststo: reg `i' Treat_V , cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+eststo: reg `i' Treat_V B_`i', cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+}
+esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
+             indicate("Stratification FE= *Panchatvillage *BlockCode") ///
+			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
+			 rename(`RENAME`k'') ///
+			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
+			 substitute("{l}{\footnotesize" "{p{1\linewidth}}{\footnotesize" ///
+			 ) ///
+			 addnote("`Notediarrhea'") ///	
+			 replace
+eststo clear
+}
+
+END
+
+* Main specification: Combined diarrhea with U2
+use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
+local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
+* local     diarrhea_2w_c_1 "Experience of diarrhea within 2 weeks for children under age 5"
+mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
 
 foreach i in C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks {
 	
-eststo: reg `i' Treat_V , cluster(R_Cen_village_name)
+eststo: reg `i' Treat_V , cluster(village)
 sum `i' if Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V B_`i', cluster(R_Cen_village_name)
+eststo: reg `i' Treat_V B_`i', cluster(village)
 sum `i' if Treat_V==0
 estadd scalar Mean = r(mean)
+
+eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
 }
-esttab using "${Table}ILC_Main_Diarrhea_RCT.tex",label se ar2 nomtitle title("Probability of experiencing diarrhea/loose stool among children U5" \label{LabelD}) nonotes nobase nocons ///
+esttab using "${Table}ILC_Main_Diarrhea_U2_RCT.tex",label se ar2 nomtitle title("Probability of experiencing diarrhea/loose stool among children U2" \label{LabelD}) nonotes nobase nocons ///
 			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
-			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0  1 0  1) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
+             indicate("Stratification FE= *Panchatvillage *BlockCode") ///
+			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
 			 rename(B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day) ///
 			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
 			 substitute("{l}{\footnotesize" "{p{1\linewidth}}{\footnotesize" ///
-			 "DSW: Yes" "\textbf{Dispenser for safe water in the community}" ///
-			 "Edu: " "~~~" "WT: " "~~~" "CHL Source:" "~~~" "DSW:" "~~~" "Distance_HF: " "~~~" "Gestation: " "~~~" "NumU5:" "~~~" ///
 			 ) ///
 			 addnote("`Notediarrhea'") ///	
 			 replace
 eststo clear
 
-*END
+use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
+graph bar B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks, over(village, sort(Treat_V) label(angle(45))) ///
+          legend(order(1 "Baseline" 2 "Endline")) note("The left 10 villages are control. Starting from Asada, it is treatment")
+
+* I have to clean 13 cases, also download the new data
+gen flag_B=1 if B_C_diarrhea_comb_U5_2weeks!=.
+gen flag_E=1 if C_diarrhea_comb_U5_2weeks!=.
+collapse B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks (sum) flag_B flag_E, by(village)
+
+END
 
 
 use "${DataTemp}U5_Child_23_24_clean.dta", clear
@@ -259,7 +367,7 @@ br unique_id comb_hhmember_name New_member_111 if New_member_111==1
 
 
 
-*DE
+DE
 /* ----------------------------------------------------
 * Name of the new mother and father exported in excel
  ----------------------------------------------------*/
