@@ -224,8 +224,9 @@ replace E_HH_not_available=1 if R_E_resp_available!=1
 tempfile main
 save `main', replace
 
-
+replace R_E_village_name_res=R_E_r_cen_village_name_str if R_E_village_name_res==""
 save "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
+
 savesome using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta" if R_E_consent==1, replace
 
 /*
