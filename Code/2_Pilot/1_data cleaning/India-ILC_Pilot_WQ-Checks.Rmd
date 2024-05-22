@@ -35,6 +35,7 @@ library(patchwork)
 library(table1)
 library(gtsummary)
 library(gt)
+library(clubSandwich)
 
 
 
@@ -158,6 +159,13 @@ bl$fc_stored_avg <- round(bl$fc_stored_avg, digits = 3)
 bl$fc_tap_avg <- round(bl$fc_tap_avg, digits = 3)
 bl$tc_stored_avg <- round(bl$tc_stored_avg, digits = 3)
 bl$tc_tap_avg <- round(bl$tc_tap_avg, digits = 3)
+
+
+#Renaming assignment names
+bl$assignment <- factor(bl$assignment)
+bl$assignment <- fct_recode(bl$assignment,
+                                  "Control" = "C", 
+                                  "Treatment" = "T")
 
   
 
@@ -1180,11 +1188,39 @@ tc_stats <- idexx%>%
       (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
     "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
       (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+    # "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
+    #   model <- glm(cf_pa_binary ~ 1, family = binomial)
+    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+    #   se <- sqrt(vcov_cluster[1, 1])
+    #   est <- (sum(cf_pa == "Presence") / n()) * 100
+    #   est - qt(0.975, df.residual(model)) * se
+    # },
+    # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
+    #   model <- glm(cf_pa_binary ~ 1, family = binomial)
+    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+    #   se <- sqrt(vcov_cluster[1, 1])
+    #   est <- (sum(cf_pa == "Presence") / n()) * 100
+    #   est + qt(0.975, df.residual(model)) * se
+    # },
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
       (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
     "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
       (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+    # #"Lower CI - EC" = {
+    #  # model <- glm(ec_pa_binary ~ 1, family = binomial)
+    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+    #   se <- sqrt(vcov_cluster[1, 1])
+    #   est <- (sum(ec_pa == "Presence") / n()) * 100
+    #   est - qt(0.975, df.residual(model)) * se
+    # },
+    # "Upper CI - EC" = {
+    #   model <- glm(ec_pa_binary ~ 1, family = binomial)
+    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+    #   se <- sqrt(vcov_cluster[1, 1])
+    #   est <- (sum(ec_pa == "Presence") / n()) * 100
+    #   est + qt(0.975, df.residual(model)) * se
+    # },
     "Median MPN E. coli/100 mL" = median(ec_mpn),
     "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
   )
@@ -1323,7 +1359,7 @@ p_ec_bl <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
-       title = "BL"
+       title = "BL - Oct 2023"
        #title = expression(paste(italic("E. coli"), " BL - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1341,7 +1377,7 @@ p_cf_bl <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for total coliform")),
        fill = "Assignment",
-       title = "BL"
+       title = "BL - Oct 2023"
        #title = expression(paste(" BL - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1362,7 +1398,7 @@ p_ec_risk_bl <- ggplot(data = risk_stats) +
   labs(x = "Assignment", 
        y = expression(paste("% for each risk category")),
        fill = expression(paste(italic("E. coli"), " Risk Categories")),
-       title = "BL"
+       title = "BL - Oct 2023"
        #title = expression(paste(" BL - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1614,7 +1650,7 @@ p_ec_r1 <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
-       title = "R1"
+       title = "R1 - February 2024"
        #title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1632,7 +1668,7 @@ p_cf_r1 <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for total coliform")),
        fill = "Assignment",
-       title = "R1"
+       title = "R1 - February 2024"
        #title = expression(paste(" R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1669,7 +1705,7 @@ p_ec_risk_r1 <- ggplot(data = risk_stats) +
   labs(x = "Assignment", 
        y = expression(paste("% for each risk category")),
        fill = expression(paste(italic("E. coli"), " Risk Categories")),
-       title = "R1"
+       title = "R1 - February 2024"
        )+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -1791,7 +1827,7 @@ p_ec_r2 <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
-       title = "R2"
+       title = "R2 - March 2024"
        #title = expression(paste(italic("E. coli"), " R2 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1809,7 +1845,7 @@ p_cf_r2 <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for total coliform")),
        fill = "Assignment",
-       title = "R2"
+       title = "R2 - March 2024"
        #title = expression(paste(" R2 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1830,7 +1866,7 @@ p_ec_risk_r2 <- ggplot(data = risk_stats) +
   labs(x = "Assignment", 
        y = expression(paste("% for each risk category")),
        fill = expression(paste(italic("E. coli"), " Risk Categories")),
-       title = "R2"
+       title = "R2 - March 2024"
        )+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -1973,7 +2009,7 @@ p_ec_r3 <- ggplot(data = tc_stats) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
-       title = "R3"
+       title = "R3 - April 2024"
        #title = expression(paste(italic("E. coli"), " R3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -1992,7 +2028,7 @@ p_cf_r3 <- ggplot(data = tc_stats) +
        y = expression(paste("% positive for total coliform")),
        fill = "Assignment"
        ,
-       title = "R3"
+       title = "R3 - April 2024"
        #title = expression(paste(" R3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -2013,7 +2049,7 @@ p_ec_risk_r3 <- ggplot(data = risk_stats) +
   labs(x = "Assignment", 
        y = expression(paste("% for each risk category")),
        fill = expression(paste(italic("E. coli"), " Risk Categories")),
-       title = "R3"
+       title = "R3 - April 2024"
        )+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -2153,15 +2189,31 @@ stored_total_stats <- idexx_total%>%
   )
 
 #Creating table using gt summary
+idexx_total$ec_pa_binary <- as.numeric(idexx_total$ec_pa_binary)
+idexx_total$cf_pa_binary <- as.numeric(idexx_total$cf_pa_binary)
 
-#tab <- idexx_total%>%
- # dplyr::select(data_round, assignment, cf_pa, ec_pa)%>%
-  #tbl_strata(by = data_round,
-   #          .tbl_fun =
-    #           ~ .x %>%
-     #   tbl_summary(by = assignment, missing = "no")%>%
-      #  add_n(),
-       # .header = "**{strata}**, N = {n}")
+tab <- idexx_total%>%
+  filter(sample_type == "Tap")%>%
+  dplyr::select(assignment, data_round, cf_pa_binary, ec_pa_binary)%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no", 
+                    type = c(cf_pa_binary, ec_pa_binary) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(ec_pa_binary ~ "Positive for E. coli",
+                                 cf_pa_binary ~ "Positive for Total Coliform")
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
+    .header = "**{strata}**"
+  )
+tab
 
 
 
@@ -2169,6 +2221,101 @@ tab <- table1(data = tap_total_stats, ~ `% Positive for Total Coliform` + `% Pos
 
 
 ```
+
+
+
+
+\newpage
+
+# Overall Chlorine Monitoring Results
+During survey rounds
+
+
+```{r Overall chlorine monitoring results}
+
+bl_cl <- bl%>%
+  dplyr::select(village_name, assignment, fc_tap_avg, fc_stored_avg, tc_tap_avg,
+                tc_stored_avg)%>%
+  mutate(data_round = "BL")%>%
+  filter(is.na(assignment) == FALSE)
+
+r1_cl <- r1%>%
+  dplyr::select(village_name, assignment, fc_tap_avg, fc_stored_avg, tc_tap_avg,
+                tc_stored_avg)%>%
+  mutate(data_round = "R1")
+
+r2_cl <- r2%>%
+  dplyr::select(village_name, assignment, fc_tap_avg, fc_stored_avg, tc_tap_avg, 
+                tc_stored_avg)%>%
+  mutate(data_round = "R2")
+
+r3_cl <- r3%>%
+  dplyr::select(village_name, assignment, fc_tap_avg, fc_stored_avg, tc_tap_avg,
+                tc_stored_avg)%>%
+  mutate(data_round = "R3")
+
+#Combining data collection rounds
+total_cl <- rbind(bl_cl, r1_cl, r2_cl, r3_cl)
+
+#Renaming variables
+total_cl <- total_cl%>%
+  rename("Tap - Free Chlorine" = fc_tap_avg)%>%
+  rename("Tap - Total Chlorine" = tc_tap_avg)%>%
+  rename( "Stored - Free Chlorine" = fc_stored_avg)%>%
+  rename("Stored - Total Chlorine" = tc_stored_avg)
+
+
+#Summarizing in a table1 table
+#Creating render
+mean_render <- parse.abbrev.render.code(c("Mean (SD)"), 2)
+
+tab <- table1(data = total_cl, ~ `Tap - Free Chlorine` + `Tap - Total Chlorine` + `Stored - Free Chlorine` + `Stored - Total Chlorine` | data_round*assignment, render = mean_render)
+tab
+
+#Summarizing in gt summary
+
+# total_cl%>%
+#   dplyr::select(assignment,`Tap - Free Chlorine` ,`Tap - Total Chlorine`, `Stored - Free Chlorine`, `Stored - Total Chlorine`)%>%
+#   tbl_summary(
+#     by = assignment,
+#     statistic = list(
+#       all_continuous() ~ "{mean} ({sd})",
+#       all_categorical() ~ "{n} / {N} ({p}%)"
+#     ),
+#     digits = all_continuous() ~ 2
+#   )
+
+
+tab <- total_cl%>%
+  dplyr::select(assignment, data_round, `Tap - Free Chlorine` ,`Tap - Total Chlorine`, `Stored - Free Chlorine`, `Stored - Total Chlorine`)%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, missing = "no", statistic = list(
+      all_continuous() ~ "{mean} ({sd})")),
+    .header = "**{strata}**, N = {n}"
+  )
+tab
+
+kbl(tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Chlorine Monitoring " = 9)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
+
+
+
+
+```
+
+
+
+
 
 
 
@@ -2289,7 +2436,7 @@ for (i in mon_villages){
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
   
-  print(p1)
+  #print(p1) #Uncomment to run
   
   p2 <- ggplot(data = x_far) + 
     geom_jitter(aes(x = test_date, y = chlorine_concentration, color = chlorine_test), width = 0.05, height = 0.001) +
@@ -2303,7 +2450,7 @@ for (i in mon_villages){
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
   
-  print(p2)
+  #print(p2) #Uncomment to run
 
   
 }
@@ -2340,8 +2487,6 @@ for (i in mon_villages){
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
-  
-  
   
 
 
@@ -2424,10 +2569,10 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
     #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
      #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
     geom_text(data = filter(mon_wide, village_name == "Asada"), 
-            aes(x = as.Date("2024-04-10"), y = 1.5), 
+            aes(x = as.Date("2024-04-12"), y = 1.5), 
             label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
     geom_text(data = filter(mon_wide, village_name == "Asada"), 
-            aes(x = as.Date("2024-04-14"), y = 1.7), 
+            aes(x = as.Date("2024-04-16"), y = 1.7), 
             label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
   
   print(p1)
