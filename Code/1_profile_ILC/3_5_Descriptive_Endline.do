@@ -1,7 +1,7 @@
 *=========================================================================* 
 * Project information at:https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
-****** Purpose: 
+****** Purpose: This do file conduct descriptive statistics using endline survey
 ****** Created by: DIL
 ****** Used by:  DIL
 ****** Input data : 
@@ -11,13 +11,15 @@
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
 
-clear all               
-set seed 758235657 // Just in case
+/*--------------------------------------------
+    Recreating baseline child level data
 
-* Baseline child level data
+	
 * N=1,123 
 * start_from_clean_file_ChildLevel
 * save "${DataTemp}Baseline_ChildLevel.dta", replace
+  --------------------------------------------*/
+
 
 * The list of data for analysis
 use "${DataTemp}U5_Child_23_24.dta", clear
