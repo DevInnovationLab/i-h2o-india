@@ -90,6 +90,7 @@ prefix_rename
 * Bit strange with _merge==2 for N=1
 use "${DataTemp}1_8_Endline_Census-Household_available-Cen_CBW_followup_HH.dta", clear
 merge  1:1 R_E_key using "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", nogen
+merge 1:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", nogen keep(3) keepusing(R_E_key)
 save "${DataFinal}1_8_Endline_21_22.dta", replace
 
 /*N=0?
@@ -305,11 +306,11 @@ erase "${DataTemp}1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_a
 	1 Merging with cleaned 1_8_Endline_Census
 ------------------------------------------------------------------------------*/
 use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", clear
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen 
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen
-merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_4_6.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_7_8.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_9_10.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_11_13.dta", nogen keep(1 3)
+merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen keep(1 3)
 
 /*------------------------------------------------------------------------------
 	2 Basic cleaning
@@ -441,7 +442,6 @@ save "${DataTemp}temp0.dta", replace
  use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
  key_creation 
  drop if  cen_name_cbw_woman_earlier==""
- * keep if cen_resp_avail_cbw==1
  keep cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence key key3
  save "${DataTemp}temp1.dta", replace
  
@@ -459,6 +459,10 @@ bys unique_id: gen Num=_n
 drop  _merge Type  key key3
 reshape wide namenumber n_hhmember_name n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother n_u5mother_name n_u5father_name n_not_curr_preg name_from_earlier_hh cen_still_a_member cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence, i(unique_id) j(Num)
 sort cen_name_cbw_woman_earlier1
+* Creating data before dropping the case for Revisit: Archi
+save  "${DataTemp}Requested_wide_backcheck_preload.dta", replace
+* Creating data after dropping the case for Backcheck: Archi
+keep if cen_resp_avail_cbw==1
 save  "${DataTemp}Requested_wide_backcheck.dta", replace
 
 erase "${DataTemp}Requested_long_backcheck1.dta"
