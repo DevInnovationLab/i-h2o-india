@@ -137,6 +137,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global Table_Pilot_analysis =  "${Overleaf}/India ILC Pilot- analysis/Table/"
 
 	cd "${DataRaw}"
+	
+END 	
 
 /*------------------------------------------------------------------------------
 	3 Initial settings 

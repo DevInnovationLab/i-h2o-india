@@ -26,6 +26,10 @@ do "${github}1_8_A_Endline_cleaning_v2.do"
 
 use "${DataPre}1_1_Endline_XXX_consented.dta", clear
 
+drop if R_E_resp_available != 1
+drop if R_E_instruction != 1
+drop if R_E_consent != 1
+
 set seed 23456
 //some basic cleaning 
 gen submit_date = dofc(R_E_submissiondate)
@@ -53,17 +57,18 @@ replace R_E_r_cen_village_name_str = "Gopi_Kankubadi" if R_E_r_cen_village_name_
 replace R_E_r_cen_village_name_str = "BK_Padar" if R_E_r_cen_village_name_str == "BK Padar" 
 drop if R_E_cen_resp_name == .
 
+tab R_E_r_cen_village_name_str
 
 preserve
 
 import delimited "${DataRaw}Endline Census BackCheck_WIDE.csv", clear
 format unique_id %15.0gc
+drop if  key ==  "uuid:72cedcf8-3973-4b3f-a427-c5690b9a8df1"
+drop if key == "uuid:89e1b78f-c2e3-4539-bd1d-cca689f2ea6c"
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 list unique_id if dup_HHID > 0
-drop if  key ==  "uuid:72cedcf8-3973-4b3f-a427-c5690b9a8df1"
-drop if key == "uuid:89e1b78f-c2e3-4539-bd1d-cca689f2ea6c"
 keep unique_id
 rename unique_id unique_id_num
 save "${DataRaw}Endline_BC_data_for_merge.dta", replace

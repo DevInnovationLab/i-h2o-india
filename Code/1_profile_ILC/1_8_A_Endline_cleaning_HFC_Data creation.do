@@ -150,7 +150,7 @@ drop comb_child_care_pres_oth
 append using "${DataTemp}temp.dta"
 drop if comb_child_caregiver_present==.
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date R_E_village_name_res) keep(3) nogen
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen
 rename R_E_key  key
 rename R_E_village_name_res Village
 * Village
@@ -232,6 +232,7 @@ foreach var of varlist *_all* {
 }
 gen Cen_Type=1
 append using "${DataTemp}temp1.dta"
+tostring comb_resp_avail_comb_oth, replace //AG: made it string 
 append using "${DataTemp}temp2.dta"
 append using "${DataTemp}temp3.dta"
 drop comb_med_seek_ind_comb
@@ -241,7 +242,7 @@ save "${DataTemp}Medical_expenditure_5_11_21_22.dta", replace
 use           "${DataTemp}Medical_expenditure_5_11_21_22.dta", clear
 append using  "${DataTemp}Morbidity_23_24.dta"
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date) keep(3) nogen
 rename R_E_key  key
 save "${DataTemp}Medical_expenditure_person.dta", replace
 
@@ -319,10 +320,12 @@ gen Cen_Type=3
 save "${DataTemp}Requested_long_backcheck2.dta", replace
 
 use "${DataTemp}Requested_long_backcheck1.dta", clear
+tab comb_resp_avail_comb_oth
+tostring comb_resp_avail_comb_oth, replace
 append using "${DataTemp}Requested_long_backcheck2.dta"
 * Adding unique ID
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name R_E_enum_code) keep(3) nogen
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
 save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 
 erase "${DataTemp}Requested_long_backcheck1.dta"
