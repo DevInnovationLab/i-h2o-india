@@ -131,8 +131,8 @@ weekly_plan <- tibble(Date = date(visit_date),
        Plan = c("Full village visits", #Needs to be manually updated
                 "Tandipur, BNPur",
                 "Tandipur, BNPur",
-                "Tandipur, BNPur",
-                "Tandipur, BNPur -- Finish dose stabilization",
+                "Naira, Asada",
+                "Naira, Asada",
                 "Flexible Day",
                 "Flexible Day")
        )

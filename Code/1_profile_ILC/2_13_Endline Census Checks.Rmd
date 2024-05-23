@@ -206,6 +206,7 @@ labelmaker <- function(x){
 
 
 ```{r changing variable names}
+
 #------------------------ Apply the labels for variables---------------------#
 
 temp.labels <- lapply(df.temp , var_lab)

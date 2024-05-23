@@ -1,0 +1,1358 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\usepackage{caption}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={India ILC -- WQ Data Checks},
+  pdfauthor={Jeremy Lowe},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{India ILC -- WQ Data Checks}
+\author{Jeremy Lowe}
+\date{2023-10-01}
+
+\begin{document}
+\maketitle
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+This report summarizes key water quality variables for the India ILc
+Pilot. It summarizes data collected during the baseline, follow-up, and
+monitoring data collection rounds. Key variables include free and total
+chlorine concentration and E. coli concentration.
+
+\begin{verbatim}
+## Rows: 325 Columns: 348
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr  (52): SubmissionDate, starttime, endtime, deviceid, unique_id_3_digit, ...
+## dbl (267): devicephonenum, unique_id_1, unique_id_2, unique_id_3, unique_id_...
+## lgl  (29): subscriberid, simid, no_consent_oth, source_container_oth_4, sour...
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Rows: 234 Columns: 119
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr  (18): SubmissionDate, starttime, endtime, deviceid, hamlet_name, valve_...
+## dbl  (84): subscriberid, simid, devicephonenum, district_name, block_name, g...
+## lgl  (13): survey_not_done, HR_nearest_tap_fc, HR_nearest_tap_tc, error_num_...
+## time  (4): nearest_tap_sample_R, nearest_tap_sample_S, farthest_tap_sample_R...
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Rows: 12 Columns: 197
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr   (42): SubmissionDate, starttime, endtime, deviceid, hamlet_name, oth_r...
+## dbl  (113): devicephonenum, district_name, block_name, gp_name, village_name...
+## lgl   (38): subscriberid, simid, oth_watersupply_reason, no_of_hours, notsol...
+## time   (4): nearest_tap_sample_R, nearest_tap_sample_S, farthest_tap_sample_...
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Rows: 85 Columns: 64
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr  (38): Deployment, Enumerator, Status, Response Code, IP Address, Distri...
+## dbl  (18): Number of Rejections, Number of Edits, nearest_tap_fc, nearest_ta...
+## lgl   (2): Approval Level, Rejection message
+## dttm  (5): Drafted On, Submitted On, valve_open (Time Answered), valve_open_...
+## date  (1): Date:
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Rows: 183 Columns: 27
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr  (9): SubmissionDate, starttime, endtime, deviceid, date_processed, date...
+## dbl (15): who_processed, who_counted, village, unique_sample_id, unique_samp...
+## lgl  (3): subscriberid, simid, devicephonenum
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## Rows: 326 Columns: 28
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr  (8): SubmissionDate, starttime, endtime, date_processed, date_counted, ...
+## dbl (17): deviceid, who_processed, who_counted, village, unique_sample_id, u...
+## lgl  (3): subscriberid, simid, devicephonenum
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+\end{verbatim}
+
+\newpage
+
+\hypertarget{baseline-census-data-cleaning}{%
+\section{Baseline Census Data
+Cleaning}\label{baseline-census-data-cleaning}}
+
+\newpage
+
+\hypertarget{baseline-survey-data-cleaning}{%
+\section{Baseline Survey Data
+Cleaning}\label{baseline-survey-data-cleaning}}
+
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+
+\newpage
+
+\hypertarget{followup-r1-data-cleaning}{%
+\section{Followup R1 Data Cleaning}\label{followup-r1-data-cleaning}}
+
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+
+\newpage
+
+\hypertarget{followup-r2-data-cleaning}{%
+\section{Followup R2 Data Cleaning}\label{followup-r2-data-cleaning}}
+
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+
+\newpage
+
+\hypertarget{followup-r3-data-cleaning}{%
+\section{Followup R3 Data Cleaning}\label{followup-r3-data-cleaning}}
+
+\newpage
+
+\hypertarget{endline-data-cleaning}{%
+\section{Endline Data Cleaning}\label{endline-data-cleaning}}
+
+\newpage
+
+\hypertarget{gram-vikas-data-cleaning}{%
+\section{Gram Vikas Data Cleaning}\label{gram-vikas-data-cleaning}}
+
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+\newpage \# Analysis
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+
+\#BL Chlorine Results
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/baseline chlorine data desc stats-1.pdf}
+
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{>{}r|>{\raggedleft\arraybackslash}p{75px}|l|l|r}
+\hline
+\multicolumn{5}{c}{Free and Total Chlorine Concentrations - Positive Samples (mg/L) } \\
+\cline{1-5}
+\cellcolor{white}{\textcolor{black}{\textbf{unique\_id}}} & \cellcolor{white}{\textcolor{black}{\textbf{unique\_id\_2}}} & \cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{chlorine\_test\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{chlorine\_concentration}}}\\
+\hline
+\textbf{20201113046} & 113 & Jaltar & fc\_tap\_avg & 0.300\\
+\hline
+\textbf{20201113046} & 113 & Jaltar & tc\_tap\_avg & 0.230\\
+\hline
+\textbf{20201113046} & 113 & Jaltar & tc\_stored\_avg & 0.170\\
+\hline
+\textbf{40401110005} & 110 & Naira & fc\_tap\_avg & 0.985\\
+\hline
+\textbf{40401110005} & 110 & Naira & tc\_tap\_avg & 1.730\\
+\hline
+\textbf{30701105017} & 105 & Gopi Kankubadi & tc\_stored\_avg & 0.195\\
+\hline
+\textbf{30202119003} & 119 & BK Padar & tc\_tap\_avg & 0.170\\
+\hline
+\textbf{30202119003} & 119 & BK Padar & tc\_stored\_avg & 0.170\\
+\hline
+\textbf{30202119038} & 119 & BK Padar & tc\_tap\_avg & 0.145\\
+\hline
+\textbf{30301119022} & 119 & Tandipur & tc\_stored\_avg & 0.290\\
+\hline
+\textbf{50201115018} & 115 & Barijhola & tc\_tap\_avg & 0.150\\
+\hline
+\textbf{50501115027} & 115 & Nathma & tc\_tap\_avg & 0.150\\
+\hline
+\textbf{40201111012} & 111 & Bichikote & fc\_tap\_avg & 0.180\\
+\hline
+\textbf{10101113030} & 113 & Asada & fc\_stored\_avg & 0.290\\
+\hline
+\textbf{10101113017} & 113 & Asada & tc\_tap\_avg & 0.150\\
+\hline
+\textbf{30602119010} & 119 & Mukundpur & fc\_stored\_avg & 0.175\\
+\hline
+\end{tabular}}
+\end{table}
+
+\newpage
+
+\#BL IDEXX Results
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{7}{c}{Baseline - Water Quality Test Results } \\
+\cline{1-7}
+\cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Asada} & Stored & 4 & 100 & 50 & 0.500 & 0.023\\
+\hline
+\textbf{Asada} & Tap & 4 & 100 & 50 & 0.500 & 0.023\\
+\hline
+\textbf{BK Padar} & Stored & 4 & 100 & 50 & 19.385 & 0.012\\
+\hline
+\textbf{BK Padar} & Tap & 4 & 100 & 50 & 0.500 & 0.012\\
+\hline
+\textbf{Badabangi} & Stored & 4 & 100 & 75 & 2.030 & 0.057\\
+\hline
+\textbf{Badabangi} & Tap & 4 & 100 & 75 & 1.510 & 0.057\\
+\hline
+\textbf{Barijhola} & Stored & 4 & 100 & 75 & 4.110 & 0.012\\
+\hline
+\textbf{Barijhola} & Tap & 4 & 100 & 100 & 11.940 & 0.012\\
+\hline
+\textbf{Bhujbal} & Stored & 4 & 100 & 25 & 0.000 & 0.015\\
+\hline
+\textbf{Bhujbal} & Tap & 4 & 100 & 25 & 0.000 & 0.015\\
+\hline
+\textbf{Bichikote} & Stored & 4 & 100 & 50 & 1.530 & 0.012\\
+\hline
+\textbf{Bichikote} & Tap & 4 & 100 & 50 & 0.500 & 0.012\\
+\hline
+\textbf{Birnarayanpur} & Stored & 4 & 100 & 0 & 0.000 & 0.020\\
+\hline
+\textbf{Birnarayanpur} & Tap & 4 & 100 & 0 & 0.000 & 0.020\\
+\hline
+\textbf{Dangalodi} & Stored & 4 & 100 & 75 & 4.650 & 0.030\\
+\hline
+\textbf{Dangalodi} & Tap & 4 & 100 & 100 & 1.510 & 0.030\\
+\hline
+\textbf{Gopi Kankubadi} & Stored & 4 & 100 & 100 & 4.190 & 0.015\\
+\hline
+\textbf{Gopi Kankubadi} & Tap & 4 & 100 & 0 & 0.000 & 0.015\\
+\hline
+\textbf{Gudiabandh} & Stored & 4 & 100 & 100 & 11.545 & 0.022\\
+\hline
+\textbf{Gudiabandh} & Tap & 4 & 100 & 100 & 2.020 & 0.022\\
+\hline
+\textbf{Jaltar} & Stored & 4 & 100 & 100 & 523.350 & 0.090\\
+\hline
+\textbf{Jaltar} & Tap & 4 & 100 & 100 & 28.310 & 0.090\\
+\hline
+\textbf{Karlakana} & Stored & 4 & 100 & 100 & 20.730 & 0.015\\
+\hline
+\textbf{Karlakana} & Tap & 4 & 100 & 100 & 3.040 & 0.015\\
+\hline
+\textbf{Karnapadu} & Stored & 4 & 100 & 75 & 1.000 & 0.030\\
+\hline
+\textbf{Karnapadu} & Tap & 4 & 100 & 50 & 0.500 & 0.030\\
+\hline
+\textbf{Kuljing} & Stored & 4 & 100 & 100 & 7.380 & 0.012\\
+\hline
+\textbf{Kuljing} & Tap & 4 & 100 & 100 & 2.530 & 0.012\\
+\hline
+\textbf{Mariguda} & Stored & 4 & 100 & 50 & 0.500 & 0.018\\
+\hline
+\textbf{Mariguda} & Tap & 4 & 100 & 25 & 0.000 & 0.018\\
+\hline
+\textbf{Mukundpur} & Stored & 4 & 100 & 100 & 8.745 & 0.025\\
+\hline
+\textbf{Mukundpur} & Tap & 4 & 100 & 75 & 5.205 & 0.025\\
+\hline
+\textbf{Naira} & Stored & 4 & 100 & 25 & 0.000 & 0.277\\
+\hline
+\textbf{Naira} & Tap & 4 & 100 & 0 & 0.000 & 0.277\\
+\hline
+\textbf{Nathma} & Stored & 4 & 100 & 100 & 4.645 & 0.057\\
+\hline
+\textbf{Nathma} & Tap & 5 & 80 & 40 & 0.000 & 0.048\\
+\hline
+\textbf{Sanagortha} & Stored & 4 & 100 & 50 & 3.690 & 0.027\\
+\hline
+\textbf{Sanagortha} & Tap & 4 & 100 & 0 & 0.000 & 0.027\\
+\hline
+\textbf{Tandipur} & Stored & 4 & 100 & 25 & 0.000 & 0.018\\
+\hline
+\textbf{Tandipur} & Tap & 4 & 100 & 25 & 0.000 & 0.018\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{11}{c}{Baseline - Water Quality Test Results } \\
+\cline{1-11}
+\cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Control} & Stored & 40 & 100.0 & 100.00000 & 100.0000 & 72.5 & 58.03786 & 86.96214 & 6.815 & 0.026\\
+\hline
+\textbf{Control} & Tap & 40 & 100.0 & 100.00000 & 100.0000 & 70.0 & 55.15751 & 84.84249 & 2.020 & 0.026\\
+\hline
+\textbf{Treatment} & Stored & 40 & 100.0 & 100.00000 & 100.0000 & 60.0 & 44.13271 & 75.86729 & 1.000 & 0.053\\
+\hline
+\textbf{Treatment} & Tap & 41 & 97.6 & 92.63152 & 102.4904 & 36.6 & 21.19316 & 51.97758 & 0.000 & 0.052\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{Baseline - Water Quality Test Results } \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Stored} & 80 & 100.0 & 66.2 & 77.124 & 0.039\\
+\hline
+\textbf{Tap} & 81 & 98.8 & 53.1 & 3.543 & 0.039\\
+\hline
+\end{tabu}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Baseline IDEXX Data Desc Stats-1.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Baseline IDEXX Data Desc Stats-2.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Baseline IDEXX Data Desc Stats-3.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Baseline IDEXX Data Desc Stats-4.pdf}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{Water Quality Test Results } \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Asada} & Stored & 3 & 0.0 & 0.00 & 0.030\\
+\hline
+\textbf{Asada} & Tap & 2 & 50.0 & 0.50 & 0.045\\
+\hline
+\textbf{BK Padar} & Stored & 3 & 66.7 & 1.00 & 0.010\\
+\hline
+\textbf{BK Padar} & Tap & 2 & 0.0 & 0.00 & 0.015\\
+\hline
+\textbf{Badabangi} & Stored & 3 & 0.0 & 0.00 & 0.060\\
+\hline
+\textbf{Badabangi} & Tap & 2 & 0.0 & 0.00 & 0.030\\
+\hline
+\textbf{Barijhola} & Stored & 1 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Barijhola} & Tap & 4 & 0.0 & 0.00 & 0.012\\
+\hline
+\textbf{Bhujbal} & Stored & 2 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Bhujbal} & Tap & 2 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Bichikote} & Stored & 4 & 25.0 & 0.00 & 0.012\\
+\hline
+\textbf{Bichikote} & Tap & 1 & 0.0 & 0.00 & 0.000\\
+\hline
+\textbf{Birnarayanpur} & Stored & 2 & 0.0 & 0.00 & 0.015\\
+\hline
+\textbf{Birnarayanpur} & Tap & 3 & 0.0 & 0.00 & 0.017\\
+\hline
+\textbf{Dangalodi} & Stored & 4 & 0.0 & 0.00 & 0.030\\
+\hline
+\textbf{Dangalodi} & Tap & 1 & 0.0 & 0.00 & 0.000\\
+\hline
+\textbf{Gopi Kankubadi} & Stored & 2 & 0.0 & 0.00 & 0.005\\
+\hline
+\textbf{Gopi Kankubadi} & Tap & 3 & 0.0 & 0.00 & 0.007\\
+\hline
+\textbf{Gudiabandh} & Stored & 3 & 0.0 & 0.00 & 0.027\\
+\hline
+\textbf{Gudiabandh} & Tap & 1 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Haathikambha} & Stored & 2 & 0.0 & 0.00 & 0.015\\
+\hline
+\textbf{Haathikambha} & Tap & 3 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Jaltar} & Stored & 2 & 50.0 & 92.09 & 0.010\\
+\hline
+\textbf{Jaltar} & Tap & 3 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Karlakana} & Stored & 2 & 50.0 & 0.50 & 0.020\\
+\hline
+\textbf{Karlakana} & Tap & 3 & 0.0 & 0.00 & 0.020\\
+\hline
+\textbf{Karnapadu} & Stored & 3 & 0.0 & 0.00 & 0.013\\
+\hline
+\textbf{Karnapadu} & Tap & 2 & 0.0 & 0.00 & 0.010\\
+\hline
+\textbf{Kuljing} & Stored & 2 & 50.0 & 0.50 & 0.005\\
+\hline
+\textbf{Kuljing} & Tap & 2 & 0.0 & 0.00 & 0.005\\
+\hline
+\textbf{Mariguda} & Stored & 2 & 0.0 & 0.00 & 0.010\\
+\hline
+\textbf{Mariguda} & Tap & 3 & 0.0 & 0.00 & 0.023\\
+\hline
+\textbf{Mukundpur} & Stored & 2 & 50.0 & 0.50 & 0.010\\
+\hline
+\textbf{Mukundpur} & Tap & 3 & 0.0 & 0.00 & 0.017\\
+\hline
+\textbf{Naira} & Stored & 2 & 0.0 & 0.00 & 0.025\\
+\hline
+\textbf{Naira} & Tap & 4 & 0.0 & 0.00 & 0.265\\
+\hline
+\textbf{Nathma} & Stored & 2 & 50.0 & 1.53 & 0.055\\
+\hline
+\textbf{Nathma} & Tap & 3 & 0.0 & 0.00 & 0.040\\
+\hline
+\textbf{Sanagortha} & Stored & 2 & 0.0 & 0.00 & 0.040\\
+\hline
+\textbf{Sanagortha} & Tap & 3 & 0.0 & 0.00 & 0.030\\
+\hline
+\textbf{Tandipur} & Stored & 3 & 33.3 & 0.00 & 0.023\\
+\hline
+\textbf{Tandipur} & Tap & 2 & 0.0 & 0.00 & 0.025\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{5}{c}{Water Quality Test Results } \\
+\cline{1-5}
+\cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Stored} & 51 & 17.6 & 31.568 & 0.022\\
+\hline
+\textbf{Tap} & 52 & 1.9 & 0.019 & 0.039\\
+\hline
+\end{tabu}
+
+\newpage
+
+\hypertarget{r1-idexx-results}{%
+\section{R1 IDEXX Results}\label{r1-idexx-results}}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{R1 - Water Quality Test Results } \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Asada} & Stored & 4 & 0.0 & 0.000 & 0.045\\
+\hline
+\textbf{Asada} & Tap & 4 & 0.0 & 0.000 & 0.045\\
+\hline
+\textbf{BK Padar} & Stored & 4 & 50.0 & 1.530 & 0.017\\
+\hline
+\textbf{BK Padar} & Tap & 4 & 0.0 & 0.000 & 0.017\\
+\hline
+\textbf{Badabangi} & Stored & 4 & 25.0 & 0.000 & 0.635\\
+\hline
+\textbf{Badabangi} & Tap & 4 & 0.0 & 0.000 & 0.635\\
+\hline
+\textbf{Barijhola} & Stored & 4 & 100.0 & 69.550 & 0.012\\
+\hline
+\textbf{Barijhola} & Tap & 4 & 100.0 & 63.740 & 0.012\\
+\hline
+\textbf{Bhujbal} & Stored & 4 & 25.0 & 0.000 & 0.010\\
+\hline
+\textbf{Bhujbal} & Tap & 4 & 25.0 & 0.000 & 0.010\\
+\hline
+\textbf{Bichikote} & Stored & 4 & 0.0 & 0.000 & 0.197\\
+\hline
+\textbf{Bichikote} & Tap & 4 & 0.0 & 0.000 & 0.197\\
+\hline
+\textbf{Birnarayanpur} & Stored & 7 & 57.1 & 1.000 & 0.063\\
+\hline
+\textbf{Birnarayanpur} & Tap & 4 & 0.0 & 0.000 & 0.058\\
+\hline
+\textbf{Dangalodi} & Stored & 4 & 75.0 & 2.030 & 0.025\\
+\hline
+\textbf{Dangalodi} & Tap & 4 & 0.0 & 0.000 & 0.025\\
+\hline
+\textbf{Gopi Kankubadi} & Stored & 4 & 50.0 & 0.500 & 0.943\\
+\hline
+\textbf{Gopi Kankubadi} & Tap & 4 & 0.0 & 0.000 & 0.943\\
+\hline
+\textbf{Gudiabandh} & Stored & 4 & 75.0 & 1.505 & 0.070\\
+\hline
+\textbf{Gudiabandh} & Tap & 4 & 100.0 & 2.565 & 0.070\\
+\hline
+\textbf{Jaltar} & Stored & 5 & 80.0 & 1.000 & 0.026\\
+\hline
+\textbf{Jaltar} & Tap & 5 & 60.0 & 0.990 & 0.026\\
+\hline
+\textbf{Karlakana} & Stored & 5 & 80.0 & 6.320 & 0.018\\
+\hline
+\textbf{Karlakana} & Tap & 4 & 0.0 & 0.000 & 0.015\\
+\hline
+\textbf{Karnapadu} & Stored & 4 & 50.0 & 0.500 & 0.022\\
+\hline
+\textbf{Karnapadu} & Tap & 3 & 0.0 & 0.000 & 0.023\\
+\hline
+\textbf{Kuljing} & Stored & 5 & 80.0 & 1.000 & 0.010\\
+\hline
+\textbf{Kuljing} & Tap & 5 & 20.0 & 0.000 & 0.010\\
+\hline
+\textbf{Mariguda} & Stored & 4 & 75.0 & 1.000 & 0.025\\
+\hline
+\textbf{Mariguda} & Tap & 4 & 25.0 & 0.000 & 0.025\\
+\hline
+\textbf{Mukundpur} & Stored & 4 & 25.0 & 0.000 & 0.167\\
+\hline
+\textbf{Mukundpur} & Tap & 4 & 25.0 & 0.000 & 0.167\\
+\hline
+\textbf{Naira} & Stored & 4 & 50.0 & 0.500 & 0.047\\
+\hline
+\textbf{Naira} & Tap & 4 & 50.0 & 0.500 & 0.047\\
+\hline
+\textbf{Nathma} & Stored & 3 & 0.0 & 0.000 & 1.287\\
+\hline
+\textbf{Nathma} & Tap & 4 & 0.0 & 0.000 & 1.167\\
+\hline
+\textbf{Sanagortha} & Stored & 4 & 75.0 & 4.735 & 0.015\\
+\hline
+\textbf{Sanagortha} & Tap & 4 & 25.0 & 0.000 & 0.015\\
+\hline
+\textbf{Tandipur} & Stored & 4 & 50.0 & 0.500 & 0.027\\
+\hline
+\textbf{Tandipur} & Tap & 4 & 0.0 & 0.000 & 0.027\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{11}{c}{R1 - Water Quality Test Results } \\
+\cline{1-11}
+\cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Control} & Stored & 43 & 97.7 & 92.98121 & 100.00000 & 72.1 & 58.12557 & 86.06047 & 2.02 & 0.023\\
+\hline
+\textbf{Control} & Tap & 42 & 100.0 & 100.00000 & 100.00000 & 35.7 & 20.60169 & 50.82688 & 0.00 & 0.022\\
+\hline
+\textbf{Treatment} & Stored & 42 & 85.7 & 74.67761 & 96.75096 & 33.3 & 18.46527 & 48.20140 & 0.00 & 0.301\\
+\hline
+\textbf{Treatment} & Tap & 39 & 33.3 & 17.85240 & 48.81426 & 7.7 & 0.00000 & 16.44316 & 0.00 & 0.339\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{5}{c}{R1 - Water Quality Test Results } \\
+\cline{1-5}
+\cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Stored} & 85 & 52.9 & 16.848 & 0.160\\
+\hline
+\textbf{Tap} & 81 & 22.2 & 20.980 & 0.175\\
+\hline
+\end{tabu}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/R1 IDEXX Data Desc Stats-1.pdf}
+
+\newpage
+
+\hypertarget{r2-idexx-results}{%
+\section{R2 IDEXX Results}\label{r2-idexx-results}}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedleft}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{5}{c}{r2 - Water Quality Test Results } \\
+\cline{1-5}
+\cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}}\\
+\hline
+\textbf{10101} & Blank & 2 & 0 & 0.000\\
+\hline
+\textbf{10101} & Stored & 4 & 25 & 0.000\\
+\hline
+\textbf{10101} & Tap & 4 & 25 & 0.000\\
+\hline
+\textbf{10201} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{10201} & Stored & 4 & 75 & 53.635\\
+\hline
+\textbf{10201} & Tap & 4 & 25 & 0.000\\
+\hline
+\textbf{20101} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{20101} & Stored & 4 & 50 & 0.500\\
+\hline
+\textbf{20101} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{20201} & Stored & 4 & 75 & 17.060\\
+\hline
+\textbf{20201} & Tap & 4 & 100 & 18.245\\
+\hline
+\textbf{30202} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{30202} & Stored & 4 & 50 & 1.530\\
+\hline
+\textbf{30202} & Tap & 4 & 25 & 0.000\\
+\hline
+\textbf{30301} & Blank & 2 & 0 & 0.000\\
+\hline
+\textbf{30301} & Stored & 4 & 75 & 12.850\\
+\hline
+\textbf{30301} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{30501} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{30501} & Stored & 4 & 50 & 17.725\\
+\hline
+\textbf{30501} & Tap & 4 & 50 & 9.245\\
+\hline
+\textbf{30602} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{30602} & Stored & 4 & 25 & 0.000\\
+\hline
+\textbf{30602} & Tap & 4 & 25 & 0.000\\
+\hline
+\textbf{30701} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{30701} & Stored & 4 & 25 & 0.000\\
+\hline
+\textbf{30701} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{40101} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{40101} & Stored & 4 & 50 & 1.010\\
+\hline
+\textbf{40101} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{40201} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{40201} & Stored & 4 & 50 & 1.530\\
+\hline
+\textbf{40201} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{40202} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{40202} & Stored & 4 & 100 & 12.110\\
+\hline
+\textbf{40202} & Tap & 4 & 100 & 8.585\\
+\hline
+\textbf{40301} & Blank & 2 & 0 & 0.000\\
+\hline
+\textbf{40301} & Stored & 4 & 25 & 0.000\\
+\hline
+\textbf{40301} & Tap & 4 & 75 & 2.020\\
+\hline
+\textbf{40401} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{40401} & Stored & 4 & 100 & 11.235\\
+\hline
+\textbf{40401} & Tap & 4 & 25 & 0.000\\
+\hline
+\textbf{50101} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{50101} & Stored & 4 & 100 & 6.235\\
+\hline
+\textbf{50101} & Tap & 4 & 100 & 10.315\\
+\hline
+\textbf{50201} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{50201} & Stored & 4 & 100 & 115.255\\
+\hline
+\textbf{50201} & Tap & 4 & 100 & 62.310\\
+\hline
+\textbf{50301} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{50301} & Stored & 4 & 100 & 45.895\\
+\hline
+\textbf{50301} & Tap & 4 & 100 & 18.505\\
+\hline
+\textbf{50401} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{50401} & Stored & 4 & 50 & 0.500\\
+\hline
+\textbf{50401} & Tap & 4 & 0 & 0.000\\
+\hline
+\textbf{50402} & Blank & 1 & 0 & 0.000\\
+\hline
+\textbf{50402} & Stored & 4 & 75 & 4.110\\
+\hline
+\textbf{50402} & Tap & 4 & 100 & 13.995\\
+\hline
+\textbf{50501} & Blank & 2 & 0 & 0.000\\
+\hline
+\textbf{50501} & Stored & 4 & 75 & 12.710\\
+\hline
+\textbf{50501} & Tap & 4 & 50 & 0.500\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{10}{c}{r2 - Water Quality Test Results } \\
+\cline{1-10}
+\cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}}\\
+\hline
+\textbf{Control} & Stored & 40 & 100.0 & 100.00000 & 100.00000 & 75.0 & 60.975162 & 89.02484 & 9.690\\
+\hline
+\textbf{Control} & Tap & 40 & 100.0 & 100.00000 & 100.00000 & 77.5 & 63.974936 & 91.02506 & 12.865\\
+\hline
+\textbf{Treatment} & Stored & 40 & 92.5 & 83.96902 & 100.00000 & 52.5 & 36.325768 & 68.67423 & 1.000\\
+\hline
+\textbf{Treatment} & Tap & 40 & 47.5 & 31.32577 & 63.67423 & 12.5 & 1.788353 & 23.21165 & 0.000\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{4}{c}{r2 - Water Quality Test Results } \\
+\cline{1-4}
+\cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average MPN E. coli/100 mL}}}\\
+\hline
+\textbf{Blank} & 23 & 0.0 & 0.000\\
+\hline
+\textbf{Stored} & 80 & 63.7 & 42.232\\
+\hline
+\textbf{Tap} & 80 & 45.0 & 13.209\\
+\hline
+\end{tabu}
+
+\begin{tabular}[t]{lllllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Stored} & \multicolumn{2}{c}{Tap} & \multicolumn{2}{c}{Overall} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+  & Control & Treatment & Control & Treatment & Control & Treatment\\
+\midrule
+ & (N=40) & (N=40) & (N=40) & (N=40) & (N=80) & (N=80)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{ec\_pa}}\\
+\hspace{1em}Absence & 10 (25.0\%) & 19 (47.5\%) & 9 (22.5\%) & 35 (87.5\%) & 19 (23.8\%) & 54 (67.5\%)\\
+\hspace{1em}Presence & 30 (75.0\%) & 21 (52.5\%) & 31 (77.5\%) & 5 (12.5\%) & 61 (76.3\%) & 26 (32.5\%)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{cf\_pa}}\\
+\hspace{1em}Presence & 40 (100\%) & 37 (92.5\%) & 40 (100\%) & 19 (47.5\%) & 80 (100\%) & 56 (70.0\%)\\
+\hspace{1em}Absence & 0 (0\%) & 3 (7.5\%) & 0 (0\%) & 21 (52.5\%) & 0 (0\%) & 24 (30.0\%)\\
+\bottomrule
+\end{tabular}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/R2 IDEXX Results-1.pdf}
+
+\newpage
+
+\hypertarget{r3-idexx-results}{%
+\section{R3 IDEXX Results}\label{r3-idexx-results}}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{R3 - Water Quality Test Results } \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{village}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Asada} & Tap & 4 & 0 & 0.000 & 0.198\\
+\hline
+\textbf{BK Padar} & Tap & 4 & 100 & 14.730 & 0.015\\
+\hline
+\textbf{Badabangi} & Tap & 4 & 25 & 0.000 & 0.622\\
+\hline
+\textbf{Barijhola} & Tap & 4 & 100 & 75.685 & 0.007\\
+\hline
+\textbf{Bhujbal} & Tap & 4 & 0 & 0.000 & 0.010\\
+\hline
+\textbf{Bichikote} & Tap & 4 & 0 & 0.000 & 0.178\\
+\hline
+\textbf{Birnarayanpur} & Tap & 4 & 25 & 0.000 & 0.020\\
+\hline
+\textbf{Dangalodi} & Tap & 4 & 100 & 12.170 & 0.057\\
+\hline
+\textbf{Gopi Kankubadi} & Tap & 4 & 25 & 0.000 & 0.035\\
+\hline
+\textbf{Gudiabandh} & Tap & 4 & 75 & 3.585 & 0.018\\
+\hline
+\textbf{Jaltar} & Tap & 4 & 100 & 5.790 & 0.030\\
+\hline
+\textbf{Karlakana} & Tap & 4 & 100 & 24.225 & 0.018\\
+\hline
+\textbf{Karnapadu} & Tap & 4 & 75 & 2.030 & 0.010\\
+\hline
+\textbf{Kuljing} & Tap & 4 & 50 & 1.010 & 0.015\\
+\hline
+\textbf{Mariguda} & Tap & 4 & 25 & 0.000 & 0.022\\
+\hline
+\textbf{Mukundpur} & Tap & 4 & 0 & 0.000 & 0.338\\
+\hline
+\textbf{Naira} & Tap & 4 & 50 & 0.500 & 0.020\\
+\hline
+\textbf{Nathma} & Tap & 4 & 0 & 0.000 & 0.983\\
+\hline
+\textbf{Sanagortha} & Tap & 4 & 0 & 0.000 & 0.032\\
+\hline
+\textbf{Tandipur} & Tap & 4 & 0 & 0.000 & 0.460\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{11}{c}{R3 - Water Quality Test Results } \\
+\cline{1-11}
+\cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for Total Coliform}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - TC}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Lower CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Upper CI - EC}}} & \cellcolor{white}{\textcolor{black}{\textbf{Median MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Control} & Blank & 11 & 0.0 & 0.00000 & 0.00000 & 0.0 & 0.00000 & 0.00000 & 0.000 & NA\\
+\hline
+\textbf{Control} & Stored & 40 & 100.0 & 100.00000 & 100.00000 & 85.0 & 73.43482 & 96.56518 & 10.890 & 0.022\\
+\hline
+\textbf{Control} & Tap & 40 & 95.0 & 87.94099 & 100.00000 & 65.0 & 49.55144 & 80.44856 & 5.195 & 0.022\\
+\hline
+\textbf{Treatment} & Blank & 10 & 0.0 & 0.00000 & 0.00000 & 0.0 & 0.00000 & 0.00000 & 0.000 & NA\\
+\hline
+\textbf{Treatment} & Stored & 39 & 82.1 & 69.44861 & 94.65396 & 33.3 & 17.85240 & 48.81426 & 0.000 & 0.266\\
+\hline
+\textbf{Treatment} & Tap & 40 & 62.5 & 46.81975 & 78.18025 & 20.0 & 7.04441 & 32.95559 & 0.000 & 0.286\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{5}{c}{R3 - Water Quality Test Results } \\
+\cline{1-5}
+\cellcolor{white}{\textcolor{black}{\textbf{sample\_type}}} & \cellcolor{white}{\textcolor{black}{\textbf{Number of Samples}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% Positive for E. coli}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average MPN E. coli/100 mL}}} & \cellcolor{white}{\textcolor{black}{\textbf{Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Blank} & 21 & 0.0 & 0.000 & NA\\
+\hline
+\textbf{Stored} & 79 & 59.5 & 14.053 & 0.143\\
+\hline
+\textbf{Tap} & 80 & 42.5 & 7.994 & 0.154\\
+\hline
+\end{tabu}
+
+\begin{tabular}[t]{lllllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Stored} & \multicolumn{2}{c}{Tap} & \multicolumn{2}{c}{Overall} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+  & Control & Treatment & Control & Treatment & Control & Treatment\\
+\midrule
+ & (N=40) & (N=39) & (N=40) & (N=40) & (N=80) & (N=79)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{ec\_pa}}\\
+\hspace{1em}Absence & 6 (15.0\%) & 26 (66.7\%) & 14 (35.0\%) & 32 (80.0\%) & 20 (25.0\%) & 58 (73.4\%)\\
+\hspace{1em}Presence & 34 (85.0\%) & 13 (33.3\%) & 26 (65.0\%) & 8 (20.0\%) & 60 (75.0\%) & 21 (26.6\%)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{cf\_pa}}\\
+\hspace{1em}Presence & 40 (100\%) & 32 (82.1\%) & 38 (95.0\%) & 25 (62.5\%) & 78 (97.5\%) & 57 (72.2\%)\\
+\hspace{1em}Absence & 0 (0\%) & 7 (17.9\%) & 2 (5.0\%) & 15 (37.5\%) & 2 (2.5\%) & 22 (27.8\%)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{fc\_tap\_avg}}\\
+\hspace{1em}Mean (SD) & 0.0244 (0.0338) & 0.268 (0.322) & 0.0244 (0.0338) & 0.289 (0.344) & 0.0244 (0.0336) & 0.279 (0.332)\\
+\hspace{1em}Median [Min, Max] & 0.0150 [0, 0.205] & 0.0450 [0.00500, 1.14] & 0.0150 [0, 0.205] & 0.0575 [0.00500, 1.14] & 0.0150 [0, 0.205] & 0.0450 [0.00500, 1.14]\\
+\bottomrule
+\end{tabular}
+
+\begin{tabular}[t]{llll}
+\toprule
+  & Stored & Tap & Overall\\
+\midrule
+ & (N=79) & (N=80) & (N=159)\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{R\_Cen\_village\_name\_str}}\\
+\hspace{1em}Asada & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Badabangi & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Barijhola & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Bhujbal & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Bichikote & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Birnarayanpur & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}BK Padar & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Dangalodi & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Gopi Kankubadi & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Gudiabandh & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Jaltar & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Karlakana & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Karnapadu & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Kuljing & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Mariguda & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Mukundpur & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Naira & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Nathma & 3 (3.8\%) & 4 (5.0\%) & 7 (4.4\%)\\
+\hspace{1em}Sanagortha & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\hspace{1em}Tandipur & 4 (5.1\%) & 4 (5.0\%) & 8 (5.0\%)\\
+\bottomrule
+\end{tabular}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/R3 IDEXX Results-1.pdf}
+
+\begin{tabular}[t]{lllllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Stored} & \multicolumn{2}{c}{Tap} & \multicolumn{2}{c}{Overall} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+  & Control & Treatment & Control & Treatment & Control & Treatment\\
+\midrule
+ & (N=32) & (N=40) & (N=32) & (N=40) & (N=64) & (N=80)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{ec\_pa}}\\
+\hspace{1em}Absence & 23 (71.9\%) & 38 (95.0\%) & 30 (93.8\%) & 40 (100\%) & 53 (82.8\%) & 78 (97.5\%)\\
+\hspace{1em}Presence & 9 (28.1\%) & 2 (5.0\%) & 2 (6.3\%) & 0 (0\%) & 11 (17.2\%) & 2 (2.5\%)\\
+\addlinespace[0.3em]
+\multicolumn{7}{l}{\textbf{cf\_pa}}\\
+\hspace{1em}Absence & 12 (37.5\%) & 18 (45.0\%) & 20 (62.5\%) & 27 (67.5\%) & 32 (50.0\%) & 45 (56.3\%)\\
+\hspace{1em}Presence & 20 (62.5\%) & 22 (55.0\%) & 12 (37.5\%) & 13 (32.5\%) & 32 (50.0\%) & 35 (43.8\%)\\
+\bottomrule
+\end{tabular}
+
+\newpage
+
+\hypertarget{overall-idexx-results}{%
+\section{Overall IDEXX Results}\label{overall-idexx-results}}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Overall IDEXX Results-1.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Overall IDEXX Results-2.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Overall IDEXX Results-3.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Overall IDEXX Results-4.pdf}
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/Overall IDEXX Results-5.pdf}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+## Table printed with `knitr::kable()`, not {gt}. Learn why at
+## https://www.danieldsjoberg.com/gtsummary/articles/rmarkdown.html To suppress
+## this message, include `message = FALSE` in code chunk header.
+\end{verbatim}
+
+\begin{tabular}{l|c|c|c|c|c|c|c|c}
+\hline
+**Characteristic** & **Control**, N = 40 & **Treatment**, N = 41 & **Control**, N = 42 & **Treatment**, N = 39 & **Control**, N = 40 & **Treatment**, N = 40 & **Control**, N = 40 & **Treatment**, N = 40\\
+\hline
+Positive for Total Coliform & 1.00 (0.00) & 0.98 (0.16) & 1.00 (0.00) & 0.33 (0.48) & 1.00 (0.00) & 0.48 (0.51) & 0.95 (0.22) & 0.63 (0.49)\\
+\hline
+Positive for E. coli & 0.70 (0.46) & 0.37 (0.49) & 0.36 (0.48) & 0.08 (0.27) & 0.78 (0.42) & 0.13 (0.33) & 0.65 (0.48) & 0.20 (0.41)\\
+\hline
+\end{tabular}
+
+\newpage
+
+\hypertarget{overall-chlorine-monitoring-results}{%
+\section{Overall Chlorine Monitoring
+Results}\label{overall-chlorine-monitoring-results}}
+
+During survey rounds
+
+\begin{tabular}[t]{lllllllllll}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{BL} & \multicolumn{2}{c}{R1} & \multicolumn{2}{c}{R2} & \multicolumn{2}{c}{R3} & \multicolumn{2}{c}{Overall} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9} \cmidrule(l{3pt}r{3pt}){10-11}
+  & Control & Treatment & Control & Treatment & Control & Treatment & Control & Treatment & Control & Treatment\\
+\midrule
+ & (N=100) & (N=100) & (N=100) & (N=100) & (N=100) & (N=100) & (N=100) & (N=100) & (N=400) & (N=400)\\
+\addlinespace[0.3em]
+\multicolumn{11}{l}{\textbf{Tap - Free Chlorine}}\\
+\hspace{1em} & 0.0232 (0.0343) & 0.0370 (0.0994) & 0.0199 (0.0151) & 0.272 (0.337) & 0.0180 (0.0120) & 0.175 (0.242) & 0.0222 (0.0243) & 0.271 (0.322) & 0.0208 (0.0231) & 0.189 (0.283)\\
+\addlinespace[0.3em]
+\multicolumn{11}{l}{\textbf{Tap - Total Chlorine}}\\
+\hspace{1em} & 0.0384 (0.0392) & 0.0612 (0.173) & 0.0349 (0.0404) & 0.278 (0.321) & 0.0268 (0.0161) & 0.200 (0.255) & 0.0263 (0.0170) & 0.311 (0.363) & 0.0316 (0.0308) & 0.213 (0.302)\\
+\addlinespace[0.3em]
+\multicolumn{11}{l}{\textbf{Stored - Free Chlorine}}\\
+\hspace{1em} & 0.0257 (0.0235) & 0.0310 (0.0385) & 0.0223 (0.0187) & 0.153 (0.286) & 0.0189 (0.0141) & 0.0674 (0.129) & 0.0184 (0.0135) & 0.131 (0.221) & 0.0213 (0.0181) & 0.0956 (0.198)\\
+\addlinespace[0.3em]
+\multicolumn{11}{l}{\textbf{Stored - Total Chlorine}}\\
+\hspace{1em} & 0.0358 (0.0348) & 0.0425 (0.0427) & 0.0353 (0.0329) & 0.179 (0.303) & 0.0252 (0.0139) & 0.0888 (0.145) & 0.0223 (0.0175) & 0.151 (0.245) & 0.0296 (0.0270) & 0.115 (0.215)\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+## Table printed with `knitr::kable()`, not {gt}. Learn why at
+## https://www.danieldsjoberg.com/gtsummary/articles/rmarkdown.html
+## To suppress this message, include `message = FALSE` in code chunk header.
+\end{verbatim}
+
+\begin{tabular}{l|c|c|c|c|c|c|c|c}
+\hline
+**Characteristic** & **Control**, N = 100 & **Treatment**, N = 100 & **Control**, N = 100 & **Treatment**, N = 100 & **Control**, N = 100 & **Treatment**, N = 100 & **Control**, N = 100 & **Treatment**, N = 100\\
+\hline
+Tap - Free Chlorine & 0.023 (0.034) & 0.037 (0.099) & 0.02 (0.02) & 0.27 (0.34) & 0.02 (0.01) & 0.18 (0.24) & 0.02 (0.02) & 0.27 (0.32)\\
+\hline
+Tap - Total Chlorine & 0.04 (0.04) & 0.06 (0.17) & 0.03 (0.04) & 0.28 (0.32) & 0.03 (0.02) & 0.20 (0.26) & 0.03 (0.02) & 0.31 (0.36)\\
+\hline
+Stored - Free Chlorine & 0.026 (0.024) & 0.031 (0.039) & 0.02 (0.02) & 0.15 (0.29) & 0.02 (0.01) & 0.07 (0.13) & 0.02 (0.01) & 0.13 (0.22)\\
+\hline
+Stored - Total Chlorine & 0.04 (0.03) & 0.04 (0.04) & 0.04 (0.03) & 0.18 (0.30) & 0.03 (0.01) & 0.09 (0.14) & 0.02 (0.02) & 0.15 (0.24)\\
+\hline
+\end{tabular}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedright}X}
+\hline
+\multicolumn{9}{c}{Chlorine Monitoring } \\
+\cline{1-9}
+\cellcolor{white}{\textcolor{black}{\textbf{**Characteristic**}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Control**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Treatment**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Control**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Treatment**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Control**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Treatment**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Control**, N = 100}}} & \cellcolor{white}{\textcolor{black}{\textbf{**Treatment**, N = 100}}}\\
+\hline
+\textbf{Tap - Free Chlorine} & 0.023 (0.034) & 0.037 (0.099) & 0.02 (0.02) & 0.27 (0.34) & 0.02 (0.01) & 0.18 (0.24) & 0.02 (0.02) & 0.27 (0.32)\\
+\hline
+\textbf{Tap - Total Chlorine} & 0.04 (0.04) & 0.06 (0.17) & 0.03 (0.04) & 0.28 (0.32) & 0.03 (0.02) & 0.20 (0.26) & 0.03 (0.02) & 0.31 (0.36)\\
+\hline
+\textbf{Stored - Free Chlorine} & 0.026 (0.024) & 0.031 (0.039) & 0.02 (0.02) & 0.15 (0.29) & 0.02 (0.01) & 0.07 (0.13) & 0.02 (0.01) & 0.13 (0.22)\\
+\hline
+\textbf{Stored - Total Chlorine} & 0.04 (0.03) & 0.04 (0.04) & 0.04 (0.03) & 0.18 (0.30) & 0.03 (0.01) & 0.09 (0.14) & 0.02 (0.02) & 0.15 (0.24)\\
+\hline
+\end{tabu}
+
+\newpage
+
+\hypertarget{overall-wash-results}{%
+\section{Overall WASH Results}\label{overall-wash-results}}
+
+\setlength{\LTpost}{0mm}
+\begin{longtable}{lcc}
+\toprule
+\textbf{Characteristic} & \textbf{Control}, N = 440\textsuperscript{\textit{1}} & \textbf{Treatment}, N = 333\textsuperscript{\textit{1}} \\ 
+\midrule\addlinespace[2.5pt]
+Primary Drinking Water Source &  &  \\ 
+    Government-provided Tap & 73\% (321) & 76\% (254) \\ 
+    Community Tap & 4\% (19) & 8\% (28) \\ 
+    Surface Water & 1\% (4) & 0\% (1) \\ 
+    Borehole & 22\% (95) & 15\% (49) \\ 
+    Covered Dug Well & 0\% (0) & 0\% (1) \\ 
+    Other & 0\% (1) & 0\% (0) \\ 
+Use Government-provided Tap for Drinking & 77\% (338) & 85\% (282) \\ 
+Issues with Government-provided Tap (2 weeks) & 2\% (7) & 14\% (46) \\ 
+Reported Taste/Odor/Cooking Issue & 0\% (0) & 78\% (36) \\ 
+Primary Drinking Water Source Quantity &  &  \\ 
+    All of it (100\%) & 80\% (353) & 82\% (274) \\ 
+    More than half of it & 13\% (55) & 15\% (51) \\ 
+    Half of it (50\%) & 0\% (1) & 0\% (1) \\ 
+    Less than half of it & 3\% (12) & 2\% (6) \\ 
+    None of it (0\%) & 4\% (18) & 0\% (0) \\ 
+    Don’t know & 0\% (1) & 0\% (1) \\ 
+Secondary Drinking Water Source &  &  \\ 
+    Refused to answer & 0\% (0) & 0\% (0) \\ 
+    No & 63\% (279) & 62\% (206) \\ 
+    Yes & 37\% (161) & 38\% (127) \\ 
+    Don't know & 0\% (0) & 0\% (0) \\ 
+Secondary Source Frequency &  &  \\ 
+    Daily & 3\% (5) & 3\% (4) \\ 
+    Every 2-3 days in a week & 4\% (7) & 2\% (2) \\ 
+    Once a week & 1\% (2) & 0\% (0) \\ 
+    Once every two weeks & 0\% (0) & 0\% (0) \\ 
+    Once a month & 0\% (0) & 1\% (1) \\ 
+    Once every few months & 1\% (1) & 0\% (0) \\ 
+    Once a year & 0\% (0) & 0\% (0) \\ 
+    No fixed schedule & 90\% (145) & 94\% (120) \\ 
+    Don’t know & 1\% (1) & 0\% (0) \\ 
+\bottomrule
+\end{longtable}
+\begin{minipage}{\linewidth}
+\textsuperscript{\textit{1}}\% (N)\\
+\end{minipage}
+
+\newpage
+
+\hypertarget{longitudinal-chlorine-monitoring}{%
+\section{Longitudinal Chlorine
+Monitoring}\label{longitudinal-chlorine-monitoring}}
+
+\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash\textbackslash{}
+
+\hypertarget{jpal-chlorine-monitoring-results}{%
+\subsection{JPAL Chlorine Monitoring
+Results}\label{jpal-chlorine-monitoring-results}}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{JPAL Chlorine Monitoring} \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{village\_name}}} & \cellcolor{white}{\textcolor{black}{\textbf{test\_date}}} & \cellcolor{white}{\textcolor{black}{\textbf{nearest\_tap\_fc}}} & \cellcolor{white}{\textcolor{black}{\textbf{nearest\_stored\_fc}}} & \cellcolor{white}{\textcolor{black}{\textbf{farthest\_tap\_fc}}} & \cellcolor{white}{\textcolor{black}{\textbf{farthest\_stored\_fc}}}\\
+\hline
+\textbf{GopiKankubadi} & 2024-05-18 & 0.005 & 0.015 & 0.015 & 0.020\\
+\hline
+\textbf{GopiKankubadi} & 2024-05-14 & 0.015 & 0.020 & 0.020 & 0.030\\
+\hline
+\textbf{GopiKankubadi} & 2024-05-03 & 0.015 & 0.015 & 0.025 & 0.020\\
+\hline
+\textbf{GopiKankubadi} & 2024-04-24 & 0.010 & 0.015 & 0.025 & 0.010\\
+\hline
+\textbf{Nathma} & 2024-05-21 & 0.010 & 0.015 & 0.010 & 0.020\\
+\hline
+\textbf{Nathma} & 2024-05-16 & 0.050 & 0.020 & 0.055 & 0.005\\
+\hline
+\textbf{Nathma} & 2024-05-06 & 0.020 & 0.015 & 0.010 & 0.005\\
+\hline
+\textbf{Nathma} & 2024-04-22 & 0.015 & 0.010 & 0.015 & 0.020\\
+\hline
+\textbf{Birnarayanpur} & 2024-05-20 & 0.010 & 0.015 & 0.015 & 0.005\\
+\hline
+\textbf{Birnarayanpur} & 2024-05-17 & 0.150 & 0.015 & 0.525 & 0.010\\
+\hline
+\textbf{Birnarayanpur} & 2024-05-05 & 0.015 & 0.015 & 0.010 & 0.020\\
+\hline
+\textbf{Birnarayanpur} & 2024-04-23 & 0.675 & 0.085 & 0.520 & 0.010\\
+\hline
+\textbf{Tandipur} & 2024-04-18 & 0.725 & 0.185 & 0.700 & 0.085\\
+\hline
+\textbf{Tandipur} & 2024-04-03 & 0.025 & 0.040 & 0.040 & 0.135\\
+\hline
+\textbf{Tandipur} & 2024-03-27 & 0.030 & 0.035 & 0.020 & 0.055\\
+\hline
+\textbf{Tandipur} & 2024-03-20 & 0.050 & 0.015 & 0.020 & 0.015\\
+\hline
+\textbf{Badabangi} & 2024-05-21 & 0.565 & 0.225 & 0.600 & 0.180\\
+\hline
+\textbf{Badabangi} & 2024-05-16 & 0.500 & 0.305 & 0.560 & 0.020\\
+\hline
+\textbf{Badabangi} & 2024-05-06 & 0.865 & 0.950 & 1.010 & 0.775\\
+\hline
+\textbf{Badabangi} & 2024-05-01 & 1.260 & 0.625 & 1.315 & 0.025\\
+\hline
+\textbf{Bichikote} & 2024-05-18 & 0.165 & 0.020 & 0.165 & 0.025\\
+\hline
+\textbf{Bichikote} & 2024-05-03 & 0.255 & 0.130 & 0.130 & 0.030\\
+\hline
+\textbf{Bichikote} & 2024-04-28 & 0.325 & 0.115 & 0.195 & 0.015\\
+\hline
+\textbf{Bichikote} & 2024-04-22 & 0.350 & 0.025 & 0.220 & 0.020\\
+\hline
+\textbf{Karnapadu} & 2024-04-01 & 0.025 & 0.010 & 0.015 & 0.015\\
+\hline
+\textbf{Karnapadu} & 2024-03-30 & 0.010 & 0.010 & 0.015 & 0.010\\
+\hline
+\textbf{Karnapadu} & 2024-03-15 & 0.080 & 0.025 & 0.070 & 0.015\\
+\hline
+\textbf{Karnapadu} & 2024-03-06 & 0.015 & 0.020 & 0.020 & 0.025\\
+\hline
+\textbf{Mukundpur} & 2024-05-19 & 0.020 & 0.040 & 0.010 & 0.015\\
+\hline
+\textbf{Mukundpur} & 2024-05-15 & 0.045 & 0.010 & 0.010 & 0.005\\
+\hline
+\textbf{Mukundpur} & 2024-05-02 & 0.320 & 0.230 & 0.255 & 0.025\\
+\hline
+\textbf{Mukundpur} & 2024-04-25 & 0.445 & 0.270 & 0.130 & 0.020\\
+\hline
+\textbf{Asada} & 2024-05-20 & 0.745 & 0.375 & 0.600 & 0.040\\
+\hline
+\textbf{Asada} & 2024-05-05 & 0.230 & 0.020 & 0.265 & 0.040\\
+\hline
+\textbf{Asada} & 2024-04-29 & 0.425 & 0.045 & 0.420 & 0.025\\
+\hline
+\textbf{Asada} & 2024-04-24 & 0.460 & 0.015 & 0.410 & 0.215\\
+\hline
+\textbf{Naira} & 2024-05-19 & 0.045 & 0.030 & 0.030 & 0.015\\
+\hline
+\textbf{Naira} & 2024-05-17 & 0.255 & 0.020 & 0.190 & 0.020\\
+\hline
+\textbf{Naira} & 2024-05-08 & 0.200 & 0.010 & 0.095 & 0.020\\
+\hline
+\textbf{Naira} & 2024-05-07 & 0.015 & 0.010 & 0.020 & 0.015\\
+\hline
+\end{tabu}
+
+\includegraphics{India-ILC_Pilot_WQ-Checks_files/figure-latex/JPAL Chlorine Monitoring results - pt 2-1.pdf}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'village_name', 'assignment'. You can
+## override using the `.groups` argument.
+## `summarise()` has grouped output by 'assignment'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{7}{c}{Household Survey Chlorine Results } \\
+\cline{1-7}
+\cellcolor{white}{\textcolor{black}{\textbf{village\_name}}} & \cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{round}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% taps positive for free chlorine (> 0.07 mg/L)}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% taps above 0.2 mg/L}}} & \cellcolor{white}{\textcolor{black}{\textbf{Tap Average Free Chlorine Concentration (mg/L)}}} & \cellcolor{white}{\textcolor{black}{\textbf{Stored Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Asada} & Treatment & bl & 0 & 0 & 0.022 & 0.056\\
+\hline
+\textbf{Asada} & Treatment & r1 & 10 & 0 & 0.041 & 0.024\\
+\hline
+\textbf{Asada} & Treatment & r2 & 30 & 0 & 0.048 & 0.022\\
+\hline
+\textbf{Asada} & Treatment & r3 & 40 & 40 & 0.219 & 0.028\\
+\hline
+\textbf{Badabangi} & Treatment & bl & 0 & 0 & 0.031 & 0.047\\
+\hline
+\textbf{Badabangi} & Treatment & r1 & 100 & 100 & 0.601 & 0.515\\
+\hline
+\textbf{Badabangi} & Treatment & r2 & 100 & 100 & 0.579 & 0.202\\
+\hline
+\textbf{Badabangi} & Treatment & r3 & 80 & 80 & 0.511 & 0.102\\
+\hline
+\textbf{Bichikote} & Treatment & bl & 20 & 0 & 0.038 & 0.024\\
+\hline
+\textbf{Bichikote} & Treatment & r1 & 80 & 40 & 0.182 & 0.071\\
+\hline
+\textbf{Bichikote} & Treatment & r2 & 50 & 0 & 0.074 & 0.026\\
+\hline
+\textbf{Bichikote} & Treatment & r3 & 80 & 40 & 0.182 & 0.120\\
+\hline
+\textbf{Birnarayanpur} & Treatment & bl & 0 & 0 & 0.019 & 0.021\\
+\hline
+\textbf{Birnarayanpur} & Treatment & r1 & 20 & 0 & 0.053 & 0.023\\
+\hline
+\textbf{Birnarayanpur} & Treatment & r2 & 80 & 40 & 0.158 & 0.098\\
+\hline
+\textbf{Birnarayanpur} & Treatment & r3 & 0 & 0 & 0.026 & 0.018\\
+\hline
+\textbf{GopiKankubadi} & Treatment & bl & 0 & 0 & 0.021 & 0.020\\
+\hline
+\textbf{GopiKankubadi} & Treatment & r1 & 100 & 100 & 0.861 & 0.488\\
+\hline
+\textbf{GopiKankubadi} & Treatment & r2 & 10 & 0 & 0.046 & 0.033\\
+\hline
+\textbf{GopiKankubadi} & Treatment & r3 & 0 & 0 & 0.025 & 0.068\\
+\hline
+\textbf{Karnapadu} & Treatment & bl & 0 & 0 & 0.038 & 0.032\\
+\hline
+\textbf{Karnapadu} & Treatment & r1 & 20 & 10 & 0.057 & 0.024\\
+\hline
+\textbf{Karnapadu} & Treatment & r2 & 0 & 0 & 0.010 & 0.015\\
+\hline
+\textbf{Karnapadu} & Treatment & r3 & 0 & 0 & 0.016 & 0.022\\
+\hline
+\textbf{Mukundpur} & Treatment & bl & 0 & 0 & 0.015 & 0.046\\
+\hline
+\textbf{Mukundpur} & Treatment & r1 & 60 & 30 & 0.148 & 0.019\\
+\hline
+\textbf{Mukundpur} & Treatment & r2 & 100 & 90 & 0.639 & 0.204\\
+\hline
+\textbf{Mukundpur} & Treatment & r3 & 90 & 60 & 0.298 & 0.192\\
+\hline
+\textbf{Naira} & Treatment & bl & 20 & 10 & 0.131 & 0.028\\
+\hline
+\textbf{Naira} & Treatment & r1 & 20 & 0 & 0.048 & 0.025\\
+\hline
+\textbf{Naira} & Treatment & r2 & 60 & 10 & 0.087 & 0.016\\
+\hline
+\textbf{Naira} & Treatment & r3 & 0 & 0 & 0.017 & 0.016\\
+\hline
+\textbf{Nathma} & Treatment & bl & 10 & 0 & 0.033 & 0.014\\
+\hline
+\textbf{Nathma} & Treatment & r1 & 100 & 90 & 0.694 & 0.310\\
+\hline
+\textbf{Nathma} & Treatment & r2 & 50 & 0 & 0.068 & 0.040\\
+\hline
+\textbf{Nathma} & Treatment & r3 & 100 & 100 & 0.883 & 0.408\\
+\hline
+\textbf{Tandipur} & Treatment & bl & 0 & 0 & 0.022 & 0.022\\
+\hline
+\textbf{Tandipur} & Treatment & r1 & 10 & 0 & 0.038 & 0.032\\
+\hline
+\textbf{Tandipur} & Treatment & r2 & 10 & 0 & 0.042 & 0.017\\
+\hline
+\textbf{Tandipur} & Treatment & r3 & 100 & 90 & 0.528 & 0.336\\
+\hline
+\end{tabu}
+
+\begin{tabu} to \linewidth {>{\raggedright}X>{\raggedright}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X>{\raggedleft}X}
+\hline
+\multicolumn{6}{c}{Household Survey Chlorine Results } \\
+\cline{1-6}
+\cellcolor{white}{\textcolor{black}{\textbf{assignment}}} & \cellcolor{white}{\textcolor{black}{\textbf{round}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% taps positive for free chlorine (> 0.07 mg/L)}}} & \cellcolor{white}{\textcolor{black}{\textbf{\% taps above 0.2 mg/L}}} & \cellcolor{white}{\textcolor{black}{\textbf{Tap Average Free Chlorine Concentration (mg/L)}}} & \cellcolor{white}{\textcolor{black}{\textbf{Stored Average Free Chlorine Concentration (mg/L)}}}\\
+\hline
+\textbf{Control} & bl & NA & NA & NaN & 0.026\\
+\hline
+\textbf{Control} & r1 & 2 & 0 & 0.020 & 0.022\\
+\hline
+\textbf{Control} & r2 & 1 & 0 & 0.018 & 0.019\\
+\hline
+\textbf{Control} & r3 & 2 & 1 & 0.022 & 0.018\\
+\hline
+\textbf{Treatment} & bl & 5 & 1 & 0.037 & 0.031\\
+\hline
+\textbf{Treatment} & r1 & 52 & 37 & 0.272 & 0.153\\
+\hline
+\textbf{Treatment} & r2 & 49 & 24 & 0.175 & 0.067\\
+\hline
+\textbf{Treatment} & r3 & 49 & 41 & 0.271 & 0.131\\
+\hline
+\end{tabu}
+
+\hypertarget{gram-vikas-chlorine-monitoring-results}{%
+\subsection{Gram Vikas Chlorine Monitoring
+Results}\label{gram-vikas-chlorine-monitoring-results}}
+
+\end{document}

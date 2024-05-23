@@ -17,6 +17,8 @@ This report summarizes key water quality variables for the India ILc Pilot. It s
 ```{r package loading, include=FALSE}
 
 library(rsurveycto)
+library(expss)
+library(labelled)
 library(httr)
 library(tidyverse)
 library(lubridate)
@@ -39,6 +41,7 @@ library(clubSandwich)
 
 
 
+
 ```
 
 
@@ -55,7 +58,7 @@ bl <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidenti
 
 
 
-census <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
+cen <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/Final_HH_Odisha_consented_Full.dta")
 
 r1 <- read_stata("C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/1_5_followup_R1_cleaned.dta")
 
@@ -85,11 +88,232 @@ village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Dat
 
 
 
+```{r profile}
+#------------------------ setting user path ----------------------------------------#
+
+
+user_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  #
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = user_path())
+
+# setting github directory
+github_path <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user=="akitokamei"){
+    github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user == "jerem") {
+    github = "C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    github = getwd()
+  }
+  
+  stopifnot(file.exists(github))
+  return(github)
+}
+
+
+
+```
+
+
+
+```{r loading endline data}
+#------------------------ Load the data ----------------------------------------#
+
+#el <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census.dta" ))
+
+df.preload <- read_stata(paste0(user_path(),"99_Preload/1_8_Endline_XXX.dta"))
+
+
+#Loading/saving most recent cleaned data
+#Lazy coding, didn't want to change Astha's Stata code and break it yet
+
+el <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
+
+
+
+```
+
+
+
+```{r defining functions}
+
+labelmaker <- function(x){
+  z <- colnames(x)
+  for(i in z){
+    labels <-  val_labels(x[i])
+    if(is.na(labels) == FALSE){
+      x[i] <- to_label(x[i])
+      
+    }
+  }
+  return(x)
+}
+
+```
 
 
 
 \newpage
-# Baseline Data Cleaning
+# Baseline Census Data Cleaning
+
+
+```{r baseline data cleaning - changing variable names}
+
+#------------------------ Apply the labels for variables---------------------#
+
+temp.labels <- lapply(cen, var_lab)
+
+#create a data with labels
+#Code from Astha
+df.label <- as.data.frame(t(as.data.frame(do.call(cbind, temp.labels)))) 
+df.label<- tibble::rownames_to_column(df.label) 
+df.label <- df.label %>% rename(variable = rowname, label = V1)  
+auto_generated_labels <- c(df.label$variable)
+
+#include labels given manually 
+df.label.manual <- read_xlsx(paste0(user_path(),"4_other/R_code_HH_Survey_labels.xlsx"))
+
+df.var <- as.data.frame(names(cen)) #List of variables in the data
+
+# assign labels to variable that were generated
+#df.label.manual <- df.label.manual %>% 
+ # mutate(new_var = ifelse(Variable %in% auto_generated_labels, 0,1)) %>% 
+  #filter(new_var == 1) %>% 
+  #select(-new_var) %>% 
+  #rename(variable = Variable, label = Label)
+
+#df.label <- rbind(df.label, df.label.manual)
+# create a function that assigns the label to appropriate variable
+
+#Changing variable names
+cen <- cen%>%
+  rename_all(~stringr::str_replace(.,"R_Cen_",""))%>%
+  rename_all(~stringr::str_replace(.,"a1_",""))%>%
+  rename_all(~stringr::str_replace(.,"a2_",""))%>%
+  rename_all(~stringr::str_replace(.,"a3_",""))%>%
+  rename_all(~stringr::str_replace(.,"a4_",""))%>%
+  rename_all(~stringr::str_replace(.,"a5_",""))%>%
+  rename_all(~stringr::str_replace(.,"a6_",""))%>%
+  rename_all(~stringr::str_replace(.,"a7_",""))%>%
+  rename_all(~stringr::str_replace(.,"a8_",""))%>%
+  rename_all(~stringr::str_replace(.,"a9_",""))%>%
+  rename_all(~stringr::str_replace(.,"a10_",""))%>%
+  rename_all(~stringr::str_replace(.,"a11_",""))%>%
+   rename_all(~stringr::str_replace(.,"a12_",""))%>%
+   rename_all(~stringr::str_replace(.,"a13_",""))%>%
+  rename_all(~stringr::str_replace(.,"a14_",""))%>%
+  rename_all(~stringr::str_replace(.,"a15_",""))%>%
+  rename_all(~stringr::str_replace(.,"a16_",""))%>%
+  rename_all(~stringr::str_replace(.,"a17_",""))%>%
+  #rename_all(~stringr::str_replace(.,"a18_",""))%>%
+  rename_all(~stringr::str_replace(.,"a19_",""))%>%
+  rename_all(~stringr::str_replace(.,"a20_",""))%>%
+  rename_all(~stringr::str_replace(.,"a21_",""))%>%
+  rename_all(~stringr::str_replace(.,"a22_",""))%>%
+  rename_all(~stringr::str_replace(.,"a23_",""))%>%
+  rename_all(~stringr::str_replace(.,"a24_",""))
+  #rename_all(~stringr::str_replace(.,"a25_",""))
+
+
+#create a date variable
+cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S")
+
+cen$date <- as_date(cen$datetime) 
+
+
+
+
+```
+
+
+```{r baseline census data cleaning - cleaning data}
+
+
+#------------------------ Keep consented cases ----------------------------------------#
+
+#cen.consent <- cen[which(cen$consent==1) ,]
+
+cen <- cen%>%
+  filter(consent == 1)
+
+
+#------------ Assign the correct treatment to villages---------------------------#
+
+cen <- cen %>% mutate(assignment = ifelse(village_str %in%
+                                                                   c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "Treatment", "Control"))
+
+#Changing village variable name
+cen <- cen%>%
+  mutate(village_name = village_str)
+
+
+#Using labelmaker to make transfer labels for the whole dataset
+cen <- labelmaker(cen)
+
+
+
+#Recoding factor levels for ws_prim
+cen <- cen%>%
+  mutate(prim_source = NA)
+cen$prim_source <- cen$ws_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "PWS: JJM Taps",
+  "Community Tap" = "PWS: Govt. community standpipe",
+  "Community Tap" = "PWS: GP/Other community standpipe",
+  "Surface Water"  = "PWS: Surface water",
+  "Surface Water" = "PWS: Private surface well",
+  "Covered Dug Well" = "PWS: Covered dug well",
+  "Borehole" = "PWS: Manual handpump",
+  "Other" = "PWS: Other"
+)
+
+#recoding secondary source
+cen$water_sec_yn <- cen$water_sec_yn%>%
+  fct_recode(
+    "No" = "SWS: No secondary water source",
+  "Yes" = "SWS: Yes"
+)
+
+
+
+```
+
+
+
+\newpage
+# Baseline Survey Data Cleaning
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
@@ -166,6 +390,29 @@ bl$assignment <- factor(bl$assignment)
 bl$assignment <- fct_recode(bl$assignment,
                                   "Control" = "C", 
                                   "Treatment" = "T")
+
+#Using labelmaker function to change variable answer labels
+bl <- labelmaker(bl)
+
+
+#Changing primary source labels
+bl <- bl%>%
+  mutate(prim_source = NA)
+bl$prim_source <- bl$water_source_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani)",
+  "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+  "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+  "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+  "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+  "Surface Water" = "Private Surface well",
+  "Surface Water" = "Uncovered dug well",
+  "Borehole"  = "Borewell operated by electric pump",
+  "Covered Dug Well" = "Covered dug well",
+  "Borehole" = "Manual handpump",
+  "Other" = "Other"
+)
+
 
   
 
@@ -1008,6 +1255,112 @@ idexx_r3 <- idexx_r3%>%
 
 
 ```
+
+\newpage
+# Endline Data Cleaning
+
+```{r Endline data cleaning - changing variable names}
+
+#------------------------ Apply the labels for variables---------------------#
+
+temp.labels <- lapply(el , var_lab)
+
+#create a data with labels
+#Code from Astha
+df.label <- as.data.frame(t(as.data.frame(do.call(cbind, temp.labels)))) 
+df.label<- tibble::rownames_to_column(df.label) 
+df.label <- df.label %>% rename(variable = rowname, label = V1)  
+auto_generated_labels <- c(df.label$variable)
+
+#include labels given manually 
+df.label.manual <- read_xlsx(paste0(user_path(),"4_other/R_code_HH_Survey_labels.xlsx"))
+
+df.var <- as.data.frame(names(el)) #List of variables in the data
+
+# assign labels to variable that were generated
+#df.label.manual <- df.label.manual %>% 
+ # mutate(new_var = ifelse(Variable %in% auto_generated_labels, 0,1)) %>% 
+  #filter(new_var == 1) %>% 
+  #select(-new_var) %>% 
+  #rename(variable = Variable, label = Label)
+
+#df.label <- rbind(df.label, df.label.manual)
+# create a function that assigns the label to appropriate variable
+
+
+#create a date variable
+el$datetime <- strptime(el$R_E_starttime, format = "%Y-%m-%d %H:%M:%S")
+
+el$date <- as_date(el$datetime) 
+
+el$End_date <- as_date(el$End_date)
+
+
+
+```
+
+
+```{r Endline data cleaning - cleaning data}
+
+
+#------------------------ Keep consented cases ----------------------------------------#
+
+el.consent <- el[which(el$R_E_consent==1) ,]
+
+el <- el%>%
+  filter(R_E_consent == 1)
+
+
+#------------ Assign the correct treatment to villages---------------------------#
+
+el.consent <- el.consent %>% mutate(Treatment = ifelse(R_E_r_cen_village_name_str %in%
+                                                                   c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "T", "C"))
+
+
+
+#Using labelmaker to make transfer labels for the whole dataset
+el <- labelmaker(el)
+el.consent <- labelmaker(el.consent)
+
+
+#Renaming all variables to remove prefixes
+el <- el%>%
+  rename_all(~stringr::str_replace(.,"R_E_",""))%>%
+  rename(village_name = "r_cen_village_name_str")
+
+#Pairing village information
+#el$village_name <- as.character(el$village_name)
+#el <- left_join(el, village_details, by = "village_name")
+
+#Setting treatment vs control assignment
+el <- el %>% mutate(assignment = ifelse(village_name %in% c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "Treatment", "Control"))
+
+
+
+#Recoding factor levels for water_source_prim
+el <- el%>%
+  mutate(prim_source = NA)
+el$prim_source <- el$water_source_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+  "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+  "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+  "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+  "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+  "Surface Water" = "Private Surface well",
+  "Surface Water" = "Uncovered dug well",
+  "Borehole"  = "Borewell operated by electric pump",
+  "Covered Dug Well" = "Covered dug well",
+  "Borehole" = "Manual handpump",
+  "Other" = "Other"
+)%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
+
+```
+
+
 
 
 \newpage
@@ -2079,6 +2432,8 @@ table1(~ ec_pa + cf_pa | sample_type*assignment, data = idexx_r3_abr)
 #Plots were coded above
 p_ec_bl + p_ec_r1 + p_ec_r2 + p_ec_r3
 
+p_cf_bl + p_cf_r1 + p_cf_r2 + p_cf_r3
+
 
 #combining WHO risk plots from all data collection rounds
 
@@ -2217,7 +2572,7 @@ tab
 
 
 
-tab <- table1(data = tap_total_stats, ~ `% Positive for Total Coliform` + `% Positive for E. coli` | data_round*assignment)
+#tab <- table1(data = tap_total_stats, ~ `% Positive for Total Coliform` + `% Positive for E. coli` | data_round*assignment)
 
 
 ```
@@ -2318,7 +2673,63 @@ kbl(tab)%>%
 
 
 
+\newpage
 
+# Overall WASH Results
+
+```{r Overall WASH results}
+
+#Selecting bl and el variables
+el_tab <- el%>%
+  dplyr::select(assignment, prim_source, jjm_drinking, tap_issues, tap_issues_type_1,
+                  quant, water_sec_yn, water_sec_freq)
+cen_tab <- cen%>%
+  dplyr::select(assignment, prim_source, jjm_yes,
+                   water_sec_yn, water_sec_freq)
+
+#Full list: jjm_drinking, jjm_yes,jjm_stored, jjm_use__77,  
+                # jjm_use_999, tap_issues, tap_issues_type__77, tap_issues_type_1, 
+                #  water_source_prim,  water_source_kids,  water_prim_source_kids,
+                # water_source_preg,   water_prim_source_preg,  quant,
+                # sec_source_reason_999, sec_source_reason__77, water_sec_yn, water_sec_freq,
+                # water_treat,  water_treat_kids,  water_treat_type__77,  water_treat_type_999,
+                # water_treat_freq__77,  water_stored
+
+
+#summarizing in a table
+tab <- el_tab%>%
+  #tbl_strata(
+   # strata = data_round,
+    #.tbl_fun =
+     # ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no", 
+                    #type = c(cf_pa_binary, ec_pa_binary) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}% ({n})"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary Drinking Water Source",
+                                 jjm_drinking ~ "Use Government-provided Tap for Drinking",
+                                 tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
+                                 tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue",
+                                 quant ~ "Primary Drinking Water Source Quantity",
+                                 water_sec_yn ~ "Secondary Drinking Water Source",
+                                 water_sec_freq ~ "Secondary Source Frequency")
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "% (N)")%>%
+  as_gt()%>%
+  tab_options(table.font.size = pct(50))#,
+    #.header = "**{strata}**"
+  #)
+tab
+
+
+
+
+
+```
 
 
 
