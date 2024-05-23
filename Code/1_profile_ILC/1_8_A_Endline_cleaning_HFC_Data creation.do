@@ -153,7 +153,11 @@ rename key R_E_key
 merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date R_E_village_name_res) keep(3) nogen
 rename R_E_key  key
 rename R_E_village_name_res Village
+* Village
+replace Village="Bhujabala" if Village=="Bhujbal"
+* Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+br unique_id Village if _merge==1
 save "${DataTemp}U5_Child_23_24.dta", replace
 savesome using "${DataTemp}Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
 
