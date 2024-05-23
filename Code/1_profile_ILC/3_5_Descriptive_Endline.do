@@ -4,7 +4,10 @@
 ****** Purpose: This do file conduct descriptive statistics using endline survey
 ****** Created by: DIL
 ****** Used by:  DIL
-****** Input data : 
+****** Input data : The list of data for analysis
+	* use "${DataTemp}U5_Child_23_24.dta", clear
+	* use "${DataTemp}Medical_expenditure_person_clean.dta", clear
+	* use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 ****** Output data : 
 ****** Language: English
 *=========================================================================*
@@ -12,28 +15,28 @@
 	* This do file exports..... Cleaned data for Endline survey
 
 /*--------------------------------------------
-    Recreating baseline child level data
-
+    Recreating baseline child level data: 
+	Needed to run if any change happen to the baselind data
 	
 * N=1,123 
 * start_from_clean_file_ChildLevel
 * save "${DataTemp}Baseline_ChildLevel.dta", replace
   --------------------------------------------*/
-
-
-* The list of data for analysis
-use "${DataTemp}U5_Child_23_24.dta", clear
-use "${DataTemp}Medical_expenditure_person_clean.dta", clear
-* Number of household with new member 
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
-
-
+  
+/*--------------------------------------------
+    Section A: Diarrhea analysis
+ --------------------------------------------*/
+ 
+ /*--------------------------------------------
+    Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
+ --------------------------------------------*/
+* Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
 use "${DataTemp}U5_Child_23_24.dta", clear
 replace comb_child_residence=0 if comb_child_residence==-98
 replace comb_child_comb_relation=98 if comb_child_comb_relation==-77
 
-* Replace missing to .
-foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_days comb_child_vomit_day comb_child_diarr_day comb_child_residence {
+* Replace missing (999/888) to .
+foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_days comb_child_vomit_day comb_child_diarr_day comb_child_residence comb_child_age {
 	replace `i'=. if `i'==999
 	replace `i'=. if `i'==888
 }
@@ -49,6 +52,7 @@ foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfe
 	}
 	}
 	
+	label var comb_child_age "Child age"
 	label var comb_child_residence "Usual residence"
 	label var comb_child_care_dia_day "Diarrhea today/yester day"
 	label var comb_child_care_dia_wk "Diarrhea week"
@@ -56,7 +60,7 @@ foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfe
 	label var comb_child_breastfeeding "Exclusive breast feeding"
 	label var comb_child_breastfed_num "Up to which months?"
 	
-	* Creating diarrhea vars
+* Creating diarrhea variables
 gen     C_diarrhea_prev_child_1day=0
 replace C_diarrhea_prev_child_1day=1  if comb_child_diarr_day==1 
 gen     C_diarrhea_prev_child_1week=0
@@ -99,23 +103,119 @@ label var comb_child_diarr_freq "Number of stools in the last 24 hours"
 
 destring key3, replace
 rename key3 num
-/*
-*/
+mdesc village
 save "${DataTemp}U5_Child_23_24_clean.dta", replace
 
+ /*--------------------------------------------
+    Section A.2: Diarrhea analysis (Descriptive statistics)
+ --------------------------------------------*/
+use "${DataTemp}U5_Child_23_24_clean.dta", clear
+tab comb_child_age Cen_Type,m
 
-* Start with Baseline
+* N_HHmember_age: Add this, Cen_CBW_consent
+global U5Var ///
+       comb_child_caregiver_present_1 comb_child_age ///
+	   comb_child_residence ///
+	   comb_child_comb_relation_1 comb_child_comb_relation_2 comb_child_comb_relation_3 comb_child_comb_relation_5 comb_child_comb_relation_98 ///
+	   comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month ///
+	   comb_child_breastfed_days ///
+	   C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
+	   comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq ///
+	   C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks ///
+	   C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
+	   
+	   * Vomit
+	   * comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk ///
+	   * comb_child_blood_day comb_child_blood_wk comb_child_blood_2wk ///
+	   * comb_child_cuts_day comb_child_cuts_wk comb_child_cuts_2wk ///
+	   * comb_anti_child_wk comb_anti_child_days comb_anti_child_last comb_anti_child_last_months comb_anti_child_last_days *
+	   * comb_anti_child_purpose comb_anti_child_purpose_1 comb_anti_child_purpose_2 comb_anti_child_purpose_3 comb_anti_child_purpose_4 comb_anti_child_purpose__77 comb_anti_child_purpose_oth comb_med_seek_care_comb comb_med_diarrhea_comb comb_med_visits_comb
+	   
+local U5Var "Descriptive statistics of children under age 5 for endline"
+local LabelU5Var "Outside"
+local noteU5Var "Notes: To do, clean the age variables of the newly added sample"
+					 
+foreach k in U5Var {
+* Mean
+	eststo  model0: estpost summarize $`k'
+* Median
+	foreach i in $`k' {
+	egen m_`i'=median(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model1: estpost summarize $`k'
+
+* Min
+	use "${DataTemp}U5_Child_23_24_clean.dta", clear
+	foreach i in $`k' {
+	egen i_`i'=min(`i')
+	replace `i'=i_`i'
+	}
+
+	eststo  model6: estpost summarize $`k'
+* Max
+	use "${DataTemp}U5_Child_23_24_clean.dta", clear
+	foreach i in $`k' {
+	egen a_`i'=max(`i')
+	replace `i'=a_`i'
+	}
+	eststo  model7: estpost summarize $`k'
+* Missing 
+	use "${DataTemp}U5_Child_23_24_clean.dta", clear
+	foreach i in $`k' {
+	egen `i'_s=rowmiss(`i')
+	egen s_`i'=sum(`i'_s)
+	replace `i'=s_`i'
+	}
+	eststo  model8: estpost summarize $`k'
+
+esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("``k''" \label{`Label`k''}) ///
+	   cell("mean (fmt(2) label(_))") stats(N, fmt("%9.0fc") label(Observations) ) /// 
+	   mtitles("Mean" "Median" "Min" "Max" "Number missing") nonum ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{0.87\linewidth}}{\footnotesize" ///
+				   "&           _&           _&           _&           _&           _\\" "" ///
+				   "Loose stool- U5 (1 day)" "\textbf{Diarrhea - WHO Definition} \\\hline Loose stool- U5 (1 day)" ///
+				   "Diarrhea/Loose- U5 (1 day)" "\textbf{Diarrhea - combined} \\\hline Diarrhea/Loose- U5 (1 day)" ///
+				   "Diarrhea- U5 (1 day)" "\textbf{Diarrhea} \\\hline Diarrhea- U5 (1 day)" ///
+				   "Exclusive breast feeding" "\textbf{Breast feeding} \\\hline Exclusive breast feeding" ///
+				   "Mother" "\textbf{Relationship} \\\hline Mother" ///
+				   "-0 " "0" ///
+				   "Expenditure sch: " "~~~" "Treat:"  "~~~" ///
+				   ) ///
+	   label  note("`note`k''")  ///
+	   replace 
+	   }
+eststo clear
+ /*--------------------------------------------
+    Section A.3: Diarrhea analysis (Creation of merging data and analysis)
+ --------------------------------------------*/
 use "${DataTemp}Baseline_ChildLevel.dta", clear
 rename R_Cen_village_name village
-merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+* Cen_Type is the type existed from the baseline
 gen Cen_Type=4
+* Renaming baseline variable with B_ prefix
 foreach i in C_diarr* C_loose* {
 	rename `i' B_`i'
 }
-* 446 children not followed
-* 97 children newly appeared
-* 677 children are matched
+
 merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village Treat_V End_date Panchatvillage BlockCode comb_child_age) update
+tab Merge_Baseline_CL Cen_Type,m
+
+/* Archi to check more
+ 
+ Matching result from |       Cen_Type
+                merge |         4          5 |     Total
+----------------------+----------------------+----------
+      master only (1) |       446          0 |       446 
+       using only (2) |         3        114 |       117 
+          matched (3) |       677          0 |       677 
+----------------------+----------------------+----------
+                Total |     1,126        114 |     1,240 
+
+*/
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+tab _merge
+br if _merge==1
 label var Treat_V "Treatment"
 label var B_C_diarrhea_comb_U5_1day "Baseline"
 label var B_C_diarrhea_prev_child_1day "Baseline"
@@ -123,22 +223,26 @@ label var B_C_loosestool_child_1day "Baseline"
 
 save "${DataTemp}U5_Child_Diarrhea_data.dta", replace
 
+ /*--------------------------------------------
+    Section A.4: Diarrhea analysis (Regression)
+ --------------------------------------------*/
 * Main specification: Combined diarrhea with U5
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
-mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
+* For every regression check the missing 
+mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode comb_child_age
+* Be clear in what case you have missing info in the regression
+tab Merge_Baseline_CL Cen_Type if Treat_V==.,m
 
 global U5COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
 global U5DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
 global U5STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
-local U5COMB "Probability of experiencing diarrhea/loose stool among children U5"
-local U5DIA "Probability of experiencing diarrhea among children U5"
-local U5STOOL "Probability of experiencing loose stool among children U5"
-local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
-local RENAMEU5COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
-local RENAMEU5DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
-local RENAMEU5STOOL  "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
-
-* local     diarrhea_2w_c_1 "Experience of diarrhea within 2 weeks for children under age 5"
+local  U5COMB "Probability of experiencing diarrhea/loose stool among children U5"
+local  U5DIA "Probability of experiencing diarrhea among children U5"
+local  U5STOOL "Probability of experiencing loose stool among children U5"
+local  Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies. To do: Some village info needs to be cleaned. Age variable is missing for newly added sample (more cleaning is needed)."
+local  RENAMEU5COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
+local  RENAMEU5DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
+local  RENAMEU5STOOL  "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
 
 foreach k in U5COMB U5DIA U5STOOL {	
 foreach i in $`k' {
@@ -172,6 +276,7 @@ eststo clear
 * Main specification: Combined diarrhea with U2
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
 keep if comb_child_age<2
+* For every regression check the missing 
 mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
 
 global U2COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
@@ -214,40 +319,14 @@ esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" 
 eststo clear
 }
 
+
+
+ /*--------------------------------------------
+	To be cleaned
+ --------------------------------------------*/
+
+
 END
-
-* Main specification: Combined diarrhea with U2
-use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
-local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
-* local     diarrhea_2w_c_1 "Experience of diarrhea within 2 weeks for children under age 5"
-mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
-
-foreach i in C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks {
-	
-eststo: reg `i' Treat_V , cluster(village)
-sum `i' if Treat_V==0
-estadd scalar Mean = r(mean)
-
-eststo: reg `i' Treat_V B_`i', cluster(village)
-sum `i' if Treat_V==0
-estadd scalar Mean = r(mean)
-
-eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
-sum `i' if Treat_V==0
-estadd scalar Mean = r(mean)
-
-}
-esttab using "${Table}ILC_Main_Diarrhea_U2_RCT.tex",label se ar2 nomtitle title("Probability of experiencing diarrhea/loose stool among children U2" \label{LabelD}) nonotes nobase nocons ///
-			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
-             indicate("Stratification FE= *Panchatvillage *BlockCode") ///
-			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
-			 rename(B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day) ///
-			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
-			 substitute("{l}{\footnotesize" "{p{1\linewidth}}{\footnotesize" ///
-			 ) ///
-			 addnote("`Notediarrhea'") ///	
-			 replace
-eststo clear
 
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
 graph bar B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks, over(village, sort(Treat_V) label(angle(45))) ///
@@ -261,80 +340,6 @@ collapse B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks (sum) flag_B flag
 END
 
 
-use "${DataTemp}U5_Child_23_24_clean.dta", clear
-
-* N_HHmember_age: Add this, Cen_CBW_consent
-global U5Var ///
-       comb_child_caregiver_present_1 ///
-	   comb_child_residence comb_child_comb_relation_1 comb_child_comb_relation_2 comb_child_comb_relation_3 comb_child_comb_relation_5 comb_child_comb_relation_98 ///
-	   comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month ///
-	   comb_child_breastfed_days ///
-	   C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
-	   comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq ///
-	   C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks ///
-	   C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
-	   
-	   * Vomit
-	   * comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk ///
-	  
-	   * comb_child_blood_day comb_child_blood_wk comb_child_blood_2wk ///
-	   * comb_child_cuts_day comb_child_cuts_wk comb_child_cuts_2wk ///
-	   * comb_anti_child_wk comb_anti_child_days comb_anti_child_last comb_anti_child_last_months comb_anti_child_last_days *
-	   * comb_anti_child_purpose comb_anti_child_purpose_1 comb_anti_child_purpose_2 comb_anti_child_purpose_3 comb_anti_child_purpose_4 comb_anti_child_purpose__77 comb_anti_child_purpose_oth comb_med_seek_care_comb comb_med_diarrhea_comb comb_med_visits_comb
-	   
-local U5Var "Incidence of person seeked care outside"
-local LabelU5Var "Outside"
-					 
-foreach k in U5Var {
-* Mean
-	eststo  model0: estpost summarize $`k'
-* Median
-	foreach i in $`k' {
-	egen m_`i'=median(`i')
-	replace `i'=m_`i'
-	}
-	eststo  model1: estpost summarize $`k'
-
-* Min
-	use "${DataTemp}U5_Child_23_24_clean.dta", clear
-	foreach i in $`k' {
-	egen i_`i'=min(`i')
-	replace `i'=i_`i'
-	}
-
-	eststo  model6: estpost summarize $`k'
-* Max
-	use "${DataTemp}U5_Child_23_24_clean.dta", clear
-	foreach i in $`k' {
-	egen a_`i'=max(`i')
-	replace `i'=a_`i'
-	}
-	eststo  model7: estpost summarize $`k'
-* Missing 
-	use "${DataTemp}U5_Child_23_24_clean.dta", clear
-	foreach i in $`k' {
-	egen `i'_s=rowmiss(`i')
-	egen s_`i'=sum(`i'_s)
-	replace `i'=s_`i'
-	}
-	eststo  model8: estpost summarize $`k'
-
-esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("``k''" \label{`Label`k''}) ///
-	   cell("mean (fmt(2) label(_))") stats(N, fmt("%9.0fc") label(Observations) ) /// 
-	   mtitles("Mean" "Median" "Min" "Max" "Number missing") nonum ///
-	   substitute( ".00" "" "{l}{\footnotesize" "{p{0.87\linewidth}}{\footnotesize" ///
-				   "&           _&           _&           _&           _&           _\\" "" ///
-				   "Walking" "\textbf{Transportation} \\\hline Walking" ///
-				   "Expenditure sch: Gov funded insurance" "\textbf{Expenditure scheme} \\\hline Expenditure sch: Gov funded insurance" ///
-				   "Treat: Allopathy (english medicines)" "\textbf{Treatment} \\\hline Treat: Allopathy (english medicines)" ///
-				   "-0 " "0" ///
-				   "Expenditure sch: " "~~~" "Treat:"  "~~~" ///
-				   ) ///
-	   label  note("`note`k''")  ///
-	   replace 
-	   }
-	   
-	   END
 
 use "${DataTemp}U5_Child_23_24_clean.dta", clear
 
