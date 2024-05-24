@@ -2,8 +2,8 @@
 
 Relevant link
 - [Survey tools](https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-)
-- [Process document](https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-](https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit)
-- [Excel village list](https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115)
+- [Process document](https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit)
+- [Excel village list](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115)
 
 # Final data description
 The analytical sample consists of 915 households from 20 villages. Among these, 846 households have children under the age of 5, with a total of 1002 children recorded in the baseline.
