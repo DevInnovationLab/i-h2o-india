@@ -286,6 +286,7 @@ gen Cen_Type=2
 unique key key3
 save "${DataTemp}Requested_long_backcheck1.dta", replace
 
+STOP 
 * ID 25
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 key_creation 

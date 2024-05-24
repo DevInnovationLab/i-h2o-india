@@ -531,8 +531,6 @@ label var C_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
 label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
 label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
-
-
 end
 
 
