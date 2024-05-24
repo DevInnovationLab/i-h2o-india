@@ -411,6 +411,13 @@ drop if R_E_key == "uuid:4d9381e8-e356-4ae2-be61-8d57322ef40a" & unique_id == "3
 //enum submitted this twice and both of these are unavailable IDs so keeping only one such case
 drop if R_E_key == "uuid:20fdbfce-ef3e-46c9-ad31-c464a7e1c1bb" & unique_id == "40201111005"
 
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:975636db-d2ae-4837-8fef-e2ea1186ede3" & unique_id == "40201113010"
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:77e94cac-755c-4bc1-a852-8bd4bb859ae3" & unique_id == "40202113050"
+
+
 save "${DataPre}1_8_Endline_XXX.dta", replace
 
 
