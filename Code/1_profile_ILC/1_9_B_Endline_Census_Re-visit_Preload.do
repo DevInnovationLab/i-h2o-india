@@ -591,9 +591,18 @@ keep if _merge == 3
 
 label variable R_E_cen_resp_label "Endline resp name"
 
+label variable Woman_name1 "Woman_name1"
+label variable Woman_name2 "Woman_name2"
+label variable Woman_name3 "Woman_name3"
+label variable Woman_name4 "Woman_name4"
+label variable total_CBW_comb  "Total CBW re-visit"
+label variable Child_name1  "Child_name1"
+label variable total_U5_Child_comb  "Total U5 re-visit"
 
-export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_cen_resp_label R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
+export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_cen_resp_label R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+
+isid unique_id
 
 /***************************************************************
 
@@ -765,7 +774,7 @@ export excel using "${DataPre}Endline_Revisit_new_CBW.xlsx" , sheet("Sheet1", re
 
 /********************************************************
 
-exporting all the fam names 
+exporting all the new fam names 
 
 ********************************************************/
 do "${github}1_8_A_Endline_cleaning_HFC_Data creation.do"
@@ -801,7 +810,7 @@ reshape wide comb_hhmember_name comb_hhmember_gender comb_hhmember_age, i(unique
 
 duplicates list unique_id
 
-export excel using "${DataPre}Endline_Revisit_all_members.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
+export excel using "${DataPre}Endline_Revisit_all_new_members.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 
 
@@ -856,7 +865,7 @@ merge 1:1 unique_id using "${DataTemp}1_8_Endline_full_data_merge.dta"
 
 
 //Changing labels 
-	label variable unique_id "Unique ID"
+	label variable unique_id_hyphen "Unique ID"
 	label variable R_Cen_village_str "Village Name"
 	label variable R_Cen_block_name "Block name"
 	label variable R_Cen_hamlet_name "Hamlet name"
@@ -867,7 +876,7 @@ merge 1:1 unique_id using "${DataTemp}1_8_Endline_full_data_merge.dta"
 	
 	
 sort R_Cen_village_str  
-export excel unique_id R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx" if _merge == 1, sheet("IDs with no subimssions", replace) firstrow(varlabels) cell(A1) 
+export excel unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx" if _merge == 1, sheet("IDs with no subimssions", replace) firstrow(varlabels) cell(A1) 
 
 
 
