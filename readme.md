@@ -6,7 +6,7 @@ Relevant link
 - [Excel village list]([https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115))
 
 > Final data description
-The analytical sample is from the 915 households from 20 villages (what is the 10 and 10?)
+The analytical sample consists of 915 households from 20 villages. Among these, 846 households have children under the age of 5, with a total of 1002 children recorded in the baseline.
  
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
 
