@@ -64,7 +64,7 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup
 * Key creation
 key_creation
 *keep if n_cbw_consent==1 //Akito to apply this later 
-keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth above
+keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth
 bys key: gen Num=_n
 reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
 prefix_rename
