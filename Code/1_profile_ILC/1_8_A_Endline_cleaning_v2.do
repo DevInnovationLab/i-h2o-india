@@ -36,6 +36,8 @@ end
 
 * Master
 use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
+
+
 rename cen_malesabove15_list_preload cen_malesabove15_lp
 keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
           cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
@@ -53,6 +55,8 @@ save "${DataTemp}1_8_Endline_Census_additional_pre.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 * Key creation
 key_creation
+
+
 * ID 26
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
 
@@ -64,11 +68,13 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup
 * Key creation
 key_creation
 *keep if n_cbw_consent==1 //Akito to apply this later 
-keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth
+keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth 
+drop if n_resp_avail_cbw  == .
 bys key: gen Num=_n
-reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence, i(key) j(Num)
+reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence n_resp_avail_cbw n_resp_avail_cbw_oth , i(key) j(Num)
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-Household_available-N_CBW_followup_HH.dta", replace
+
 
 * ID 21
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
@@ -77,7 +83,8 @@ drop if cen_name_cbw_woman_earlier==""
 key_creation
 save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long1.dta", replace
 
-keep if cen_cbw_consent==1
+*keep if cen_cbw_consent==1
+//AG - Commented this out (Akito to incorporate)
 save "${DataFinal}1_8_Endline_Census-Household_available-Cen_CBW_Long2.dta", replace
 keep key cen_preg_index cen_resp_avail_cbw cen_preg_status cen_not_curr_preg cen_preg_residence cen_name_cbw_woman_earlier cen_resp_avail_cbw cen_resp_avail_cbw_oth 
 destring cen_preg_index, replace
@@ -384,7 +391,36 @@ foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 ce
 	
 merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep(1 3) nogen
 
+
+/*******************************************************************
+
+#Dropping duplicates 
+
+********************************************************************/
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:cf2d7db0-db8f-427d-a77a-87fd0264f94c" & unique_id == "10101108009"
+
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:30d0381d-8076-46bc-86ce-fde616ccb3b6" & unique_id == "10101108026"
+
+//enum submitted this twice and both of these are unavailable IDs so keeping only one such case
+drop if R_E_key == "uuid:4d9381e8-e356-4ae2-be61-8d57322ef40a" & unique_id == "30501117006"
+
+//enum submitted this twice and both of these are unavailable IDs so keeping only one such case
+drop if R_E_key == "uuid:20fdbfce-ef3e-46c9-ad31-c464a7e1c1bb" & unique_id == "40201111005"
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:975636db-d2ae-4837-8fef-e2ea1186ede3" & unique_id == "40201113010"
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:77e94cac-755c-4bc1-a852-8bd4bb859ae3" & unique_id == "40202113050"
+
+
 save "${DataPre}1_8_Endline_XXX.dta", replace
+
+
 savesome using "${DataPre}1_1_Endline_XXX_consented.dta" if R_E_consent==1, replace
 
 
@@ -463,7 +499,7 @@ sort cen_name_cbw_woman_earlier1
 * Creating data before dropping the case for Revisit: Archi
 save  "${DataTemp}Requested_wide_backcheck_preload.dta", replace
 * Creating data after dropping the case for Backcheck: Archi
-keep if cen_resp_avail_cbw==1
+*keep if cen_resp_avail_cbw ==1
 save  "${DataTemp}Requested_wide_backcheck.dta", replace
 
 erase "${DataTemp}Requested_long_backcheck1.dta"

@@ -253,6 +253,10 @@ cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S")
 cen$date <- as_date(cen$datetime) 
 
 
+#Filtering out backup villages
+cen <- cen%>%
+  filter(village_name != "Badaalubadi")%>%
+  filter(village_name != "Hatikhamba")
 
 
 ```
@@ -2567,7 +2571,8 @@ tab <- idexx_total%>%
                     )%>%
      modify_footnote(all_stat_cols() ~ "Mean (SD)"),
     .header = "**{strata}**"
-  )
+  )%>%
+  modify_footnote(update =  ~ "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
 tab
 
 
@@ -2612,12 +2617,30 @@ r3_cl <- r3%>%
 #Combining data collection rounds
 total_cl <- rbind(bl_cl, r1_cl, r2_cl, r3_cl)
 
+#Creating presence absence variable
+total_cl <- total_cl%>%
+  mutate(fc_stored_pa = case_when(fc_stored_avg < 0.1 ~ 0, 
+                                  fc_stored_avg >= 0.1 ~ 1))%>%
+  mutate(fc_tap_pa = case_when(fc_tap_avg < 0.1 ~ 0,
+                               fc_tap_avg >= 0.1 ~ 1))%>%
+  mutate(tc_stored_pa = case_when(tc_stored_avg < 0.1 ~ 0,
+                                  tc_stored_avg >= 0.1 ~ 1))%>%
+  mutate(tc_tap_pa = case_when(tc_tap_avg < 0.1 ~ 0,
+                               tc_tap_avg >= 0.1 ~ 1))
+
 #Renaming variables
 total_cl <- total_cl%>%
   rename("Tap - Free Chlorine" = fc_tap_avg)%>%
   rename("Tap - Total Chlorine" = tc_tap_avg)%>%
   rename( "Stored - Free Chlorine" = fc_stored_avg)%>%
-  rename("Stored - Total Chlorine" = tc_stored_avg)
+  rename("Stored - Total Chlorine" = tc_stored_avg)%>%
+  rename("Tap - FC Presence" = fc_tap_pa)%>%
+  rename("Tap - TC Presence" = tc_tap_pa)%>%
+  rename( "Stored - FC Presence" = fc_stored_pa)%>%
+  rename("Stored - TC Presence" = tc_stored_pa)
+  
+
+
 
 
 #Summarizing in a table1 table
@@ -2653,12 +2676,38 @@ tab <- total_cl%>%
   )
 tab
 
-kbl(tab)%>%
-  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Chlorine Monitoring " = 9)) %>%
-  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
-  column_spec(1, bold = TRUE) %>%
-  column_spec(2, width = "75px")
+
+tab <- total_cl%>%
+  dplyr::select(assignment, data_round, `Tap - FC Presence` ,`Tap - TC Presence`, `Stored - FC Presence`, `Stored - TC Presence`)%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    type = list(c(`Tap - FC Presence` ,
+                                        `Tap - TC Presence`,
+                                        `Stored - FC Presence`,
+                                         `Stored - TC Presence`) ~ 'continuous'),
+                    statistic = all_continuous() ~ "{mean} ({sd})",
+                    ),
+    .header = "**{strata}**"
+  )%>%
+  modify_footnote(update =  ~ "Mean (SD); Presence > 0.1 mg/L")
+
+tab
+
+#kbl(tab)%>%
+ # kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  #add_header_above(c("Chlorine Monitoring " = 9)) %>%
+  #row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  #column_spec(1, bold = TRUE) %>%
+  #column_spec(2, width = "75px")
+
+
+
 
 
 
@@ -2687,6 +2736,21 @@ cen_tab <- cen%>%
   dplyr::select(assignment, prim_source, jjm_yes,
                    water_sec_yn, water_sec_freq)
 
+#Selecting jjm variables
+el_jjm <- el%>%
+  dplyr::select(assignment, prim_source, jjm_drinking, tap_issues, tap_issues_type_1)%>%
+  mutate(data_round = "EL")
+
+cen_jjm <- cen%>%
+  dplyr::select(assignment, prim_source, jjm_yes)%>%
+  mutate(data_round = "BL")%>%
+  mutate(tap_issues = NA)%>%
+  mutate(tap_issues_type_1 = NA)%>%
+  rename("jjm_drinking" = jjm_yes)
+#Combining EL and BL datasets
+total_jjm <- rbind(cen_jjm, el_jjm)
+
+
 #Full list: jjm_drinking, jjm_yes,jjm_stored, jjm_use__77,  
                 # jjm_use_999, tap_issues, tap_issues_type__77, tap_issues_type_1, 
                 #  water_source_prim,  water_source_kids,  water_prim_source_kids,
@@ -2695,8 +2759,10 @@ cen_tab <- cen%>%
                 # water_treat,  water_treat_kids,  water_treat_type__77,  water_treat_type_999,
                 # water_treat_freq__77,  water_stored
 
+#####################################################################################
 
-#summarizing in a table
+
+#summarizing endline results in a table
 tab <- el_tab%>%
   #tbl_strata(
    # strata = data_round,
@@ -2720,13 +2786,46 @@ tab <- el_tab%>%
                     )%>%
      modify_footnote(all_stat_cols() ~ "% (N)")%>%
   as_gt()%>%
-  tab_options(table.font.size = pct(50))#,
+  tab_options(table.font.size = pct(50),
+              #table_body.hlines.width = 
+                table.width = pct(50))
+  
+  #,
     #.header = "**{strata}**"
   #)
 tab
 
 
 
+
+#Summarizing combined results in a table
+tab <- total_jjm%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no", 
+                    #type = c() ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}% ({n})"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary Drinking Water Source",
+                                 jjm_drinking ~ "Use Government-provided Tap for Drinking",
+                                 tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
+                                 tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue"
+                                 )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "% (N); BL - Oct 2023, EL - May 2024"),#%>%
+ # as_gt()%>%
+  #tab_options(table.font.size = pct(50),
+              #table_body.hlines.width = 
+   #             table.width = pct(50)),
+    .header = "**{strata}**"
+  )
+tab
 
 
 ```
@@ -3024,6 +3123,21 @@ r3_cl <- r3%>%
 
 
 hh_survey_cl <- bind_rows(bl_cl, r1_cl, r2_cl, r3_cl)
+
+#Creating presence/absence variables for chlorine detection
+hh_survey_cl <- hh_survey_cl%>%
+  mutate(fc_stored_pa = case_when(fc_stored_avg < 0.1 ~ 0, 
+                                  fc_stored_avg >= 0.1 ~ 1))%>%
+  mutate(fc_tap_pa = case_when(fc_tap_avg < 0.1 ~ 0,
+                               fc_tap_avg >= 0.1 ~ 1))%>%
+  mutate(tc_stored_pa = case_when(tc_stored_avg < 0.1 ~ 0,
+                                  tc_stored_avg >= 0.1 ~ 1))%>%
+  mutate(tc_tap_pa = case_when(tc_tap_avg < 0.1 ~ 0,
+                               tc_tap_avg >= 0.1 ~ 1))
+  
+  
+  
+                              
 
 
 
