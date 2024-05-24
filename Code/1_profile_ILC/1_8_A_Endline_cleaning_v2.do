@@ -36,6 +36,8 @@ end
 
 * Master
 use "${DataRaw}1_8_Endline/1_8_Endline_Census.dta", clear
+
+
 rename cen_malesabove15_list_preload cen_malesabove15_lp
 keep key  cen_female_above12 cen_female_15to49 cen_num_female_15to49 cen_adults_hh_above12 cen_num_adultsabove12 ///
           cen_children_below12 cen_num_childbelow12 cen_num_childbelow5 cen_num_malesabove15 cen_malesabove15_lp ///
@@ -53,6 +55,8 @@ save "${DataTemp}1_8_Endline_Census_additional_pre.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 * Key creation
 key_creation
+
+
 * ID 26
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
 
@@ -387,7 +391,29 @@ foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 ce
 	
 merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep(1 3) nogen
 
+
+/*******************************************************************
+
+#Dropping duplicates 
+
+********************************************************************/
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:cf2d7db0-db8f-427d-a77a-87fd0264f94c" & unique_id == "10101108009"
+
+
+//enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
+drop if R_E_key == "uuid:30d0381d-8076-46bc-86ce-fde616ccb3b6" & unique_id == "10101108026"
+
+//enum submitted this twice and both of these are unavailable IDs so keeping only one such case
+drop if R_E_key == "uuid:4d9381e8-e356-4ae2-be61-8d57322ef40a" & unique_id == "30501117006"
+
+//enum submitted this twice and both of these are unavailable IDs so keeping only one such case
+drop if R_E_key == "uuid:20fdbfce-ef3e-46c9-ad31-c464a7e1c1bb" & unique_id == "40201111005"
+
 save "${DataPre}1_8_Endline_XXX.dta", replace
+
+
 savesome using "${DataPre}1_1_Endline_XXX_consented.dta" if R_E_consent==1, replace
 
 

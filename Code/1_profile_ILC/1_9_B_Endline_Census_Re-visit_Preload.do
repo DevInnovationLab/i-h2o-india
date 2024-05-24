@@ -19,6 +19,13 @@
 
 use "${DataPre}1_8_Endline_XXX.dta", clear
 
+*Assigned to Archi- Drop duplicates: DONE 
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+br unique_id R_E_key R_E_enum_name R_E_r_cen_a1_resp_name R_E_resp_available if dup_HHID > 0
+
 * This is zero case
 drop if R_E_resp_available == . 
 // we will not re-visit those cases where HH has left permannetly 
@@ -74,7 +81,7 @@ save `new', replace
 // Create scenarios 
 keep if C_Screened == 1
 drop if R_Cen_a1_resp_name == "" 
-
+list if unique_id == ""
 isid unique_id
 
 ///////////////////////////////////////////////////////////////
@@ -354,6 +361,8 @@ label values comb_resp_avail_comb comb_resp_avail_comb_ex
 
 //droppinh cases that won't be re-visited 
 * Akito to Archi: Most of the case is missing. Can you describe what those are? They are simply data from non-main respondent?
+
+tab comb_resp_avail_comb
 drop if comb_resp_avail_comb == . | comb_resp_avail_comb == 2 | comb_resp_avail_comb == 1 | comb_resp_avail_comb == 7 | comb_resp_avail_comb == 8 | comb_resp_avail_comb == -98 | comb_resp_avail_comb == 9 | comb_resp_avail_comb == -77 
 
 bys unique_id: gen Num=_n
@@ -555,7 +564,6 @@ gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
 sort R_Cen_village_str 
 
 
-export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
 
 isid  unique_id
 
@@ -569,12 +577,224 @@ isid unique_id
 
 * This is zero case
 drop if R_E_resp_available == . 
-drop if R_E_resp_available == . 
 keep unique_id R_E_enum_name_label R_E_cen_resp_label
-isid unique_id
 save "${DataPre}stata_Endline_revisit_main_filtered.dta", replace
 restore
 
-merge 1:1 unique_id R_E_enum_name_label using "${DataPre}stata_Endline_revisit_main_filtered.dta"
+merge 1:1 unique_id using "${DataPre}stata_Endline_revisit_main_filtered.dta"
+
+keep if _merge == 3
+
+label variable R_E_cen_resp_label "Endline resp name"
+
+
+export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_cen_resp_label R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
+
+
+/***************************************************************
+
+
+Finding out if any IDs got left from being surveyed because of the change in the preload 
+
+****************************************************************/
+
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Team-1 (Jitan Mallik)") firstrow clear
+
+keep UniqueID
+
+drop if UniqueID == ""
+
+rename UniqueID unique_id
+
+isid unique_id
+
+save "${DataTemp}excel_Endline_JPAL_sheet1.dta", replace
+
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Team - 2(Sadananda)") firstrow clear
+
+keep UniqueID
+
+drop if UniqueID == ""
+
+rename UniqueID unique_id
+
+isid unique_id
+
+save "${DataTemp}excel_Endline_JPAL_sheet2.dta", replace
+
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Team -3 (Nityananda)") firstrow clear
+
+keep UniqueID
+
+drop if UniqueID == ""
+
+rename UniqueID unique_id
+
+isid unique_id
+
+save "${DataTemp}excel_Endline_JPAL_sheet3.dta", replace
+
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Team -4 (Rajib)") firstrow clear
+
+
+keep UniqueID
+
+drop if UniqueID == ""
+
+rename UniqueID unique_id
+
+isid unique_id
+
+save "${DataTemp}excel_Endline_JPAL_sheet4.dta", replace
+
+append using "${DataTemp}excel_Endline_JPAL_sheet1.dta"
+append using "${DataTemp}excel_Endline_JPAL_sheet2.dta"
+append using "${DataTemp}excel_Endline_JPAL_sheet3.dta"
+isid unique_id
+
+rename unique_id unique_id_hyphen
+save "${DataTemp}Endline_JPAL_tracker_all_IDs.dta", replace
+
+
+//importing baseline census data 
+clear
+cap program drop start_from_clean_file_Population
+program define   start_from_clean_file_Population
+  * Open clean file
+use  "${DataPre}1_1_Census_cleaned.dta", clear
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+gen     C_Census=1
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
+recode Merge_C_F 1=0 3=1
+
+*drop if  R_Cen_village_name==30501
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var C_HH_not_available "Respondent not available"
+
+end
+
+
+//Remove HHIDs with differences between census and HH survey
+start_from_clean_file_Population
+//why do we drop this?
+*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+
+tempfile new
+save `new', replace
+
+//keeping only screend cases 
+keep if C_Screened == 1
+drop if R_Cen_a1_resp_name == "" 
+
+keep unique_id unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_a1_resp_name
+
+merge 1:1 unique_id_hyphen using "${DataTemp}Endline_JPAL_tracker_all_IDs.dta"
+
+
+//Changing labels 
+	label variable unique_id_hyphen "Unique ID"
+	label variable R_Cen_village_str "Village Name"
+	label variable R_Cen_block_name "Block name"
+	label variable R_Cen_hamlet_name "Hamlet name"
+	label variable R_Cen_saahi_name "Saahi name"
+	label variable R_Cen_landmark "Landmark"
+	label variable R_Cen_enum_name_label "Enumerator name"
+	label variable R_Cen_a1_resp_name "Baseline Respondent name"
+	
+	
+sort R_Cen_village_str  
+export excel unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark   R_Cen_a1_resp_name using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx" if _merge == 1, sheet("remaining IDs", replace) firstrow(varlabels) cell(A1) 
+
+
+/*******************************************************************
+
+PRELOAD FOR NEW MEMBERS TO BE DISPLAYED AS A DROPDOWN
+
+*********************************************************************/
+
+//The dataset below has infor for all new members from endline census
+
+use "${DataTemp}Requested_long_backcheck1.dta", clear
+
+rename key R_E_key
+
+//merging it with endline census dataset 
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+
+
+
+//firstly the preload for only  child bearing women 
+
+keep comb_name_comb_woman_earlier unique_id comb_hhmember_age
+
+//we have to make sure that women that have prefix 111- in their names are not repeated in the preload list because their names are alreday in census list 
+split comb_name_comb_woman_earlier, generate(common_cbw_names) parse("111")
+replace comb_name_comb_woman_earlier = common_cbw_names2 if common_cbw_names2 != ""
+
+drop common_cbw_names1 
+drop common_cbw_names2
+
+drop if comb_name_comb_woman_earlier == ""
+
+drop if unique_id == ""
+
+bys unique_id: gen Num=_n
+duplicates list unique_id
+
+reshape wide comb_name_comb_woman_earlier comb_hhmember_age, i(unique_id) j(Num)
+
+isid  unique_id
+
+export excel using "${DataPre}Endline_Revisit_new_CBW.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
+
+
+/********************************************************
+
+exporting all the fam names 
+
+********************************************************/
+
+use "${DataTemp}Requested_long_backcheck1.dta", clear
+
+rename key R_E_key
+
+//merging it with endline census dataset 
+merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+
+
+//firstly the preload for all members 
+
+keep comb_hhmember_name comb_hhmember_gender comb_hhmember_age unique_id 
+
+//we have to make sure that women that have prefix 111- in their names are not repeated in the preload list because their names are alreday in census list 
+split comb_hhmember_name, generate(common_names) parse("111")
+replace comb_hhmember_name = common_names2 if common_names2 != ""
+
+drop common_names1 
+drop common_names2
+
+drop if comb_hhmember_name == ""
+
+drop if unique_id == ""
+
+bys unique_id: gen Num=_n
+duplicates list unique_id
+
+reshape wide comb_hhmember_name comb_hhmember_gender comb_hhmember_age, i(unique_id) j(Num)
+
+duplicates list unique_id
+
+export excel using "${DataPre}Endline_Revisit_all_members.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
+
+
 
 
