@@ -253,6 +253,10 @@ cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S")
 cen$date <- as_date(cen$datetime) 
 
 
+#Filtering out backup villages
+cen <- cen%>%
+  filter(village_name != "Badaalubadi")%>%
+  filter(village_name != "Hatikhamba")
 
 
 ```
@@ -2732,6 +2736,21 @@ cen_tab <- cen%>%
   dplyr::select(assignment, prim_source, jjm_yes,
                    water_sec_yn, water_sec_freq)
 
+#Selecting jjm variables
+el_jjm <- el%>%
+  dplyr::select(assignment, prim_source, jjm_drinking, tap_issues, tap_issues_type_1)%>%
+  mutate(data_round = "EL")
+
+cen_jjm <- cen%>%
+  dplyr::select(assignment, prim_source, jjm_yes)%>%
+  mutate(data_round = "BL")%>%
+  mutate(tap_issues = NA)%>%
+  mutate(tap_issues_type_1 = NA)%>%
+  rename("jjm_drinking" = jjm_yes)
+#Combining EL and BL datasets
+total_jjm <- rbind(cen_jjm, el_jjm)
+
+
 #Full list: jjm_drinking, jjm_yes,jjm_stored, jjm_use__77,  
                 # jjm_use_999, tap_issues, tap_issues_type__77, tap_issues_type_1, 
                 #  water_source_prim,  water_source_kids,  water_prim_source_kids,
@@ -2740,8 +2759,10 @@ cen_tab <- cen%>%
                 # water_treat,  water_treat_kids,  water_treat_type__77,  water_treat_type_999,
                 # water_treat_freq__77,  water_stored
 
+#####################################################################################
 
-#summarizing in a table
+
+#summarizing endline results in a table
 tab <- el_tab%>%
   #tbl_strata(
    # strata = data_round,
@@ -2776,6 +2797,35 @@ tab
 
 
 
+
+#Summarizing combined results in a table
+tab <- total_jjm%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no", 
+                    #type = c() ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}% ({n})"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary Drinking Water Source",
+                                 jjm_drinking ~ "Use Government-provided Tap for Drinking",
+                                 tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
+                                 tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue"
+                                 )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "% (N); BL - Oct 2023, EL - May 2024"),#%>%
+ # as_gt()%>%
+  #tab_options(table.font.size = pct(50),
+              #table_body.hlines.width = 
+   #             table.width = pct(50)),
+    .header = "**{strata}**"
+  )
+tab
 
 
 ```
