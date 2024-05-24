@@ -253,10 +253,7 @@ cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S")
 cen$date <- as_date(cen$datetime) 
 
 
-#Filtering out backup villages
-cen <- cen%>%
-  filter(village_name != "Badaalubadi")%>%
-  filter(village_name != "Hatikhamba")
+
 
 
 ```
@@ -286,7 +283,10 @@ cen <- cen%>%
 #Using labelmaker to make transfer labels for the whole dataset
 cen <- labelmaker(cen)
 
-
+#Filtering out backup villages
+cen <- cen%>%
+  filter(village_name != "Badaalubadi")%>%
+  filter(village_name != "Hatikhamba")
 
 #Recoding factor levels for ws_prim
 cen <- cen%>%
