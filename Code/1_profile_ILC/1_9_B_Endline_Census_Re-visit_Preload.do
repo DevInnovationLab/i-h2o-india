@@ -735,6 +735,7 @@ PRELOAD FOR NEW MEMBERS TO BE DISPLAYED AS A DROPDOWN
 *********************************************************************/
 
 //The dataset below has infor for all new members from endline census
+do "${github}1_8_A_Endline_cleaning_HFC_Data creation.do"
 
 use "${DataTemp}Requested_long_backcheck1.dta", clear
 
@@ -883,7 +884,8 @@ export excel unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_villa
 /***************************************************************CHECKING IF ALL IDs are there which JPAL tracker has
 ***************************************************************/
 
-import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Supervisor_Endline_Revisit_Trac") firstrow clear
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Supervisor_Endline_House lock_T") firstrow clear
 
 keep UniqueID
 
