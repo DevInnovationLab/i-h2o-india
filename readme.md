@@ -2,9 +2,17 @@
 
 Relevant link
 - [Survey tools](https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-)
+- [Process document]([https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-](https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit))
+- [Excel village list]([https://drive.google.com/drive/u/1/folders/1DTvu3EhsxN6-HjEp9H0WAufLSEDoudp-](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115))
 
+> Final data description
+The analytical sample is from the 915 households from 20 villages (what is the 10 and 10?)
+ 
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
->
+
+
+
+
 > ## List of final outputs
 
 > INSTRUCTIONS: Your programs should clearly identify the tables and figures as they appear in the manuscript, by number. Sometimes, this may be obvious, e.g. a program called "`table1.do`" generates a file called `table1.png`. Sometimes, mnemonics are used, and a mapping is necessary. In all circumstances, provide a list of tables and figures, identifying the program (and possibly the line number) where a figure is created.
