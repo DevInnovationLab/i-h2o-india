@@ -52,6 +52,24 @@ format   unique_id_num %15.0gc
 	gen C_startmin= mm(R_E_starttime)
 	cap gen diff_minutes = clockdiff(R_E_starttime, R_E_endtime, "minute")
     
+//just a check to see if only valid dates are being dropped 
+	
+	
+	* First, convert the numeric date to a string format
+gen date_string = string(R_E_starttime, "%tc")
+
+* Then, extract only the date part from the string
+gen date_only = substr(date_string, 1, 9)
+
+* Now, format the date_only variable as a date
+gen date_final = date(date_only, "DMY")
+
+format date_final %td
+
+drop if date_final < mdy(4,21,2024)
+
+* Optionally, drop the intermediate variables if not needed
+
     drop if End_date < mdy(4,21,2024)
 	format End_date  %d
 
