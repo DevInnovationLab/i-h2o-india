@@ -120,7 +120,8 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_foll
 tab cen_child_caregiver_present
 tab cen_child_act_age
 * Respondent available for an interview 
-keep if cen_child_caregiver_present==1
+*keep if cen_child_caregiver_present==1
+//Archi to Akito - I commented this out so that all values are included 
 key_creation
 foreach var of varlist cen* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -148,16 +149,27 @@ foreach var of varlist *_u5*  {
     rename `var' `newname'
 }
 gen Cen_Type=5
-drop comb_child_care_pres_oth
+//drop comb_child_care_pres_oth
+tostring  comb_child_care_pres_oth, replace
+//Archi to Akito - It is better to not drop it 
 append using "${DataTemp}temp.dta"
-drop if comb_child_caregiver_present==.
+//drop if comb_child_caregiver_present==.
+//Archi - I commented this out because we still need names of the unavailable children 
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen
+/*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen*/
+
+//Archi - In the command above we are merging this data with consented values but if we want to survey unavailable respondents too we have to merge it with "${DataPre}1_8_Endline_XXX.dta"
+
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen
+
+
 rename R_E_key  key
 rename R_E_village_name_res Village
 * Village
 replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
+save "${DataTemp}U5_Child_23_24_part1.dta", replace
+//Archi to Akito- I think you want to perform the merge below for analaysis purposes but I am creating another dataset so that any value doesn't get missed out so I am gonna use ${DataTemp}U5_Child_23_24_part1 for re-visit purpose 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 br unique_id Village if _merge==1
 save "${DataTemp}U5_Child_23_24.dta", replace
@@ -171,7 +183,8 @@ savesome using "${DataTemp}Morbidity_23_24.dta" if comb_med_out_home_comb!="", r
  ---------------------------------------------------------------------------*/
 * ID 22 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
-drop if n_resp_avail_cbw==.
+//drop if n_resp_avail_cbw==.
+//Archi - I am commenting this out 
 key_creation 
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -187,7 +200,7 @@ save "${DataTemp}temp1.dta", replace
 
 * ID 21
  use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
- drop if  cen_name_cbw_woman_earlier==""
+*drop if  cen_name_cbw_woman_earlier==""
  key_creation
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -269,7 +282,8 @@ save "${DataTemp}temp0.dta", replace
 * ID 22
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 key_creation 
-drop if n_resp_avail_cbw==.
+//drop if n_resp_avail_cbw==.
+//Archi - I commente dthis out because we want all the values
 // List all variables starting with "n_"
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -284,11 +298,12 @@ save "${DataTemp}temp1.dta", replace
 
 use "${DataTemp}temp0.dta", clear
 merge 1:1 key key3 using "${DataTemp}temp1.dta"
+//only missing values dont match
 gen Cen_Type=2
 * N=141
 unique key key3
 save "${DataTemp}Requested_long_backcheck1.dta", replace
- 
+
 * ID 25
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 key_creation 
@@ -302,7 +317,8 @@ save "${DataTemp}temp0.dta", replace
 * ID 21
  use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
  key_creation 
- drop if  cen_name_cbw_woman_earlier==""
+//drop if  cen_name_cbw_woman_earlier==""
+//Archi - I am commenting this out
  // List all variables starting with "n_"
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -328,11 +344,17 @@ tostring comb_resp_avail_comb_oth, replace
 append using "${DataTemp}Requested_long_backcheck2.dta"
 * Adding unique ID
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+/*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen*/
+
+//Archi - we have to merge this on "${DataPre}1_8_Endline_XXX.dta",
+
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+
+
 save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 
-erase "${DataTemp}Requested_long_backcheck1.dta"
-erase "${DataTemp}Requested_long_backcheck2.dta"
+*erase "${DataTemp}Requested_long_backcheck1.dta"
+*erase "${DataTemp}Requested_long_backcheck2.dta"
 
 
  /* ---------------------------------------------------------------------------

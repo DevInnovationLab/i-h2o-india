@@ -69,7 +69,8 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup
 key_creation
 *keep if n_cbw_consent==1 //Akito to apply this later 
 keep key n_name_cbw_woman_earlier n_preg_status n_not_curr_preg n_preg_residence n_preg_hus n_resp_avail_cbw n_resp_avail_cbw_oth 
-drop if n_resp_avail_cbw  == .
+drop if n_name_cbw_woman_earlier  == ""
+//Archi to Akito- replaced n_resp_avail_cbw with n_name_cbw_woman_earlier in the command above
 bys key: gen Num=_n
 reshape wide  n_name_cbw_woman_earlier n_preg_hus n_preg_status n_not_curr_preg n_preg_residence n_resp_avail_cbw n_resp_avail_cbw_oth , i(key) j(Num)
 prefix_rename
@@ -327,9 +328,9 @@ merge  1:1 R_E_key using "${DataFinal}1_8_Endline_21_22.dta", nogen keep(1 3)
 *******Final variable creation for clean data
 
 * Sarita Bhatra (unique ID: 20201108018) - This is the training
-drop if unique_id=="20201108018"
+//drop if unique_id=="20201108018" (we should have dropped the key because it dropped the actual valid entry)
 
-drop if unique_id=="20201108018"
+//drop if unique_id=="20201108018"
 
 *renaming some duration vars becuase their names were slightly off and was not in accordance with the section in surveycto
 rename R_E_intro_dur_end       R_E_final_consent_duration
@@ -417,6 +418,9 @@ drop if R_E_key == "uuid:975636db-d2ae-4837-8fef-e2ea1186ede3" & unique_id == "4
 //enum submitted this twice so removing the case which was marked as unavailable or locked because they were found after and a complete survey was submitted later for them 
 drop if R_E_key == "uuid:77e94cac-755c-4bc1-a852-8bd4bb859ae3" & unique_id == "40202113050"
 
+
+//one was a practise entry that is why we dropped it 
+drop if R_E_key == "uuid:54261fb3-0798-4528-9e85-3af458fdbad9" & unique_id == "20201108018"
 
 save "${DataPre}1_8_Endline_XXX.dta", replace
 

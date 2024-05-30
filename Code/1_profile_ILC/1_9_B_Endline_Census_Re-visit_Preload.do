@@ -223,13 +223,27 @@ export excel ID R_E_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_ham
 
 
 *CREATING PRELOAD FOR RE-VISIT (U5 LEVEL)
-use "${DataTemp}U5_Child_23_24.dta", clear
-fre comb_child_caregiver_present
+use "${DataTemp}U5_Child_23_24_part1.dta", clear
+tab comb_child_caregiver_present
+drop if comb_child_comb_name_label == ""
+
+label define comb_child_caregiver_present_x 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "U5 died or is no longer a member of the household" 8 "U5 child no longer falls in the criteria (less than 5 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_child_caregiver_present comb_child_caregiver_present_x
+
+list if comb_child_comb_name_label == ""
+
+//Archi - why the check below is really important? 
+//Archi - It ensures that if at all there are any missing values in comb_child_caregiver_present it is not because question was not mandatory or got skipped or child was elgible but then also questions were not asked. You will also notice that missing values in comb_child_caregiver_present are present only at those places where comb_combchild_status is 0 because before running the loop for new child section in this variable  N_u5child_status ensures that loop is run only for eligible new children i.e. any non U5 children is not aske dthis questions so if status is 0 that means that new person was not eleihible for U5 questions as a resyult there is a missing value 
+br if comb_child_caregiver_present == . & comb_combchild_status != "0"
+//Archi- there are 0 value sin the command above so we are safe to go
+
 //dropping cases where survey was done already conducted, U5 child has permanently left or value is missing
-drop if comb_child_caregiver_present == . | comb_child_caregiver_present == 2 | comb_child_caregiver_present == 1
+drop if comb_child_caregiver_present == 2 | comb_child_caregiver_present == 1 | comb_child_caregiver_present == -77 | comb_child_caregiver_present == 7 | comb_child_caregiver_present == 8 | comb_child_caregiver_present == .
 
 duplicates list unique_id
-isid unique_id
+*isid unique_id
 
 * Akito to Archi: This data is already wide for me: Why are we making this reshaped? It seems you have 2nd child (Is this because you have more updated data?)
 *Archi to Akito: This  is not wide. Discuss more with Akito
@@ -311,13 +325,35 @@ foreach var of varlist `r(varlist)'{
 gen num_`var' = 1 if `var' != ""
 }
 
-forvalues i = 1/4{
+forvalues i = 1/6{
 cap rename num_comb_child_comb_name_label`i' num_child_comb`i'
 }
 
 
 egen total_U5_Child_comb = rowtotal(num_child_comb*)
 drop temp_group
+
+//merging it with endline XXX data to check if missing values in child availability is coming only because that HH was locked 
+preserve
+use "${DataPre}1_8_Endline_XXX.dta", clear
+
+*Assigned to Archi- Drop duplicates: DONE 
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+br unique_id R_E_key R_E_enum_name R_E_r_cen_a1_resp_name R_E_resp_available if dup_HHID > 0
+
+keep unique_id R_E_resp_available R_E_instruction
+
+save "${DataTemp}Endline_XXX_data_for_merge.dta", replace 
+
+restore
+
+merge 1:1 unique_id using "${DataTemp}Endline_XXX_data_for_merge.dta"
+
+keep if _merge == 3
+drop _merge
 
 //creating preload
 export excel using "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx" , sheet("Sheet1", replace) firstrow(variables) cell(A1) 
@@ -344,7 +380,7 @@ sort R_Cen_village_str
 
 //AG: Now it is not showing any values in label 2 ? How come? (investigate more)
 
-export excel ID R_E_enum_name_label R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1  using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_E_enum_name_label R_Cen_district_name R_Cen_block_name R_Cen_gp_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_address R_Cen_a10_hhhead R_Cen_a10_hhhead_gender R_Cen_a11_oldmale_name comb_child_comb_name_label1 comb_child_comb_caregiver_label1 comb_child_residence1 comb_child_comb_name_label2 comb_child_comb_caregiver_label2 comb_child_residence2   using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_U5_level.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 /***************************************************************
@@ -372,6 +408,7 @@ drop if comb_resp_avail_comb == . | comb_resp_avail_comb == 2 | comb_resp_avail_
 bys unique_id: gen Num=_n
 duplicates list unique_id
 
+drop if comb_name_comb_woman_earlier == ""
 
 //keeping only relevant vars 
 keep comb_resp_avail_comb comb_resp_avail_comb_oth comb_name_comb_woman_earlier unique_id Num R_E_enum_name_label
@@ -493,11 +530,12 @@ import excel "${DataPre}Endline_Revisit_Preload_Main_resp_level.xlsx", sheet("Sh
 keep unique_id R_E_enum_name_label R_Cen_a1_resp_name WASH_applicable R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark
 isid unique_id
 list if R_E_enum_name_label == ""
+list if unique_id == ""
 save "${DataPre}stata_Endline_revisit_main_resp.dta", replace
 
 //U5 preload
 import excel "${DataPre}Endline_Revisit_Preload_U5_Child_level.xlsx", sheet("Sheet1") firstrow clear
-keep unique_id R_E_enum_name_label comb_child_comb_name_label1 comb_child_caregiver_present1 comb_child_caregiver_name1 comb_child_residence1 comb_child_comb_caregiver_label1 total_U5_Child_comb R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark
+keep unique_id R_E_enum_name_label comb_child_comb_name_label* comb_child_caregiver_present* comb_child_caregiver_name* comb_child_residence* comb_child_comb_caregiver_label* total_U5_Child_comb R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark
 isid unique_id
 list if R_E_enum_name_label == ""
 save "${DataPre}stata_Endline_revisit_U5_child.dta", replace
@@ -513,14 +551,28 @@ gen match_CBW_U5_child = ""
 replace match_CBW_U5_child = "CBW and U5" if _merge == 3
 replace match_CBW_U5_child = "only U5" if _merge == 2
 replace match_CBW_U5_child = "only CBW" if _merge == 1
-drop _merge
+*drop _merge
+rename _merge CBW_U5_merge
 merge 1:1 unique_id using "${DataPre}stata_Endline_revisit_main_resp.dta"
 gen match_CBW_main = ""
-replace match_CBW_main = "both" if _merge == 3
+replace match_CBW_main = "CBW and Main" if _merge == 3
 replace match_CBW_main = "Only main" if _merge == 2
 replace match_CBW_main = "Only CBW" if _merge == 1
-replace match_CBW_main = "CBW and U5" if match_CBW_U5_child == "CBW and U5" & _merge == 1
-replace match_CBW_main = "Only U5" if match_CBW_U5_child == "only U5" & _merge == 1
+rename _merge CBW_Main_merge
+
+
+*** merge type 1
+replace match_CBW_main = "CBW and U5" if match_CBW_U5_child == "CBW and U5" & CBW_Main_merge == 1
+replace match_CBW_main = "Only U5" if match_CBW_U5_child == "only U5" & CBW_Main_merge == 1
+replace match_CBW_main = "Only CBW" if match_CBW_U5_child == "only CBW" & CBW_Main_merge == 1
+
+***merge type 3 
+replace match_CBW_main = "CBW U5 Main" if match_CBW_U5_child == "CBW and U5" & CBW_Main_merge == 3
+replace match_CBW_main = "CBW Main" if match_CBW_U5_child == "only CBW" & CBW_Main_merge == 3
+replace match_CBW_main = "U5 Main" if match_CBW_U5_child == "only U5" & CBW_Main_merge == 3
+
+
+
 keep unique_id R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_E_enum_name_label R_Cen_a1_resp_name comb_name_CBW* comb_name_CBW* comb_name_CBW* total_CBW_comb comb_child_comb_name_label* total_U5_Child_comb WASH_applicable match_CBW_U5_child match_CBW_main
 
 forvalues i= 1/5{
@@ -535,15 +587,15 @@ gen Do_child_section = ""
 gen Do_woman_section = ""
 gen Do_main_resp_section = ""
 
-replace Do_child_section = "Yes" if match_CBW_U5_child == "CBW and U5" | match_CBW_U5_child == "only U5" | match_CBW_main == "CBW and U5" | match_CBW_main == "Only U5"
+replace Do_child_section = "Yes" if match_CBW_U5_child == "CBW and U5" | match_CBW_U5_child == "only U5" | match_CBW_main == "CBW and U5" | match_CBW_main == "Only U5" | match_CBW_main == "U5 Main"
 
 replace Do_child_section = "No" if Do_child_section == ""
 
-replace Do_woman_section = "Yes" if match_CBW_U5_child == "CBW and U5" | match_CBW_U5_child == "Only CBW" | match_CBW_main == "CBW and U5" | match_CBW_main == "Only CBW"
+replace Do_woman_section = "Yes" if match_CBW_U5_child == "CBW and U5" | match_CBW_U5_child == "Only CBW" | match_CBW_main == "CBW and U5" | match_CBW_main == "Only CBW" | match_CBW_main == "CBW Main"
 
 replace Do_woman_section = "No" if Do_woman_section == ""
 
-replace Do_main_resp_section = "Yes" if  match_CBW_main == "Only main" | match_CBW_main == "both"
+replace Do_main_resp_section = "Yes" if  match_CBW_main == "Only main" | match_CBW_main == "CBW Main" | match_CBW_main == "U5 Main"
 
 replace Do_main_resp_section = "No" if Do_main_resp_section == ""
 
@@ -597,10 +649,11 @@ label variable Woman_name3 "Woman_name3"
 label variable Woman_name4 "Woman_name4"
 label variable total_CBW_comb  "Total CBW re-visit"
 label variable Child_name1  "Child_name1"
+label variable Child_name2  "Child_name2"
 label variable total_U5_Child_comb  "Total U5 re-visit"
 
 
-export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_cen_resp_label R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark  R_Cen_a1_resp_name R_E_cen_resp_label R_E_enum_name_label Woman_name1 Woman_name2 Woman_name3 Woman_name4 total_CBW_comb Child_name1 Child_name2 total_U5_Child_comb Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main using "${DataPre}Endline_Revisit_common_IDs.xlsx" , sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 isid unique_id
 
@@ -736,20 +789,44 @@ PRELOAD FOR NEW MEMBERS TO BE DISPLAYED AS A DROPDOWN
 
 //The dataset below has infor for all new members from endline census
 
+cap program drop key_creation
+program define   key_creation
+
+	split  key, p("/" "[" "]")
+	rename key key_original
+	rename key1 key
+	
+end
+
+cap program drop prefix_rename
+program define   prefix_rename
+
+	//Renaming vars with prefix R_E
+	foreach x of var * {
+	rename `x' R_E_`x'
+	}	
+
+end
+
+
 use "${DataTemp}Requested_long_backcheck1.dta", clear
 
 rename key R_E_key
 
 //merging it with endline census dataset 
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+*merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+
+//to continue
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
 
 
+drop if comb_name_comb_woman_earlier == ""
+drop if comb_resp_avail_comb == .
 
 //firstly the preload for only  child bearing women 
 
 keep comb_name_comb_woman_earlier unique_id comb_hhmember_age
 
-drop if comb_name_comb_woman_earlier == ""
 
 //we have to make sure that women that have prefix 111- in their names are not repeated in the preload list because their names are alreday in census list 
 split comb_name_comb_woman_earlier, generate(common_cbw_names) parse("111")
@@ -777,20 +854,19 @@ export excel using "${DataPre}Endline_Revisit_new_CBW.xlsx" , sheet("Sheet1", re
 exporting all the new fam names 
 
 ********************************************************/
-do "${github}1_8_A_Endline_cleaning_HFC_Data creation.do"
 use "${DataTemp}Requested_long_backcheck1.dta", clear
 
 rename key R_E_key
 
 //merging it with endline census dataset 
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
 
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
 
 //firstly the preload for all members 
+drop if comb_hhmember_name == ""
 
 keep comb_hhmember_name comb_hhmember_gender comb_hhmember_age unique_id 
 
-drop if comb_hhmember_name == ""
 
 //we have to make sure that women that have prefix 111- in their names are not repeated in the preload list because their names are alreday in census list 
 split comb_hhmember_name, generate(common_names) parse("111")
@@ -883,7 +959,8 @@ export excel unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_villa
 /***************************************************************CHECKING IF ALL IDs are there which JPAL tracker has
 ***************************************************************/
 
-import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Supervisor_Endline_Revisit_Trac") firstrow clear
+
+import excel "${DataTemp}SDWCH End-line Survey details productivity Tracker(Supervisiors).xlsx", sheet("Supervisor_Endline_House lock_T") firstrow clear
 
 keep UniqueID
 
@@ -899,4 +976,109 @@ merge 1:1 UniqueID using "${DataTemp}excel_Endline_JPAL_revisit_IDs.dta"
 
 	
 export excel UniqueID Endline_Enum_name Blockname VillageName Hamletname Saahiname Landmark BaselineRespondentname _merge using "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx" if _merge != 3, sheet("IDs no match jpal", replace) firstrow(varlabels) cell(A1) 
+
+
+/***************************************************************COMPARING OLD VERSION OF COMMON IDs sheet with new one 
+***************************************************************/
+
+import excel "${DataTemp}Endline_Revisit_common_IDs_old_version.xlsx", sheet("Sheet1") firstrow clear
+
+keep UniqueID 
+*Woman_name1 Woman_name2 Woman_name3 Woman_name4 TotalCBWrevisit Child_name1 TotalU5revisit
+save "${DataTemp}stata_endline_common_IDs_old_version.dta", replace
+
+
+import excel "${DataPre}Endline_Revisit_common_IDs.xlsx", sheet("Sheet1") firstrow clear
+
+merge 1:1 UniqueID using "${DataTemp}stata_endline_common_IDs_old_version.dta"
+
+isid UniqueID
+
+
+gen match = ""
+
+replace match = "matched" if _merge == 3
+replace match = "new ID" if _merge == 1
+
+save "${DataTemp}stata_endline_common_IDs_old_new_match.dta", replace
+
+
+/***************************************************************COMPARING women and children that have happened because of old version of common IDs 
+***************************************************************/
+
+
+import excel "${DataTemp}Endline_Revisit_common_IDs_old_version.xlsx", sheet("Sheet1") firstrow clear
+
+ds `r(varlist)'
+foreach var of varlist `r(varlist)'{
+rename `var' O_`var'
+}
+
+rename O_UniqueID  UniqueID 
+save "${DataTemp}stata_endline_common_IDs_old_version.dta", replace
+
+
+import excel "${DataPre}Endline_Revisit_common_IDs.xlsx", sheet("Sheet1") firstrow clear
+
+merge 1:1 UniqueID using "${DataTemp}stata_endline_common_IDs_old_version.dta"
+
+
+gen mismatch_CBW  = 1 if O_TotalCBWrevisit != TotalCBWrevisit
+
+gen mismatch_U5  = 1 if O_TotalU5revisit != TotalU5revisit
+
+gen mismatch_Main = 1 if WASH_applicable !=  O_WASH_applicable
+
+gen match = ""
+replace match = "matched" if _merge == 3
+replace match = "new ID" if _merge == 1
+
+
+forvalues i = 1/2{
+cap gen mismatch_U5_`i' = 1 if Child_name`i' != O_Child_name`i'
+}
+br Child_name1 Child_name2 TotalU5revisit O_Child_name1  O_TotalU5revisit mismatch_U5 mismatch_U5_1 if mismatch_U5 == 1
+
+//there is no mismatch in women dataset 
+forvalues i = 1/4{
+ gen mismatch_CBW_`i' = 1 if O_Woman_name`i' != Woman_name`i'
+}
+
+isid UniqueID
+
+rename O_Child_name1 Old_Child_name1
+rename O_TotalU5revisit Old_total_U5_revisit
+
+//Changing labels 
+	label variable UniqueID "Unique ID"
+	label variable VillageName "Village Name"
+	label variable Blockname "Block name"
+	label variable Hamletname "Hamlet name"
+	label variable Saahiname "Saahi name"
+	label variable R_Cen_landmark "Landmark"
+	label variable Baselinerespname "Baseline Respondent name"
+	label variable Endlinerespname "Baseline Respondent name"
+	label variable match "match_ID"
+	label variable Old_Child_name1 "Old child name"
+	label variable Old_total_U5_revisit "old total U5 revisit"
+
+	
+sort VillageName 
+
+export excel UniqueID Blockname VillageName Hamletname Saahiname R_Cen_landmark Baselinerespname Endlinerespname Endline_Enum_name Woman_name1 Woman_name2 Woman_name3 Woman_name4 TotalCBWrevisit Child_name1 Child_name2 TotalU5revisit Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main Old_Child_name1 Old_total_U5_revisit mismatch_U5 match using "${DataPre}Endline_Revisit_common_IDs_new_version.xlsx", sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+
+
+/***************************************************************COMPARING new and old HH lock tracking sheet
+***************************************************************/
+
+import excel "${DataTemp}Supervisor_Endline_Revisit_Tracker_checking_HH_level_old_ver.xlsx", sheet("Sheet1") firstrow clear
+
+keep UniqueID
+
+save "${DataTemp}stata_endline_HH_lock_old_match.dta", replace
+
+import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx", sheet("Sheet1") firstrow clear
+
+merge 1:1 UniqueID using "${DataTemp}stata_endline_HH_lock_old_match.dta"
+
 
