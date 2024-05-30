@@ -142,8 +142,6 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 
 	cd "${DataRaw}"
 	
-END 	
-
 /*------------------------------------------------------------------------------
 	3 Initial settings 
 ------------------------------------------------------------------------------*/
@@ -175,6 +173,8 @@ local string pregwoman
 */ 
 	
 cd "${DataRaw}"
+
+END 	
 
 * (0) First apply SurveyCTO code cleaning do file
 do "${Do_pilot}0_Preparation_V2.do" // Long form data of endline census datasets

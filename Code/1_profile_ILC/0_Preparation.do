@@ -79,8 +79,9 @@ save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", replace
 
 * Village level info
 import excel using "${DataOther}India ILC_Pilot_Rayagada Village Tracking.xlsx", first clear sheet("Selected villages")   
+keep if WhetherSelectedBackuporRejec=="Selected"
 keep HHchoicecriteria village_IDinternal
-drop if village_IDinternal==""
+* drop if village_IDinternal==""
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear

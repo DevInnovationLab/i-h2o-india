@@ -107,7 +107,6 @@ export excel unique_id R_Cen_a18_water_treat_oth English_translation using "${pi
  firstrow(var) cell(A1) sheetreplace
 restore
 
-
 levelsof R_Cen_a18_jjm_drinking
 	foreach value in `r(levels)' {
 		gen     R_Cen_a18_jjm_drink_`value'=0
@@ -115,8 +114,6 @@ levelsof R_Cen_a18_jjm_drinking
 		replace R_Cen_a18_jjm_drink_`value'=. if R_Cen_a18_jjm_drinking==.
 		label var R_Cen_a18_jjm_drink_`value' ": label (R_Cen_a18_jjm_drink) `value"
 	}
-	
-
 	
 * Replacing missing value
 gen     C_Cen_a18_jjm_drinking=R_Cen_a18_jjm_drinking
@@ -138,7 +135,6 @@ forvalues i = 1/17 {
 
 }
 egen      C_total_U5child_hh = rowtotal(C_U5child_*)
-
 
 ************
 * Labeling *
@@ -187,7 +183,7 @@ destring R_Cen_a12_ws_prim, replace
 	label var R_Cen_a12_ws_prim_3 "GP/Other community standpipe"
 	label var R_Cen_a12_ws_prim_4 "Manual handpump"
 	label var R_Cen_a12_ws_prim_5 "Covered dug well"
-	label var R_Cen_a12_ws_prim_6 "Uncovered dug well"
+	* label var R_Cen_a12_ws_prim_6 "Uncovered dug well"
 	label var R_Cen_a12_ws_prim_7 "Surface water"
 	label var R_Cen_a12_ws_prim_8 "Private surface well" 
 	label var R_Cen_a12_ws_prim_77 "Other"
@@ -416,8 +412,21 @@ program define   start_from_clean_file_Census
   use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
   drop if R_Cen_village_name==88888
   *drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601
+  
+  * Redandant info
+  drop R_FU_r_cen_village_name_str
 
   label var R_Cen_a2_hhmember_count "Household size" 
+  rename R_Cen_village_name village
+  merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode) keep(1 3)
+  
+  * Final data description
+   unique village
+   unique unique_id
+   unique village if Treat_V==0
+   unique village if Treat_V==1
+   unique village if Treat_V==.
+
   
 end
 
@@ -485,14 +494,15 @@ cap program drop start_from_clean_file_ChildLevel
 program define   start_from_clean_file_ChildLevel
   * Open clean file
 start_from_clean_file_Census  
-keep R_Cen_a29_child_diarr*  unique_id* C_total_U5child_hh Treat_V  R_Cen_block_name R_Cen_village_name R_Cen_village_str R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*
+keep R_Cen_a29_child_diarr* unique_id* C_total_U5child_hh ///
+     Treat_V R_Cen_block_name R_Cen_village_str village Village Panchatvillage BlockCode ///
+	 R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* 
 reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ ///
          R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
 * Drop the case where there is no children
 drop if R_Cen_a29_child_diarr_day_==. & R_Cen_a29_child_diarr_week_==. & R_Cen_a29_child_diarr_2week_==.
 * Data quality: Michelle (sometimes they fill the child child diarrhea info although C_total_U5child_hh=0?)
 drop if C_total_U5child_hh==0
-
 
 * Creating diarrhea vars
 gen     C_diarrhea_prev_child_1day=0
@@ -530,6 +540,10 @@ label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)"
 label var C_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
 label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
 label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
+
+   unique village
+   unique unique_id
+
 
 end
 

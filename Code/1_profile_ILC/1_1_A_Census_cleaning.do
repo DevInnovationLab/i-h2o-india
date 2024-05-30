@@ -328,6 +328,10 @@ drop if _merge==1
 	gen month_day= day_of_month + " " + month + " " + "2023"
 */
 
+* Akito: If we agree, we will drop those two villages from the original data
+* To do: Archi to add description
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
