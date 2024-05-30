@@ -111,10 +111,11 @@ append using "${DataTemp}temp.dta"
 save "${DataTemp}Mortality_19_20.dta", replace
 
 /* ---------------------------------------------------------------------------
-* ID 21, 22, 23 and 24: Morbidity for children U5
+* ID 21, 22, 23 and 24: List of U5 and Morbidity for U5 children
  ---------------------------------------------------------------------------*/
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
+* Akito to Archi: Which age variable to use?
 * Questions to Archi
 tab cen_child_caregiver_present
 tab cen_child_act_age
@@ -134,6 +135,7 @@ gen Cen_Type=4
 save "${DataTemp}temp.dta", replace
 
 * ID 24
+* Akito to Archi: Add age
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
 key_creation
 foreach var of varlist n_* {
@@ -254,7 +256,8 @@ save "${DataTemp}Medical_expenditure_person.dta", replace
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
 key_creation 
 keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
-      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth
+      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth ///
+	  n_dob_date n_dob_month n_dob_year
 // List all variables starting with "n_"
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -285,8 +288,7 @@ gen Cen_Type=2
 * N=141
 unique key key3
 save "${DataTemp}Requested_long_backcheck1.dta", replace
-
-STOP 
+ 
 * ID 25
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 key_creation 
