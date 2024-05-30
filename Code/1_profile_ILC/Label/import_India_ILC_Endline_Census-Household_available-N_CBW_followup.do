@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "Endline Census-Household_available-N_CBW_followup" (ID: India_ILC_Endline_Census) data.
 *
-*	Inputs:  "Endline Census-Household_available-N_CBW_followup.csv"
-*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-N_CBW_followup.dta"
+*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup.csv"
+*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup.dta"
 *
-*	Output by SurveyCTO April 23, 2024 3:03 PM.
+*	Output by SurveyCTO May 29, 2024 7:48 AM.
 
 * initialize Stata
 clear all
@@ -21,13 +21,14 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "Endline Census-Household_available-N_CBW_followup.csv"
-local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-N_CBW_followup.dta"
-local corrfile "Endline Census-Household_available-N_CBW_followup_corrections.csv"
+local csvfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup.csv"
+local dtafile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup.dta"
+local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup_corrections.csv"
 local note_fields1 ""
-local text_fields1 "n_cbw_ind n_cen_women_status n_name_cbw_woman_earlier n_no_consent_reason n_no_consent_oth n_no_consent_comment n_preg_hus n_preg_current_village_oth n_preg_rch_id n_preg_rch_id_inc"
-local text_fields2 "n_anti_preg_purpose n_anti_preg_purpose_oth n_num_living_null n_num_notliving_null n_num_stillborn_null n_num_less24_null n_num_more24_null n_child_died_lessmore_24_num n_child_died_u5_count"
-local text_fields3 "n_child_died_repeat_count n_med_symp_cbw n_med_symp_oth_cbw n_med_where_cbw n_med_where_oth_cbw n_med_out_home_cbw n_med_out_oth_cbw n_prvdrs_exp_loop_cbw_count n_med_work_who_cbw"
+local text_fields1 "n_cbw_ind n_cen_women_status n_name_cbw_woman_earlier n_resp_avail_cbw_oth n_no_consent_reason n_no_consent_oth n_no_consent_comment n_preg_hus n_preg_current_village_oth n_preg_rch_id"
+local text_fields2 "n_preg_rch_id_inc n_anti_preg_purpose n_anti_preg_purpose_oth n_num_living_null n_num_notliving_null n_num_stillborn_null n_num_less24_null n_num_more24_null n_child_died_lessmore_24_num"
+local text_fields3 "n_child_died_u5_count n_child_died_repeat_count n_med_symp_cbw n_med_symp_oth_cbw n_med_where_cbw n_med_where_oth_cbw n_med_out_home_cbw n_med_out_oth_cbw n_prvdrs_exp_loop_cbw_count"
+local text_fields4 "n_med_work_who_cbw"
 local date_fields1 ""
 local datetime_fields1 ""
 
@@ -121,8 +122,11 @@ if _N>0 {
 
 	label variable n_resp_avail_cbw "C2) Did you find \${N_name_CBW_woman_earlier} to interview?"
 	note n_resp_avail_cbw: "C2) Did you find \${N_name_CBW_woman_earlier} to interview?"
-	label define n_resp_avail_cbw 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 9 "Respondent is a visitor and is not available right now"
+	label define n_resp_avail_cbw 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 9 "Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other, please specify"
 	label values n_resp_avail_cbw n_resp_avail_cbw
+
+	label variable n_resp_avail_cbw_oth "B1.1) Please specify other"
+	note n_resp_avail_cbw_oth: "B1.1) Please specify other"
 
 	label variable n_cbw_consent "C3)Do I have your permission to proceed with the interview?"
 	note n_cbw_consent: "C3)Do I have your permission to proceed with the interview?"
@@ -426,9 +430,14 @@ if _N>0 {
 	label define n_translator 1 "Yes" 0 "No"
 	label values n_translator n_translator
 
+	label variable n_hh_prsnt "Was there any Household member (other than the \${N_name_CBW_woman_earlier}) pre"
+	note n_hh_prsnt: "Was there any Household member (other than the \${N_name_CBW_woman_earlier}) present during the survey?"
+	label define n_hh_prsnt 1 "Yes" 0 "No"
+	label values n_hh_prsnt n_hh_prsnt
 
 
-    drop setofn_prvdrs_exp_loop_cbw
+
+
 
 
 	* append old, previously-imported data (if any)
@@ -468,7 +477,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  Endline Census-Household_available-N_CBW_followup_corrections.csv
+*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_CBW_followup_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 

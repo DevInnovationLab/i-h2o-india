@@ -1,8 +1,8 @@
-*=========================================================================* 
+W*=========================================================================* 
 * Project information at:https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
 ****** Purpose: 
-****** Created by: DIL
+****** Created by: ARCHI
 ****** Used by:  DIL
 ****** Input data : 
 ****** Output data : 
@@ -20,7 +20,6 @@ do "${github}1_8_A_Endline_cleaning_v2.do"
 
 * CREATING PRELOAD FOR RE-VISIT (HH LEVEL)
 
-use "${DataPre}1_8_Endline_XXX.dta", clear
 br R_E_submissiondate
 
 *Assigned to Archi- Drop duplicates: DONE 
@@ -1081,4 +1080,138 @@ import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx"
 
 merge 1:1 UniqueID using "${DataTemp}stata_endline_HH_lock_old_match.dta"
 
+
+
+
+
+
+
+/***************************************************************MATCHING WOMEN  AND U5 FROM BASELINE CENSUS TO SEE HOW MANY ARE DONE 
+***************************************************************/
+
+import excel "${DataPre}Endline_census_eligiblewomen_preload.xlsx", sheet("Sheet1") firstrow clear
+
+
+drop R_Cen_a7_pregnant_*
+ds `r(varlist)' 
+foreach var of varlist `r(varlist)'{
+tostring `var', replace
+}
+
+
+
+//reshape long R_Cen_eligible_women_pre_, i(unique_id) j(Women)
+
+//sort R_Cen_eligible_women_pre_
+
+save "${DataTemp}reshaped_long_baseline_CBW.dta", replace
+
+
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
+
+tab comb_resp_avail_comb
+tab comb_resp_avail_comb,m
+label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_resp_avail_comb comb_resp_avail_comb_ex
+
+//droppinh cases that won't be re-visited 
+* Akito to Archi: Most of the case is missing. Can you describe what those are? They are simply data from non-main respondent?
+
+tab comb_resp_avail_comb
+
+
+keep unique_id comb_name_comb_woman_earlier comb_name_comb_preg comb_resp_avail_comb comb_resp_avail_comb_oth comb_preg_index comb_cen_women_status
+
+bys unique_id: gen Num=_n
+
+reshape wide comb_name_comb_woman_earlier comb_name_comb_preg comb_resp_avail_comb comb_resp_avail_comb_oth comb_preg_index comb_cen_women_status, i(unique_id) j(Num)
+
+merge m:m unique_id using "${DataTemp}reshaped_long_baseline_CBW.dta"
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE DATA TO SEE IF ANY FORMS HAVE BEEN LEFT FROM GETTING SUBMITTED
+***************************************************************/
+
+use "${DataPre}1_8_Endline_XXX.dta", clear
+
+isid unique_id
+
+save "${DataTemp}1_8_Endline_XXX_for_merge.dta", replace
+
+
+clear
+cap program drop start_from_clean_file_Population
+program define   start_from_clean_file_Population
+  * Open clean file
+use  "${DataPre}1_1_Census_cleaned.dta", clear
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+gen     C_Census=1
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
+recode Merge_C_F 1=0 3=1
+
+*drop if  R_Cen_village_name==30501
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var C_HH_not_available "Respondent not available"
+
+end
+
+
+//Remove HHIDs with differences between census and HH survey
+start_from_clean_file_Population
+//why do we drop this?
+*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+
+tempfile new
+save `new', replace
+
+//keeping only screend cases 
+keep if C_Screened == 1
+drop if R_Cen_a1_resp_name == "" 
+
+keep unique_id unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_a1_resp_name
+
+merge 1:1 unique_id using "${DataTemp}1_8_Endline_XXX_for_merge.dta", keepusing(unique_id)
+
+
+br unique_id unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_a1_resp_name if _merge != 3
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE HH LOCK DATA WITH PRELOAD FOR HH LOCK CASES
+***************************************************************/
+
+use "${DataPre}1_8_Endline_XXX.dta", clear
+
+isid unique_id
+
+keep unique_id R_E_resp_available R_E_enum_name_label
+
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+
+rename ID UniqueID
+
+save "${DataTemp}1_8_Endline_XXX_for_merge.dta", replace
+
+
+import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx", sheet("Sheet1") firstrow clear
+
+
+merge 1:1 UniqueID using "C:\Users\Archi Gupta\Box\Data\99_temp\1_8_Endline_XXX_for_merge.dta"
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE REVISIT DATA WITH PRELOAD TO SEE HOW MANY ENTRIES HAVE COME 
+***************************************************************/
+clear
+set maxvar 30000
+
+import delimited "${DataRaw}Endline Census Re-visit_WIDE.csv", bindquote(strict) clear
 

@@ -393,6 +393,8 @@ foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 ce
 merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep(1 3) nogen
 
 
+
+
 /*******************************************************************
 
 #Dropping duplicates 
@@ -421,6 +423,173 @@ drop if R_E_key == "uuid:77e94cac-755c-4bc1-a852-8bd4bb859ae3" & unique_id == "4
 
 //one was a practise entry that is why we dropped it 
 drop if R_E_key == "uuid:54261fb3-0798-4528-9e85-3af458fdbad9" & unique_id == "20201108018"
+
+//this ID was attempted later on
+drop if R_E_key == "uuid:cc7d0330-7241-4bdd-a46b-97e16ed56e60" & unique_id == "10101113031"
+
+//this ID was attempted later on
+drop if R_E_key == "uuid:611e4cfa-aef2-4bfd-a40e-6ee647e317d4" & unique_id == "20201108047"
+
+//this ID was attempted later on
+drop if R_E_key == "uuid:4967324b-4832-42ba-8d5b-e4a57876dfbe" & unique_id == "20201110016"
+
+//all the IDs below were given as re-visits as these are house lock IDs so surveyors were asked to submit attempted HH lock IDs on the main endline census form that is why those IDs that were later found I have dropped their previous date entry that was marked as unavailable and for HH lock IDs that are still locked I have dropped IDs with an earlier date 
+drop if R_E_key == "uuid:4c7fd5ae-0a6b-4c95-a40a-d6d8376ff1eb" & unique_id == "20201113045"
+
+drop if R_E_key == "uuid:52af03bb-2287-4a07-a4b3-59867ba792a2" & unique_id == "20201113081"
+
+drop if R_E_key == "uuid:ee472a73-3548-4e04-a89d-91fac2ad60ee" & unique_id == "30202109011"
+
+drop if R_E_key == "uuid:78f11df1-c342-479a-a616-87087137624d" & unique_id == "30301119063"
+
+drop if R_E_key == "uuid:ea7326e8-3a8a-49a9-a152-3ee4ab05c803" & unique_id == "30501117040"
+
+drop if R_E_key == "uuid:32bfbced-d7c4-4ef2-98a7-4a67d7e6d478" & unique_id == "30602105059"
+
+drop if R_E_key == "uuid:f94eef7a-0908-4b74-a7d7-6f36fd1c312b" & unique_id == "30701105023"
+
+drop if R_E_key == "uuid:d7b0d915-1d36-43d8-9d6d-8a2962f8d6ad" & unique_id == "30701112022"
+
+drop if R_E_key == "uuid:a9968d3e-2969-4459-8823-3c87eed84057" & unique_id == "40101111026"
+
+drop if R_E_key == "uuid:274cd721-064e-4892-98dc-1e2476cf8c09" & unique_id == "40101111033"
+
+drop if R_E_key == "uuid:67226e44-3dcf-4b7b-a29b-99c5be2285a1" & unique_id == "40202108062"
+
+drop if R_E_key == "uuid:3f0c8021-bec8-4da1-ad86-213379450f98" & unique_id == "40202113009"
+
+drop if R_E_key == "uuid:c7c5f66d-6a2d-400f-842c-526956b02a17" & unique_id == "40301108014"
+
+drop if R_E_key == "uuid:5befa7a4-e547-4f75-bc2c-7d4c1de617a9" & unique_id == "40301108018"
+
+drop if R_E_key == "uuid:1f5a83f4-193b-4a5a-8696-bf9b8c145384" & unique_id == "40301108026"
+
+drop if R_E_key == "uuid:f1ea1ecc-51cd-4749-9013-95c5c5bbb6f4" & unique_id == "40301113002"
+
+drop if R_E_key == "uuid:fdc9757f-5c52-4fcf-9dca-9389dfb84a4b" & unique_id == "40401108066"
+
+drop if R_E_key == "uuid:151ebafd-91a4-4f2a-896f-26ab6a663af0" & unique_id == "40401111028"
+
+drop if R_E_key == "uuid:e500a8b7-879e-49c3-a2c5-6b9d97e56c13" & unique_id == "40401113001"
+
+drop if R_E_key == "uuid:cdc34462-b535-47b7-b777-3bfda2378c05" & unique_id == "50101119016"
+
+drop if R_E_key == "uuid:b04274f3-d920-4c2e-a773-b75263801eef" & unique_id == "50201104008"
+
+drop if R_E_key == "uuid:1c8d5fa5-5bc7-4317-ba2b-e981f139925e" & unique_id == "50201104009"
+
+drop if R_E_key == "uuid:e671b025-fb01-484e-9d1c-dd97de89a5bc" & unique_id == "50201109003"
+
+drop if R_E_key == "uuid:7114b0da-5af1-4000-898f-2d1e58c707a2" & unique_id == "50201109035"
+
+drop if R_E_key == "uuid:899eee2b-efb9-4022-a142-97187c027f80" & unique_id == "50201119022"
+
+drop if R_E_key == "uuid:56feac43-7e90-4f66-91f0-5f0d6cfa6d1c" & unique_id == "50201119042"
+
+drop if R_E_key == "uuid:da5b0b89-ed38-4e22-80c1-3e36f18d94bb" & unique_id == "50201119044"
+
+drop if R_E_key == "uuid:4672d4b8-040d-4397-9bc1-3ce62d9466f3" & unique_id == "50301105005"
+
+drop if R_E_key == "uuid:5bbcc0c5-a6b6-454e-972d-b54408909622" & unique_id == "50301106006"
+
+drop if R_E_key == "uuid:29da7271-93cd-4cda-89d0-008a6cc0ece8" & unique_id == "50301106013"
+
+drop if R_E_key == "uuid:47c1db5e-d49c-4ac8-88e6-ee9f34b8cf57" & unique_id == "50301106014"
+
+drop if R_E_key == "uuid:4f07d6bb-a863-450c-9d20-a4bf7ea5ee2d" & unique_id == "50301106035"
+
+drop if R_E_key == "uuid:7bd7b4e0-994f-4d98-a311-306f38779738" & unique_id == "50301107003"
+
+drop if R_E_key == "uuid:1f6dc4bc-3148-47f4-a66d-a66ce89f54da" & unique_id == "50301107014"
+
+drop if R_E_key == "uuid:33b7c651-d400-4eea-b56b-6b01c4f360bb" & unique_id == "50301107025"
+
+drop if R_E_key == "uuid:caaa46fe-ba0d-4822-aa2f-ea7f080f41e4" & unique_id == "50301117034"
+
+drop if R_E_key == "uuid:972d3059-537c-475d-809a-d198a160d021" & unique_id == "50401106024"
+
+drop if R_E_key == "uuid:555ef21b-a498-47da-9350-f7e455d67c92" & unique_id == "50401106054"
+
+drop if R_E_key == "uuid:e3e37787-7b7c-4072-85e6-267f95d7cacf" & unique_id == "50401107033"
+
+drop if R_E_key == "uuid:22b65692-176f-4586-81ac-04b3de6258c5" & unique_id == "50401107059"
+
+drop if R_E_key == "uuid:54952409-2f3e-4fe9-8f88-78b7c24057ea" & unique_id == "50401107066"
+
+drop if R_E_key == "uuid:d5b10d89-ba3e-4da2-9397-19515333c6d5" & unique_id == "50402106050"
+
+drop if R_E_key == "uuid:daf69f4b-65ed-4934-8495-278dbfe5a324" & unique_id == "50402107010"
+
+drop if R_E_key == "uuid:4ee0dbf4-a7b9-466f-be10-ec409c6aa8b3" & unique_id == "50402107043"
+
+drop if R_E_key == "uuid:a1221224-7ccf-4a77-9537-574298a2f6a3" & unique_id == "50402107049"
+
+drop if R_E_key == "uuid:a8d7ea95-d112-4316-a1a7-36cbed0cce18" & unique_id == "50402117026"
+
+drop if R_E_key == "uuid:9f7a0610-b7ff-4920-ac1d-2cb49c06cd90" & unique_id == "50501104007"
+
+drop if R_E_key == "uuid:5f28da33-eb86-455c-9e4b-5d3297e9e041" & unique_id == "50501104011"
+
+drop if R_E_key == "uuid:52a4d7a5-4121-4ebd-9793-9a49f91890f1" & unique_id == "20101108027"
+
+
+drop if R_E_key == "uuid:cd2002a5-04f7-4655-bd6c-e30f28f2918d" & unique_id == "20201108043"
+
+
+drop if R_E_key == "uuid:587a59e3-ec78-4343-b82d-3da878c2ea4a" & unique_id == "20201113046"
+
+drop if R_E_key == "uuid:154a71f5-8410-4a45-a451-b8d44b5f2015" & unique_id == "30301109002"
+
+drop if R_E_key == "uuid:e37fbb15-5044-4e65-aeba-9382971590bc" & unique_id == "30301119062"
+
+drop if R_E_key == "uuid:e2b0bf67-16af-4e0d-935d-e4566d28dc3b" & unique_id == "30602106023"
+
+drop if R_E_key == "uuid:e3671011-8b5f-4dee-bf09-ab815f14efda" & unique_id == "30602106030"
+
+drop if R_E_key == "uuid:40774fa6-689c-4654-a5dd-23e8664c831d" & unique_id == "30602117014"
+
+drop if R_E_key == "uuid:030d441b-2fbf-47b5-a7db-aabed4650aa9" & unique_id == "30602117025"
+
+drop if R_E_key == "uuid:0a9ec852-7e87-42c8-926b-98186c96a755" & unique_id == "30701112023"
+
+drop if R_E_key == "uuid:5ee5348f-4a96-46db-afc6-bb189028ca35" & unique_id == "40101108003"
+
+drop if R_E_key == "uuid:185719a4-c609-4613-bf1a-527465395310" & unique_id == "40101111024"
+
+drop if R_E_key == "uuid:4e6cbffa-401c-451d-a555-0ed0e0c529e3" & unique_id == "40201110014"
+
+
+drop if R_E_key == "uuid:592cccd7-2e30-4c84-bfa7-071480954469" & unique_id == "40201111005"
+
+drop if R_E_key == "uuid:f5f693ec-8c46-4080-a4b8-f25f4060cd25" & unique_id == "50101104006"
+
+drop if R_E_key == "uuid:a8db3950-3a53-4ed3-965b-717658d02fd9" & unique_id == "50101115003"
+
+drop if R_E_key == "uuid:b2348752-54a4-49f7-a0fa-45b98fe703f3" & unique_id == "50101115006"
+
+drop if R_E_key == "uuid:385f9b49-e64f-4d46-8f3f-1c92edc13f9b" & unique_id == "50101115011"
+
+drop if R_E_key == "uuid:c9a34fdd-d23c-4568-bb37-55795865f0ed" & unique_id == "50401105034"
+
+drop if R_E_key == "uuid:bfc18a3d-b5fb-4ae1-b949-a57d241bbf9c" & unique_id == "50401105039"
+
+drop if R_E_key == "uuid:1afef2c7-32fd-4ee3-bf38-d955c7eaa3ab" & unique_id == "50401106029"
+
+drop if R_E_key == "uuid:4165680b-67b3-4193-aba0-04fb6086deac" & unique_id == "50401107005"
+
+drop if R_E_key == "uuid:ac531f0b-084e-426c-a1e2-917e3d8a213e" & unique_id == "50401107010"
+
+drop if R_E_key == "uuid:08cb3fc2-bab4-47d7-b0d8-edd9b94dcdac" & unique_id == "50501104003"
+
+
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+sort unique_id R_E_submissiondate
+
+br R_E_submissiondate unique_id R_E_key R_E_resp_available R_E_enum_name_label R_E_instruction R_E_r_cen_a1_resp_name if dup_HHID > 0
 
 save "${DataPre}1_8_Endline_XXX.dta", replace
 
