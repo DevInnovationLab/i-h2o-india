@@ -2714,7 +2714,7 @@ total_cl$`Stored - FC Presence` <- total_cl$`Stored - FC Presence`%>%
 
 #Creating summary stats for bar plot
 total_cl_stats <- total_cl%>%
-  group_by(assignment, data_round) %>%
+  group_by(assignment, data_round, village_name) %>%
   summarize(
     "Number of Samples" = n(),
     "Tap - % Positive for Free Chlorine" = round((sum(`Tap - FC Presence` == "1") / n()) * 100,
@@ -2737,6 +2737,8 @@ total_cl_stats <- total_cl%>%
 #Pivoting data and filtering for R3
 total_cl_stats <- total_cl_stats%>%
   filter(data_round == "R3")%>%
+  filter(assignment == "Treatment")%>%
+  filter(village_name != "Karnapadu")%>%
   pivot_longer(cols = c(`Tap - % Positive for Free Chlorine`, `Stored - % Positive for Free Chlorine`), values_to = "% Positive for Free Chlorine", names_to = "Sample_Type")
 
 total_cl_stats$Sample_Type <- total_cl_stats$Sample_Type%>%
@@ -2747,10 +2749,11 @@ total_cl_stats$Sample_Type <- total_cl_stats$Sample_Type%>%
 
 #Creating plot just for R3
 total_cl_r3 <- ggplot(data = total_cl_stats) + 
-  geom_col(aes(x = Sample_Type, y = `% Positive for Free Chlorine`, fill = assignment), position = "dodge") +
+  geom_col(aes(x = Sample_Type, y = `% Positive for Free Chlorine`), position = "dodge") +
   geom_text(aes(x = Sample_Type, y = `% Positive for Free Chlorine`,
                 label = paste0(round(`% Positive for Free Chlorine`, 1), "%"),
                 group = assignment), position = position_dodge(width = 0.9), vjust = -0.5) +
+    facet_wrap(~village_name, ncol = 3)+
     #geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
                       #fill = assignment), position = position_dodge(width = 0.9),
                  #width = 0.25) +
@@ -2759,9 +2762,10 @@ total_cl_r3 <- ggplot(data = total_cl_stats) +
                      limits = c(0, 100),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
-       y = "% Positive for Free Chlorine",
+       y = "% Positive for Free Chlorine (>0.1 mg/L)",
        fill = "Assignment",
-       title = "Positive chlorine samples from JPAL survey round - April 2024"
+       title = "Positive chlorine samples from JPAL survey round - April 2024",
+       caption = "10 households visited per village"
        )+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -3121,7 +3125,7 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
     scale_y_continuous(
-                     limits = c(0, 2.0),
+                     limits = c(0, 1.5),
                      expand = c(0,0))+
     labs(x = "Date", 
        y = "Chlorine Concentration (mg/L)",
@@ -3137,10 +3141,10 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
     #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
      #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
     geom_text(data = filter(mon_wide, village_name == "Asada"), 
-            aes(x = as.Date("2024-04-12"), y = 1.5), 
+            aes(x = as.Date("2024-04-12"), y = 1.08), 
             label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
     geom_text(data = filter(mon_wide, village_name == "Asada"), 
-            aes(x = as.Date("2024-04-18"), y = 1.7), 
+            aes(x = as.Date("2024-04-18"), y = 1.2), 
             label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
   
   print(p1)
