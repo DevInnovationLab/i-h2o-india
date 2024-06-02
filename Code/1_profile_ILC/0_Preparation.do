@@ -85,10 +85,13 @@ keep HHchoicecriteria village_IDinternal
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear
+replace if Village=="Badabangi"
+keep if 
+* Adding HHchoicecriteria 
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta"
+* Adding distance variable
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", nogen
-rename village_IDinternal village
-rename HHchoicecriteria V_Num_HH
+rename (village_IDinternal HHchoicecriteria) (village V_Num_HH)
 destring village, replace
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", replace
 export excel using "${DataPre}Google_map_village.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1) 
