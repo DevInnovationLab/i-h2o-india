@@ -241,10 +241,33 @@ gen      E_HH_not_available=0
 replace E_HH_not_available=1 if R_E_resp_available!=1
 tempfile main
 save `main', replace
-
 replace R_E_village_name_res=R_E_r_cen_village_name_str if R_E_village_name_res==""
-save "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
+rename R_E_r_cen_village_name_str R_E_village_name_str
+drop R_E_village_name_res
+gen village=.
+replace village=10101 if R_E_village_name_str=="Asada"
+replace village=10201 if R_E_village_name_str=="Sanagortha"
+replace village=20101 if R_E_village_name_str=="Badabangi"
+replace village=20201 if R_E_village_name_str=="Jaltar"
+replace village=30202 if R_E_village_name_str=="BK Padar"
+replace village=30301 if R_E_village_name_str=="Tandipur"
+replace village=30501 if R_E_village_name_str=="Bhujbal"
+replace village=30602 if R_E_village_name_str=="Mukundpur"
+replace village=30701 if R_E_village_name_str=="Gopi Kankubadi"
+replace village=40101 if R_E_village_name_str=="Karnapadu"
+replace village=40201 if R_E_village_name_str=="Bichikote"
+replace village=40202 if R_E_village_name_str=="Gudiabandh"
+replace village=40301 if R_E_village_name_str=="Mariguda"
+replace village=40401 if R_E_village_name_str=="Naira"
+* replace village=30101 if R_E_village_name_str=="Badaalubadi"
+replace village=50101 if R_E_village_name_str=="Dangalodi"
+replace village=50201 if R_E_village_name_str=="Barijhola"
+replace village=50301 if R_E_village_name_str=="Karlakana"
+replace village=50401 if R_E_village_name_str=="Birnarayanpur"
+replace village=50402 if R_E_village_name_str=="Kuljing"
+replace village=50501 if R_E_village_name_str=="Nathma"
 
+save "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
 savesome using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta" if R_E_consent==1, replace
 
 /*

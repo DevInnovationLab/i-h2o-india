@@ -1,15 +1,60 @@
-*=========================================================================* 
-* Project information at:https://github.com/DevInnovationLab/i-h2o-india/
+/*=========================================================================
+Project information at: https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
-****** Purpose: 
-****** Created by: DIL
-****** Used by:  DIL
-****** Input data : 
-****** Output data : 
+****** Purpose: To assess the impact of clean drinking water initiatives.
+****** Created by: Development Innovation Lab (DIL)
+****** Used by: Development Innovation Lab (DIL)
+****** Input data:
+	•	Medical_expenditure_person.dta
+	•	1_8_Endline/1_8_Endline_Census_cleaned_consented.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta
+	•	1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_med_seek_lp_all.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta
+	•	1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_all.dta
+	•	1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_CBW-N_tests_exp_loop_CBW.dta
+	•	1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_U5-N_tests_exp_loop_U5.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.dta
+	•	1_8_Endline/1_8_Endline_Census-N_prvdrs_notnull_all-N_tests_exp_loop_all.dta
+	•	1_8_Endline/1_8_Endline_Census-N_u5child_start_eligible-N_caregiver_present-N_sought_med_care_U5-N_med_visits_not0_U5-N_prvdrs_exp_loop_U5.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_start_u5child_nonull-Cen_caregiver_present-Cen_sought_med_care_U5-Cen_med_visits_not0_U5-Cen_prvdrs_exp_loop_U5.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_sought_med_care_CBW-Cen_med_visits_not0_CBW-Cen_prvdrs_exp_loop_CBW.dta
+	•	1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_sought_med_care_CBW-N_med_visits_not0_CBW-N_prvdrs_exp_loop_CBW.dta
+	•	1_8_Endline/1_8_Endline_Census-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.dta
+	•	1_8_Endline/1_8_Endline_Census-N_med_notnull_all-N_prvidr_exp_lp_all.dta
+	•	India ILC_Pilot_Rayagada Village Tracking_clean.dta
+	•	1_8_Endline/1_8_Endline_Census_cleaned_consented.dta
+	
+****** Output data:
+	•	Medical_expenditure_person_HH.dta
+	•	Mortality_19_20.dta
+	•	U5_Child_23_24_part1.dta : Check with Archi. Is this used for pre-loading?
+	•	U5_Child_23_24.dta
+	•	Morbidity_23_24.dta
+	•	Medical_expenditure_person.dta
+	•	Endline_Long_Indiv_analysis.dta
+	•	Medical_expenditure_person_case.dta
+	•	Medical_expenditure_person_clean.dta
+	•	Medical_expenditure_person_case_clean.dta
 ****** Language: English
-*=========================================================================*
-** In this do file: 
-	* This do file exports..... Cleaned data for Endline survey
+****** Date: [Insert Date]
+****** Version: 1.0
+
+=========================================================================
+** In this do file: This do file exports cleaned data for the Endline survey.
+Steps:
+	1.	Import raw survey data.
+	2.	Clean and preprocess the data.
+	3.	Generate summary statistics.
+	4.	Export the cleaned data for further analysis.
+=========================================================================
+*/
 
 clear all               
 set seed 758235657 // Just in case
@@ -115,13 +160,12 @@ save "${DataTemp}Mortality_19_20.dta", replace
  ---------------------------------------------------------------------------*/
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
-* Akito to Archi: Which age variable to use?
-* Questions to Archi
-tab cen_child_caregiver_present
-tab cen_child_act_age
 * Respondent available for an interview 
-*keep if cen_child_caregiver_present==1
+* Discuss
 //Archi to Akito - I commented this out so that all values are included 
+//Akito to Archi - Do you still wnat to keep this? I want to remove the entry of non-itnerview for analysis, so I want to remove this from dataset. We can create the dataset that includes this if needed (but different data set name)
+keep if cen_child_caregiver_present==1
+
 key_creation
 foreach var of varlist cen* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -136,9 +180,12 @@ gen Cen_Type=4
 save "${DataTemp}temp.dta", replace
 
 * ID 24
-* Akito to Archi: Add age
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
 key_creation
+* Same as above
+keep if n_child_caregiver_present==1
+* Add age varible
+merge 1:1 parent_key key3 using "${DataTemp}Requested_long_backcheck1.dta", keepusing(comb_hhmember_age) keep(1 3) nogen
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -159,9 +206,7 @@ rename key R_E_key
 /*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen*/
 
 //Archi - In the command above we are merging this data with consented values but if we want to survey unavailable respondents too we have to merge it with "${DataPre}1_8_Endline_XXX.dta"
-
 merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen
-
 
 rename R_E_key  key
 rename R_E_village_name_res Village
@@ -260,102 +305,7 @@ rename key R_E_key
 merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date) keep(3) nogen
 rename R_E_key  key
 save "${DataTemp}Medical_expenditure_person.dta", replace
-
-
-/* ---------------------------------------------------------------------------
-* Long indivual data from the roster
- ---------------------------------------------------------------------------*/
-* ID 26
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
-key_creation 
-keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
-      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth ///
-	  n_dob_date n_dob_month n_dob_year
-// List all variables starting with "n_"
-foreach var of varlist n_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "n_", "comb_", 1)
-    rename `var' `newname'
-}
-save "${DataTemp}temp0.dta", replace
-
-* ID 22
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
-key_creation 
-//drop if n_resp_avail_cbw==.
-//Archi - I commente dthis out because we want all the values
-// List all variables starting with "n_"
-foreach var of varlist n_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "n_", "comb_", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_cbw* {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
-save "${DataTemp}temp1.dta", replace
-
-use "${DataTemp}temp0.dta", clear
-merge 1:1 key key3 using "${DataTemp}temp1.dta"
-//only missing values dont match
-gen Cen_Type=2
-* N=141
-unique key key3
-save "${DataTemp}Requested_long_backcheck1.dta", replace
-
-* ID 25
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
-key_creation 
-foreach var of varlist cen_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen_", "comb_", 1)
-    rename `var' `newname'
-}
-save "${DataTemp}temp0.dta", replace
-
-* ID 21
- use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
- key_creation 
-//drop if  cen_name_cbw_woman_earlier==""
-//Archi - I am commenting this out
- // List all variables starting with "n_"
-foreach var of varlist cen_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen_", "comb_", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_cbw* {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
- save "${DataTemp}temp1.dta", replace
- 
- * Archi: For some reason 48 women cannot be merged back to the loop
- use "${DataTemp}temp0.dta", clear
- merge 1:1 key key3 using "${DataTemp}temp1.dta", keep(1 3)
-unique key key3
-gen Cen_Type=3
-save "${DataTemp}Requested_long_backcheck2.dta", replace
-
-use "${DataTemp}Requested_long_backcheck1.dta", clear
-tab comb_resp_avail_comb_oth
-tostring comb_resp_avail_comb_oth, replace
-append using "${DataTemp}Requested_long_backcheck2.dta"
-* Adding unique ID
-rename key R_E_key
-/*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen*/
-
-//Archi - we have to merge this on "${DataPre}1_8_Endline_XXX.dta",
-
-merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
-
-
-save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
-
-*erase "${DataTemp}Requested_long_backcheck1.dta"
-*erase "${DataTemp}Requested_long_backcheck2.dta"
-
+erase "${DataTemp}Medical_expenditure_5_11_21_22.dta"
 
  /* ---------------------------------------------------------------------------
 * ID of the data 6 15
@@ -739,5 +689,108 @@ label var comb_med_scheme_comb_999 "Expenditure sch: Do not know"
 
 label var comb_med_doctor_fees_comb "doctor fees all: What did .... This is how much?"
 
-
 save "${DataTemp}Medical_expenditure_person_case_clean.dta", replace
+
+erase "${DataTemp}Medical_expenditure_6_15.dta"
+erase "${DataTemp}Medical_expenditure_8_10_13_17.dta"
+erase "${DataTemp}Medical_expenditure_4_7_12_14_18.dta"
+
+
+
+
+/* ---------------------------------------------------------------------------
+* Long indivual data from the roster
+ ---------------------------------------------------------------------------*/
+* ID 26 (N=322) All new household members
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
+key_creation 
+keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
+      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth ///
+	  n_dob_date n_dob_month n_dob_year ///
+	  n_cbw_age n_all_age 
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+save "${DataTemp}temp0.dta", replace
+
+* ID 22
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+key_creation 
+//drop if n_resp_avail_cbw==.
+//Archi - I commente dthis out because we want all the values
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+save "${DataTemp}temp1.dta", replace
+
+* New hosuehold member
+use "${DataTemp}temp0.dta", clear
+merge 1:1 key key3 using "${DataTemp}temp1.dta"
+//only missing values dont match
+gen Cen_Type=2
+* N=141
+unique key key3
+save "${DataTemp}Requested_long_backcheck1.dta", replace
+
+* ID 25
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
+key_creation 
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+save "${DataTemp}temp0.dta", replace
+
+* ID 21
+ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+ key_creation 
+//drop if  cen_name_cbw_woman_earlier==""
+//Archi - I am commenting this out
+ // List all variables starting with "n_"
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+ save "${DataTemp}temp1.dta", replace
+ 
+ * Archi: For some reason 48 women cannot be merged back to the loop
+ use "${DataTemp}temp0.dta", clear
+ merge 1:1 key key3 using "${DataTemp}temp1.dta", keep(1 3)
+unique key key3
+gen Cen_Type=3
+save "${DataTemp}Requested_long_backcheck2.dta", replace
+
+use "${DataTemp}Requested_long_backcheck1.dta", clear
+tab comb_resp_avail_comb_oth
+tostring comb_resp_avail_comb_oth, replace
+append using "${DataTemp}Requested_long_backcheck2.dta"
+* Adding unique ID
+rename key R_E_key
+/*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen*/
+
+//Archi - we have to merge this on "${DataPre}1_8_Endline_XXX.dta",
+
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
+
+save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
+
+* New hosuehold member
+* "${DataTemp}Requested_long_backcheck1.dta"
+* Baseline hosuehold member
+* "${DataTemp}Requested_long_backcheck2.dta"

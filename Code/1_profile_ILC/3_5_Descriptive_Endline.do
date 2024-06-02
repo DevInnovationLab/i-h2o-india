@@ -22,58 +22,7 @@
 start_from_clean_file_ChildLevel
 save "${DataTemp}Baseline_ChildLevel.dta", replace
   --------------------------------------------*/
-  
-/*--------------------------------------------
-    Testing platform
- --------------------------------------------*/
- use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
- rename R_E_key key
- rename key3 key6
- keep Cen_Type comb_hhmember_age comb_dob_date comb_dob_month comb_dob_year key key* Cen_Type
- merge 1:1 key key6 Cen_Type using "${DataTemp}Mortality_19_20.dta", keepusing(comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dod_autoage comb_dob_date_comb comb_dob_month_comb comb_dob_year_comb comb_dob_concat_comb)
- 
- * 4 cases to resolve: Appear in the death data but not in the roaster: Check with Archi
- drop if _merge==2
- drop key_original key2
- sort Cen_Type comb_hhmember_age
- drop if comb_dob_date==. & comb_dob_date_comb==.
- 
- * Cleaning: Replacing the missing day to 15
- foreach i in comb_dob_date_comb comb_dob_date comb_dod_date_comb {
- 	replace `i'=15 if `i'==999
- }
- 
- * Replacing missing month to: June except comb_dod_month_comb
-  foreach i in comb_dob_month comb_dob_month_comb {
- 	replace `i'=6 if `i'==999
- }
- 
- gen dob1=mdy(comb_dob_month,comb_dob_date,comb_dob_year)
- gen dob2=mdy(comb_dob_month_comb, comb_dob_date_comb, comb_dob_year_comb)
- gen dod=mdy(comb_dod_month_comb,comb_dod_date_comb,comb_dod_year_comb)
- 
- * Have to clean the interview date data: Now use 2024 May
- gen doi=mdy(5, 15, 2024)
- gen dob=dob1
- replace dob=dob2 if dob==. 
- drop comb_dob_month comb_dob_date comb_dob_year comb_dob_concat_comb comb_dod_concat_comb dob1 dob2 comb_dob_month_comb comb_dob_date_comb comb_dob_year_comb comb_dod_month_comb comb_dod_date_comb comb_dod_year_comb
- format dob doi dod %td
- 
- * Check 1: If the new added member of age matches to the DOB info
- gen Calcualted_age=round((doi-dob)/365, 1)
- gen Check1=Calcualted_age-comb_hhmember_age
- tab Check1
- * There are are three members where info from the new roaster and the age informtion does not matched
- br if Check1<-1
- 
- * Check 2: If the date of death implies that death recorded are all below the age 5
- gen Check2=(dod-dob)/365
- sort Check2
- * I am not sure what is happening here: By looking at Check2, it seems all the death is below the age 5. However, the age of child calcualted from dod and dob (=Check2) does not match with "comb_dod_autoage"
- 
-END
-
-  
+   
 /*--------------------------------------------
     Section A: Diarrhea analysis
  --------------------------------------------*/
@@ -84,7 +33,9 @@ END
 * Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
 use "${DataTemp}U5_Child_23_24.dta", clear
 missings dropvars, force
-drop comb_child_age_v comb_child_act_age
+* Cleaning age variable
+replace comb_child_age=comb_hhmember_age if comb_child_age==.
+drop comb_hhmember_age
  
 replace comb_child_residence=0 if comb_child_residence==-98
 replace comb_child_comb_relation=98 if comb_child_comb_relation==-77
@@ -187,7 +138,7 @@ global U5Var ///
 	   
 local U5Var "Descriptive statistics of children under age 5 for endline"
 local LabelU5Var "Outside"
-local noteU5Var "Notes: To do, clean the age variables of the newly added sample"
+local noteU5Var "Notes: To do, 98 for relationship is other?"
 					 
 foreach k in U5Var {
 * Mean
@@ -244,46 +195,7 @@ esttab model0 model01 model02  model1 model6 model7 model8 using "${Table}Enr_`k
 eststo clear
 
  /*--------------------------------------------
-    Section A.3: Diarrhea analysis (Creation of merging data and analysis)
- --------------------------------------------*/
-use "${DataTemp}Baseline_ChildLevel.dta", clear
-* Cen_Type is the type existed from the baseline
-gen Cen_Type=4
-* Renaming baseline variable with B_ prefix
-foreach i in C_diarr* C_loose* {
-	rename `i' B_`i'
-}
-
-merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village Treat_V End_date Panchatvillage BlockCode comb_child_age) update
-tab Merge_Baseline_CL Cen_Type  if BlockCode==.,m
-
-/* Archi to check more
-
- Matching result from |       Cen_Type
-                merge |         4          5 |     Total
-----------------------+----------------------+----------
-      master only (1) |       209          0 |       209 
-       using only (2) |         3        117 |       120 
-          matched (3) |       770          0 |       770 
-nonmissing conflict ( |        23          0 |        23 
-----------------------+----------------------+----------
-                Total |     1,005        117 |     1,122 
-
-
-
-*/
-merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
-tab _merge
-br if _merge==1
-label var Treat_V "Treatment"
-label var B_C_diarrhea_comb_U5_1day "Baseline"
-label var B_C_diarrhea_prev_child_1day "Baseline"
-label var B_C_loosestool_child_1day "Baseline"
-
-save "${DataTemp}U5_Child_Diarrhea_data.dta", replace
-
- /*--------------------------------------------
-    Section A.4: Diarrhea analysis (Regression)
+    Section A.3: Diarrhea analysis (Regression)
  --------------------------------------------*/
 * Main specification: Combined diarrhea with U5
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
@@ -661,3 +573,55 @@ collapse (sum) $keepvar, by(key)
 
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-N_med_notnull_all-N_prvidr_exp_lp_all_HH.dta", replace
+
+/*--------------------------------------------
+    Testing platform
+ --------------------------------------------*/
+ use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
+ rename R_E_key key
+ rename key3 key6
+ keep Cen_Type comb_hhmember_age comb_dob_date comb_dob_month comb_dob_year key key* Cen_Type
+ merge 1:1 key key6 Cen_Type using "${DataTemp}Mortality_19_20.dta", keepusing(comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dod_autoage comb_dob_date_comb comb_dob_month_comb comb_dob_year_comb comb_dob_concat_comb)
+ 
+ * 4 cases to resolve: Appear in the death data but not in the roaster: Check with Archi
+ drop if _merge==2
+ drop key_original key2
+ sort Cen_Type comb_hhmember_age
+ drop if comb_dob_date==. & comb_dob_date_comb==.
+ 
+ * Cleaning: Replacing the missing day to 15
+ foreach i in comb_dob_date_comb comb_dob_date comb_dod_date_comb {
+ 	replace `i'=15 if `i'==999
+ }
+ 
+ * Replacing missing month to: June except comb_dod_month_comb
+  foreach i in comb_dob_month comb_dob_month_comb {
+ 	replace `i'=6 if `i'==999
+ }
+ 
+ gen dob1=mdy(comb_dob_month,comb_dob_date,comb_dob_year)
+ gen dob2=mdy(comb_dob_month_comb, comb_dob_date_comb, comb_dob_year_comb)
+ gen dod=mdy(comb_dod_month_comb,comb_dod_date_comb,comb_dod_year_comb)
+ 
+ * Have to clean the interview date data: Now use 2024 May
+ gen doi=mdy(5, 15, 2024)
+ gen dob=dob1
+ replace dob=dob2 if dob==. 
+ drop comb_dob_month comb_dob_date comb_dob_year comb_dob_concat_comb comb_dod_concat_comb dob1 dob2 comb_dob_month_comb comb_dob_date_comb comb_dob_year_comb comb_dod_month_comb comb_dod_date_comb comb_dod_year_comb
+ format dob doi dod %td
+ 
+ * Check 1: If the new added member of age matches to the DOB info
+ gen Calcualted_age=round((doi-dob)/365, 1)
+ gen Check1=Calcualted_age-comb_hhmember_age
+ tab Check1
+ * There are are three members where info from the new roaster and the age informtion does not matched
+ br if Check1<-1
+ 
+ * Check 2: If the date of death implies that death recorded are all below the age 5
+ gen Check2=(dod-dob)/365
+ sort Check2
+ * I am not sure what is happening here: By looking at Check2, it seems all the death is below the age 5. However, the age of child calcualted from dod and dob (=Check2) does not match with "comb_dod_autoage"
+ 
+END
+
+ 
