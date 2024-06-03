@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "Endline Census-Household_available-N_child_followup" (ID: India_ILC_Endline_Census) data.
 *
-*	Inputs:  "Endline Census-Household_available-N_child_followup.csv"
-*	Outputs: "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/Label/Endline Census-Household_available-N_child_followup.dta"
+*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup.csv"
+*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup.dta"
 *
-*	Output by SurveyCTO April 23, 2024 3:03 PM.
+*	Output by SurveyCTO May 29, 2024 7:27 PM.
 
 * initialize Stata
 clear all
@@ -21,12 +21,12 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "Endline Census-Household_available-N_child_followup.csv"
-local dtafile "${DataRaw}1_8_Endline/Endline Census-Household_available-N_child_followup.dta"
-local corrfile "Endline Census-Household_available-N_child_followup_corrections.csv"
+local csvfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup.csv"
+local dtafile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup.dta"
+local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup_corrections.csv"
 local note_fields1 ""
-local text_fields1 "n_u5child_index n_u5child_status n_child_u5_name_label n_child_u5_caregiver_label n_child_u5_relation_oth n_anti_child_purpose n_anti_child_purpose_oth n_med_symp_u5 n_med_symp_oth_u5 n_med_where_u5"
-local text_fields2 "n_med_where_oth_u5 n_med_out_home_u5 n_med_out_oth_u5 n_prvdrs_exp_loop_u5_count n_med_work_who_u5"
+local text_fields1 "n_u5child_index n_u5child_status n_child_u5_name_label n_child_care_pres_oth n_child_u5_caregiver_label n_child_u5_relation_oth n_anti_child_purpose n_anti_child_purpose_oth n_med_symp_u5"
+local text_fields2 "n_med_symp_oth_u5 n_med_where_u5 n_med_where_oth_u5 n_med_out_home_u5 n_med_out_oth_u5 n_prvdrs_exp_loop_u5_count n_med_work_who_u5"
 local date_fields1 ""
 local datetime_fields1 ""
 
@@ -120,8 +120,11 @@ if _N>0 {
 
 	label variable n_child_caregiver_present "Is the caregiver/mother of \${N_child_u5_name_label} available?"
 	note n_child_caregiver_present: "Is the caregiver/mother of \${N_child_u5_name_label} available?"
-	label define n_child_caregiver_present 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 9 "Respondent is a visitor and is not available right now"
+	label define n_child_caregiver_present 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3 "This is my first visit: The respondent is temporarily unavailable but might be a" 4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable b" 5 "This is my 2rd re-visit (3rd visit): The revisit within two days is not possible" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (" 9 "Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other, please specify"
 	label values n_child_caregiver_present n_child_caregiver_present
+
+	label variable n_child_care_pres_oth "B1.1) Please specify other"
+	note n_child_care_pres_oth: "B1.1) Please specify other"
 
 	label variable n_child_caregiver_name "Who is the caregiver/mother of \${N_child_u5_name_label}?"
 	note n_child_caregiver_name: "Who is the caregiver/mother of \${N_child_u5_name_label}?"
@@ -334,6 +337,16 @@ if _N>0 {
 	label variable n_med_days_caretaking_u5 "How many days have this person taken caretaking \${N_child_u5_name_label} (inclu"
 	note n_med_days_caretaking_u5: "How many days have this person taken caretaking \${N_child_u5_name_label} (including the time taken to visit/stay at a hospital clinic/including the time taken to visit a hospital clinic)?"
 
+	label variable n_translator_u5 "C29)Was a translator used in the survey?"
+	note n_translator_u5: "C29)Was a translator used in the survey?"
+	label define n_translator_u5 1 "Yes" 0 "No"
+	label values n_translator_u5 n_translator_u5
+
+	label variable n_hh_prsnt_u5 "Was there any Household member (other than the \${N_child_u5_name_label}) presen"
+	note n_hh_prsnt_u5: "Was there any Household member (other than the \${N_child_u5_name_label}) present during the survey?"
+	label define n_hh_prsnt_u5 1 "Yes" 0 "No"
+	label values n_hh_prsnt_u5 n_hh_prsnt_u5
+
 
 
 
@@ -376,7 +389,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  Endline Census-Household_available-N_child_followup_corrections.csv
+*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/Endline Census-Household_available-N_child_followup_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 

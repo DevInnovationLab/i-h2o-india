@@ -1,8 +1,8 @@
-*=========================================================================* 
+W*=========================================================================* 
 * Project information at:https://github.com/DevInnovationLab/i-h2o-india/
 ****** Country: India (Odisha)
 ****** Purpose: 
-****** Created by: DIL
+****** Created by: ARCHI
 ****** Used by:  DIL
 ****** Input data : 
 ****** Output data : 
@@ -19,12 +19,11 @@ do "${github}1_8_A_Endline_cleaning.do"
 do "${github}1_8_A_Endline_cleaning_v2.do"
 
 * CREATING PRELOAD FOR RE-VISIT (HH LEVEL)
-
 use "${DataPre}1_8_Endline_XXX.dta", clear
-br R_E_submissiondate
+
 
 *Assigned to Archi- Drop duplicates: DONE 
-
+drop dup_HHID
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
@@ -1080,5 +1079,370 @@ save "${DataTemp}stata_endline_HH_lock_old_match.dta", replace
 import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx", sheet("Sheet1") firstrow clear
 
 merge 1:1 UniqueID using "${DataTemp}stata_endline_HH_lock_old_match.dta"
+
+
+
+
+
+
+
+/***************************************************************MATCHING WOMEN  AND U5 FROM BASELINE CENSUS TO SEE HOW MANY ARE DONE 
+***************************************************************/
+
+import excel "${DataPre}Endline_census_eligiblewomen_preload.xlsx", sheet("Sheet1") firstrow clear
+
+
+drop R_Cen_a7_pregnant_*
+ds `r(varlist)' 
+foreach var of varlist `r(varlist)'{
+tostring `var', replace
+}
+
+
+
+//reshape long R_Cen_eligible_women_pre_, i(unique_id) j(Women)
+
+//sort R_Cen_eligible_women_pre_
+
+save "${DataTemp}reshaped_long_baseline_CBW.dta", replace
+
+
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
+
+tab comb_resp_avail_comb
+tab comb_resp_avail_comb,m
+label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_resp_avail_comb comb_resp_avail_comb_ex
+
+//droppinh cases that won't be re-visited 
+* Akito to Archi: Most of the case is missing. Can you describe what those are? They are simply data from non-main respondent?
+
+tab comb_resp_avail_comb
+
+
+keep unique_id comb_name_comb_woman_earlier comb_name_comb_preg comb_resp_avail_comb comb_resp_avail_comb_oth comb_preg_index comb_cen_women_status
+
+bys unique_id: gen Num=_n
+
+reshape wide comb_name_comb_woman_earlier comb_name_comb_preg comb_resp_avail_comb comb_resp_avail_comb_oth comb_preg_index comb_cen_women_status, i(unique_id) j(Num)
+
+merge m:m unique_id using "${DataTemp}reshaped_long_baseline_CBW.dta"
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE DATA TO SEE IF ANY FORMS HAVE BEEN LEFT FROM GETTING SUBMITTED
+***************************************************************/
+
+use "${DataPre}1_8_Endline_XXX.dta", clear
+
+isid unique_id
+
+save "${DataTemp}1_8_Endline_XXX_for_merge.dta", replace
+
+
+clear
+cap program drop start_from_clean_file_Population
+program define   start_from_clean_file_Population
+  * Open clean file
+use  "${DataPre}1_1_Census_cleaned.dta", clear
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+gen     C_Census=1
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
+recode Merge_C_F 1=0 3=1
+
+*drop if  R_Cen_village_name==30501
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var C_HH_not_available "Respondent not available"
+
+end
+
+
+//Remove HHIDs with differences between census and HH survey
+start_from_clean_file_Population
+//why do we drop this?
+*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+
+tempfile new
+save `new', replace
+
+//keeping only screend cases 
+keep if C_Screened == 1
+drop if R_Cen_a1_resp_name == "" 
+
+keep unique_id unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_a1_resp_name
+
+merge 1:1 unique_id using "${DataTemp}1_8_Endline_XXX_for_merge.dta", keepusing(unique_id)
+
+
+br unique_id unique_id_hyphen R_Cen_enum_name_label R_Cen_block_name R_Cen_village_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_a1_resp_name if _merge != 3
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE HH LOCK DATA WITH PRELOAD FOR HH LOCK CASES
+***************************************************************/
+
+use "${DataPre}1_8_Endline_XXX.dta", clear
+
+isid unique_id
+
+keep unique_id R_E_resp_available R_E_enum_name_label
+
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+
+rename ID UniqueID
+
+save "${DataTemp}1_8_Endline_XXX_for_merge.dta", replace
+
+
+import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level.xlsx", sheet("Sheet1") firstrow clear
+
+
+merge 1:1 UniqueID using "C:\Users\Archi Gupta\Box\Data\99_temp\1_8_Endline_XXX_for_merge.dta"
+
+
+/***************************************************************MERGING SUBMITTED ENDLINE REVISIT DATA WITH PRELOAD TO SEE HOW MANY ENTRIES HAVE COME 
+***************************************************************/
+clear
+set maxvar 30000
+
+do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
+
+
+use "${DataPre}1_9_Endline_revisit_final.dta", clear
+
+
+//drop duplicates 
+drop if key == "uuid:20270a02-5941-47a7-b53f-7194404e8b30" & unique_id == "30301109053"
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+sort unique_id submissiondate 
+br submissiondate unique_id key enum_name_label resp_available instruction if dup_HHID > 0
+
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_child_u5_name_label_* comb_child_caregiver_present_* comb_main_caregiver_label_* comb_preg_index_1 comb_preg_index_2 comb_preg_index_3 comb_preg_index_4 comb_child_ind_1 comb_child_ind_2 if dup_HHID > 0
+
+
+//replacements for ID - "30701119030"
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "30701119030"
+
+replace comb_child_u5_name_label_1 = "Labesha Hikaka" if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb"  & unique_id == "30701119030" 
+
+replace comb_main_caregiver_label_1 = "Indra mani Hikaka" if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb" & unique_id == "30701119030" 
+
+replace comb_child_caregiver_present_1 = -77 if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb" & unique_id == "30701119030" 
+
+replace comb_child_ind_1 = "1" if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb" & unique_id == "30701119030" 
+
+replace comb_child_care_pres_oth_1 = "Maa ke sath dusre village gaye hai kob ayege pata nehi" if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb" & unique_id == "30701119030" 
+
+drop if key == "uuid:832d0cdd-82d9-4fa8-ac3c-f0d4274faf3d" & unique_id == "30701119030" 
+
+
+//replacements for ID - "40202108030"
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108030"
+
+replace comb_child_u5_name_label_1 = "Pihu Pradhan" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+replace comb_main_caregiver_label_1 = "Banita Raouta" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+
+replace comb_child_caregiver_present_1 = 5 if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+
+replace comb_child_ind_1 = "1" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+replace comb_child_caregiver_name_1 = 5 if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+replace comb_child_residence_1 = 1 if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+replace comb_child_name_1 = "988" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
+
+
+drop if key == "uuid:e6d04108-7221-4f6d-be77-7fc19092e8c0" & & unique_id == "40202108030" 
+
+
+//preliminary replacements  
+//here I am only gonna replace for availability of women. Merege for oither data parts can happen later as surveys on these IDs have been admisnitered 
+
+
+//replacements for UID- 40202108039
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108039"
+
+br submissiondate  unique_id  key comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_not_curr_preg_* comb_child_u5_name_label_* comb_child_ind_* comb_main_caregiver_label_* comb_child_caregiver_present_* if unique_id == "40202108039"
+
+
+drop if key == "uuid:b638f0cc-1ad0-446c-86ce-3b4bc5aa567e" & & unique_id == "40202108039" 
+
+//case of UID - 40202110037
+//lay out my logic 
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202110037"
+
+
+replace comb_child_u5_name_label_1 = "New baby" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+replace comb_main_caregiver_label_1 = "Goutami Ladi" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+
+replace comb_child_caregiver_present_1 = 5 if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+
+replace comb_child_ind_1 = "1" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+replace comb_child_caregiver_name_1 = 1 if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+replace comb_child_residence_1 = 1 if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+replace comb_child_name_1 = "988" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
+
+
+drop if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2" & & unique_id == "40202110037" 
+
+//case of UID - 40301108013
+
+drop if key == "uuid:1dfdb694-9d40-4476-aaab-321e9c62028d" & unique_id == "40301108013" 
+
+//create a spare key 
+
+//case of UID = 40301113025
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_* comb_resp_gen_v_cbw_* comb_age_ch_cbw_* comb_resp_age_v_cbw_* comb_resp_age_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40301113025"
+
+replace comb_resp_avail_cbw_1 = 2 if key == "uuid:e19f6abd-e053-4c3c-8fe1-fa63214826ab" & unique_id == "40301113025" & comb_name_cbw_woman_earlier_1== "Sonali gouda" 
+
+
+replace comb_resp_avail_cbw_2 = 2 if key == "uuid:e19f6abd-e053-4c3c-8fe1-fa63214826ab" & unique_id == "40301113025" & comb_name_cbw_woman_earlier_2 == "Mamali gouda"
+
+drop if key == "uuid:62db341b-de7e-45cf-a983-0ab650e964f6" & unique_id == "40301113025" 
+
+
+//case of UID = 50201109021
+
+replace comb_child_u5_name_label_1 = "Milan Kandagari"  if key == "uuid:7ce48c56-4d02-4234-9e41-414a3567d55b" & unique_id == "50201109021" 
+
+replace comb_child_caregiver_present_1 = 5  if key == "uuid:7ce48c56-4d02-4234-9e41-414a3567d55b" & unique_id == "50201109021" 
+
+replace comb_child_ind_1 = "1" if key == "uuid:7ce48c56-4d02-4234-9e41-414a3567d55b" & unique_id == "50201109021" 
+
+replace comb_main_caregiver_label_1 = "Minati Kandagari" if key == "uuid:7ce48c56-4d02-4234-9e41-414a3567d55b" & unique_id == "50201109021" 
+
+
+drop if key == "uuid:297b27f2-4101-4181-bf18-af6175f04797" & unique_id == "50201109021" 
+
+
+//Case of UID = 50201115026
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115026"
+
+
+replace comb_child_u5_name_label_1 = "Lishima Bidika"  if key == "uuid:5537cede-5e90-4d1e-a6d0-3b6c0503a684" & unique_id == "50201115026" 
+
+replace comb_child_caregiver_present_1 = 5  if key == "uuid:5537cede-5e90-4d1e-a6d0-3b6c0503a684" & unique_id == "50201115026" 
+
+replace comb_child_ind_1 = "1" if key == "uuid:5537cede-5e90-4d1e-a6d0-3b6c0503a684" & unique_id == "50201115026" 
+
+replace comb_main_caregiver_label_1 = "Kasu Mandangi" if key == "uuid:5537cede-5e90-4d1e-a6d0-3b6c0503a684" & unique_id == "50201115026" 
+
+
+drop if key == "uuid:59b8b051-e779-4467-a649-f2b49ef54e1b" & unique_id == "50201115026" 
+
+
+//case of UID - 50201115043
+
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115043"
+
+
+replace comb_child_u5_name_label_1 = "Debashmita Bidika"  if key == "uuid:30eab718-52aa-42a6-9ebb-0733095a68f5" & unique_id == "50201115043" 
+
+replace comb_child_caregiver_present_1 = 5  if key == "uuid:30eab718-52aa-42a6-9ebb-0733095a68f5" & unique_id == "50201115043" 
+
+replace comb_child_ind_1 = "1" if key == "uuid:30eab718-52aa-42a6-9ebb-0733095a68f5" & unique_id == "50201115043" 
+
+replace comb_main_caregiver_label_1 = "Jyoshna Rani Pradhan" if key == "uuid:30eab718-52aa-42a6-9ebb-0733095a68f5" & unique_id == "50201115043" 
+
+
+drop if key == "uuid:b38a369a-521c-4d59-a243-46895bc109da" & unique_id == "50201115043" 
+
+
+
+//case of UID - 50301105008
+drop if key == "uuid:9418ebad-ede3-4780-b275-a84b1b077f46" & unique_id == "50301105008" 
+
+
+//case of UID = 50301117008
+drop if key == "uuid:be4aefc3-cfc2-4b7a-87f7-06b8285b9dac" & unique_id == "50301117008" 
+
+//case of UID - 50301117064
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50301117064"
+
+
+replace comb_resp_avail_cbw_1 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
+
+
+replace comb_resp_avail_cbw_2 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
+
+
+replace comb_resp_avail_cbw_3 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
+
+
+replace comb_resp_avail_cbw_4 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
+
+drop if key == "uuid:b893a36b-1e5b-4087-8cc6-2425c05be489" & unique_id == "50301117064"
+
+drop dup_HHID
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+//supervisor tracking sheet
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+
+drop unique_id
+
+rename ID unique_id
+
+
+keep unique_id submissiondate key comb_child_u5_name_label_* comb_child_caregiver_present_* comb_child_ind_* comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_preg_index_*  wash_applicable cen_resp_label r_cen_a1_resp_name enum_name_label resp_available instruction r_cen_village_name_str
+
+reshape long comb_preg_index_ comb_name_cbw_woman_earlier_ comb_resp_avail_cbw_ comb_resp_avail_cbw_oth_ comb_child_ind_ comb_child_u5_name_label_ comb_child_caregiver_present_, i(unique_id) j(final)  
+
+
+save "${DataTemp}endline_revisit_merge.dta", replace
+
+import excel "${DataPre}Endline_Revisit_common_IDs_new_version.xlsx", sheet("Sheet1") firstrow clear
+
+rename UniqueID unique_id 
+
+
+rename H endline_resp_name
+
+
+forvalues i = 1/4{
+rename Woman_name`i'  Woman_name_`i'
+cap rename Child_name`i'  Child_name_`i'
+}
+
+reshape long Woman_name_ Child_name_ , i(unique_id) j(final_revisit)  
+
+
+merge m:m unique_id using "${DataTemp}endline_revisit_merge.dta"
+
 
 
