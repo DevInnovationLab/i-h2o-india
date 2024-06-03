@@ -1219,8 +1219,6 @@ do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
 use "${DataPre}1_9_Endline_revisit_final.dta", clear
 
 
-//drop duplicates 
-drop if key == "uuid:20270a02-5941-47a7-b53f-7194404e8b30" & unique_id == "30301109053"
 
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
@@ -1233,9 +1231,106 @@ br submissiondate unique_id key enum_name_label resp_available instruction if du
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_child_u5_name_label_* comb_child_caregiver_present_* comb_main_caregiver_label_* comb_preg_index_1 comb_preg_index_2 comb_preg_index_3 comb_preg_index_4 comb_child_ind_1 comb_child_ind_2 if dup_HHID > 0
 
 
-//replacements for ID - "30701119030"
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "30701119030"
+/* 
+//create a spare key 
+
+APPROACH USED FOR DEALING WITH DUPLICATES 
+
+ISSUE WITH PRELOAD: Preload for this survey was updated becuse some child names weren't appearing in the form so the instruction to the surveyors was they have to copy this data into new version and then delete the old version and submit the new version data where applicable child names were comimg for that respective UID
+
+OBJECTIVE: I want to drop those IDs which were done on old version becasue all applicable child names weren't appearing for that respective UID in old version but after preload was updated all applicable child names were coming
+
+ACTION TAKEN: It is not very starightforward to drop old version IDs becasue some enums made a mistake by sending their old versions where women surveys were already done so they couldn't copy that data into new version and there was also no possibility to go back to these women and survey them so they just marked these women as unavailable with child data when submitting new version. So, basically the problm is i the old version submissions women data has been done on some IDs but child names wreen't even appearing so there is no way to identify if children data was to be done on that ID or not 
+
+TYPES OF DUPLICATES: 
+
+TYPE 1: 
+Old version data was sent where women data was done as women were available but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but here the child data wasn't done and child was marked as unavailable 
+So, to deal with this we will replace applicable child variables in old version data to reflect that these children belong to this ID but their data wasn't done because of their unvailability 
+ 
+TYPE 2: 
+Old version data was sent where women data was done as women were available but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but here the child data was done and child was marked as available and full survey was administered 
+So, to deal with this we can't do normal replace we will have to merge child and women data on the UID to create a one observation where all sections pertaining to that ID are appearing 
+
+TYPE 3: 
+Old version data was sent where women data was not done as women were unavailable but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but but here the child data wasn't done and child was marked as unavailable 
+So, to deal with this we can just drop the observation where child names weren't appearing that is old version obs as nrew version also has the unavailable status for women so no data is being lost
+
+
+TYPE 4: 
+Old version data was sent where women data was not done as women were unavailable but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing and here the child data was done and child was marked as available
+So, to deal with this we will replace applicable child variables in new version data to reflect that these children and women belong to this ID but women data wasn't done because of their unvailability
+
+
+TYPE 5: 
+both old version and new versions are sent but enum had alreday copied the data into new version so no replace,ent or merge is required we can just drop old version data because new version alreday has all the applicable cases 
+
+
+
+
+If replacements are being administered as a solution which variables get replaced: 
+
+Mandaory replace- 
+
+comb_child_ind
+comb_child_u5_name_label
+comb_main_caregiver_label
+comb_child_caregiver_present
+
+Situational replace- (replaced only if applicable) 
+
+comb_child_care_pres_oth
+comb_child_age_V
+comb_child_act_age
+comb_child_caregiver_name
+comb_child_residence
+comb_child_name
+comb_child_u5_caregiver_label
+
+
+If women replacements are being done then : 
+
+Mandatory replace- 
+
+comb_preg_index
+comb_name_CBW_woman_earlier
+comb_resp_avail_CBW
+comb_resp_avail_CBW_oth
+
+Situational replace- (replaced only if applicable) 
+
+comb_resp_gen_V_CBW
+comb_age_ch_CBW
+comb_resp_age_V_CBW
+comb_resp_age_CBW
+
+NOTE: Replacements are only done if either women or child data was unavailable otherwise you can't replace each variable 
+
+If replacements are not aplicable we do merge by UID (this must be done at the end) 
+
+*/
+
+
+
+//drop duplicates 
+//Explanation: Preload for this survey was updated becuse some child names weren't appearing in the form so the instruction to the surveyors was they have to copy this data into new version and then delete the old version and submit the new version data where applicable child names were comimg for that respective UID but this enum sent the old version too so I dropped the old version data 
+
+//CASE OF ID - "30301109053"
+//TYPE 5 DUPLICATE 
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "30301109053"
+
+drop if key == "uuid:20270a02-5941-47a7-b53f-7194404e8b30" & unique_id == "30301109053"
+
+
+
+//CASE OF ID - "30701119030"
+
+/*Main respondent survey was applicable and child survey but in old version child names weren't appearing so only main respondent data was done and child names weren't even coming so we need to drop the new version submission because main resp survey was marjked as unavailable there and child data was unavailable so replacements for child variable need to be done in the old version */
+
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "30701119030"
 
 replace comb_child_u5_name_label_1 = "Labesha Hikaka" if key == "uuid:0aa3d0a7-f32f-49cb-857c-dc828c4034fb"  & unique_id == "30701119030" 
 
@@ -1250,9 +1345,12 @@ replace comb_child_care_pres_oth_1 = "Maa ke sath dusre village gaye hai kob aye
 drop if key == "uuid:832d0cdd-82d9-4fa8-ac3c-f0d4274faf3d" & unique_id == "30701119030" 
 
 
-//replacements for ID - "40202108030"
+//CASE for ID - "40202108030"
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108030"
+/*TYPE 1 DUPLICATE (PLEASE READ DESCRIPTION ABOVE)
+Replacements are being made in the old version submission because it has complete women data*/
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108030"
 
 replace comb_child_u5_name_label_1 = "Pihu Pradhan" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee70d341"  & unique_id == "40202108030" 
 
@@ -1274,13 +1372,12 @@ replace comb_child_name_1 = "988" if key == "uuid:7c9ec07b-1869-47a6-a0d6-edd9ee
 drop if key == "uuid:e6d04108-7221-4f6d-be77-7fc19092e8c0" & & unique_id == "40202108030" 
 
 
-//preliminary replacements  
-//here I am only gonna replace for availability of women. Merege for oither data parts can happen later as surveys on these IDs have been admisnitered 
 
+//Case of UID- 40202108039
 
-//replacements for UID- 40202108039
+//Here enum did the women survey again because she had sent old version survey as well where women survey was done but child names weren't appearing that's why child surveys weren't done but this enum on the new version did women survey again and child survey again and sent it so we should drop old version data because new version has no missing data 
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108039"
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108039"
 
 br submissiondate  unique_id  key comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_not_curr_preg_* comb_child_u5_name_label_* comb_child_ind_* comb_main_caregiver_label_* comb_child_caregiver_present_* if unique_id == "40202108039"
 
@@ -1288,9 +1385,10 @@ br submissiondate  unique_id  key comb_name_cbw_woman_earlier_* comb_resp_avail_
 drop if key == "uuid:b638f0cc-1ad0-446c-86ce-3b4bc5aa567e" & & unique_id == "40202108039" 
 
 //case of UID - 40202110037
-//lay out my logic 
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202110037"
+//TYPE 1 DUPLICATE (PLease refer to description above)
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202110037"
 
 
 replace comb_child_u5_name_label_1 = "New baby" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
@@ -1310,15 +1408,23 @@ replace comb_child_residence_1 = 1 if key == "uuid:90c042fa-51b5-4565-a990-a3fec
 replace comb_child_name_1 = "988" if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2"  & unique_id == "40202110037" 
 
 
-drop if key == "uuid:90c042fa-51b5-4565-a990-a3fecd5b5cc2" & & unique_id == "40202110037" 
+drop if key == "uuid:a6d45213-5337-44c7-951f-b5b51c631065" & & unique_id == "40202110037" 
+
 
 //case of UID - 40301108013
 
+//Here enum did the women survey again because she had sent old version survey as well where women survey was done but child names weren't appearing that's why child surveys weren't done but this enum on the new version did women survey again and child survey again and sent it so we should drop old version data because new version has no missing data 
+
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40301108013"
+
 drop if key == "uuid:1dfdb694-9d40-4476-aaab-321e9c62028d" & unique_id == "40301108013" 
 
-//create a spare key 
 
 //case of UID = 40301113025
+
+//TYPE 1 DUPLICATE 
+
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_* comb_resp_gen_v_cbw_* comb_age_ch_cbw_* comb_resp_age_v_cbw_* comb_resp_age_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40301113025"
 
 replace comb_resp_avail_cbw_1 = 2 if key == "uuid:e19f6abd-e053-4c3c-8fe1-fa63214826ab" & unique_id == "40301113025" & comb_name_cbw_woman_earlier_1== "Sonali gouda" 
@@ -1330,6 +1436,11 @@ drop if key == "uuid:62db341b-de7e-45cf-a983-0ab650e964f6" & unique_id == "40301
 
 
 //case of UID = 50201109021
+
+/* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201109021"
+
 
 replace comb_child_u5_name_label_1 = "Milan Kandagari"  if key == "uuid:7ce48c56-4d02-4234-9e41-414a3567d55b" & unique_id == "50201109021" 
 
@@ -1345,7 +1456,10 @@ drop if key == "uuid:297b27f2-4101-4181-bf18-af6175f04797" & unique_id == "50201
 
 //Case of UID = 50201115026
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115026"
+/* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
+
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115026"
 
 
 replace comb_child_u5_name_label_1 = "Lishima Bidika"  if key == "uuid:5537cede-5e90-4d1e-a6d0-3b6c0503a684" & unique_id == "50201115026" 
@@ -1362,8 +1476,9 @@ drop if key == "uuid:59b8b051-e779-4467-a649-f2b49ef54e1b" & unique_id == "50201
 
 //case of UID - 50201115043
 
+/* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
 
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115043"
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115043"
 
 
 replace comb_child_u5_name_label_1 = "Debashmita Bidika"  if key == "uuid:30eab718-52aa-42a6-9ebb-0733095a68f5" & unique_id == "50201115043" 
@@ -1380,14 +1495,29 @@ drop if key == "uuid:b38a369a-521c-4d59-a243-46895bc109da" & unique_id == "50201
 
 
 //case of UID - 50301105008
+
+//TYPE 3 DUPLICATE 
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50301105008"
+
 drop if key == "uuid:9418ebad-ede3-4780-b275-a84b1b077f46" & unique_id == "50301105008" 
 
 
 //case of UID = 50301117008
+
+//TYPE 3 DUPLICATE 
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50301117008"
+
 drop if key == "uuid:be4aefc3-cfc2-4b7a-87f7-06b8285b9dac" & unique_id == "50301117008" 
 
 //case of UID - 50301117064
-br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50301117064"
+
+/* There are 4 eligible women on this ID and all 4 women surveys were marked as unavailable earlier but in the new version 2 out 4 women were surveyed and child survey was also done on new version so it makes sense to drop the old version ID.
+
+I do minor replacements in women variables to make the reason of unavailability of uniform across */
+
+br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50301117064"
 
 
 replace comb_resp_avail_cbw_1 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
@@ -1396,11 +1526,6 @@ replace comb_resp_avail_cbw_1 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b
 replace comb_resp_avail_cbw_2 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
 
 
-replace comb_resp_avail_cbw_3 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
-
-
-replace comb_resp_avail_cbw_4 = 5 if key == "uuid:738387e0-f484-4c7b-b2f4-722d3b6c324e" & unique_id == "50301117064"
-
 drop if key == "uuid:b893a36b-1e5b-4087-8cc6-2425c05be489" & unique_id == "50301117064"
 
 drop dup_HHID
@@ -1408,7 +1533,14 @@ bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
-//supervisor tracking sheet
+
+//Now we have the final cleaned re-visit dataset 
+
+
+/*************************************************************
+MATCH THIS DATA WITH REVISIT PRELOAD TO SEE IF ALL IDs HAVE BEEN ATTEMPTED
+*/
+
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
@@ -1418,6 +1550,7 @@ drop unique_id
 
 rename ID unique_id
 
+isid unique_id
 
 keep unique_id submissiondate key comb_child_u5_name_label_* comb_child_caregiver_present_* comb_child_ind_* comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_preg_index_*  wash_applicable cen_resp_label r_cen_a1_resp_name enum_name_label resp_available instruction r_cen_village_name_str
 
@@ -1443,6 +1576,66 @@ reshape long Woman_name_ Child_name_ , i(unique_id) j(final_revisit)
 
 
 merge m:m unique_id using "${DataTemp}endline_revisit_merge.dta"
+
+gen mismatch_W = 1 if comb_name_cbw_woman_earlier_ != Woman_name_
+
+br unique_id Woman_name_ comb_name_cbw_woman_earlier_ comb_resp_avail_cbw_ resp_available instruction key mismatch_W  if comb_name_cbw_woman_earlier_ != Woman_name_
+
+//FINDING UNAVAILABILTY STATUS OF WOMEN DATA FIRST 
+
+
+/* 
+
+SOME IMP POINTS TO KEEP IN MIND-
+
+For surveys where the var resp_available was marked unavailable there no survey was administered as it was a locked HH as a result at some places women names and child names are not appearing from using data because these variables didn't get genearted for those IDs so for the sake of comparison we are doing replacements of name in the using data
+
+Another imp thing to note is there are mismatches when you run the command-
+ br unique_id Woman_name_ comb_name_cbw_woman_earlier_ comb_resp_avail_cbw_ resp_available instruction key mismatch_W  if comb_name_cbw_woman_earlier_ != Woman_name_
+
+but this doens't mean these values are not matching. Their index got chnaged because when preload was updated the reshape command got more values as a result reshaped assigment became different. This is not an issue as of now while doing the merge with the endline dataset this thing must be kept in mind that the index has to be uniform 
+
+This shouldn't be a veru tedious process because while reshaping endline data you can sort women names alphabet wise. Same logic applies to endline data  
+*/
+
+//Doing replacements just to include it in the unavailability stats 
+
+replace comb_name_cbw_woman_earlier_ = "Divyang Bidika" if unique_id == "50201-115-016" & key == "uuid:0ae6e596-3f06-4723-8de2-926004f8d619" & mismatch_W == 1
+
+
+replace comb_name_cbw_woman_earlier_ = "Sandhe Bidika" if unique_id == "50201-115-019" & key == "uuid:60319132-977e-430a-a20c-f1d832e7f2ba" & mismatch_W == 1
+
+
+replace comb_resp_avail_cbw_ = 5 if unique_id == "50201-115-016" & key == "uuid:0ae6e596-3f06-4723-8de2-926004f8d619" & mismatch_W == 1 & comb_name_cbw_woman_earlier_ == "Divyang Bidika"
+
+
+replace comb_resp_avail_cbw_ = 5 if unique_id == "50201-115-019" & key == "uuid:60319132-977e-430a-a20c-f1d832e7f2ba" & mismatch_W == 1 & comb_name_cbw_woman_earlier_ == "Sandhe Bidika"
+
+
+label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_resp_avail_cbw_ comb_resp_avail_comb_ex
+
+ 
+tab comb_resp_avail_cbw_
+
+//FINDING UNAVAILABILTY STATUS OF CHILD DATA FIRST 
+
+
+gen mismatch_C = 1 if Child_name_ != comb_child_u5_name_label_
+
+br unique_id Child_name_ comb_child_u5_name_label_ comb_child_caregiver_present_ resp_available instruction key mismatch_C  if Child_name_ != comb_child_u5_name_label_
+
+//For surveys where the var resp_available was marked unavailable there no survey was administered as it was a locked HH as a result at some places women names and child names are not appearing from using data because these variables didn't get genearted for those IDs so for the sake of comparison we are doing replacements of name in the using data
+
+replace comb_child_u5_name_label_ = Child_name_  if unique_id == "40202-113-039" & key == "uuid:1311469e-7eea-42e6-9355-4f3c049b0d4a" & mismatch_C == 1
+
+
+label define comb_child_caregiver_present_x 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "U5 died or is no longer a member of the household" 8 "U5 child no longer falls in the criteria (less than 5 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_child_caregiver_present_ comb_child_caregiver_present_x
 
 
 
