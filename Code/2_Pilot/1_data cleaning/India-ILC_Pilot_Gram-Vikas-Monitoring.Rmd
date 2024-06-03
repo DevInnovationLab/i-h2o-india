@@ -330,11 +330,11 @@ gv_cl$chlorine_test <- fct_recode(gv_cl$chlorine_test,
        #        angle = 0, vjust = -0.5, size = 3, color = "darkgreen")
     #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
      #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
-    geom_text(data = filter(gv_cl, Village == "Badabangi"), 
-            aes(x = as.Date("2024-04-10"), y = 1.5), 
+    geom_text(data = filter(gv_cl, Village == "Asada"), 
+            aes(x = as.Date("2024-04-12"), y = 1.5), 
             label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
-    geom_text(data = filter(gv_cl, Village == "Badabangi"), 
-            aes(x = as.Date("2024-04-14"), y = 1.7), 
+    geom_text(data = filter(gv_cl, Village == "Asada"), 
+            aes(x = as.Date("2024-04-16"), y = 1.7), 
             label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
 
 

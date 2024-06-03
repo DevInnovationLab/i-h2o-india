@@ -1317,7 +1317,7 @@ el <- el%>%
 
 #------------ Assign the correct treatment to villages---------------------------#
 
-el.consent <- el.consent %>% mutate(Treatment = ifelse(R_E_r_cen_village_name_str %in%
+el.consent <- el.consent %>% mutate(Treatment = ifelse(R_E_village_name_str %in%
                                                                    c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "T", "C"))
 
 
@@ -1330,7 +1330,7 @@ el.consent <- labelmaker(el.consent)
 #Renaming all variables to remove prefixes
 el <- el%>%
   rename_all(~stringr::str_replace(.,"R_E_",""))%>%
-  rename(village_name = "r_cen_village_name_str")
+  rename(village_name = "village_name_str")
 
 #Pairing village information
 #el$village_name <- as.character(el$village_name)
