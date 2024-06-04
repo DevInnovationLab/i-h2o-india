@@ -130,7 +130,7 @@ mon <- read_csv(paste0(user_path(),"/1_raw/Daily Chlorine Monitoring Form_WIDE.c
 
 mon_full <- read_csv(paste0(user_path(),"/1_raw/india_ilc_pilot_monitoring_WIDE.csv"))
 
-
+village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
 
 
@@ -207,9 +207,26 @@ mon_far <- mon%>%
 
 
 
+#Setting variable labels for stata compatibility
+make_stata_compatible <- function(name) {
+  name <- gsub("[^a-zA-Z0-9_]", "_", name)  # Replace illegal characters with underscores
+  if (nchar(name) > 32) {
+    name <- substr(name, 1, 32)  # Trim to 32 characters
+  }
+  name
+}
+# Apply the function to all column names
+new_names <- sapply(names(mon_wide), make_stata_compatible)
+names(mon_wide) <- new_names
 
-#Writing final chlorine monitoring csv file
-#write_csv(mon_wide,paste0(user_path(), "/2_deidentified/1_X_chlorine_monitoring.csv"))
+#Reducing length of variable name
+mon_wide <- mon_wide %>% 
+  rename(Village_ID = `Corresponding Village ID from census`)
+
+
+#Writing final chlorine monitoring file
+write_dta(mon_wide,paste0(user_path(), "/2_deidentified/1_X_chlorine_monitoring.dta"))
+write_csv(mon_wide,paste0(user_path(), "/2_deidentified/1_X_chlorine_monitoring.csv"))
 
 
 
