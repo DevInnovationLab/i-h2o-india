@@ -418,6 +418,8 @@ program define   start_from_clean_file_Census
 
   label var R_Cen_a2_hhmember_count "Household size" 
   rename R_Cen_village_name village
+  drop Treat_V
+  * merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode)
   merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode) keep(1 3)
   
   * Final data description
@@ -552,7 +554,7 @@ cap program drop start_from_clean_file_PregDiarr
 program define   start_from_clean_file_PregDiarr
   * Open clean file
 start_from_clean_file_Census  
-keep R_Cen_a23_wom_diarr*  unique_id* C_total_pregnant_hh R_Cen_block_name R_Cen_village_name R_Cen_village_str R_Cen_a25_wom_stool*
+keep R_Cen_a23_wom_diarr*  unique_id* C_total_pregnant_hh R_Cen_block_name R_Cen_village_str R_Cen_a25_wom_stool*
 reshape long R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a25_wom_stool_24h_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_, i(unique_id) j(num)
 * Drop the case where there is no preg women
 drop if R_Cen_a23_wom_diarr_day_==. & R_Cen_a23_wom_diarr_week_==. & R_Cen_a23_wom_diarr_2week_==.
