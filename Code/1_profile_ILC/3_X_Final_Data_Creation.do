@@ -41,22 +41,24 @@ gen Cen_Type=4
 foreach i in C_diarr* C_loose* {
 	rename `i' B_`i'
 }
-
-merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village Treat_V End_date Panchatvillage BlockCode comb_child_age) update
-tab Merge_Baseline_CL Cen_Type  if BlockCode==.,m
+drop Treat_V Panchatvillage BlockCode
+merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village End_date comb_child_age) update
 tab Merge_Baseline_CL Cen_Type,m
 
 /* Archi to check more
+. tab Merge_Baseline_CL Cen_Type,m
+
  Matching result from |       Cen_Type
                 merge |         4          5 |     Total
 ----------------------+----------------------+----------
-      master only (1) |       161          0 |       161 
-       using only (2) |         4        116 |       120 
-          matched (3) |       818          0 |       818 
-nonmissing conflict ( |        23          0 |        23 
+      Master only (1) |       155          0 |       155 
+       Using only (2) |         4        116 |       120 
+          Matched (3) |       847          0 |       847 
 ----------------------+----------------------+----------
                 Total |     1,006        116 |     1,122 
+
 */
+replace village=20101 if village==60101
 merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 tab _merge
 br if _merge==1

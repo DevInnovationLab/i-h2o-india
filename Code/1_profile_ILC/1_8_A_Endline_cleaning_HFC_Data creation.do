@@ -160,12 +160,6 @@ save "${DataTemp}Mortality_19_20.dta", replace
  ---------------------------------------------------------------------------*/
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
-* Respondent available for an interview 
-* Discuss
-//Archi to Akito - I commented this out so that all values are included 
-//Akito to Archi - Do you still wnat to keep this? I want to remove the entry of non-itnerview for analysis, so I want to remove this from dataset. We can create the dataset that includes this if needed (but different data set name)
-keep if cen_child_caregiver_present==1
-
 key_creation
 foreach var of varlist cen* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -182,8 +176,6 @@ save "${DataTemp}temp.dta", replace
 * ID 24
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
 key_creation
-* Same as above
-keep if n_child_caregiver_present==1
 * Add age varible
 merge 1:1 parent_key key3 using "${DataTemp}Requested_long_backcheck1.dta", keepusing(comb_hhmember_age) keep(1 3) nogen
 foreach var of varlist n_* {
@@ -206,14 +198,17 @@ rename key R_E_key
 /*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen*/
 
 //Archi - In the command above we are merging this data with consented values but if we want to survey unavailable respondents too we have to merge it with "${DataPre}1_8_Endline_XXX.dta"
-merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen
+merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_str) keep(3) nogen
 
 rename R_E_key  key
-rename R_E_village_name_res Village
+rename R_E_village_name_str Village
 * Village
 replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
 save "${DataTemp}U5_Child_23_24_part1.dta", replace
+
+* Respondent available for an interview 
+keep if comb_child_caregiver_present==1
 //Archi to Akito- I think you want to perform the merge below for analaysis purposes but I am creating another dataset so that any value doesn't get missed out so I am gonna use ${DataTemp}U5_Child_23_24_part1 for re-visit purpose 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 br unique_id Village if _merge==1

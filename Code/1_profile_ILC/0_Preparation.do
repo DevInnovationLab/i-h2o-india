@@ -85,14 +85,27 @@ keep HHchoicecriteria village_IDinternal
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta", replace
 
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_1.dta",clear
-replace if Village=="Badabangi"
-keep if 
+replace village_IDinternal="20101" if Village=="Badabangi"
+
+* Adding Gopi Kankubadi
+count
+local observation = `r(N)'+1
+set obs `observation'
+replace Village="Gopi Kankubadi" in `observation'
+replace Treat_V=1 in `observation'
+replace village_IDinternal="30701" in `observation'
+replace Block="Kolnara" in `observation'
+replace Selected="Selected" in `observation'
+replace BlockCode=3 in `observation'
+replace Selected="Selected-dropped" if Village=="Badaalubadi"
 * Adding HHchoicecriteria 
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_2.dta"
 * Adding distance variable
 merge 1:1 village_IDinternal using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_3.dta", nogen
 rename (village_IDinternal HHchoicecriteria) (village V_Num_HH)
 destring village, replace
+drop if village==60101
+keep if Selected=="Selected"
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", replace
 export excel using "${DataPre}Google_map_village.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1) 
 
