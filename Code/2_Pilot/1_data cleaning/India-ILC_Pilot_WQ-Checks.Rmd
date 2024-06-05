@@ -20,7 +20,6 @@ library(rsurveycto)
 library(expss)
 library(labelled)
 library(httr)
-library(tidyverse)
 library(lubridate)
 library(quantitray)
 library(sjmisc)
@@ -37,7 +36,9 @@ library(patchwork)
 library(table1)
 library(gtsummary)
 library(gt)
+library(webshot2)
 library(clubSandwich)
+library(tidyverse)
 
 
 
@@ -105,9 +106,13 @@ user_path <- function() {
   } 
   else if (user=="akitokamei"){
     path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+    github =	"/Users/akitokamei/GitHub/i-h2o-india/"
+		overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
+		DataRaw = "${box}01. 2_Pilot/Data/1_raw/"
   } 
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -142,7 +147,41 @@ github_path <- function() {
   return(github)
 }
 
+github <- github_path()
 
+#Setting overleaf
+overleaf_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  #
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+    github =	"/Users/akitokamei/GitHub/i-h2o-india/"
+		overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
+		DataRaw = "${box}01. 2_Pilot/Data/1_raw/"
+  } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(overleaf))
+  return(overleaf)
+}
+
+
+overleaf <- overleaf_path()
 
 ```
 
@@ -1527,8 +1566,8 @@ idexx <- idexx%>%
 
 # Calculate descriptive statistics by village
 village_stats <- idexx%>%
-  group_by(village, sample_type) %>%
-  summarize(
+  dplyr::group_by(village, sample_type) %>%
+  dplyr::summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
@@ -1538,7 +1577,7 @@ village_stats <- idexx%>%
 
 tc_stats <- idexx%>%
   group_by(assignment, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -1589,7 +1628,7 @@ tc_stats <- tc_stats%>%
 
 all_stats <- idexx%>%
   group_by(sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
@@ -1602,7 +1641,7 @@ all_stats <- idexx%>%
 #Creating risk level stats for WHO Risk plot
 risk_stats <- idexx%>%
   group_by(assignment, ec_risk)%>%
-  summarize(count = n())%>%
+  summarise(count = n())%>%
   mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 
@@ -1772,7 +1811,7 @@ p_ec_risk_bl <- ggplot(data = risk_stats) +
 # Calculate descriptive statistics by village
 village_stats <- abr%>%
   group_by(village, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Median MPN E. coli/100 mL" = median(ec_mpn),
@@ -1781,7 +1820,7 @@ village_stats <- abr%>%
 
 abr_stats <- abr%>%
   group_by(sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
     "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
@@ -1846,7 +1885,7 @@ idexx_r1 <- idexx_r1%>%
 # Calculate descriptive statistics by village
 village_stats <- idexx_r1%>%
   group_by(village, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Median MPN E. coli/100 mL" = median(ec_mpn),
@@ -1855,7 +1894,7 @@ village_stats <- idexx_r1%>%
 
 tc_stats <- idexx_r1%>%
   group_by(assignment, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -1880,7 +1919,7 @@ tc_stats <- tc_stats%>%
 
 all_stats <- idexx_r1%>%
   group_by(sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
     "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
@@ -1890,7 +1929,7 @@ all_stats <- idexx_r1%>%
 #Creating risk level stats for WHO Risk plot
 risk_stats <- idexx_r1%>%
   group_by(assignment, ec_risk)%>%
-  summarize(count = n())%>%
+  summarise(count = n())%>%
   mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 # Print the table
@@ -2090,7 +2129,7 @@ idexx_r2$assignment <- fct_recode(idexx_r2$assignment,
 # Calculate descriptive statistics by village
 village_stats <- idexx_r2%>%
   group_by(village, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Median MPN E. coli/100 mL" = median(ec_mpn),
@@ -2099,7 +2138,7 @@ village_stats <- idexx_r2%>%
 
 tc_stats <- idexx_r2%>%
   group_by(assignment, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -2126,7 +2165,7 @@ tc_stats <- tc_stats%>%
 
 all_stats <- idexx_r2%>%
   group_by(sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
     "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
@@ -2136,7 +2175,7 @@ all_stats <- idexx_r2%>%
 #Creating risk level stats for WHO Risk plot
 risk_stats <- idexx_r2%>%
   group_by(assignment, ec_risk)%>%
-  summarize(count = n())%>%
+  summarise(count = n())%>%
   mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 
@@ -2268,7 +2307,7 @@ idexx_r3 <- idexx_r3%>%
 village_stats <- idexx_r3%>%
   filter(sample_type == "Tap")%>%
   group_by(village, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Median MPN E. coli/100 mL" = median(ec_mpn),
@@ -2277,7 +2316,7 @@ village_stats <- idexx_r3%>%
 
 tc_stats <- idexx_r3%>%
   group_by(assignment, sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -2302,7 +2341,7 @@ tc_stats <- tc_stats%>%
 
 all_stats <- idexx_r3%>%
   group_by(sample_type) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
     "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
@@ -2312,7 +2351,7 @@ all_stats <- idexx_r3%>%
 #Creating risk level stats for WHO Risk plot
 risk_stats <- idexx_r3%>%
   group_by(assignment, ec_risk)%>%
-  summarize(count = n())%>%
+  summarise(count = n())%>%
   mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
 
 
@@ -2512,7 +2551,7 @@ p_total_boxplot
 tap_total_stats <- idexx_total%>%
   filter(sample_type == "Tap")%>%
   group_by(assignment, data_round) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -2531,7 +2570,7 @@ tap_total_stats <- idexx_total%>%
 stored_total_stats <- idexx_total%>%
   filter(sample_type == "Stored")%>%
   group_by(assignment, data_round) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
     "Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
@@ -2715,7 +2754,7 @@ total_cl$`Stored - FC Presence` <- total_cl$`Stored - FC Presence`%>%
 #Creating summary stats for bar plot
 total_cl_stats <- total_cl%>%
   group_by(assignment, data_round, village_name) %>%
-  summarize(
+  summarise(
     "Number of Samples" = n(),
     "Tap - % Positive for Free Chlorine" = round((sum(`Tap - FC Presence` == "1") / n()) * 100,
                                                  1),
@@ -2887,6 +2926,12 @@ tab <- total_jjm%>%
    #             table.width = pct(50)),
     .header = "**{strata}**"
   )
+
+# Convert to gt object
+gt_tab <- as_gt(tab)
+
+# Save as .tex file
+#gtsave(gt_tab, filename = "wash_results_endline.png", path = paste0(overleaf_path(),"/Everything document -ILC/table/"))
 #tab
 
 
@@ -3207,7 +3252,7 @@ hh_survey_cl <- hh_survey_cl%>%
 # Calculate descriptive statistics by village
 village_stats <- hh_survey_cl%>%
   group_by(village_name, assignment, round) %>%
-  summarize(
+  summarise(
     "% taps positive for free chlorine (> 0.07 mg/L)" = round((sum(fc_tap_avg > 0.07) / n()) * 100, 1),
     "% taps above 0.2 mg/L" = round((sum(fc_tap_avg > 0.20) / n()) * 100, 1),
     "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3),
@@ -3217,7 +3262,7 @@ village_stats <- hh_survey_cl%>%
 
 all_stats <- hh_survey_cl %>%
   group_by(assignment, round) %>%
-  summarize(
+  summarise(
     "% taps positive for free chlorine (> 0.07 mg/L)" = round((sum(fc_tap_avg > 0.07) / n()) * 100, 1),
     "% taps above 0.2 mg/L" = round((sum(fc_tap_avg > 0.20) / n()) * 100, 1),
     "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3),
@@ -3317,7 +3362,7 @@ kbl(all_stats)%>%
 
 # karn_results <- karn%>%
 #   group_by(sample_location) %>%
-#   summarize(
+#   summarise(
 #     "Number of Samples" = n(),
 #     "Average Free Chlorine Concentration" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
 #     "Median MPN E. coli/100 mL" = median(ec_mpn),
