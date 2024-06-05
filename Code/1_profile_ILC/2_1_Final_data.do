@@ -364,8 +364,7 @@ replace Prim_JJM=. if R_Cen_a12_ws_prim==.
 
 collapse R_Cen_a18_jjm_drinking Prim_JJM (sum) C_Census R_Cen_consent, by(R_Cen_village_name)
 rename R_Cen_village_name village
-* We agree to use 20101
-replace village=20101 if village==60101
+replace village=60101 if village==20101
 save "${DataFinal}Final_Population_Village.dta", replace
 
   * Open clean file
@@ -378,8 +377,7 @@ label var C_Census  "Total HH"
 label var R_Cen_consent "Census consented (HH with Preg+U5)"
 label var R_Cen_a18_jjm_drinking "Drink JJM percent"
 
-* Removing this code since all the data is selected
-* drop if Selected=="Backup"
+drop if Selected=="Backup"
 
 * Labeling
 destring village V_Num_HH BlockCode, replace
@@ -422,7 +420,7 @@ program define   start_from_clean_file_Census
   rename R_Cen_village_name village
   drop Treat_V
   * merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode)
-  merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta",   keepusing(Treat_V Village Panchatvillage BlockCode) keep(1 3)
+  merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode) keep(1 3)
   
   * Final data description
    unique village
@@ -440,9 +438,8 @@ program define   start_from_clean_file_Preglevel
   * Open clean file
   start_from_clean_file_Census
   destring R_Cen_a5_autoage_13 R_Cen_a5_autoage_14 R_Cen_a5_autoage_15 R_Cen_a5_autoage_16 R_Cen_a5_autoage_17, replace
-
-  *Removed  R_Cen_village_name
-keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* R_Cen_a4_hhmember_gender_* R_Cen_a7_pregnant_* village R_Cen_village_str
+  
+keep R_Cen_a23_wom_diarr*  unique_id* R_Cen_a29_child_diarr* C_total_pregnant_hh R_Cen_village_name C_total_U5child_hh R_Cen_a6_hhmember_age* R_Cen_a6_u1age* R_Cen_unit_age* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* R_Cen_a4_hhmember_gender_* R_Cen_a7_pregnant_*
 reshape long R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ R_Cen_a4_hhmember_gender_ R_Cen_a7_pregnant_, i(unique_id) j(num)
 * Drop missing
 end

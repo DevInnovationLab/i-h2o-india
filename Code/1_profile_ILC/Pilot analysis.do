@@ -34,20 +34,20 @@ tabout DATE ENUEMRERATOR using "${Table}Duration_Issue.tex", ///
 //number of child-bearing age women
 start_from_clean_file_Preglevel
 gen count_1=1 if (R_Cen_a6_hhmember_age_>=15 & R_Cen_a6_hhmember_age_<=49) & R_Cen_a4_hhmember_gender_==2
-collapse (sum) count_1, by (village)
+collapse (sum) count_1, by (R_Cen_village_name)
 sum count_1
 
 //number of children
 start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a6_hhmember_age_>=0 & R_Cen_a6_hhmember_age_<=14
-collapse (sum) count_1, by (village)
+collapse (sum) count_1, by (R_Cen_village_name)
 sum count_1
 
 //number of preg women on avg
 start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.
 gen count_2=1 if (R_Cen_a6_hhmember_age_>=15 & R_Cen_a6_hhmember_age_<=49) & R_Cen_a4_hhmember_gender_==2
-collapse (sum) count_1 count_2, by (village)
+collapse (sum) count_1 count_2, by (R_Cen_village_name)
 gen perc_preg_women= count_1/192.22
 br
 sum count_1 perc_preg_women
@@ -56,7 +56,7 @@ sum count_1 perc_preg_women
 start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a6_hhmember_age_<5
 gen count_2=1 if R_Cen_a6_hhmember_age_>=0 & R_Cen_a6_hhmember_age_<=14
-collapse (sum) count_1 count_2, by (village)
+collapse (sum) count_1 count_2, by (R_Cen_village_name)
 gen perc_U5child= count_1/192.22
 sum count_1 perc_U5child
 
@@ -64,7 +64,7 @@ sum count_1 perc_U5child
 start_from_clean_file_Preglevel
 gen count_1=1 if R_Cen_a23_wom_diarr_day_!=.| R_Cen_a23_wom_diarr_week_!=. | R_Cen_a23_wom_diarr_2week_!=.| R_Cen_a6_hhmember_age_<5
 gen count_2=1 if ((R_Cen_a6_hhmember_age_>=15 & R_Cen_a6_hhmember_age_<=49) & R_Cen_a4_hhmember_gender_==2) | R_Cen_a6_hhmember_age_>=0 & R_Cen_a6_hhmember_age_<=14
-collapse (sum) count_1 count_2, by (village)
+collapse (sum) count_1 count_2, by (R_Cen_village_name)
 gen perc_total= count_1/192.22
 sum count_1 perc_total
 
@@ -94,9 +94,8 @@ sum count1 count2 count3 count4 perc_hh_preg perc_hh_U5 perc_hh_screened
 -----------------------------------------------------------------*/
 //JJM access
 start_from_clean_file_Census
-* 0 Observation is deleted
-drop if village== 50601 | village== 30601	
-unique village
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	
+
 
 global jjm_nonuse R_Cen_a18_jjm_drink_2 R_Cen_a18_jjm_drink_0 R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_999 R_Cen_a18_reason_nodrink__77 
 
@@ -138,10 +137,9 @@ esttab model6 model7 using "${Table}JJM tap_non use.tex", ///
 
 //Water sources
 start_from_clean_file_Census
-* No observations dropped
-drop if village== 50601 | village== 30601	   
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	   
   
-global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 
+global primary_water R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_6 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77 
 		   
 global secondary_water R_Cen_a13_water_sec_yn_0 ///
   R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec__77 
@@ -185,8 +183,7 @@ esttab model5 model4 using "${Table}Use of Water Sources_`k'.tex", ///
 
 
 start_from_clean_file_Census
-* 0 observation is deted
-drop if village== 50601 | village== 30601	 
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	 
 keep if R_Cen_a12_ws_prim==1	
    
 global secondary_JJMprim R_Cen_a13_water_sec_yn_0 ///
@@ -197,7 +194,7 @@ local secondary_JJMprim "Secondary water source for JJM as primary water source"
 
 foreach k in secondary_JJMprim {
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	 
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	 
 keep if R_Cen_a12_ws_prim==1
 
 
@@ -206,7 +203,7 @@ keep if R_Cen_a12_ws_prim==1
 	
 *Min
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	 
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	 
 keep if R_Cen_a12_ws_prim==1
 	foreach i in $`k' {
 	egen m_`i'=sd(`i')
@@ -225,10 +222,10 @@ esttab model30 model31 using "${Table}Use of Water Sources_`k'.tex", ///
 
 
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	 
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	 
 keep if R_Cen_a13_ws_sec_1==1
 		   
-global primary_JJMsecond R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77
+global primary_JJMsecond R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_6 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77
            
 local primary_JJMsecond "Primary water source for JJM as secondary water source"
 
@@ -271,12 +268,12 @@ esttab model32 model33 using "${Table}Use of Water Sources_`k'.tex", ///
 
 //NUMBER OF WATER SOURCES PEOPLE HAVE
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	 
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	 
 rename R_Cen_a13_ws_sec__77 R_Cen_a13_ws_sec_77
 
 egen count_secondary_sources= rowtotal(R_Cen_a13_ws_sec_1 R_Cen_a13_ws_sec_2 R_Cen_a13_ws_sec_3 R_Cen_a13_ws_sec_4 R_Cen_a13_ws_sec_5 R_Cen_a13_ws_sec_6 R_Cen_a13_ws_sec_7 R_Cen_a13_ws_sec_8 R_Cen_a13_ws_sec_77)
 
-egen count_primary_sources= rowtotal (R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77)
+egen count_primary_sources= rowtotal (R_Cen_a12_ws_prim_1 R_Cen_a12_ws_prim_2 R_Cen_a12_ws_prim_3 R_Cen_a12_ws_prim_4 R_Cen_a12_ws_prim_5 R_Cen_a12_ws_prim_6 R_Cen_a12_ws_prim_7 R_Cen_a12_ws_prim_8 R_Cen_a12_ws_prim_77)
 
 gen total_num_sources= count_secondary_sources+ count_primary_sources
 
@@ -353,7 +350,7 @@ esttab model32 model33 using "${Table}Number of water sources_`k'.tex", ///
 //JJM uses
 
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	  
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	  
 
 global jjm_uses C_Cen_a18_jjm_drinking ///
 		   R_Cen_a20_jjm_use_1 R_Cen_a20_jjm_use_2 R_Cen_a20_jjm_use_3 R_Cen_a20_jjm_use_4 R_Cen_a20_jjm_use_5 R_Cen_a20_jjm_use_6 R_Cen_a20_jjm_use_7 
@@ -429,7 +426,7 @@ esttab model8 model9 using "${Table}JJM water uses_for JJM primary source.tex", 
 //Water treatment
 
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	   
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	   
 
  
 global general R_Cen_a16_water_treat_0 R_Cen_a16_water_treat_1 R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 ///
@@ -514,7 +511,7 @@ esttab model10 model11 using "${Table}Water treatment_JJM users.tex", ///
 
 //Water treatment frequency
 start_from_clean_file_Census
-drop if village== 50601 | village== 30601	   
+drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601	   
 
 
 global general R_Cen_a16_water_treat_freq_1 R_Cen_a16_water_treat_freq_2 R_Cen_a16_water_treat_freq_3 R_Cen_a16_water_treat_freq_4 R_Cen_a16_water_treat_freq_5 R_Cen_a16_water_treat_freq_6 R_Cen_a16_water_treat_freq__77 
@@ -716,8 +713,7 @@ local diarrhea_preg "Diarrhea_Preg"
 start_from_clean_file_ChildLevel
 keep if R_Cen_a6_hhmember_age_<2
 
-* decode R_Cen_village_name, gen(R_Cen_village_name_str)
-rename R_Cen_village_str R_Cen_village_name_str
+decode R_Cen_village_name, gen(R_Cen_village_name_str)
 drop if R_Cen_village_name_str== "Badaalubadi" | R_Cen_village_name_str=="Haathikambha"
 gen treatment= 1 if R_Cen_village_name_str== "Birnarayanpur" | R_Cen_village_name_str=="Nathma"|R_Cen_village_name_str== "Badabangi"| R_Cen_village_name_str=="Naira"| R_Cen_village_name_str== "Bichikote"|R_Cen_village_name_str== "Karnapadu"| R_Cen_village_name_str=="Mukundpur"|R_Cen_village_name_str== "Tandipur"|R_Cen_village_name_str== "Gopi Kankubadi"|R_Cen_village_name_str== "Asada" 
 
@@ -1250,7 +1246,7 @@ eststo clear
 *E.coli results at baseline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-import delimited "${DataIdexx}BL_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv", clear
 drop if assignment=="NA"
 drop if date=="2024-02-20T00:00:00Z"
 
@@ -1325,10 +1321,11 @@ reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cl
 
 //log10 transformed density plots
 
-* twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
-* graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90)
-* twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
-* graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90) replace
+twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90)
+
+twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli baseline.jpg", as(jpg) name("Graph") quality(90) replace
 
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1506,8 +1503,7 @@ eststo clear
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at followup R1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-import delimited "${DataIdexx}R1_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv", clear
 
 split date, parse("-")
 replace date3 = substr(date3, 1, 2)
@@ -1529,6 +1525,7 @@ gen positive_ecoli=1 if ec_mpn>0
 replace positive_ecoli=0 if ec_mpn==0
 gen positive_totalcoliform=1 if cf_mpn>0
 replace positive_totalcoliform=0 if cf_mpn==0
+
 
 gen treatment= 1 if assignment=="Treatment"
 replace treatment=0 if assignment=="Control"
@@ -1586,11 +1583,12 @@ reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cl
 
 
 //log10 transformed density plots
-* twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
-* graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
 
-* twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
-* graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
+twoway histogram ecoli_log10 if sample_type=="Tap" || kdensity ecoli_log10 if sample_type=="Tap", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
+
+twoway histogram ecoli_log10 if sample_type=="Stored" || kdensity ecoli_log10 if sample_type=="Stored", by(treatment) 
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli R1 FU.jpg", as(jpg) name("Graph") quality(90)
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *Follow-up R2 survey data
@@ -1762,7 +1760,7 @@ eststo clear
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at followup R2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-import delimited "${DataIdexx}R2_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv", clear
 
 split submissiondate, parse("/")
 replace submissiondate3 = substr(submissiondate3, 1, 4)
@@ -1835,10 +1833,10 @@ reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cl
 //log10 transformed density plots
 
 twoway histogram ec_log if sample_type=="Tap" || kdensity ec_log if sample_type=="Tap", by(treatment) 
-graph export "${Figure}Running water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Running water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
 
 twoway histogram ec_log if sample_type=="Stored" || kdensity ec_log if sample_type=="Stored", by(treatment) 
-graph export "${Figure}Stored water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
+graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data Checks/Stored water, ecoli R2 FU.jpg", as(jpg) name("Graph") quality(90)
 
 
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1944,7 +1942,7 @@ reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_FU3_r_cen_vill
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *E.coli results at followup R3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-import delimited "${DataIdexx}R3_idexx_master_cleaned.csv", clear
+import delimited "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv", clear
 
 
 duplicates report sample_id
