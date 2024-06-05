@@ -106,6 +106,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataFinal "${pilot}3_final/"
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
+	global DataIdexx  "${pilot}5_lab data/idexx/cleaned/"
+	
 					if c(username) == "Archi Gupta" {		
 		global DataTemp  "C:\Users\Archi Gupta\Box\Data\99_temp\"
 	}
@@ -175,7 +177,7 @@ local string pregwoman
 	
 cd "${DataRaw}"
 
-END 	
+/*
 
 * (0) First apply SurveyCTO code cleaning do file
 do "${Do_pilot}0_Preparation_V2.do" // Long form data of endline census datasets

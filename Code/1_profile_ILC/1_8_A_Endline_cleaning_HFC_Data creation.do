@@ -153,7 +153,7 @@ foreach var of varlist *_cbw {
      }
 gen Cen_Type=2
 append using "${DataTemp}temp.dta"
-save "${DataTemp}Mortality_19_20.dta", replace
+save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
 /* ---------------------------------------------------------------------------
 * ID 21, 22, 23 and 24: List of U5 and Morbidity for U5 children
@@ -212,8 +212,8 @@ keep if comb_child_caregiver_present==1
 //Archi to Akito- I think you want to perform the merge below for analaysis purposes but I am creating another dataset so that any value doesn't get missed out so I am gonna use ${DataTemp}U5_Child_23_24_part1 for re-visit purpose 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 br unique_id Village if _merge==1
-save "${DataTemp}U5_Child_23_24.dta", replace
-savesome using "${DataTemp}Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
+save "${DataFinal}1_1_Endline_U5_Child_23_24.dta", replace
+savesome using "${DataFinal}1_1_Endline_Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
 
 /* ---------------------------------------------------------------------------
 * ID of the data 5 and 11, 21 and 22
