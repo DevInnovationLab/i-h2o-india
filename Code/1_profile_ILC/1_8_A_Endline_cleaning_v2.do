@@ -599,8 +599,6 @@ sort unique_id R_E_submissiondate
 br R_E_submissiondate unique_id R_E_key R_E_resp_available R_E_enum_name_label R_E_instruction R_E_r_cen_a1_resp_name if dup_HHID > 0
 
 save "${DataPre}1_8_Endline_XXX.dta", replace
-
-
 savesome using "${DataPre}1_1_Endline_XXX_consented.dta" if R_E_consent==1, replace
 
 
