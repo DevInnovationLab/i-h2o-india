@@ -21,35 +21,6 @@ do "${github}1_8_A_Endline_cleaning_v2.do"
 * CREATING PRELOAD FOR RE-VISIT (HH LEVEL)
 use "${DataPre}1_8_Endline_XXX.dta", clear
 
-//formatting starttime 
-
-drop date_string date_only date_final
-	* First, convert the numeric date to a string format
-gen date_starttime = string(R_E_starttime, "%tc")
-
-* Then, extract only the date part from the string
-gen date_only_starttime = substr(date_starttime, 1, 9)
-
-* Now, format the date_only variable as a date
-gen date_final_starttime = date(date_only_starttime, "DMY")
-
-format date_final_starttime %td
-
-//formatting submissiondate
-
-	* First, convert the numeric date to a string format
-gen date_submission = string(R_E_submissiondate, "%tc")
-
-* Then, extract only the date part from the string
-gen date_only_submission = substr(date_submission, 1, 9)
-
-* Now, format the date_only variable as a date
-gen date_final_submission = date(date_only_submission, "DMY")
-
-format date_final_submission %td
-
-
-*keep if date_final_submission  < mdy(5,27,2024)
 
 *Assigned to Archi- Drop duplicates: DONE 
 drop dup_HHID
@@ -64,35 +35,12 @@ drop if R_E_resp_available == .
 br if unique_id == ""
 // I am creating this as HH level preload so I am not exporting those cases where HH was available for survey 
 tab R_E_resp_available
-
-//creating a subset for matching with old version of HH level tracking sheet
-
-preserve
-import excel "${pilot}Supervisor_Endline_Revisit_Tracker_checking_HH_level_old_version.xlsx", sheet("Sheet1") firstrow clear
-rename UniqueID unique_id
-save "${DataTemp}stata_revisit_HH_level", replace
-restore
-
-preserve
-keep unique_id date_final_submission R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction
-gen newvar1 = substr(unique_id, 1, 5)
-gen newvar2 = substr(unique_id, 6, 3)
-gen newvar3 = substr(unique_id, 9, 3)
-gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-drop unique_id
-rename ID unique_id 
-merge 1:1 unique_id using "${DataTemp}stata_revisit_HH_level.dta"
-keep if _merge == 3
-//72% completion rate
-restore 
-
 drop if R_E_resp_available == 1 | R_E_resp_available == 2
 
 * HH unavailable for re-visits 
 
 //checking unique ID is unique
 isid unique_id
-
 
 //merging it with the main census file 
 keep unique_id R_E_enum_name_label
@@ -182,30 +130,6 @@ keep if R_E_resp_available == 1
 tab R_E_instruction
 replace R_E_instruction = 6 if R_E_instruction == 7
 //removuing cases where main resp survey has been done already or where main resp has permanently left
-
-//matching with old version preload
-preserve
-import excel "C:\Users\Archi Gupta\Box\Data\Supervisor_Endline_Revisit_Tracker_checking_Main_resp_level_old_version.xlsx", sheet("Sheet1") firstrow clear
-rename UniqueID unique_id
-save "${DataTemp}stata_revisit_Main_resp_level", replace
-restore
-
-
-preserve
-keep unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_r_instruction R_E_r_instruction_oth
-
-gen newvar1 = substr(unique_id, 1, 5)
-gen newvar2 = substr(unique_id, 6, 3)
-gen newvar3 = substr(unique_id, 9, 3)
-gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
-drop unique_id
-rename ID unique_id 
-merge 1:1 unique_id using "${DataTemp}stata_revisit_Main_resp_level.dta"
-keep if _merge == 3
-restore
-
-//////////////////////////////////////////////
-
 keep if R_E_instruction != 1 & R_E_instruction != 2
 
 isid unique_id
@@ -414,7 +338,6 @@ use "${DataPre}1_8_Endline_XXX.dta", clear
 
 *Assigned to Archi- Drop duplicates: DONE 
 
-drop dup_HHID
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
@@ -701,7 +624,6 @@ isid  unique_id
 
 preserve
 use "${DataPre}1_8_Endline_XXX.dta", clear
-drop dup_HHID
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
@@ -1142,7 +1064,7 @@ rename O_TotalU5revisit Old_total_U5_revisit
 	
 sort VillageName 
 
-cap export excel UniqueID Blockname VillageName Hamletname Saahiname R_Cen_landmark Baselinerespname Endlinerespname Endline_Enum_name Woman_name1 Woman_name2 Woman_name3 Woman_name4 TotalCBWrevisit Child_name1 Child_name2 TotalU5revisit Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main Old_Child_name1 Old_total_U5_revisit mismatch_U5 match using "${DataPre}Endline_Revisit_common_IDs_new_version.xlsx", sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel UniqueID Blockname VillageName Hamletname Saahiname R_Cen_landmark Baselinerespname Endlinerespname Endline_Enum_name Woman_name1 Woman_name2 Woman_name3 Woman_name4 TotalCBWrevisit Child_name1 Child_name2 TotalU5revisit Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main Old_Child_name1 Old_total_U5_revisit mismatch_U5 match using "${DataPre}Endline_Revisit_common_IDs_new_version.xlsx", sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 
 /***************************************************************COMPARING new and old HH lock tracking sheet
@@ -1612,13 +1534,6 @@ count if dup_HHID > 0
 tab dup_HHID
 
 
-keep deviceid-hh_member_section key
-
-rename key Revisit_key
-
-save "${DataPre}1_9_Endline_revisit_final_XXX.dta", replace
-
-
 //Now we have the final cleaned re-visit dataset 
 
 
@@ -1644,7 +1559,7 @@ reshape long comb_preg_index_ comb_name_cbw_woman_earlier_ comb_resp_avail_cbw_ 
 
 save "${DataTemp}endline_revisit_merge.dta", replace
 
-import excel "${DataPre}Endline_Revisit_common_IDs_old_version.xlsx", sheet("Sheet1") firstrow clear
+import excel "${DataPre}Endline_Revisit_common_IDs_new_version.xlsx", sheet("Sheet1") firstrow clear
 
 rename UniqueID unique_id 
 
@@ -1722,123 +1637,5 @@ label define comb_child_caregiver_present_x 1 "Respondent available for an inter
  
 label values comb_child_caregiver_present_ comb_child_caregiver_present_x
 
-
-
-
-
-
-
-
-
-
-
-/*************************************************************MERGING REVISIT DATA WITH ENDLINE_XXX DATSET (ONLY MAIN RESPONDENTS) 
-**************************************************************/
-
-
-
-clear all
-
-set maxvar 30000
-use "${DataPre}1_8_Endline_XXX.dta", clear
-
-drop _merge 
-
-renpfix R_E_ 
-
-ds `r(varlist)'
-
-foreach var of varlist `r(varlist)'{
-tostring `var', replace
-}
-
-ds `r(varlist)', has (type string)
-foreach var of varlist `r(varlist)'{
-replace `var' = "" if `var' == "."
-}
-
-
-preserve
-clear
-use "${DataPre}1_9_Endline_revisit_final_XXX.dta", clear
-
-keep if wash_applicable == "1"
-
-ds `r(varlist)'
-
-foreach var of varlist `r(varlist)'{
-tostring `var', replace
-}
-
-ds `r(varlist)', has (type string)
-foreach var of varlist `r(varlist)'{
-replace `var' = "" if `var' == "."
-}
-
-
-save "${DataPre}1_9_Endline_revisit_WASH_XXX.dta", replace
-
-restore
-
-merge 1:1 unique_id using "${DataPre}1_9_Endline_revisit_WASH_XXX.dta", update replace
-
-
-
-cf _all using "${DataPre}1_9_Endline_revisit_WASH_XXX.dta", verbose
-
-
-
-/*use "${DataPre}1_9_Endline_revisit_final_XXX.dta", clear
-
-keep if wash_applicable == "1"
-
-ds `r(varlist)'
-
-global varlist_re `r(varlist)'
-
-ds `varlist_re'
-
-use "${DataPre}1_8_Endline_XXX.dta", clear
-
-renpfix R_E_ //removing R_cen prefix 
-
-ds `r(varlist)'
-
-global varlist_e `r(varlist)'
-
-ds `$varlist_e'
-
-ds `$varlist_re'
-
-local varlist_re $varlist_re
-local varlist_e $varlist_e
-
-// Initialize local macros to store the differences
-local diff_re ""
-local diff_e ""
-
-// Find variables in varlist_re that are not in varlist_e
-foreach var of local varlist_re {
-    if !inlist("`var'", `varlist_e') {
-        local diff_re `"`diff_re' `var''"
-    }
-}
-
-// Find variables in varlist_e that are not in varlist_re
-foreach var of local varlist_e {
-    if !inlist("`var'", `varlist_re') {
-        local diff_e `"`diff_e' `var''"
-    }
-}
-
-ds `diff_re'
-
-// Display the differences
-display "Variables in varlist_re but not in varlist_e: `diff_re'"
-display "Variables in varlist_e but not in varlist_re: `diff_e'"
-
-save "${DataPre}1_9_Endline_revisit_edited_XXX.dta", replace
-//right now we are merging HH level dataset with main endline dataset 
-use "${DataPre}1_8_Endline_XXX.dta", clear */
 
 
