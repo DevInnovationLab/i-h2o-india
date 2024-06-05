@@ -581,6 +581,13 @@ drop if R_E_key == "uuid:ac531f0b-084e-426c-a1e2-917e3d8a213e" & unique_id == "5
 
 drop if R_E_key == "uuid:08cb3fc2-bab4-47d7-b0d8-edd9b94dcdac" & unique_id == "50501104003"
 
+drop if R_E_key == "uuid:0bba28b6-f6d3-4a5d-80b8-8632c28c4a86" & unique_id == "50301106006"
+
+drop if R_E_key == "uuid:7581b00a-2cca-4115-9c6d-35b5e082a083" & unique_id == "50301106014"
+
+drop if R_E_key == "uuid:345ecae7-bfbe-4f01-82fa-c47ad9b036ed" & unique_id == "50301106035"
+
+drop if R_E_key == "uuid:fed059d7-fc79-4a06-bad8-438b71634456" & unique_id == "50301117034"
 
 
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
