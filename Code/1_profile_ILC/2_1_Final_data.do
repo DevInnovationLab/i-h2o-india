@@ -425,7 +425,7 @@ program define   start_from_clean_file_Census
   * Final data description
    unique village
    unique unique_id
-   unique village if Treat_V==0
+   tab village if Treat_V==0
    unique village if Treat_V==1
    unique village if Treat_V==.
 
@@ -498,9 +498,13 @@ program define   start_from_clean_file_ChildLevel
 start_from_clean_file_Census  
 keep R_Cen_a29_child_diarr* unique_id* C_total_U5child_hh ///
      Treat_V R_Cen_block_name R_Cen_village_str village Village Panchatvillage BlockCode ///
-	 R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_* 
+	 R_Cen_a31_child_stool* R_Cen_a6_hhmember_age_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_a6_age_confirm2_* R_Cen_a5_autoage_*  ///
+	 R_Cen_a27_child* 
+	   
 reshape long R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_2week_ ///
-         R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_, i(unique_id) j(num)
+         R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a6_hhmember_age_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_a6_age_confirm2_ R_Cen_a5_autoage_ ///
+		 R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ ///
+		 , i(unique_id) j(num)
 * Drop the case where there is no children
 drop if R_Cen_a29_child_diarr_day_==. & R_Cen_a29_child_diarr_week_==. & R_Cen_a29_child_diarr_2week_==.
 * Data quality: Michelle (sometimes they fill the child child diarrhea info although C_total_U5child_hh=0?)
@@ -521,6 +525,14 @@ gen     C_loosestool_child_1week=0
 replace C_loosestool_child_1week=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1) 
 gen     C_loosestool_child_2weeks=0
 replace C_loosestool_child_2weeks=1 if (R_Cen_a31_child_stool_24h_==1 | R_Cen_a31_child_stool_yest_==1 | R_Cen_a31_child_stool_week_==1 | R_Cen_a31_child_stool_2week_==1)
+
+* Cut
+gen     C_cuts_child_1day=0
+replace C_cuts_child_1day=1  if R_Cen_a27_child_cuts_day_==1
+gen     C_cuts_child_1week=0
+replace C_cuts_child_1week=1 if (R_Cen_a27_child_cuts_day_==1 | R_Cen_a27_child_cuts_week_==1) 
+gen     C_cuts_child_2weeks=0
+replace C_cuts_child_2weeks=1 if (R_Cen_a27_child_cuts_day_==1 | R_Cen_a27_child_cuts_week_==1 | R_Cen_a27_child_cuts_2week_==1) 
 
 *generating new vars using both vars for diarrhea
 gen    C_diarrhea_comb_U5_1day=0

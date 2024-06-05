@@ -81,6 +81,14 @@ replace C_loosestool_child_1week=1 if (comb_child_stool_24h==1 | comb_child_stoo
 gen     C_loosestool_child_2weeks=0
 replace C_loosestool_child_2weeks=1 if (comb_child_stool_24h==1 | comb_child_stool_yest==1 | comb_child_stool_wk==1 | comb_child_stool_2wk==1)
 
+* Cut
+gen     C_cuts_child_1day=0
+replace C_cuts_child_1day=1  if comb_child_cuts_day==1
+gen     C_cuts_child_1week=0
+replace C_cuts_child_1week=1 if (comb_child_cuts_day==1 | comb_child_cuts_wk==1) 
+gen     C_cuts_child_2weeks=0
+replace C_cuts_child_2weeks=1 if (comb_child_cuts_day==1 | comb_child_cuts_wk==1 | comb_child_cuts_2wk==1) 
+
 *generating new vars using both vars for diarrhea
 gen     C_diarrhea_comb_U5_1day=0
 replace C_diarrhea_comb_U5_1day=1 if C_diarrhea_prev_child_1day==1 | C_loosestool_child_1day==1
@@ -94,9 +102,14 @@ replace C_diarrhea_comb_U5_2weeks=1 if C_diarrhea_prev_child_2weeks==1 | C_loose
 label var C_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
 label var C_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
 label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
+
 label var C_loosestool_child_1day "Loose stool- U5 (1 day)" 
 label var C_loosestool_child_1week "Loose stool- U5 (1 week)" 
 label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+
+label var C_cuts_child_1day "Cuts/Bruise- U5 (1 day)" 
+label var C_cuts_child_1week "Cuts/Bruise- U5 (1 week)" 
+label var C_cuts_child_2weeks "Cuts/Bruise- U5 (2 weeks)" 
 
 label var C_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
 label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
@@ -127,7 +140,8 @@ global U5Var ///
 	   C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
 	   comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq ///
 	   C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks ///
-	   C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
+	   C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks ///
+	   C_cuts_child_1day C_cuts_child_1week C_cuts_child_2weeks ///
 	   
 	   * Vomit
 	   * comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk ///
@@ -194,6 +208,7 @@ esttab model0 model01 model02  model1 model6 model7 model8 using "${Table}Enr_`k
 	   }
 eststo clear
 
+
  /*--------------------------------------------
     Section A.3: Diarrhea analysis (Regression)
  --------------------------------------------*/
@@ -201,22 +216,25 @@ eststo clear
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
 tab  village Merge_Baseline_CL,m
 * For every regression check the missing 
-mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode comb_child_age
+mdesc *1day *1week *2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode comb_child_age
 * Be clear in what case you have missing info in the regression
 tab Merge_Baseline_CL Cen_Type if Treat_V==.,m
-
 global U5COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
 global U5DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
 global U5STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
-local  U5COMB "Probability of experiencing diarrhea/loose stool among children U5"
-local  U5DIA "Probability of experiencing diarrhea among children U5"
-local  U5STOOL "Probability of experiencing loose stool among children U5"
-local  Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies. To do: Some village info needs to be cleaned. Age variable is missing for newly added sample (more cleaning is needed)."
+global U5CUT C_cuts_child_1day C_cuts_child_1week C_cuts_child_2weeks
+local  U5CUT "Probability of experiencing any bruising, scrapes, or cuts in the past 2 weeks among children U5 at endline"
+local  U5COMB "Probability of experiencing diarrhea/loose stool (Combined) among children U5 at endline"
+local  U5DIA "Probability of experiencing diarrhea (Self-reported) among children U5 at endline"
+local  U5STOOL "Probability of experiencing loose stool (WHO definition) among children U5 at endline"
+local  Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
+local  RENAMEU5CUT "B_C_cuts_child_1week B_C_cuts_child_1day B_C_cuts_child_2weeks B_C_cuts_child_1day"
 local  RENAMEU5COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
 local  RENAMEU5DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
 local  RENAMEU5STOOL  "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
 
-foreach k in U5COMB U5DIA U5STOOL {	
+* Program effect
+foreach k in U5COMB U5DIA U5STOOL U5CUT {	
 foreach i in $`k' {
 	
 eststo: reg `i' Treat_V , cluster(village)
@@ -245,7 +263,41 @@ esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" 
 eststo clear
 }
 
+* Baseline balance
+global B_U5CUT B_C_cuts_child_1day B_C_cuts_child_1week B_C_cuts_child_2weeks
+global B_U5STOOL B_C_loosestool_child_1day B_C_loosestool_child_1week B_C_loosestool_child_2weeks
+local  B_U5CUT "Probability of experiencing any bruising, scrapes, or cuts in the past 2 weeks among children U5 at baseline"
+local  B_U5STOOL "Probability of experiencing loose stool (WHO definition) among children U5 at baseline"
+
+foreach k in B_U5STOOL B_U5CUT {	
+foreach i in $`k' {
+	
+eststo: reg `i' Treat_V , cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+eststo: reg `i' Treat_V i.Panchatvillage i.BlockCode, cluster(village)
+sum `i' if Treat_V==0
+estadd scalar Mean = r(mean)
+
+}
+esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
+             indicate("Stratification FE= *Panchatvillage *BlockCode") ///
+			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
+			 rename(`RENAME`k'') ///
+			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
+			 substitute("{l}{\footnotesize" "{p{1\linewidth}}{\footnotesize" ///
+			 ) ///
+			 addnote("`Notediarrhea'") ///	
+			 replace
+eststo clear
+}
+
+
 * Main specification: Combined diarrhea with U2
+* Run this do file to udpate the data
+* 3_X_Final_Data_Creation.do
 use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
 keep if comb_child_age<2
 * For every regression check the missing 
@@ -254,9 +306,9 @@ mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_i
 global U2COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
 global U2DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
 global U2STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
-local U2COMB "Probability of experiencing diarrhea/loose stool among children U2"
-local U2DIA "Probability of experiencing diarrhea among children U2"
-local U2STOOL "Probability of experiencing loose stool among children U2"
+local U2COMB "Probability of experiencing diarrhea/loose stool (Combined) among children U2"
+local U2DIA "Probability of experiencing diarrhea (Self-reported) among children U2"
+local U2STOOL "Probability of experiencing loose stool (WHO definition) among children U2"
 local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
 local RENAMEU2COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
 local RENAMEU2DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
