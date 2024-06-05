@@ -38,11 +38,11 @@ use "${DataTemp}Baseline_ChildLevel.dta", clear
 * Cen_Type is the type existed from the baseline
 gen Cen_Type=4
 * Renaming baseline variable with B_ prefix
-foreach i in C_diarr* C_loose* {
+foreach i in C_diarr* C_loose* C_cuts_* {
 	rename `i' B_`i'
 }
 drop Treat_V Panchatvillage BlockCode
-merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* village End_date comb_child_age) update
+merge 1:1 unique_id num Cen_Type using "${DataTemp}U5_Child_23_24_clean.dta", gen(Merge_Baseline_CL) keepusing(C_diarrhea* C_loose* C_cuts_* village End_date comb_child_age) update
 tab Merge_Baseline_CL Cen_Type,m
 
 /* Archi to check more
@@ -58,14 +58,14 @@ tab Merge_Baseline_CL Cen_Type,m
                 Total |     1,006        116 |     1,122 
 
 */
-replace village=20101 if village==60101
-merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3)
 tab _merge
 br if _merge==1
 label var Treat_V "Treatment"
 label var B_C_diarrhea_comb_U5_1day "Baseline"
 label var B_C_diarrhea_prev_child_1day "Baseline"
 label var B_C_loosestool_child_1day "Baseline"
+label var B_C_cuts_child_1day "Baseline"
 
 save "${DataTemp}U5_Child_Diarrhea_data.dta", replace
 
