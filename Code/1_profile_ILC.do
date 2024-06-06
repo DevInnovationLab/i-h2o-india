@@ -84,6 +84,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
 		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
 	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
+		global git_trim "C:\Users\Archi Gupta\Documents\GitHub\"
 	}
     
 	global DataRaw   "${pilot}1_raw/"
@@ -92,6 +93,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	}
 
 
+	
 	
 	global Endline   "${DataRaw}1_8_Endline/"
 				if c(username) == "Archi Gupta" {		
@@ -133,6 +135,11 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	    global Do_lab   "C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\Label\" 
 	}
 
+
+	global git_trim     "C:\Users\Archi Gupta\Documents\GitHub\"
+					if c(username) == "Archi Gupta" {		
+	    global git_trim  "C:\Users\Archi Gupta\Documents\GitHub\"
+	}
 	
 	global Data_map   "${box}4_Admin data/shrug-pc11-village-poly-shp/"
 	
