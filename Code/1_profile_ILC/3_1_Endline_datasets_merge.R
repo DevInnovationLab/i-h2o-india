@@ -141,6 +141,35 @@ pre_path <- function() {
 knitr::opts_knit$set(root.dir = pre_path())
 
 
+
+temp_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/99_temp/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = temp_path())
+
 #------------------------ Load the data ----------------------------------------#
 
 
@@ -334,3 +363,16 @@ num_invalid_names <- length(invalid_names)
 # Print the invalid names and their count
 print(invalid_names)
 print(paste("Number of variables requiring renaming:", num_invalid_names))
+
+
+
+
+
+#---------------------------------------------------------------
+#CHILD LEVEL DATASET MERGE 
+#---------------------------------------------------------------
+
+df.child.main <- read_stata(paste0(temp_path(),"U5_Child_23_24_part1.dta"))
+View(df.child.main)
+
+
