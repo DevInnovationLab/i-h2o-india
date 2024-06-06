@@ -402,6 +402,8 @@ DE
  ----------------------------------------------------*/
 use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear 
 
+//Archi to Akito- Hey, Akito for this file I cannot drop unavailable values in the data creation file because of presence of roster members, women members and children so if I drop rows for mother's unavailable cases it would also drop cases for child that might be available so this has to be incirporated in this file itself 
+
 foreach i in father mother {
 use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 unique R_E_key key3
@@ -697,6 +699,8 @@ The given do file uses and saves several datasets. Here are the details:
    - This dataset is recreated from the clean file `start_from_clean_file_ChildLevel` and saved.
 
 5. **`${DataTemp}U5_Child_Diarrhea_data.dta`**
+Archi to Akito- Can't find where this dataset is created. In what file I mean?
+
    - This dataset is used multiple times for various analyses, including descriptive statistics, regression, and graphical representations.
 
 ### Datasets Saved:
