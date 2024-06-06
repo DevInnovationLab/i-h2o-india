@@ -286,3 +286,6 @@ esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("`k
 	   }
 	   
 erase "${DataTemp}Temp.dta"
+
+
+//trial
