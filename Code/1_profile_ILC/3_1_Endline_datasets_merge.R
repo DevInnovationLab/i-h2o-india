@@ -209,26 +209,128 @@ flagged_df <- flagged_df %>% select_if(function(col) !all(is.na(col) | col == 0)
 View(flagged_df)
 
 
-#DOING THE FINAL REPLACEMENT 
+#---------------------------------------------------------------
+#REPLACING EMPTY STRINGS WITH NA VALUES 
+#---------------------------------------------------------------
+
+df.main <- read_stata(paste0(pre_path(),"1_8_Endline_XXX.dta"))
+View(df.main)
+
+#removing _merge var
+df.main$`_merge` <- NULL
+
+#removing R_E prefix
+names(df.main) <- gsub("^R_E_", "", names(df.main))
+
+View(df.main)
+# Apply as.character to all columns in df.main
+df.main <- data.frame(lapply(df.main, as.character), stringsAsFactors = FALSE)
+
+# Display the structure of the modified data frame to confirm the changes
+str(df.main)
+
+df.revisit <- read_stata(paste0(pre_path(),"1_9_Endline_revisit_final_XXX.dta"))
+
+df.revisit.f <- subset(df.revisit, wash_applicable == 1)
+
+# Display the filtered data frame to confirm the changes
+View(df.revisit.f)
+
+# Apply as.character to all columns in df.main
+df.revisit.f <- data.frame(lapply(df.revisit.f, as.character), stringsAsFactors = FALSE)
+
+
+# Function to replace empty strings with NA
+replace_empty_with_na <- function(df) {
+  df[df == ""] <- NA
+  return(df)
+}
+
+
+# Apply the function to both datasets
+df.main <- replace_empty_with_na(df.main)
+df.revisit.f <- replace_empty_with_na(df.revisit.f)
+
+# Check the result
+str(df.main)
+str(df.revisit.f)
+
+#---------------------------------------------------------------
+#DOING THE FINAL REPLACEMENT IN THE MAIN ENDLINE XXX DATASET 
+#---------------------------------------------------------------
 
 # Identify common columns, excluding 'unique_id'
 common_cols <- intersect(names(df.main), names(df.revisit.f))
 common_cols <- setdiff(common_cols, "unique_id")
 
-# Merge based on matched unique_id (inner join)
-matched_df <- inner_join(df.main, df.revisit.f, by = "unique_id", suffix = c("_main", "_revisit"))
+# Match indices
+matched_indices <- match(df.main$unique_id, df.revisit.f$unique_id)
+valid_indices <- !is.na(matched_indices)
+
+View(matched_indices)
 
 
 # Update df.main with matched and common variables from df.revisit.f
 for (col in common_cols) {
-  matched_indices <- match(df.main$unique_id, matched_df$unique_id)
-  # Replace only where the matched indices are not NA and the value in revisit is not NA
-  is_not_na <- !is.na(matched_df[[paste0(col, "_revisit")]])
-  df.main[[col]][matched_indices[is_not_na]] <- matched_df[[paste0(col, "_revisit")]][is_not_na]
+  revisit_values <- df.revisit.f[[col]][matched_indices[valid_indices]]
+  df.main[[col]][valid_indices] <- revisit_values
 }
 
-# Final merge to include all records and columns
-final_df <- full_join(df.main, df.revisit.f, by = "unique_id")
+
+# Merge additional columns from df.revisit.f that are not in df.main
+additional_cols <- setdiff(names(df.revisit.f), names(df.main))
+additional_data <- df.revisit.f %>% select(unique_id, all_of(additional_cols))
+
+final_df <- left_join(df.main, additional_data, by = "unique_id")
 
 # View the final merged dataset
 View(final_df)
+
+
+names(final_df)
+
+# Tabulate the 'instruction' column
+instruction_table <- table(final_df$instruction)
+
+# Print the frequency table
+print(instruction_table)
+
+#putting this as a check 
+
+# Create a subset dataset with the specified variables
+subset_df <- final_df %>% select(unique_id, water_source_prim, resp_available, instruction, n_new_members, n_hhmember_count, wash_applicable, Revisit_key)
+
+# View the subset dataset
+View(subset_df)
+
+
+
+# Reattach the prefix R_E_ to all variables except unique_id
+final_df <- final_df %>%
+  rename_with(~ ifelse(. == "unique_id", ., str_c("R_E_", .)), .cols = -unique_id, -unique_id_num)
+
+# View the final dataframe with renamed columns
+View(final_df)
+
+# Save the final_df dataset to the specified directory as a .dta file
+output_path <- file.path(pre_path(), "final_df.dta")
+write_dta(final_df, output_path)
+
+
+
+library(stringr)
+
+# Function to check for valid Stata variable names
+is_valid_stata_name <- function(var_name) {
+  return(str_detect(var_name, "^[a-zA-Z][a-zA-Z0-9_]{0,31}$"))
+}
+
+# Apply the function to variable names in final_df
+invalid_names <- names(final_df)[!sapply(names(final_df), is_valid_stata_name)]
+
+# Count the number of invalid variable names
+num_invalid_names <- length(invalid_names)
+
+# Print the invalid names and their count
+print(invalid_names)
+print(paste("Number of variables requiring renaming:", num_invalid_names))
