@@ -377,7 +377,7 @@ village_stats_bl <- village_stats(idexx)
 
 tc_stats_bl <- tc_stats(idexx)
 
-all_stats <- all_stats(idexx)
+all_stats_bl <- all_stats(idexx)
 
 
 
@@ -387,21 +387,21 @@ risk_stats_bl <- risk_stats(idexx)
 
 
 # Print the table
-kbl(village_stats)%>%
+kbl(village_stats_bl)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
   add_header_above(c("Baseline - Water Quality Test Results " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
-kbl(tc_stats)%>%
+kbl(tc_stats_bl)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
   add_header_above(c("Baseline - Water Quality Test Results " = 11)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
-kbl(all_stats)%>%
+kbl(all_stats_bl)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
   add_header_above(c("Baseline - Water Quality Test Results " = 6)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
@@ -444,7 +444,7 @@ p4
 
 
 #Plotting treatment/control stats on a bar plot
-p_ec_bl <- ggplot(data = tc_stats) + 
+p_ec_bl <- ggplot(data = tc_stats_bl) + 
   geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
                     fill = assignment), position = position_dodge(width = 0.9),
@@ -461,7 +461,7 @@ p_ec_bl <- ggplot(data = tc_stats) +
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-p_cf_bl <- ggplot(data = tc_stats) + 
+p_cf_bl <- ggplot(data = tc_stats_bl) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
     geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
                       fill = assignment), position = position_dodge(width = 0.9),
@@ -485,7 +485,7 @@ p_cf_bl + p_ec_bl
 
 
 #Making WHO risk plot
-p_ec_risk_bl <- ggplot(data = risk_stats) + 
+p_ec_risk_bl <- ggplot(data = risk_stats_bl) + 
   geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
@@ -506,8 +506,205 @@ p_ec_risk_bl <- ggplot(data = risk_stats) +
 
 ###Follow-up Surveys
 
-```{r Microbiological Contamination -- Follow-up Surveys}
+```{r Microbiological Contamination -- Follow-up R1}
 
+
+#Removing NA result
+idexx_r1 <- idexx_r1%>%
+  filter(is.na(ec_mpn) == FALSE)
+
+# Calculate descriptive statistics by village
+village_stats_r1 <- village_stats(idexx_r1)
+
+tc_stats_r1 <- tc_stats(idexx_r1)
+
+#adjusting CI to be within 0-100
+tc_stats_r1 <- tc_stats_r1%>%
+  mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
+                            `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+  mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
+                            `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+
+
+all_stats <- all_stats(idexx_r1)
+
+
+#Creating risk level stats for WHO Risk plot
+risk_stats <- risk_stats(idexx_r1)
+
+# Print the table
+kbl(village_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+kbl(tc_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 11)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+kbl(all_stats)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 5)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
+
+#Plotting chlorine concentrations against e. coli presence/absence
+# p1 <- ggplot(data = idexx_r1) + 
+#   geom_boxplot(aes(x = ec_pa, y = fc_tap)) +
+#   scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
+#                      limits = c(0, 1.0),
+#                      expand = c(0,0))+
+#   labs(x = "Presence/Absence of E. coli", 
+#        y = "Free Chlorine Concentration (mg/L)",
+#        title = "Chlorination of JJM Taps and Detection of E. coli")+
+#   theme_bw()
+# 
+# p1
+
+
+#need to correct
+# #p2 <- ggplot(data = idexx_r1) + 
+#   geom_col(aes(x = village, y = fc_tap)) +
+#   scale_y_continuous(breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 1.1),
+#                      limits = c(0, 1.0),
+#                      expand = c(0,0))+
+#   labs(x = "Sample ID", 
+#        y = "Average Free Chlorine Concentration (mg/L)",
+#        title = "Chlorination of JJM Taps in each village in Odisha")+
+#   theme_bw()
+# 
+# p2
+
+
+#Plotting IDEXX E. coli data per village
+p3 <- ggplot(data = idexx_r1) + 
+  geom_boxplot(aes(x = village, y = ec_log, fill = sample_type)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Village", 
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       title = expression(paste(italic("E. coli"), " Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#p3
+
+
+
+#Plotting IDEXX E. coli data by sample type
+p4 <- ggplot(data = idexx_r1) + 
+  geom_boxplot(aes(x = sample_type, y = ec_log, fill = assignment)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       fill = "Assignment",
+       title = expression(paste(italic("E. coli"), " Follow-up 1 - Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#p4
+
+
+#Plotting IDEXX E. coli data per village
+p5 <- ggplot(data = idexx_r1) + 
+  geom_boxplot(aes(x = block, y = ec_log, fill = sample_type)) +
+  scale_y_continuous(
+                     limits = c(0, 4),
+                     expand = c(0,0))+
+  labs(x = "Block", 
+       y = expression(paste("log10(MPN ",italic("E. coli"), "/100 mL)")),
+       fill = "Sample Type",
+       title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 160)")))+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#p5
+
+
+#Plotting treatment/control stats on a bar plot
+p_ec_r1 <- ggplot(data = tc_stats) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "R1 - February 2024"
+       #title = expression(paste(italic("E. coli"), " R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_r1 <- ggplot(data = tc_stats) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Assignment",
+       title = "R1 - February 2024"
+       #title = expression(paste(" R1 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_r1 + p_ec_r1
+
+#Fisher's Exact Test for differences between control and treatment
+idexx_r1_stored <- idexx_r1%>%
+  filter(sample_type == "Stored")
+
+idexx_r1_tap <- idexx_r1%>%
+  filter(sample_type == "Tap")
+
+stored_cf <- fisher.test(x = idexx_r1_stored$assignment, y=idexx_r1_stored$cf_pa)
+
+stored_ec <- fisher.test(x = idexx_r1_stored$assignment, y=idexx_r1_stored$ec_pa)
+
+tap_cf <- fisher.test(x = idexx_r1_tap$assignment, y=idexx_r1_tap$cf_pa)
+
+tap_ec <- fisher.test(x = idexx_r1_tap$assignment, y=idexx_r1_tap$ec_pa)
+
+idexx_r1_signif <- data.frame(stored_cf$p.value, stored_ec$p.value, tap_cf$p.value, tap_ec$p.value)
+
+
+
+#Making WHO risk plot
+p_ec_risk_r1 <- ggplot(data = risk_stats) + 
+  geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Assignment", 
+       y = expression(paste("% for each risk category")),
+       fill = expression(paste(italic("E. coli"), " Risk Categories")),
+       title = "R1 - February 2024"
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 
 

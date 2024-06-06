@@ -605,7 +605,17 @@ r2 <- r2%>%
 
 #Selecting r2 data key variables for WQ testing
 r2 <- r2%>%
-  dplyr::select(R_FU2_unique_id_1, R_FU2_unique_id_2, R_FU2_unique_id_3, unique_id_num, R_FU2_r_cen_village_name_str, R_FU2_consent, R_FU2_water_source_prim, R_FU2_primary_water_label, R_FU2_water_qual_test, R_FU2_wq_stored_bag, R_FU2_stored_bag_source, R_FU2_sample_ID_stored, R_FU2_bag_ID_stored, R_FU2_fc_stored, R_FU2_wq_chlorine_storedfc_again, R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again, R_FU2_sample_ID_tap, R_FU2_bag_ID_tap, R_FU2_fc_tap, R_FU2_wq_tap_fc_again, R_FU2_tc_tap, R_FU2_wq_tap_tc_again, R_FU2_instancename)
+  dplyr::select(R_FU2_unique_id_1, R_FU2_unique_id_2,
+                R_FU2_unique_id_3, unique_id_num, R_FU2_r_cen_village_name_str,
+                R_FU2_consent, R_FU2_water_source_prim,
+                R_FU2_primary_water_label, R_FU2_water_qual_test,
+                R_FU2_wq_stored_bag, R_FU2_stored_bag_source,
+                R_FU2_sample_ID_stored, R_FU2_bag_ID_stored, 
+                R_FU2_fc_stored, R_FU2_wq_chlorine_storedfc_again,
+                R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again, 
+                R_FU2_sample_ID_tap, R_FU2_bag_ID_tap, R_FU2_fc_tap, 
+                R_FU2_wq_tap_fc_again, R_FU2_tc_tap, R_FU2_wq_tap_tc_again,
+                R_FU2_instancename)
 
 #Assigning more meaningful variable names
 r2 <- r2%>%
@@ -681,23 +691,24 @@ r2$tc_tap_avg <- round(r2$tc_tap_avg, digits = 3)
 
 #PREPARING IDEXX DATA##########################################################
 #Adding village name column
-village_ID <- village_details%>%
-  dplyr::select(village_name, village_ID, assignment)
+#No longer using this, opting for the survey data information instead
+#village_ID <- village_details%>%
+ # dplyr::select(village_name, village_ID, assignment)
 idexx_r2 <- idexx_r2%>%
   mutate(village_ID = as.character(village))%>%
   mutate(sample_ID = unique_sample_id)
-
-idexx_r2 <- left_join(idexx_r2, village_ID, by = "village_ID")
+#idexx_r2 <- left_join(idexx_r2, village_ID, by = "village_ID")
 
 
 #Pivoting dataset to be longer for pairing IDEXX data to sample IDs
 r2_for_idexx <- r2%>%
-  pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
+  pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), 
+               values_to = "sample_ID", names_to = "sample_type")
 
 #Noting duplicate samples
-#idexx_r2 <- idexx_r2%>%
-# mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-#replace_na(duplicate, value = 0)
+idexx_r2 <- idexx_r2%>%
+ mutate(duplicate = ifelse(end_comments == "DUPLICATE", 1, 0))%>%
+ replace_na(duplicate, value = 0)
 
 #Noting lab blank and field blanks
 idexx_r2 <- idexx_r2%>%
@@ -727,11 +738,17 @@ idexx_r2 <- idexx_r2%>%
 #idexx_id_check <- idexx_r2%>%
 # filter(!(sample_ID %in% r2_sample_ids))
 
+
 #combining idexx results to survey results
-#r2_for_idexx$sample_ID <- as.numeric(r2_for_idexx$sample_ID)
-#idexx_r2 <- inner_join(idexx_r2, r2_for_idexx, by = "sample_ID")
-#abr$sample_ID <- as.character(abr$sample_ID)
-#abr <- inner_join(abr, bl_idexx, by = "sample_ID")
+r2_for_idexx$sample_ID <- as.numeric(r2_for_idexx$sample_ID)
+idexx_r2 <- left_join(idexx_r2, r2_for_idexx, by = "sample_ID")
+
+#Fixing variable names after the join
+idexx_r2 <- idexx_r2%>%
+  rename(village_ID = "village.x")%>%
+  rename(village = "village.y")%>%
+  #rename(assignment = "assignment.y")%>%
+  dplyr::select(-c("village_ID.x", "village_ID.y"))
 
 
 #creating new variable to tell the sample type
@@ -806,6 +823,7 @@ idexx_r2 <- idexx_r2%>%
                              (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
+
 
 #Writing/updating final csv file
 #write_csv(idexx_r2,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv")
@@ -960,6 +978,14 @@ idexx_r3 <- idexx_r3%>%
 #combining idexx results to survey results
 r3_for_idexx$sample_ID <- as.numeric(r3_for_idexx$sample_ID)
 idexx_r3 <- left_join(idexx_r3, r3_for_idexx, by = "sample_ID")
+
+
+#Fixing variable names after the join
+idexx_r3 <- idexx_r3%>%
+  rename(village_ID = "village.x")%>%
+  rename(village = "village.y")%>%
+  rename(assignment = "assignment.y")%>%
+  dplyr::select(-c("village_ID.x", "village_ID.y", "village_name.x", "village_name.y", "assignment.x"))
 
 #abr$sample_ID <- as.character(abr$sample_ID)
 #abr <- inner_join(abr, bl_idexx, by = "sample_ID")
