@@ -232,6 +232,19 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 ```
 
 
+```{r Pairing BL and EL census data}
+
+#Adding EL classification to the variables in the endline dataset
+el_pair <- el%>%
+  rename_with(~ paste0(., "_EL"))%>%
+  rename(unique_id = "unique_id_EL")
+
+
+paired <- inner_join(cen, el_pair, by = "unique_id")
+
+
+```
+
 
 
 \newpage
@@ -506,6 +519,8 @@ p_ec_risk_bl <- ggplot(data = risk_stats_bl) +
 
 ###Follow-up Surveys
 
+Need to finish the rest of the surveys
+
 ```{r Microbiological Contamination -- Follow-up R1}
 
 
@@ -526,21 +541,21 @@ tc_stats_r1 <- tc_stats_r1%>%
                             `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
 
 
-all_stats <- all_stats(idexx_r1)
+all_stats_r1 <- all_stats(idexx_r1)
 
 
 #Creating risk level stats for WHO Risk plot
-risk_stats <- risk_stats(idexx_r1)
+risk_stats_r1 <- risk_stats(idexx_r1)
 
 # Print the table
-kbl(village_stats)%>%
+kbl(village_stats_r1)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("R1 - Water Quality Test Results " = 6)) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
-kbl(tc_stats)%>%
+kbl(tc_stats_r1)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
   add_header_above(c("R1 - Water Quality Test Results " = 11)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
@@ -548,9 +563,9 @@ kbl(tc_stats)%>%
   column_spec(2, width = "75px")
 
 
-kbl(all_stats)%>%
+kbl(all_stats_r1)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("R1 - Water Quality Test Results " = 5)) %>%
+  add_header_above(c("R1 - Water Quality Test Results " = 6)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
@@ -635,7 +650,7 @@ p5 <- ggplot(data = idexx_r1) +
 
 
 #Plotting treatment/control stats on a bar plot
-p_ec_r1 <- ggplot(data = tc_stats) + 
+p_ec_r1 <- ggplot(data = tc_stats_r1) + 
   geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
                     fill = assignment), position = position_dodge(width = 0.9),
@@ -652,7 +667,7 @@ p_ec_r1 <- ggplot(data = tc_stats) +
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-p_cf_r1 <- ggplot(data = tc_stats) + 
+p_cf_r1 <- ggplot(data = tc_stats_r1) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
     geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
                       fill = assignment), position = position_dodge(width = 0.9),
@@ -692,7 +707,7 @@ idexx_r1_signif <- data.frame(stored_cf$p.value, stored_ec$p.value, tap_cf$p.val
 
 
 #Making WHO risk plot
-p_ec_risk_r1 <- ggplot(data = risk_stats) + 
+p_ec_risk_r1 <- ggplot(data = risk_stats_r1) + 
   geom_bar(aes(x = assignment, y = `E. coli Risk Levels %`, fill = ec_risk), position = "stack", stat = "identity") +
   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
@@ -724,6 +739,50 @@ p_ec_risk_r1 <- ggplot(data = risk_stats) +
 
 
 
+
+
+##Overall Results Table
+
+```{r}
+
+#Subsetting datasets with key variables
+
+bl_tab <- bl%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "BL")
+
+r1_tab <- r1%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R1")
+
+r2_tab <- r2%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R2")
+
+r3_tab <- r3%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R3")
+
+
+
+
+```
 
 
 

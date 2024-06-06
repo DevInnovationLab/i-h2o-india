@@ -132,15 +132,15 @@ bl <- bl%>%
 
 
 #Selecting bl data key variables for WQ testing
-bl <- bl%>%
-  dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num,
-                R_FU_r_cen_village_name_str, R_FU_consent, R_FU_water_source_prim, 
-                R_FU_primary_water_label, R_FU_water_qual_test, R_FU_wq_stored_bag,
-                R_FU_stored_bag_source, R_FU_sample_ID_stored, R_FU_bag_ID_stored, 
-                R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again, R_FU_tc_stored,
-                R_FU_wq_chlorine_storedtc_again, R_FU_sample_ID_tap, R_FU_bag_ID_tap,
-                R_FU_fc_tap, R_FU_wq_tap_fc_again, R_FU_tc_tap, R_FU_wq_tap_tc_again,
-                R_FU_instancename)
+#bl <- bl%>%
+ # dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num,
+  #              R_FU_r_cen_village_name_str, R_FU_consent, R_FU_water_source_prim, 
+   #             R_FU_primary_water_label, R_FU_water_qual_test, R_FU_wq_stored_bag,
+    #            R_FU_stored_bag_source, R_FU_sample_ID_stored, R_FU_bag_ID_stored, 
+     #           R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again, R_FU_tc_stored,
+      #          R_FU_wq_chlorine_storedtc_again, R_FU_sample_ID_tap, R_FU_bag_ID_tap,
+       #         R_FU_fc_tap, R_FU_wq_tap_fc_again, R_FU_tc_tap, R_FU_wq_tap_tc_again,
+        #        R_FU_instancename)
 
 #Assigning more meaningful variable names
 bl <- bl%>%
@@ -189,12 +189,48 @@ bl$fc_tap_avg <- round(bl$fc_tap_avg, digits = 3)
 bl$tc_stored_avg <- round(bl$tc_stored_avg, digits = 3)
 bl$tc_tap_avg <- round(bl$tc_tap_avg, digits = 3)
 
+#Adding presence/absence variable
+bl <- bl%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.14 ~ "Presence",
+    fc_tap_avg < 0.14 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.14 ~ "Presence",
+    tc_tap_avg < 0.14 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.14 ~ "Presence",
+    fc_stored_avg < 0.14 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.14 ~ "Presence",
+    tc_stored_avg < 0.14 ~ 'Absence'))
+
+#Adding presence/absence variable
+bl <- bl%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.14 ~ 1,
+    fc_tap_avg < 0.14 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.14 ~ 1,
+    tc_tap_avg < 0.14 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.14 ~ 1,
+    fc_stored_avg < 0.14 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.14 ~ 1,
+    tc_stored_avg < 0.14 ~ 0))
+
+
+
 
 #Renaming assignment names
 bl$assignment <- factor(bl$assignment)
 bl$assignment <- fct_recode(bl$assignment,
                             "Control" = "C", 
                             "Treatment" = "T")
+
+#classifying panchayat village
+bl <- bl%>%
+  mutate(panchayat_village = `Panchat village`)
 
 
 #Using labelmaker function to change variable answer labels
@@ -219,10 +255,79 @@ bl$prim_source <- bl$water_source_prim%>%
     "Other" = "Other"
   )
 
+#Setting primary source binary variable
+bl <- bl%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+bl <- bl%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type
+
+
+
+#Updating satisfaction and confidence questions to be binary
+bl <- bl%>%
+  mutate(tap_trust_binary = case_when(
+    tap_trust == "Very confident" ~ 1,
+    tap_trust == "Somewhat confident" ~ 1,
+    tap_trust == "Neither confident or not confident" ~ 0,
+    tap_trust == "Somewhat not confident" ~ 0,
+    tap_trust == "Not confident at all" ~ 0
+  ))
+
+bl <- bl%>%
+  mutate(tap_taste_binary = case_when(
+    tap_taste_satisfied == "Very satisfied" ~ 1,
+    tap_taste_satisfied == "Satisfied" ~ 1,
+    tap_taste_satisfied == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_taste_satisfied == "Dissatisfied" ~ 0,
+    tap_taste_satisfied == "Very dissatisfied" ~ 0,
+    tap_taste_satisfied == "Don't know" ~ 0 
+  ))
+bl <- bl%>%
+  mutate(tap_future_binary = case_when(
+    tap_use_future == "Very satisfied" ~ 1,
+    tap_use_future == "Satisfied" ~ 1,
+    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_use_future == "Dissatisfied" ~ 0,
+    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Don't know" ~ 0 
+  ))
 
 
 
 
+#Updating water treatment binary variable
+bl <- bl%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+#Setting JJM use variable
+bl <- bl%>%
+  mutate(jjm_drinking = tap_use_1)
+
+
+
+
+
+#Updating BL IDs to be characters instead of numeric types
+bl$unique_id <- as.character(bl$unique_id)
+
+#Variable List:
+#assignment, unique_id, sample_id, village, block, panchayat_village,
+#prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary, 
+#tap_trust_binary, tap_taste_binary, tap_future_binary
+#fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary
 
 
 
@@ -236,8 +341,11 @@ r1 <- r1%>%
 
 
 #Selecting r1 data key variables for WQ testing
-r1 <- r1%>%
-  dplyr::select(R_FU1_unique_id_1, R_FU1_unique_id_2, R_FU1_unique_id_3, unique_id_num, R_FU1_r_cen_village_name_str, R_FU1_consent, R_FU1_water_source_prim, R_FU1_primary_water_label, R_FU1_water_qual_test, R_FU1_wq_stored_bag, R_FU1_stored_bag_source, R_FU1_sample_ID_stored, R_FU1_bag_ID_stored, R_FU1_fc_stored, R_FU1_wq_chlorine_storedfc_again, R_FU1_tc_stored, R_FU1_wq_chlorine_storedtc_again, R_FU1_sample_ID_tap, R_FU1_bag_ID_tap, R_FU1_fc_tap, R_FU1_wq_tap_fc_again, R_FU1_tc_tap, R_FU1_wq_tap_tc_again, R_FU1_instancename)
+#r1 <- r1%>%
+ # dplyr::select(R_FU1_unique_id_1, R_FU1_unique_id_2, R_FU1_unique_id_3,
+  #              unique_id_num, R_FU1_r_cen_village_name_str, R_FU1_consent,
+   #             R_FU1_water_source_prim, R_FU1_primary_water_label, 
+    #            R_FU1_water_qual_test, R_FU1_wq_stored_bag, R_FU1_stored_bag_source, R_FU1_sample_ID_stored, R_FU1_bag_ID_stored, R_FU1_fc_stored, R_FU1_wq_chlorine_storedfc_again, R_FU1_tc_stored, R_FU1_wq_chlorine_storedtc_again, R_FU1_sample_ID_tap, R_FU1_bag_ID_tap, R_FU1_fc_tap, R_FU1_wq_tap_fc_again, R_FU1_tc_tap, R_FU1_wq_tap_tc_again, R_FU1_instancename)
 
 #Assigning more meaningful variable names
 r1 <- r1%>%
@@ -272,6 +380,14 @@ r1$assignment <- factor(r1$assignment)%>%
   fct_recode("Control" = "C",
              "Treatment" = "T")
 
+#classifying panchayat village
+r1 <- r1%>%
+  mutate(panchayat_village = `Panchat village`)
+
+
+#Using labelmaker function to change variable answer labels
+r1 <- labelmaker(r1)
+
 
 #Removing cases of "999" being reported in a measurement. Replacing with NA values for now.
 # xx <- r1%>%
@@ -301,6 +417,134 @@ r1$tc_stored_avg <- round(r1$tc_stored_avg, digits = 3)
 r1$tc_tap_avg <- round(r1$tc_tap_avg, digits = 3)
 
 
+#Adding presence/absence variable
+r1 <- r1%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
+
+#Adding presence/absence variable
+r1 <- r1%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
+
+
+
+
+
+#Changing primary source labels
+r1 <- r1%>%
+  mutate(prim_source = NA)
+r1$prim_source <- r1$water_source_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
+#Setting primary source binary variable
+r1 <- r1%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+r1 <- r1%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type JJM
+r1 <- r1%>%
+  mutate(sec_source_jjm = case_when(
+    water_source_sec_1 == 1 ~ 1,
+    water_source_sec_1 == 0 ~ 0
+  ))
+
+
+
+#Updating satisfaction and confidence questions to be binary
+r1 <- r1%>%
+  mutate(tap_trust_binary = case_when(
+    tap_trust == "Very confident" ~ 1,
+    tap_trust == "Somewhat confident" ~ 1,
+    tap_trust == "Neither confident or not confident" ~ 0,
+    tap_trust == "Somewhat not confident" ~ 0,
+    tap_trust == "Not confident at all" ~ 0
+  ))
+
+r1 <- r1%>%
+  mutate(tap_taste_binary = case_when(
+    tap_taste_satisfied == "Very satisfied" ~ 1,
+    tap_taste_satisfied == "Satisfied" ~ 1,
+    tap_taste_satisfied == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_taste_satisfied == "Dissatisfied" ~ 0,
+    tap_taste_satisfied == "Very dissatisfied" ~ 0,
+    tap_taste_satisfied == "Don't know" ~ 0 
+  ))
+r1 <- r1%>%
+  mutate(tap_future_binary = case_when(
+    tap_use_future == "Very satisfied" ~ 1,
+    tap_use_future == "Satisfied" ~ 1,
+    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_use_future == "Dissatisfied" ~ 0,
+    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Don't know" ~ 0 
+  ))
+
+
+
+
+#Updating water treatment binary variable
+r1 <- r1%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+#Setting JJM use variable
+r1 <- r1%>%
+  mutate(jjm_drinking = case_when(
+    tap_use_drinking_yesno == "Yes" ~ 1,
+    tap_use_drinking_yesno == "No" ~ 0))
+
+
+
+
+
+#Updating IDs to be characters instead of numeric types
+r1$unique_id <- as.character(r1$unique_id)
 
 
 
@@ -319,15 +563,15 @@ r2 <- r2%>%
 
 
 #Selecting r2 data key variables for WQ testing
-r2 <- r2%>%
-  dplyr::select(R_FU2_unique_id_1, R_FU2_unique_id_2, R_FU2_unique_id_3,
-                unique_id_num, R_FU2_r_cen_village_name_str, R_FU2_consent, 
-                R_FU2_water_source_prim, R_FU2_primary_water_label, R_FU2_water_qual_test,
-                R_FU2_wq_stored_bag, R_FU2_stored_bag_source, R_FU2_sample_ID_stored,
-                R_FU2_bag_ID_stored, R_FU2_fc_stored, R_FU2_wq_chlorine_storedfc_again,
-                R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again, R_FU2_sample_ID_tap,
-                R_FU2_bag_ID_tap, R_FU2_fc_tap, R_FU2_wq_tap_fc_again, R_FU2_tc_tap,
-                R_FU2_wq_tap_tc_again, R_FU2_instancename)
+#r2 <- r2%>%
+ # dplyr::select(R_FU2_unique_id_1, R_FU2_unique_id_2, R_FU2_unique_id_3,
+  #              unique_id_num, R_FU2_r_cen_village_name_str, R_FU2_consent, 
+   #             R_FU2_water_source_prim, R_FU2_primary_water_label, R_FU2_water_qual_test,
+    #            R_FU2_wq_stored_bag, R_FU2_stored_bag_source, R_FU2_sample_ID_stored,
+     #           R_FU2_bag_ID_stored, R_FU2_fc_stored, R_FU2_wq_chlorine_storedfc_again,
+      #          R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again, R_FU2_sample_ID_tap,
+       #         R_FU2_bag_ID_tap, R_FU2_fc_tap, R_FU2_wq_tap_fc_again, R_FU2_tc_tap,
+        #        R_FU2_wq_tap_tc_again, R_FU2_instancename)
 
 #Assigning more meaningful variable names
 r2 <- r2%>%
@@ -368,6 +612,13 @@ r2$assignment <- factor(r2$assignment)%>%
   fct_recode("Control" = "C",
              "Treatment" = "T")
 
+#classifying panchayat village
+r2 <- r2%>%
+  mutate(panchayat_village = `Panchat village`)
+
+#Using labelmaker function to change variable answer labels
+r2 <- labelmaker(r2)
+
 #Removing cases of "999" being reported in a measurement. Replacing with NA values for now.
 # xx <- r2%>%
 #   filter(fc_stored > 2.0 |
@@ -395,9 +646,128 @@ r2$tc_tap_avg <- round(r2$tc_tap_avg, digits = 3)
 
 #
 
+#Adding presence/absence variable for chlorine
+r2 <- r2%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
+
+
+#Adding presence/absence variable
+r2 <- r2%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
 
 
 
+
+
+#Changing primary source labels
+r2 <- r2%>%
+  mutate(prim_source = NA)
+r2$prim_source <- r2$water_source_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
+#Setting primary source binary variable
+r2 <- r2%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+r2 <- r2%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type JJM
+r2 <- r2%>%
+  mutate(sec_source_jjm = case_when(
+    water_source_sec_1 == 1 ~ 1,
+    water_source_sec_1 == 0 ~ 0
+  ))
+
+
+
+#Updating satisfaction and confidence questions to be binary
+r2 <- r2%>%
+  mutate(tap_trust_binary = case_when(
+    tap_trust == "Very confident" ~ 1,
+    tap_trust == "Somewhat confident" ~ 1,
+    tap_trust == "Neither confident or not confident" ~ 0,
+    tap_trust == "Somewhat not confident" ~ 0,
+    tap_trust == "Not confident at all" ~ 0
+  ))
+
+r2 <- r2%>%
+  mutate(tap_taste_binary = case_when(
+    tap_taste_satisfied == "Very satisfied" ~ 1,
+    tap_taste_satisfied == "Satisfied" ~ 1,
+    tap_taste_satisfied == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_taste_satisfied == "Dissatisfied" ~ 0,
+    tap_taste_satisfied == "Very dissatisfied" ~ 0,
+    tap_taste_satisfied == "Don't know" ~ 0 
+  ))
+r2 <- r2%>%
+  mutate(tap_future_binary = case_when(
+    tap_use_future == "Very satisfied" ~ 1,
+    tap_use_future == "Satisfied" ~ 1,
+    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_use_future == "Dissatisfied" ~ 0,
+    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Don't know" ~ 0 
+  ))
+
+
+
+
+#Updating water treatment binary variable
+r2 <- r2%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+#Setting JJM use variable
+r2 <- r2%>%
+  mutate(jjm_drinking = case_when(
+    tap_use_drinking_yesno == "Yes" ~ 1,
+    tap_use_drinking_yesno == "No" ~ 0))
 
 
 
@@ -418,8 +788,8 @@ r3 <- r3%>%
 
 
 #Selecting r3 data key variables for WQ testing
-r3 <- r3%>%
-  dplyr::select(R_FU3_unique_id_1, R_FU3_unique_id_2, R_FU3_unique_id_3, unique_id_num, R_FU3_r_cen_village_name_str, submission_date, R_FU3_consent, R_FU3_water_source_prim, R_FU3_primary_water_label, R_FU3_water_qual_test, R_FU3_wq_stored_bag, R_FU3_stored_bag_source, R_FU3_sample_ID_stored, R_FU3_bag_ID_stored, R_FU3_fc_stored, R_FU3_wq_chlorine_storedfc_again, R_FU3_tc_stored, R_FU3_wq_chlorine_storedtc_again, R_FU3_sample_ID_tap, R_FU3_bag_ID_tap, R_FU3_fc_tap, R_FU3_wq_tap_fc_again, R_FU3_tc_tap, R_FU3_wq_tap_tc_again, R_FU3_instancename)
+#r3 <- r3%>%
+ # dplyr::select(R_FU3_unique_id_1, R_FU3_unique_id_2, R_FU3_unique_id_3, unique_id_num, R_FU3_r_cen_village_name_str, submission_date, R_FU3_consent, R_FU3_water_source_prim, R_FU3_primary_water_label, R_FU3_water_qual_test, R_FU3_wq_stored_bag, R_FU3_stored_bag_source, R_FU3_sample_ID_stored, R_FU3_bag_ID_stored, R_FU3_fc_stored, R_FU3_wq_chlorine_storedfc_again, R_FU3_tc_stored, R_FU3_wq_chlorine_storedtc_again, R_FU3_sample_ID_tap, R_FU3_bag_ID_tap, R_FU3_fc_tap, R_FU3_wq_tap_fc_again, R_FU3_tc_tap, R_FU3_wq_tap_tc_again, R_FU3_instancename)
 
 #Assigning more meaningful variable names
 r3 <- r3%>%
@@ -454,6 +824,14 @@ r3$assignment <- factor(r3$assignment)%>%
   fct_recode("Control" = "C",
              "Treatment" = "T")
 
+
+#classifying panchayat village
+r3 <- r3%>%
+  mutate(panchayat_village = `Panchat village`)
+
+#Using labelmaker function to change variable answer labels
+r3 <- labelmaker(r3)
+
 #Removing cases of "999" being reported in a measurement. Replacing with NA values for now.
 # xx <- r3%>%
 #   filter(fc_stored > 2.0 |
@@ -480,8 +858,127 @@ r3$tc_stored_avg <- round(r3$tc_stored_avg, digits = 3)
 r3$tc_tap_avg <- round(r3$tc_tap_avg, digits = 3)
 
 #
+#Adding presence/absence variable
+r3 <- r3%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
 
 
+#Adding presence/absence variable
+r3 <- r3%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
+
+
+
+
+#Changing primary source labels
+r3 <- r3%>%
+  mutate(prim_source = NA)
+r3$prim_source <- r3$water_source_prim%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
+#Setting primary source binary variable
+r3 <- r3%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+r3 <- r3%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type JJM
+r3 <- r3%>%
+  mutate(sec_source_jjm = case_when(
+    water_source_sec_1 == 1 ~ 1,
+    water_source_sec_1 == 0 ~ 0
+  ))
+
+
+
+#Updating satisfaction and confidence questions to be binary
+r3 <- r3%>%
+  mutate(tap_trust_binary = case_when(
+    tap_trust == "Very confident" ~ 1,
+    tap_trust == "Somewhat confident" ~ 1,
+    tap_trust == "Neither confident or not confident" ~ 0,
+    tap_trust == "Somewhat not confident" ~ 0,
+    tap_trust == "Not confident at all" ~ 0
+  ))
+
+r3 <- r3%>%
+  mutate(tap_taste_binary = case_when(
+    tap_taste_satisfied == "Very satisfied" ~ 1,
+    tap_taste_satisfied == "Satisfied" ~ 1,
+    tap_taste_satisfied == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_taste_satisfied == "Dissatisfied" ~ 0,
+    tap_taste_satisfied == "Very dissatisfied" ~ 0,
+    tap_taste_satisfied == "Don't know" ~ 0 
+  ))
+r3 <- r3%>%
+  mutate(tap_future_binary = case_when(
+    tap_use_future == "Very satisfied" ~ 1,
+    tap_use_future == "Satisfied" ~ 1,
+    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
+    tap_use_future == "Dissatisfied" ~ 0,
+    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Don't know" ~ 0 
+  ))
+
+
+
+
+#Updating water treatment binary variable
+r3 <- r3%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+#Setting JJM use variable
+r3 <- r3%>%
+  mutate(jjm_drinking = case_when(
+    tap_use_drinking_yesno == "Yes" ~ 1,
+    tap_use_drinking_yesno == "No" ~ 0))
 
 
 
