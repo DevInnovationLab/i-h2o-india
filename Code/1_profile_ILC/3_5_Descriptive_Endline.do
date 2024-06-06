@@ -676,4 +676,49 @@ save "${DataTemp}1_8_Endline_Census-N_med_notnull_all-N_prvidr_exp_lp_all_HH.dta
  
 END
 
+
+
+/*
+The given do file uses and saves several datasets. Here are the details:
+
+### Datasets Used:
+
+1. **`${DataTemp}U5_Child_23_24.dta`**
+   - This dataset is used multiple times in the file for cleaning and analysis.
+   - The cleaned version of this dataset is saved as `${DataTemp}U5_Child_23_24_clean.dta`.
+
+2. **`${DataTemp}Medical_expenditure_person_clean.dta`**
+   - This dataset is mentioned in the list of input data but doesn't seem to be actively used within the provided code.
+
+3. **`${DataTemp}Endline_Long_Indiv_analysis.dta`**
+   - Similar to the medical expenditure dataset, this is mentioned but not actively used in the provided code.
+
+4. **`${DataTemp}Baseline_ChildLevel.dta`**
+   - This dataset is recreated from the clean file `start_from_clean_file_ChildLevel` and saved.
+
+5. **`${DataTemp}U5_Child_Diarrhea_data.dta`**
+   - This dataset is used multiple times for various analyses, including descriptive statistics, regression, and graphical representations.
+
+### Datasets Saved:
+
+1. **`${DataTemp}Baseline_ChildLevel.dta`**
+   - This dataset is saved after recreating the baseline child-level data.
+
+2. **`${DataTemp}U5_Child_23_24_clean.dta`**
+   - This dataset is saved after cleaning the `${DataTemp}U5_Child_23_24.dta` dataset.
+
+3. **`${Table}Enr_U5Var.tex`**
+   - Tables for descriptive statistics of children under age 5 at endline are saved using this file name pattern, with different variable names replacing `U5Var`.
+
+4. **`${Table}ILC_Main_U5COMB_RCT.tex`, `${Table}ILC_Main_U5DIA_RCT.tex`, `${Table}ILC_Main_U5STOOL_RCT.tex`, `${Table}ILC_Main_U5CUT_RCT.tex`**
+   - These files save regression analysis results for different health outcomes among children under 5 at endline.
+
+5. **`${Table}ILC_Main_B_U5STOOL_RCT.tex`, `${Table}ILC_Main_B_U5CUT_RCT.tex`**
+   - These files save baseline balance analysis results for different health outcomes among children under 5.
+
+6. **`${Table}ILC_Main_U2COMB_RCT.tex`, `${Table}ILC_Main_U2DIA_RCT.tex`, `${Table}ILC_Main_U2STOOL_RCT.tex`**
+   - These files save regression analysis results for different health outcomes among children under 2 at endline.
+
+Overall, the primary datasets used are `${DataTemp}U5_Child_23_24.dta`, `${DataTemp}Medical_expenditure_person_clean.dta`, `${DataTemp}Endline_Long_Indiv_analysis.dta`, and `${DataTemp}U5_Child_Diarrhea_data.dta`. The cleaned and analyzed datasets are saved under different filenames reflecting various stages of the data processing and analysis.
  
+*/
