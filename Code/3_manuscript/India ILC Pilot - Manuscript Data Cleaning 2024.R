@@ -1000,10 +1000,26 @@ el <- el%>%
   rename(village_name = "village_name_str")
 
 
+#Updating village name vs village ID
+el <- el%>%
+  mutate(village_ID = village)%>%
+  mutate(village = village_name)
+
+#Adding/Updating block names and panchayat status
+el$village_ID <- as.character(el$village_ID)
+x <- village_details%>%
+  dplyr::select(village_ID, block, assignment, `Panchat village`)%>%
+  rename(panchayat_village = `Panchat village`)
+el <- left_join(el, x, by = "village_ID")
+
+
 # Assign the correct treatment to villages-#
 
 #Setting treatment vs control assignment
 el <- el %>% mutate(assignment = ifelse(village_name %in% c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "Treatment", "Control"))
+
+
+
 
 
 #-Changing specific variables--#
@@ -1044,6 +1060,46 @@ el$prim_source <- el$water_source_prim%>%
   )%>%
   fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
               "Borehole", "Covered Dug Well", "Other")
+
+
+#Setting primary source binary variable
+el <- el%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+el <- el%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type JJM
+el <- el%>%
+  mutate(sec_source_jjm = case_when(
+    water_source_sec_1 == 1 ~ 1,
+    water_source_sec_1 == 0 ~ 0
+  ))
+
+
+
+#Updating water treatment binary variable
+el <- el%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+#Setting JJM use variable
+el <- el%>%
+  mutate(jjm_drinking_yn = jjm_drinking)%>%
+  mutate(jjm_drinking = case_when(
+    jjm_drinking == "Yes" ~ 1,
+    jjm_drinking == "No" ~ 0))
+
+
 
 
 

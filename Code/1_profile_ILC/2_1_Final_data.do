@@ -367,6 +367,7 @@ rename R_Cen_village_name village
 replace village=60101 if village==20101
 save "${DataFinal}Final_Population_Village.dta", replace
 
+
   * Open clean file
 use "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", clear
 merge 1:1 village using "${DataFinal}Final_Population_Village.dta", gen(Merge_Village_Pop)
@@ -377,7 +378,8 @@ label var C_Census  "Total HH"
 label var R_Cen_consent "Census consented (HH with Preg+U5)"
 label var R_Cen_a18_jjm_drinking "Drink JJM percent"
 
-drop if Selected=="Backup"
+drop if Selected=="Backup" 
+*Code is not working for Jeremy somewhere around here. "Selection not found"
 
 * Labeling
 destring village V_Num_HH BlockCode, replace

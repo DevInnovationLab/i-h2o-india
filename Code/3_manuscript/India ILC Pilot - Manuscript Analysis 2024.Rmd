@@ -39,6 +39,7 @@ library(gtsummary)
 library(gt)
 library(webshot2)
 library(clubSandwich)
+library(broom)
 library(tidyverse)
 
 
@@ -193,6 +194,12 @@ idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_mast
 #Village Details
 village_details <- read_xlsx(paste0(user_path(),"/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx"))
 
+#Village Details
+villages <- read_stata(paste0(user_path(),"4_other/India ILC_Pilot_Rayagada Village Tracking_clean_final.dta" ))
+
+#Cen final
+cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta" ))
+
 
 #endline census
 el <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
@@ -226,6 +233,7 @@ labelmaker <- function(x){
 
 ```{r Data cleaning R code}
 
+#Calling script to clean loaded data
 source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cleaning 2024.R"))
 
 
@@ -741,12 +749,11 @@ p_ec_risk_r1 <- ggplot(data = risk_stats_r1) +
 
 
 
-##Overall Results Table
+##Overall Regression Results Table
 
-```{r}
+```{r Regression Results -- WASH variables, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
 
 #Subsetting datasets with key variables
-
 bl_tab <- bl%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, block, panchayat_village,
@@ -779,6 +786,195 @@ r3_tab <- r3%>%
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "R3")
 
+el_tab <- el%>%
+  dplyr::select(assignment, unique_id, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary
+                )%>%
+  mutate(data_round = "EL")
+
+
+
+
+#Summarizing EL data and running regression models ----
+#Stargazer method
+
+#Selecting variables
+binary_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+
+
+#Calculating desc stats
+stargazer(el_tab[binary_vars], type = "latex", title = "Descriptive Statistics", 
+          summary.stat = c("mean", "sd", "min", "max"))
+
+
+#Running all models
+all_models <- lapply(binary_vars, 
+                     function(var) {
+                       formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+                       glm(formula, data = el_tab, family = "binomial")
+})
+
+#Creating tables
+stargazer(all_models, type = "latex", title = "Regression Results", 
+          dep.var.labels = binary_vars, 
+          covariate.labels = c("Treatment", "Block (fixed effects)", "Panchayat Village (fixed effects)"),
+          omit = c("block", "panchayat_village"),
+          omit.labels = c("Block fixed effects", "Panchayat Village fixed effects"),
+          align = TRUE, no.space = TRUE)
+
+#Outputting to overleaf
+
+
+# 
+# #GT method
+# #Summarizing desc stats for each variable
+# desc_stats <- el_tab%>%
+#   dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
+#   tbl_summary(
+#   by = assignment,
+#   statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
+#   digits = all_continuous() ~ 2
+# )
+# 
+# #Running regression models for each variable in the dataset
+# all_models <- lapply(c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary"),
+#                  function(var) {
+#                    formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+#                    model <- glm(formula, data = el_tab, family = binomial)
+#                    list(model = model, 
+#                         table = tbl_regression(model, exponentiate = TRUE)) #Tidying models
+#                    })
+# #Assigning names to models
+# names(all_models) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+# 
+# 
+# #Forcing to be gt objects
+# gt_tables <- lapply(all_models, 
+#                     function(model_info) {
+#                       as_gt(model_info$table)
+# })
+# 
+# #Naming gt tables
+# names(gt_tables) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+# 
+
+
+
+```
+
+
+## Stata Translation
+
+```{r Akito Stata translation}
+# 
+# # Load necessary libraries
+# library(dplyr)
+# library(tidyr)
+# library(ggplot2)
+# library(broom)
+# 
+# # Function to generate descriptive tables
+# generate_descriptive_tables <- function(data, output_path) {
+#   # Number of child-bearing age women
+#   child_bearing_age_women <- data %>%
+#     filter(R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49 & R_Cen_a4_hhmember_gender_ == 2) %>%
+#     group_by(village) %>%
+#     summarise(count_1 = sum(!is.na(R_Cen_a6_hhmember_age_)))
+#   print(summary(child_bearing_age_women$count_1))
+#   # Number of children
+#   children <- data %>%
+#     filter(R_Cen_a6_hhmember_age_ >= 0 & R_Cen_a6_hhmember_age_ <= 14) %>%
+#     group_by(village) %>%
+#     summarise(count_1 = sum(!is.na(R_Cen_a6_hhmember_age_)))
+#   print(summary(children$count_1))
+#   # Number of pregnant women on average
+#   pregnant_women <- data %>%
+#     filter(R_Cen_a23_wom_diarr_day_ != “.” | R_Cen_a23_wom_diarr_week_ != “.” | R_Cen_a23_wom_diarr_2week_ != “.”) %>%
+#     group_by(village) %>%
+#     summarise(count_1 = sum(!is.na(R_Cen_a23_wom_diarr_day_)),
+#               count_2 = sum(R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49 & R_Cen_a4_hhmember_gender_ == 2)) %>%
+#     mutate(perc_preg_women = count_1 / 192.22)
+#   print(summary(pregnant_women$perc_preg_women))
+#   # Number of U5 children on average
+#   U5_children <- data %>%
+#     filter(R_Cen_a6_hhmember_age_ < 5) %>%
+#     group_by(village) %>%
+#     summarise(count_1 = sum(!is.na(R_Cen_a6_hhmember_age_)),
+#               count_2 = sum(R_Cen_a6_hhmember_age_ >= 0 & R_Cen_a6_hhmember_age_ <= 14)) %>%
+#     mutate(perc_U5child = count_1 / 192.22)
+#   print(summary(U5_children$perc_U5child))
+#   # Number and average pregnant women + children <5 years per village
+#   pregnant_women_children <- data %>%
+#     filter(R_Cen_a23_wom_diarr_day_ != “.” | R_Cen_a23_wom_diarr_week_ != “.” | R_Cen_a23_wom_diarr_2week_ != “.” | R_Cen_a6_hhmember_age_ < 5) %>%
+#     group_by(village) %>%
+#     summarise(count_1 = sum(!is.na(R_Cen_a23_wom_diarr_day_) | !is.na(R_Cen_a6_hhmember_age_ < 5)),
+#               count_2 = sum((R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49 & R_Cen_a4_hhmember_gender_ == 2) | (R_Cen_a6_hhmember_age_ >= 0 & R_Cen_a6_hhmember_age_ <= 14))) %>%
+#     mutate(perc_total = count_1 / 192.22)
+#   print(summary(pregnant_women_children$perc_total))
+# }
+# # Load data
+# data <- read.csv(“path_to_data.csv”)
+# # Generate descriptive tables
+# generate_descriptive_tables(data, “output_path”)
+# # Number of HHs with pregnant women and children <5 years per village
+# hh_pregnant_children <- data %>%
+#   mutate(count1 = 1) %>%
+#   rowwise() %>%
+#   mutate(C_total_pregnant = sum(c_across(starts_with(“R_Cen_a7_pregnant”)) == 1, na.rm = TRUE)) %>%
+#   ungroup() %>%
+#   mutate(count2 = ifelse(C_total_pregnant > 0, 1, 0),
+#          count3 = ifelse(R_Cen_screen_u5child == 1, 1, 0),
+#          count4 = ifelse(C_Screened == 1, 1, 0)) %>%
+#   group_by(R_Cen_village_name) %>%
+#   summarise(count1 = sum(count1, na.rm = TRUE),
+#             count2 = sum(count2, na.rm = TRUE),
+#             count3 = sum(count3, na.rm = TRUE),
+#             count4 = sum(count4, na.rm = TRUE)) %>%
+#   mutate(perc_hh_preg = count2 / count1,
+#          perc_hh_U5 = count3 / count1,
+#          perc_hh_screened = count4 / count1)
+# print(summary(hh_pregnant_children))
+# # JJM access and other main vars - distribution by categories
+# jjm_access <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   group_by(village) %>%
+#   summarise(across(starts_with("R_Cen_a18"), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))))
+# print(jjm_access)
+# # Water sources
+# water_sources <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   group_by(village) %>%
+#   summarise(across(starts_with(“R_Cen_a12_ws_prim”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))),
+#             across(starts_with(“R_Cen_a13_ws_sec”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))))
+# print(water_sources)
+# # Number of water sources people have
+# water_sources_people <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   mutate(count_secondary_sources = rowSums(select(., starts_with(“R_Cen_a13_ws_sec”)), na.rm = TRUE),
+#          count_primary_sources = rowSums(select(., starts_with(“R_Cen_a12_ws_prim”)), na.rm = TRUE),
+#          total_num_sources = count_secondary_sources + count_primary_sources)
+# print(water_sources_people)
+# # JJM uses
+# jjm_uses <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   group_by(village) %>%
+#   summarise(across(starts_with(“C_Cen_a18_jjm”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))))
+# print(jjm_uses)
+# # Water treatment
+# water_treatment <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   group_by(village) %>%
+#   summarise(across(starts_with(“R_Cen_a16_water_treat”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))),
+#             across(starts_with(“R_Cen_a17_water_treat_kids”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))))
+# print(water_treatment)
+# # Water treatment frequency
+# water_treatment_freq <- data %>%
+#   filter(!village %in% c(50601, 30601)) %>%
+#   group_by(village) %>%
+#   summarise(across(starts_with(“R_Cen_a16_water_treat_freq”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))),
+#             across(starts_with(“R_Cen_a17_treat_kids_freq”), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE))))
+# print(water_treatment_freq)
 
 
 
