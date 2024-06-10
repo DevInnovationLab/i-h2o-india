@@ -7,7 +7,7 @@ Relevant link
 ## Final data description ([Process document](https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit))
 
 ### Villages
-The final village list of 20 villages info with block and Panchayatta code is saved at "- [Excel village list](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115)". 
+The final village list of 20 villages info with block and Panchayatta code is saved at "(Excel village list)(https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115)". 
 
 ### Baseline and Endline
 Household Level Information:
