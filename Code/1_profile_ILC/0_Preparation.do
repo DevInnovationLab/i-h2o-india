@@ -107,6 +107,8 @@ order assignment Treat_V, first
 save "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", replace
 export excel using "${DataPre}Google_map_village.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1) 
 
+
+
 * Village gep info
 use "${DataRaw}90_Village_Geo.dta", clear
 *************************

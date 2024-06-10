@@ -673,15 +673,11 @@ foreach x in cen_fam_age1 cen_fam_age2 cen_fam_age3 cen_fam_age4 cen_fam_age5 ce
 	
 merge 1:1 R_E_key using "${DataTemp}1_8_Endline_Census_additional_pre.dta", keep(1 3) nogen
 
-
-
-bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
-count if dup_HHID > 0 
-tab dup_HHID
+isid unique_id
 
 sort unique_id R_E_submissiondate
 
-br R_E_submissiondate unique_id R_E_key R_E_resp_available R_E_enum_name_label R_E_instruction R_E_r_cen_a1_resp_name if dup_HHID > 0
+br R_E_submissiondate unique_id R_E_key R_E_resp_available R_E_enum_name_label R_E_instruction R_E_r_cen_a1_resp_name
 
 save "${DataPre}1_8_Endline_XXX.dta", replace
 
