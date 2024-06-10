@@ -31,7 +31,7 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
 * Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
-use "${DataTemp}U5_Child_23_24.dta", clear
+use "${DataFinal}1_1_Endline_U5_Child_23_24.dta", clear
 missings dropvars, force
 * Cleaning age variable
 replace comb_child_age=comb_hhmember_age if comb_child_age==.
@@ -122,12 +122,12 @@ label var comb_child_diarr_freq "Number of stools in the last 24 hours"
 destring key3, replace
 rename key3 num
 mdesc village
-save "${DataTemp}U5_Child_23_24_clean.dta", replace
+save "${DataFinal}U5_Child_23_24_clean.dta", replace
 
  /*--------------------------------------------
     Section A.2: Diarrhea analysis (Descriptive statistics)
  --------------------------------------------*/
-use "${DataTemp}U5_Child_23_24_clean.dta", clear
+use "${DataFinal}U5_Child_23_24_clean.dta", clear
 tab comb_child_age Cen_Type,m
 
 * N_HHmember_age: Add this, Cen_CBW_consent
@@ -213,7 +213,7 @@ eststo clear
     Section A.3: Diarrhea analysis (Regression)
  --------------------------------------------*/
 * Main specification: Combined diarrhea with U5
-use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
+use "${DataFinal}0_Master_ChildLevel.dta", clear
 tab  village Merge_Baseline_CL,m
 * For every regression check the missing 
 mdesc *1day *1week *2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode comb_child_age

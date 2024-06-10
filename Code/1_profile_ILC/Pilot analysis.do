@@ -14,7 +14,6 @@
 	* Loocation of Nathma
 	* Tank Location
 	* HH survey: After selection code is over
-	
 do "${Do_pilot}2_1_Final_data.do"
 
 /* Example: 

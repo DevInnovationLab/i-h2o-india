@@ -67,6 +67,6 @@ label var B_C_diarrhea_prev_child_1day "Baseline"
 label var B_C_loosestool_child_1day "Baseline"
 label var B_C_cuts_child_1day "Baseline"
 
-save "${DataTemp}U5_Child_Diarrhea_data.dta", replace
+save "${DataFinal}0_Master_ChildLevel.dta", replace
 
  
