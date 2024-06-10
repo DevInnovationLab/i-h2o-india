@@ -12,8 +12,11 @@ Relevant link
 - Confirm: Badaalubadi has dropped out? So there is no endline data for this? We also do not use this village baseline info. I though there are two village that was replaced into the final dataset. What is the other?
 
 ### Baseline and Endline
-The baseline sample consists of 3,848 households
-915 households from 20 villages. Among these, 846 households have children under the age of 5, with a total of 1002 children recorded in the baseline.
+Household Level Information:
+The baseline census consists of 3,848 households from 20 villages. There are 915 households with children under age 5 or pregnant women. Among these, there were 1,002 children under age 5. In the endline survey, 915 households were targeted for the survey, and interviews were conducted with 875 households (${DataFinal}1_1_Endline_XXX_consented.dta).
+
+Child Level Information:
+There are 1,006 children from the 915 households. In the endline survey, 847 children were followed up, and 155 children were not found to be interviewed (4 cases are still to be resolved). Additionally, 116 children under age 5 were newly added in the endline survey.
  
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
 
