@@ -11,8 +11,9 @@ Relevant link
 - Same for Mariguda
 - Confirm: Badaalubadi has dropped out? So there is no endline data for this? We also do not use this village baseline info. I though there are two village that was replaced into the final dataset. What is the other?
 
-### Baseline
-The baseline sample consists of 915 households from 20 villages. Among these, 846 households have children under the age of 5, with a total of 1002 children recorded in the baseline.
+### Baseline and Endline
+The baseline sample consists of 3,848 households
+915 households from 20 villages. Among these, 846 households have children under the age of 5, with a total of 1002 children recorded in the baseline.
  
 > INSTRUCTIONS: Include a brief project summary here, as well as short instructions for how to run the code in the repository. This may be simple, or may involve many complicated steps. It should be a simple list, no excess prose. Strict linear sequence. If more than 4-5 manual steps, please wrap a master program/Makefile around them, in logical sequences. Examples follow.
 
