@@ -7,9 +7,7 @@ Relevant link
 ## Final data description ([Process document](https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit))
 
 ### Villages
-- Which block is this? Badabangi. If the block is not "Gunupur" do people suggest us to use different village code (20101) or stick with the current one?
-- Same for Mariguda
-- Confirm: Badaalubadi has dropped out? So there is no endline data for this? We also do not use this village baseline info. I though there are two village that was replaced into the final dataset. What is the other?
+The final village list of 20 villages info with block and Panchayatta code is saved at "- [Excel village list](https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1529467115)". 
 
 ### Baseline and Endline
 Household Level Information:
