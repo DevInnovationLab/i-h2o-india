@@ -164,9 +164,6 @@ gen Cen_Type=2
 append using "${DataTemp}temp.dta"
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
-
-
-
 /* ---------------------------------------------------------------------------
 * Long indivual data from the roster
  ---------------------------------------------------------------------------*/

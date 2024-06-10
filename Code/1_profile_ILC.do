@@ -111,6 +111,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global DataFinal "${pilot}3_final/"
 	global DataOther "${pilot}4_other/"
 	global DataTemp  "${pilot}99_temp/"
+	global DataIdexx  "${pilot}5_lab data/idexx/cleaned/"
+	
 					if c(username) == "Archi Gupta" {		
 		global DataTemp  "C:\Users\Archi Gupta\Box\Data\99_temp\"
 	}
@@ -177,8 +179,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	4 Run code
 ------------------------------------------------------------------------------*/
 * Search function
-	/* 
-local string pregwoman
+
+local string start_from_clean_file_Population
 	cd "${Do_pilot}"
 	find, match(`string') show zero
 */ 

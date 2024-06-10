@@ -16,8 +16,59 @@
   
  /*--------------------------------------------
     Section A: HH level data
- --------------------------------------------*/
- 
+ --------------------------------------------*/  
+ //baseline data
+cap program drop start_from_clean_BL_final
+program define   start_from_clean_BL_final
+  * Open clean file
+ * baseline clean
+use  "${DataPre}1_1_Census_cleaned.dta", clear
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+gen     C_Census=1
+* There are 3,848 households
+merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
+recode Merge_C_F 1=0 3=1
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var C_HH_not_available "Respondent not available"
+
+end
+
+start_from_clean_BL_final
+tab C_Census
+
+
+//Remove HHIDs with differences between census and HH survey
+start_from_clean_BL_final
+//why do we drop this?
+*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+
+tempfile new
+save `new', replace
+
+************************************************************************
+* Step 2: Classifying households for Mortality survey based on Scenarios *
+************************************************************************
+
+// Create scenarios 
+keep if C_Screened == 1
+drop if R_Cen_a1_resp_name == "" 
+list if unique_id == ""
+isid unique_id
+
+///////////////////////////////////////////////////////////////
+/***************************************************************
+PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
+****************************************************************/
+////////////////////////////////////////////////////////////////
+
+merge 1:1 unique_id using "${DataPre}1_8_Endline_XXX.dta", keep(3) nogen
+
+
  
 
   
@@ -71,57 +122,4 @@ save "${DataFinal}0_Master_ChildLevel.dta", replace
 
  
  
- //HH level merge between baseline and endline 
  
- use "${DataPre}1_8_Endline_XXX.dta", clear
- drop dup_HHID 
- save "${DataPre}1_8_Endline_XXX.dta", replace
- 
- //baseline data
- cap program drop start_from_clean_file_Population
-program define   start_from_clean_file_Population
-  * Open clean file
-use  "${DataPre}1_1_Census_cleaned.dta", clear
-drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
-gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
-recode Merge_C_F 1=0 3=1
-
-*drop if  R_Cen_village_name==30501
-
-label var C_Screened  "Screened"
-	label variable R_Cen_consent "Census consent"
-	label variable R_FU_consent "HH survey consent"
-	label var Non_R_Cen_consent "Refused"
-	label var C_HH_not_available "Respondent not available"
-
-end
-
-
-//Remove HHIDs with differences between census and HH survey
-start_from_clean_file_Population
-//why do we drop this?
-*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
-
-tempfile new
-save `new', replace
-
-************************************************************************
-* Step 2: Classifying households for Mortality survey based on Scenarios *
-************************************************************************
-
-// Create scenarios 
-keep if C_Screened == 1
-drop if R_Cen_a1_resp_name == "" 
-list if unique_id == ""
-isid unique_id
-
-///////////////////////////////////////////////////////////////
-/***************************************************************
-PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
-****************************************************************/
-////////////////////////////////////////////////////////////////
-
-merge 1:1 unique_id using "${DataPre}1_8_Endline_XXX.dta", keep(3) nogen
-
