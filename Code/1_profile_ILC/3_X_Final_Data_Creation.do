@@ -9,10 +9,15 @@
 	- "${DataTemp}U5_Child_23_24_clean.dta"
 ****** Output data : 
 	- "${DataTemp}U5_Child_Diarrhea_data.dta"
+	
+****** Do file to run before this do file
+	- 2_1_Final_data.do (start_from_clean_file_ChildLevel)
+
 ****** Language: English
 *=========================================================================*/
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
+	
   
  /*--------------------------------------------
     Section A: HH level data
@@ -25,7 +30,7 @@ program define   start_from_clean_BL_final
 use  "${DataPre}1_1_Census_cleaned.dta", clear
 drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
 gen     C_Census=1
-* There are 3,848 households
+* There are 3,848 households: 915 sample goes to the: Final_HH_Odisha_consented_Full
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
           keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
@@ -37,10 +42,6 @@ label var C_Screened  "Screened"
 	label var C_HH_not_available "Respondent not available"
 
 end
-
-start_from_clean_BL_final
-tab C_Census
-
 
 //Remove HHIDs with differences between census and HH survey
 start_from_clean_BL_final
@@ -65,27 +66,35 @@ isid unique_id
 PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
+* 40 household were not followed in the endline
+merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", gen(Merge_Baseline_Endline)
+* keep if Merge_Baseline_Endline==3
+* drop Merge_Baseline_Endline
 
-merge 1:1 unique_id using "${DataPre}1_8_Endline_XXX.dta", keep(3) nogen
 
 
- 
+
+
+
+
+
+
+
+save "${DataFinal}0_Master_HHLevel.dta", replace
+
+
+
+
+
+
+
 
   
  /*--------------------------------------------
     Section B: Child level data
  --------------------------------------------*/
- 
- /*--------------------------------------------
-    Recreating baseline child level data: 
-	Needed to run if any change happen to the baselind data
-	
-* N=1,123 
-start_from_clean_file_ChildLevel
-save "${DataTemp}Baseline_ChildLevel.dta", replace
-  --------------------------------------------*/
-
-use "${DataTemp}Baseline_ChildLevel.dta", clear
+* N=1,002 
+use "${DataFinal}Baseline_ChildLevel.dta", clear
 * Cen_Type is the type existed from the baseline
 gen Cen_Type=4
 * Renaming baseline variable with B_ prefix
