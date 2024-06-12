@@ -562,6 +562,8 @@ label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)"
 
    unique village
    unique unique_id
+   
+   save "${DataFinal}Baseline_ChildLevel.dta", replace
 
 
 end

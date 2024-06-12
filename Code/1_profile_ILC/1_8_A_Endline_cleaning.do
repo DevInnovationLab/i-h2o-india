@@ -463,6 +463,7 @@ drop if R_E_key == "uuid:345ecae7-bfbe-4f01-82fa-c47ad9b036ed" & unique_id == "5
 
 drop if R_E_key == "uuid:fed059d7-fc79-4a06-bad8-438b71634456" & unique_id == "50301117034"
 
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Village Panchatvillage BlockCode) keep(1 3)
 save "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned.dta", replace
 savesome using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta" if R_E_consent==1, replace
 

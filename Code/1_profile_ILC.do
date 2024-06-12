@@ -180,14 +180,15 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 ------------------------------------------------------------------------------*/
 * Search function
 
-local string start_from_clean_file_Population
+/* 
+local string 1_1_Endline_XXX_consented
 	cd "${Do_pilot}"
 	find, match(`string') show zero
 */ 
 	
 cd "${DataRaw}"
 
-END 	
+END 
 
 * (0) First apply SurveyCTO code cleaning do file
 do "${Do_pilot}0_Preparation_V2.do" // Long form data of endline census datasets
