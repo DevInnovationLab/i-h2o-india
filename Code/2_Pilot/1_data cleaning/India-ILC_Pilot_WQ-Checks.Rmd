@@ -85,6 +85,9 @@ idexx_r3 <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab 
 
 village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
+
+scoping <- read_stata("C:/Users/jerem/Box/India Water project/1_Scoping/04. Working/Household data_cleaned.dta")
+
 ```
 
 
@@ -222,6 +225,51 @@ labelmaker <- function(x){
 
 ```
 
+\newpage
+# Scoping Data Cleaning
+
+```{r scoping data cleaning}
+
+scoping <- labelmaker(scoping)
+
+
+#Renaming key variables
+scoping <- scoping%>%
+  rename(prim_source = "A1")%>%
+  rename(sec_source = "A2")%>%
+  rename(sec_source_tap = "A2_1")%>%
+  rename(sec_source_private_tap = "A2_2")%>%
+  rename(sec_source_comm_tap = "A2_3")%>%
+  rename(sec_source_handpump = "A2_4")%>%
+  rename(sec_source_dug_well = "A2_5")%>%
+  rename(sec_source_other = "A2__98")%>%
+  rename(tap_supply = "A15")%>%
+  rename(tap_coverage = "A12")%>%
+  rename(tap_supply_freq = "A16")%>%
+  rename(water_treat = "A8")%>%
+  rename(water_treat_type = "A9")%>%
+  rename(water_treat_cloth = "A9_1")%>%
+  rename(water_treat_stand = "A9_2")%>%
+  rename(water_treat_boil = "A9_3")%>%
+  rename(water_treat_chlorine = "A9_4")%>%
+  rename(water_treat_other = "A9__98")
+  
+
+scoping$prim_source <- scoping$prim_source%>%
+  factor(levels = c("Government household tap","Private household tap","Community standpoint", "Handpump","Dug well", "Other"))
+
+scoping <- scoping%>%
+  mutate(sec_source = case_when(sec_source == "0" ~ 0,
+                                sec_source != "0" ~ 1))
+  
+  
+  
+  
+
+
+
+
+```
 
 
 \newpage
@@ -1488,6 +1536,68 @@ gv_refill <- gv_refill%>%
 \newpage
 # Analysis
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+#Scoping Results
+
+```{r scoping analysis}
+
+#Selecting data
+scoping_tab <- scoping%>%
+  dplyr::select(district_name, prim_source, sec_source, tap_coverage, tap_supply_freq, water_treat)
+
+
+
+#prim_source, sec_source, sec_source_tap, sec_source_private_tap, sec_source_comm_tap, sec_source_handpump, sec_source_dug_well, sec_source_other, tap_supply, tap_coverage, tap_supply_freq, water_treat, water_treat_type, water_treat_cloth, water_treat_stand, water_treat_boil, water_treat_chlorine, water_treat_other
+
+
+#making desc stats table
+#Summarizing combined results in a table
+tab <- scoping_tab%>%
+  tbl_strata(
+    strata = district_name,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(missing = "no", 
+                    #type = c() ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}% ({n})"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary Drinking Water Source",
+                                 sec_source ~ "Use a Secondary Drinking Water Source",
+                                 tap_coverage ~ "Tap Connection at House",
+                                 tap_supply_freq ~ "Number of Times Water is Supplied Each Day",
+                                 water_treat ~ "Treat Drinking Water"
+                                 )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "% (N)"),#%>%
+ # as_gt()%>%
+  #tab_options(table.font.size = pct(50),
+              #table_body.hlines.width = 
+   #             table.width = pct(50)),
+    .header = "**{strata}**"
+  )
+
+# Convert to gt object
+gt_tab <- as_gt(tab)
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 #BL Chlorine Results
 
