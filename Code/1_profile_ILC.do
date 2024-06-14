@@ -74,6 +74,17 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	}
 	
 	
+	else if c(username) == "uchicago" {		//Pathways for Niharika's device
+		global box 		"/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/"
+		global github	"/Users/uchicago/Documents/GitHub/i-h2o-india/"
+		global Overleaf "/Users/uchicago/Dropbox/Apps/Overleaf"
+		global DataRaw  "${box}2_Pilot/Data/1_raw/"
+		global pilot    "${box}2_Pilot/Data/"
+		global Endline  "${DataRaw}/1_8_Endline/"
+		global DataDeid "${pilot}/2_deidentified/"
+		
+	}
+		
 
 	global code		     "${github}Code"
 				if c(username) == "Archi Gupta" {		
@@ -154,6 +165,8 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	global Table_Pilot_analysis =  "${Overleaf}/India ILC Pilot- analysis/Table/"
 
 	cd "${DataRaw}"
+	
+	
 	
 /*------------------------------------------------------------------------------
 	3 Initial settings 
