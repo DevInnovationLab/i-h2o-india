@@ -332,6 +332,12 @@ drop if _merge==1
 * To do: Archi to add description
 drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
 
+
+//generating relevant vars
+gen     sec_jjm_use=0
+replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_source_prim!=1
+tab     sec_jjm_use
+
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
