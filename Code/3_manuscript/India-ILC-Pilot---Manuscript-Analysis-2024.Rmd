@@ -39,8 +39,6 @@ library(gtsummary)
 library(gt)
 library(webshot2)
 library(clubSandwich)
-library(sandwich)
-library(lmtest)
 library(broom)
 library(tidyverse)
 
@@ -1151,10 +1149,12 @@ p_ec_risk_r3 <- ggplot(data = risk_stats_r3) +
 
 
 
-##Overall Regression Results Table -- Household Surveys
+
+
+
+##Overall Regression Results Table
 
 ```{r Regression Results -- WASH variables, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
-
 
 #Subsetting datasets with key variables
 bl_tab <- bl%>%
@@ -1189,101 +1189,6 @@ r3_tab <- r3%>%
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "R3")
 
-#Combining Datasets
-all_tab <- rbind(bl_tab, r1_tab, r2_tab, r3_tab)
-
-
-#Summarizing EL data and running regression models ----
-
-#Selecting variables
-binary_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary",
-                 "tap_trust_binary", "tap_taste_binary", "tap_future_binary",
-                 "fc_tap_binary", "fc_stored_binary")
-
-
-
-#GT method
-#Summarizing desc stats for each variable
-#reset_gtsummary_theme()
-
-desc_stats <- all_tab%>%
-  dplyr::select("assignment","data_round","prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary","tap_trust_binary", "tap_taste_binary", "tap_future_binary","fc_tap_binary", "fc_stored_binary")%>%
-  tbl_strata(
-    strata = data_round,
-    .tbl_fun =
-      ~ .x %>%
-        tbl_summary(by = assignment, 
-                    missing = "no",
-                    type = c("prim_source_jjm", "sec_source", "jjm_drinking",
-                             "water_treat_binary", "tap_trust_binary", "tap_taste_binary",
-                             "tap_future_binary","fc_tap_binary",
-                             "fc_stored_binary") ~ "continuous",
-                    statistic = list(
-                      all_continuous() ~ "{mean} ({sd})",
-                      all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
-                    label = list(prim_source_jjm ~ "Government-provided tap as primary source",
-                                 sec_source ~ "Use of a secondary source",
-                                 jjm_drinking ~ "Use of government-provided taps for drinking",
-                                 water_treat_binary ~ "Water treatment used",
-                                 tap_trust_binary ~ "Trust in safety of taps",
-                                 tap_taste_binary ~ "Satisfaction with taste from taps",
-                                 tap_future_binary ~ "Likelihood of using taps in future",
-                                 fc_tap_binary ~ "Presence of free chlorine in taps (>0.1 mg/L)",
-                                 fc_stored_binary ~ "Presence of free chlorine in stored water (>0.1 mg/L)"
-                                 )
-                    )%>%
-     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
-    .header = "**{strata}**"
-  )%>%
-  modify_footnote(update =  ~ "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
-
-desc_stats <- as_gt(desc_stats)%>%
-  tab_options(table.font.size = 11)
-
-desc_stats
-
-
-
-#To be updated ----
-#Running regression models for each variable in the dataset
-all_models <- lapply(c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary"),
-                 function(var) {
-                   formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-                   model <- glm(formula, data = bl_tab, family = binomial)
-                   # Adjust for clustering at the village level
-                   cluster_vcov <- vcovCL(model, cluster = ~village)
-                   clustered_se <- sqrt(diag(cluster_vcov))
-                   # Get the coefficients with clustered standard errors
-                   clustered_results <- coeftest(model, vcov. = cluster_vcov)
-                   #Tidying models -- need to understand how to use clustered results option
-                   list(model = model,
-                        table = tbl_regression(model, exponentiate = TRUE)) #Tidying models
-                   })
-#Assigning names to models
-names(all_models) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-#Forcing to be gt objects
-gt_tables <- lapply(all_models,
-                    function(model_info) {
-                      as_gt(model_info$table)
-})
-
-#Naming gt tables
-names(gt_tables) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-```
-
-
-##Overall Regression Results Table -- Endline
-
-```{r Regression Results -- WASH variables, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
-
-#Subsetting datasets with key variables
-
 el_tab <- el%>%
   dplyr::select(assignment, unique_id, 
                 village, block, panchayat_village,
@@ -1316,12 +1221,6 @@ all_models <- lapply(c("prim_source_jjm", "sec_source", "jjm_drinking", "water_t
                  function(var) {
                    formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
                    model <- glm(formula, data = el_tab, family = binomial)
-                   # Adjust for clustering at the village level
-                   cluster_vcov <- vcovCL(model, cluster = ~village)
-                   clustered_se <- sqrt(diag(cluster_vcov))
-                   # Get the coefficients with clustered standard errors
-                   clustered_results <- coeftest(model, vcov. = cluster_vcov)
-                   #Tidying models -- need to understand how to use clustered results option
                    list(model = model,
                         table = tbl_regression(model, exponentiate = TRUE)) #Tidying models
                    })

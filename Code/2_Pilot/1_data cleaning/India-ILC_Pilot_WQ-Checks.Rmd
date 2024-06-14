@@ -522,8 +522,9 @@ bl_idexx <- bl%>%
 
 #Noting duplicate samples
 idexx <- idexx%>%
-  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-  replace_na(duplicate, value = 0)
+  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))
+  
+idexx$duplicate <- tidyr::replace_na(idexx$duplicate, 0)
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
@@ -766,8 +767,10 @@ r1_for_idexx <- r1%>%
 
 #Noting duplicate samples
 idexx_r1 <- idexx_r1%>%
-  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-  replace_na(duplicate, value = 0)
+  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))
+
+
+idexx_r1$duplicate <- replace_na(idexx_r1$duplicate, 0)
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r1 <- idexx_r1%>%
@@ -987,15 +990,16 @@ idexx_r2 <- idexx_r2%>%
   mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
                                end_comments == "Lab blank" |
                                end_comments == "This is LAB BLANK results")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(lab_blank, value = 0)
+                            & sample_ID == 0, 1, 0))
+  
+idexx_r2$lab_blank <-   replace_na(idexx_r2$lab_blank, 0)
 
 idexx_r2 <- idexx_r2%>%
   mutate(field_blank = ifelse((end_comments == "Field Blank" | 
                                  end_comments == "Field blank" |
                                  end_comments == "This is FIELD BLANK")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(field_blank, value = 0)
+                            & sample_ID == 0, 1, 0))
+idexx_r2$field_blank <-   replace_na(idexx_r2$field_blank, 0)
 
 
 #Dropping lab blanks, field blanks, and duplicates
@@ -1217,21 +1221,24 @@ idexx_r3 <- idexx_r3%>%
   mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
                                end_comments == "Lab blank" |
                                end_comments == "This is LAB BLANK results")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(lab_blank, value = 0)
+                            & sample_ID == 0, 1, 0))
+
+idexx_r3$lab_blank <-   replace_na(idexx_r3$lab_blank, 0)
 
 idexx_r3 <- idexx_r3%>%
   mutate(field_blank = ifelse((end_comments == "Field Blank" | 
                                  end_comments == "Field blank" |
                                  end_comments == "This is FIELD BLANK")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(field_blank, value = 0)
+                            & sample_ID == 0, 1, 0))
+
+idexx_r3$field_blank <-   replace_na(idexx_r3$field_blank, 0)
 
 #Noting solar tank water
 idexx_r3 <- idexx_r3%>%
   mutate(solar_water = ifelse((end_comments == "Solar water" | 
-                                 end_comments == "Solar Tank Water"), 1, 0))%>%
-  replace_na(solar_water, value = 0)
+                                 end_comments == "Solar Tank Water"), 1, 0))
+
+idexx_r3$solar_water <-   replace_na(idexx_r3$solar_water, 0)
 
 
 #Dropping lab blanks, field blanks, and duplicates

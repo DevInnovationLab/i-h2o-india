@@ -22,6 +22,23 @@ labelmaker <- function(x){
 }
 
 
+#-------------------------Village information cleaning-----------------------#
+
+#Making village IDs compatible to the surveys
+village_details <- village_details%>%
+  mutate(village_ID = `Village codes`)
+
+village_details$village_ID <- as.character(village_details$village_ID)
+
+#Making Panchayat village variable compatible with the existing data
+village_details <- village_details%>%
+  mutate(`Panchat village` = Panchayat)
+
+#Making block variable compatible with existing data
+village_details <- village_details%>%
+  rename(block = "Block")
+
+
 
 #--------------------------Baseline Census Data Cleaning-------------------#
 
@@ -294,11 +311,11 @@ bl <- bl%>%
   ))
 bl <- bl%>%
   mutate(tap_future_binary = case_when(
-    tap_use_future == "Very satisfied" ~ 1,
-    tap_use_future == "Satisfied" ~ 1,
-    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
-    tap_use_future == "Dissatisfied" ~ 0,
-    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Very likely" ~ 1,
+    tap_use_future == "Somewhat likely" ~ 1,
+    tap_use_future == "Neither likely nore unlikely" ~ 0,
+    tap_use_future == "Somewhat unlikely" ~ 0,
+    tap_use_future == "Very unlikely" ~ 0,
     tap_use_future == "Don't know" ~ 0 
   ))
 
@@ -515,11 +532,11 @@ r1 <- r1%>%
   ))
 r1 <- r1%>%
   mutate(tap_future_binary = case_when(
-    tap_use_future == "Very satisfied" ~ 1,
-    tap_use_future == "Satisfied" ~ 1,
-    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
-    tap_use_future == "Dissatisfied" ~ 0,
-    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Very likely" ~ 1,
+    tap_use_future == "Somewhat likely" ~ 1,
+    tap_use_future == "Neither likely nore unlikely" ~ 0,
+    tap_use_future == "Somewhat unlikely" ~ 0,
+    tap_use_future == "Very unlikely" ~ 0,
     tap_use_future == "Don't know" ~ 0 
   ))
 
@@ -745,11 +762,11 @@ r2 <- r2%>%
   ))
 r2 <- r2%>%
   mutate(tap_future_binary = case_when(
-    tap_use_future == "Very satisfied" ~ 1,
-    tap_use_future == "Satisfied" ~ 1,
-    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
-    tap_use_future == "Dissatisfied" ~ 0,
-    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Very likely" ~ 1,
+    tap_use_future == "Somewhat likely" ~ 1,
+    tap_use_future == "Neither likely nore unlikely" ~ 0,
+    tap_use_future == "Somewhat unlikely" ~ 0,
+    tap_use_future == "Very unlikely" ~ 0,
     tap_use_future == "Don't know" ~ 0 
   ))
 
@@ -956,11 +973,11 @@ r3 <- r3%>%
   ))
 r3 <- r3%>%
   mutate(tap_future_binary = case_when(
-    tap_use_future == "Very satisfied" ~ 1,
-    tap_use_future == "Satisfied" ~ 1,
-    tap_use_future == "Neither satisfied nor dissatisfied" ~ 0,
-    tap_use_future == "Dissatisfied" ~ 0,
-    tap_use_future == "Very dissatisfied" ~ 0,
+    tap_use_future == "Very likely" ~ 1,
+    tap_use_future == "Somewhat likely" ~ 1,
+    tap_use_future == "Neither likely nore unlikely" ~ 0,
+    tap_use_future == "Somewhat unlikely" ~ 0,
+    tap_use_future == "Very unlikely" ~ 0,
     tap_use_future == "Don't know" ~ 0 
   ))
 
