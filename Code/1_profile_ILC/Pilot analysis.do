@@ -1053,10 +1053,10 @@ gen secondary_water_source_JJM= 0
 replace secondary_water_source_JJM= 1 if R_Cen_a13_water_source_sec_1==1
 tab secondary_water_source_JJM
 
-gen sec_jjm_use=0
-replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_source_prim!=1
-tab secondary_water_source_JJM
-tab sec_jjm_use
+* gen sec_jjm_use=0
+* replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_source_prim!=1
+* tab secondary_water_source_JJM
+* tab sec_jjm_use
 
 gen panchayat_village=0
 replace panchayat_village=1 if R_FU_r_cen_village_name_str=="Asada" | R_FU_r_cen_village_name_str=="Jaltar" | R_FU_r_cen_village_name_str=="BK Padar" | R_FU_r_cen_village_name_str=="Mukundpur" | R_FU_r_cen_village_name_str=="Gudiabandh" | R_FU_r_cen_village_name_str=="Naira" | R_FU_r_cen_village_name_str=="Dangalodi" | R_FU_r_cen_village_name_str=="Karlakana" 
@@ -1291,10 +1291,10 @@ gen secondary_water_source_JJM= 0
 replace secondary_water_source_JJM= 1 if R_FU1_water_source_sec_1==1
 tab secondary_water_source_JJM
 
-gen sec_jjm_use=0
-replace sec_jjm_use=1 if R_FU1_water_source_sec_1==1 & R_FU1_water_source_prim!=1
-tab secondary_water_source_JJM
-tab sec_jjm_use
+* gen sec_jjm_use=0
+* replace sec_jjm_use=1 if R_FU1_water_source_sec_1==1 & R_FU1_water_source_prim!=1
+* tab secondary_water_source_JJM
+* tab sec_jjm_use
 
 gen panchayat_village=0
 replace panchayat_village=1 if R_FU1_village_str=="Asada" | R_FU1_village_str=="Jaltar" | R_FU1_village_str=="BK Padar" | R_FU1_village_str=="Mukundpur" | R_FU1_village_str=="Gudiabandh" | R_FU1_village_str=="Naira" | R_FU1_village_str=="Dangalodi" | R_FU1_village_str=="Karlakana" 
@@ -1552,10 +1552,10 @@ gen secondary_water_source_JJM= 0
 replace secondary_water_source_JJM= 1 if R_FU2_water_source_sec_1==1
 tab secondary_water_source_JJM
 
-gen sec_jjm_use=0
-replace sec_jjm_use=1 if R_FU2_water_source_sec_1==1 & R_FU2_water_source_prim!=1
-tab secondary_water_source_JJM
-tab sec_jjm_use
+* gen sec_jjm_use=0
+* replace sec_jjm_use=1 if R_FU2_water_source_sec_1==1 & R_FU2_water_source_prim!=1
+* tab secondary_water_source_JJM
+* tab sec_jjm_use
 
 gen panchayat_village=0
 replace panchayat_village=1 if R_FU2_village_str=="Asada" | R_FU2_village_str=="Jaltar" | R_FU2_village_str=="BK Padar" | R_FU2_village_str=="Mukundpur" | R_FU2_village_str=="Gudiabandh" | R_FU2_village_str=="Naira" | R_FU2_village_str=="Dangalodi" | R_FU2_village_str=="Karlakana" 
@@ -1806,10 +1806,10 @@ gen secondary_water_source_JJM= 0
 replace secondary_water_source_JJM= 1 if R_FU3_water_source_sec_1==1
 tab secondary_water_source_JJM
 
-gen sec_jjm_use=0
-replace sec_jjm_use=1 if R_FU3_water_source_sec_1==1 & R_FU3_water_source_prim!=1
-tab secondary_water_source_JJM
-tab sec_jjm_use
+* gen sec_jjm_use=0
+* replace sec_jjm_use=1 if R_FU3_water_source_sec_1==1 & R_FU3_water_source_prim!=1
+* tab secondary_water_source_JJM
+* tab sec_jjm_use
 
 gen panchayat_village=0
 replace panchayat_village=1 if R_FU3_village_str=="Asada" | R_FU3_village_str=="Jaltar" | R_FU3_village_str=="BK Padar" | R_FU3_village_str=="Mukundpur" | R_FU3_village_str=="Gudiabandh" | R_FU3_village_str=="Naira" | R_FU3_village_str=="Dangalodi" | R_FU3_village_str=="Karlakana" 
@@ -1940,9 +1940,157 @@ sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
 reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
 
+/*  ---------------------------------------------------------
+	   Pooled Follow-up rounds survey data (Akito revision)
+  ----------------------------------------------------------*/
+use "${DataDeid}Followup R1 survey_for pooling data.dta", clear
+append using "${DataDeid}Followup R2 survey_for pooling data.dta"
+append using "${DataDeid}Followup R3 survey_for pooling data.dta"
+drop R_FU1_village_str R_FU2_village_str R_FU3_village_str
+drop R_Cen_block_name treatment
+rename  R_Cen_village_name village
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
+label var Treat_V "Treatment"
+
+rename R_FU_tap_use_drinking_yesno_1 R_FU_tap_drin_1
+
+label var R_FU_water_source_prim_1 "Using JJM as Primary source"
+label var sec_jjm_use "Using JJM as Secondary source"
+label var R_FU_tap_drin_1 "Drinking JJM water"
+label var R_FU_water_treat_1 "Using any water treatment methods"
+
+label var taste_satisfy_1 "Satisfied with taste of govt. tap water"
+label var tap_trust_1 "Confident that govt. tap water safe to drink"
+label var tap_use_future_1 "Likely to continue using govt. tap"
+
+label var tap_tc "Total chlorine in running water"
+label var stored_tc "Total chlorine in stored water"
+label var tap_rc "Free chlorine in running water"
+label var stored_rc "Free chlorine in stored water"
+
+save "${DataTemp}Temp.dta", replace
+
+global PanelA R_FU_water_source_prim_1 sec_jjm_use R_FU_tap_drin_1 R_FU_water_treat_1  taste_satisfy_1 tap_trust_1 tap_use_future_1  tap_tc stored_tc tap_rc stored_rc 
+local PanelA "Endline TC"
+local LabelPanelA "MaintableHH"
+local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
+local ScalePanelA "0.6"
+foreach k in PanelA {
+use "${DataTemp}Temp.dta", clear
+* Mean
+	eststo  model1: estpost summarize $`k' if Treat_V==1
+	eststo  model2: estpost summarize $`k' if Treat_V==0
+	
+	* Diff
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	replace `i'=_b[1.Treat_V]
+	}
+	eststo  model3: estpost summarize $`k'
+	
+	* Significance
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=99996 if p_1> 0.1
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model4: estpost summarize $`k'
+	
+	* P-value
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=p_1
+	}
+	eststo  model5: estpost summarize $`k'
+
+	* Min
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model6: estpost summarize $`k'
+	
+	* Max
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model7: estpost summarize $`k'
+	
+	* Missing 
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i')
+	egen max_`i'=sum(`i'_Miss)
+	replace `i'=max_`i'
+	}
+	eststo  model8: estpost summarize $`k'
+
+* 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_FUP_Desc.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _\\" "" ///
+				   "Using JJM as Primary source" "\multicolumn{3}{l}{\textbf{Panel A: Water source and treatment}} \\Using JJM as Primary source" ///
+				   "Satisfied with taste of govt. tap water" "\multicolumn{3}{l}{\textbf{Panel B: Perceptions about government tap water}} \\Satisfied with taste of govt. tap water" ///
+				   "Total chlorine in running water" "\multicolumn{3}{l}{\textbf{Panel C: Chlorine tests}} \\Total chlorine in running water" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
+}
+
+
+END
+
+local followup1 R_FU_water_source_prim_1 sec_jjm_use R_FU_tap_use_drinking_yesno_1 R_FU_water_treat_1
+local followup2 taste_satisfy_1 tap_trust_1 tap_use_future_1
+local followup3 tap_tc stored_tc tap_rc stored_rc
+local mtfollowup1 "\shortstack{Using JJM as\\Primary source}" "\shortstack{Using JJM as\\Secondary source}" "\shortstack{Drinking\\JJM water}" "\shortstack{Using any water\\treatment methods}"
+local mtfollowup2 "\shortstack{Satisfied with\\taste of\\govt. tap water}" "\shortstack{Confident that\\govt. tap water\\safe to drink}"  "\shortstack{Likely to\\continue using \\govt. tap}" 
+local mtfollowup3 "\shortstack{Total chlorine\\in\\running water}" "\shortstack{Total chlorine\\in\\stored water}" "\shortstack{Free chlorine\\in\\running water}" "\shortstack{ Free chlorine\\in\\stored water}" 
+
+foreach k in 1 2 3 {
+foreach y of local followup`k' {
+eststo: reg `y' Treat_V Panchatvillage i.BlockCode i.round, cluster(R_Cen_village_str) 
+sum         `y' if Treat_V==0
+estadd scalar Mean = r(mean)              
+}
+esttab using "${Table}Main_followup`k'_FUP_Reg.tex",label se ar2  ///
+             title("The impact of the ILC program on Water sources and treatment" \label{LabelD}) ///
+			 nonotes nobase nocons ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observations"')) ///
+			 mtitle("`mtfollowup`k''") ///
+			 indicate("Round FE=*round" "Stratification FE=*BlockCode Panchatvillage") ///
+			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(2) ///
+			 substitute("{l}{\footnotesize" "{p{0.8\linewidth}}{\footnotesize" ///
+			 "Age_year=1" "\multicolumn{4}{l}{Age in years: Base is 0} \\\hline Age_year=1" ///
+			 ) ///
+			 addnote("`Notediarrhea_2w_c_1'") ///	
+			 replace
+eststo clear
+}
+
+
+* rename(sec_jjm_use R_C_water_source_prim_1 R_Cen_a18_jjm_drinking_1  R_C_water_source_prim_1 R_Cen_a16_water_treat_1  R_C_water_source_prim_1) ///
+
+
+
+END
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-* Pooled Follow-up rounds survey data
+* Pooled Follow-up rounds survey data (Michelles' original code)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 use "${DataDeid}Followup R1 survey_for pooling data.dta", clear
@@ -2020,9 +2168,9 @@ gen control= 1 if treatment==0
 replace control=0 if treatment==1
 
 //generating relevant vars
-gen sec_jjm_use=0
+gen     sec_jjm_use=0
 replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_source_prim!=1
-tab sec_jjm_use
+tab     sec_jjm_use
 
 foreach i in R_Cen_a12_water_source_prim  {
 	replace `i'=77 if `i'==-77
@@ -2111,44 +2259,25 @@ reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_Cen_village_st
 }
 
 
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-* Endline: Panel A. Water sources & treatment
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
+									/*------------------------------------------------------------
+									    Baseline and Endline: Panel A. Water sources & treatment
+								     ------------------------------------------------------------*/
 
-**creating new vars
-gen taste_satisfy=0
-replace taste_satisfy=1 if R_FU_tap_taste_satisfied==1 | R_FU_tap_taste_satisfied==2
-gen tap_trust=0
-replace tap_trust= 1 if R_FU_tap_trust==1 | R_FU_tap_trust==2
-gen tap_use_future= 0
-replace tap_use_future= 1 if R_FU_tap_use_future==1 | R_FU_tap_use_future==2
-gen stored_rc=0
-replace stored_rc=1 if R_FU_fc_stored>0.14 & R_FU_fc_stored!=.
-gen tap_rc=0
-replace tap_rc=1 if R_FU_fc_tap>0.14 & R_FU_fc_tap!=.
-gen stored_tc=0
-replace stored_tc=1 if R_FU_tc_stored>0.14 & R_FU_tc_stored!=.
-gen tap_tc=0
-replace tap_tc=1 if R_FU_tc_tap>0.14 & R_FU_tc_tap!=.
+use "${DataFinal}0_Master_HHLevel.dta", clear
+rename R_Cen_a12_water_source_prim R_C_water_source_prim
 
-
-gen secondary_water_source_JJM= 0
-replace secondary_water_source_JJM= 1 if R_Cen_a13_water_source_sec_1==1
-tab secondary_water_source_JJM
-
-END
 
 //generating relevant vars
-gen sec_jjm_use=0
-replace sec_jjm_use=1 if R_E_water_source_sec_1==1 & R_E_water_source_prim!=1
-tab sec_jjm_use
+gen     R_E_sec_jjm_use=0
+replace R_E_sec_jjm_use=1 if R_E_water_source_sec_1==1 & R_E_water_source_prim!=1
+replace R_E_sec_jjm_use=. if Merge_Baseline_Endline==1
+tab R_E_sec_jjm_use
 
-foreach i in R_E_water_source_prim  {
+foreach i in R_E_water_source_prim R_C_water_source_prim {
 	replace `i'=77 if `i'==-77
 }
 
-foreach v in R_E_water_treat R_E_water_source_prim R_E_jjm_drinking  {
+foreach v in R_E_water_treat R_E_water_source_prim R_E_jjm_drinking R_C_water_source_prim R_Cen_a18_jjm_drinking R_Cen_a16_water_treat {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -2159,28 +2288,28 @@ foreach v in R_E_water_treat R_E_water_source_prim R_E_jjm_drinking  {
 	}
 	
 //CODE FOR DESCRIPTIVE TABLE FOR WATER USE AND TREATMENT
-label var R_E_water_source_prim_1 "Using govt. taps as primary drinking water"
-label var sec_jjm_use "Using govt. taps as secondary drinking water"
+label var R_E_water_source_prim_1 "Using govt. taps as primary drinking water_E"
+label var R_C_water_source_prim_1 "Using govt. taps as primary drinking water_C"
+label var R_E_sec_jjm_use "Using govt. taps as secondary drinking water"
+label var    sec_jjm_use "Using govt. taps as secondary drinking water"
 label var R_E_jjm_drinking_1 "Using JJM taps for drinking"
+label var R_Cen_a18_jjm_drinking_1 "Using JJM taps for drinking"
 label var R_E_water_treat_1 "Using any water treatment method"
+label var R_Cen_a16_water_treat_1 "Using any water treatment method"
   
 save "${DataTemp}Temp.dta", replace
 
-
-global PanelA R_E_water_source_prim_1 sec_jjm_use R_E_jjm_drinking_1 R_E_water_treat_1
-
+/*-----------------------------
+     Table (Baseline)
+-----------------------------*/
+global PanelA R_C_water_source_prim_1     sec_jjm_use R_Cen_a18_jjm_drinking_1 R_Cen_a16_water_treat_1
+               
 local PanelA "Endline TC"
 local LabelPanelA "MaintableHH"
 local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
 local ScalePanelA "1"
-
-* By R_Enr_treatment
 foreach k in PanelA {
-
 use "${DataTemp}Temp.dta", clear
-***********
-** Table **
-***********
 * Mean
 	eststo  model1: estpost summarize $`k' if Treat_V==1
 	eststo  model2: estpost summarize $`k' if Treat_V==0
@@ -2241,29 +2370,145 @@ use "${DataTemp}Temp.dta", clear
 	}
 	eststo  model8: estpost summarize $`k'
 
-	
-esttab model1 model2 model3 model4 model5 model6 model7 model8 using "${Table}Main_Endline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value" "Min" "Max" "Missing") ///
+* 
+esttab model1 model2 model3 model4 model5 model8 using "${Table}Main_Baseline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "Number of days with diarrhea" "\hline Number of days with diarrhea" ///
-				   "Using govt. taps as primary drinking water" "\textbf{Panel A. Water sources \& treatment} \\Using govt. taps as primary drinking water" ///
+				   "Using govt. taps as primary drinking water_C" "\multicolumn{3}{l}{\textbf{Baseline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
+				   "Using govt. taps as primary drinking water_E" "\multicolumn{3}{l}{\textbf{Endline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 }
 
+/*-----------------------------
+     Table (Endline)
+-----------------------------*/
+global PanelA R_E_water_source_prim_1 R_E_sec_jjm_use R_E_jjm_drinking_1       R_E_water_treat_1
 
+local PanelA "Endline TC"
+local LabelPanelA "MaintableHH"
+local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
+local ScalePanelA "1"
+foreach k in PanelA {
+use "${DataTemp}Temp.dta", clear
+drop if Merge_Baseline_Endline==1
+* Mean
+	eststo  model1: estpost summarize $`k' if Treat_V==1
+	eststo  model2: estpost summarize $`k' if Treat_V==0
+	
+	* Diff
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	replace `i'=_b[1.Treat_V]
+	}
+	eststo  model3: estpost summarize $`k'
+	
+	* Significance
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=99996 if p_1> 0.1
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model4: estpost summarize $`k'
+	
+	* P-value
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village)
+	matrix b = r(table)
+	scalar p_1 = b[4,2]
+	replace `i'=p_1
+	}
+	eststo  model5: estpost summarize $`k'
 
+	* Min
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model6: estpost summarize $`k'
+	
+	* Max
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model7: estpost summarize $`k'
+	
+	* Missing 
+	use "${DataTemp}Temp.dta", clear
+	drop if Merge_Baseline_Endline==1
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i')
+	egen max_`i'=sum(`i'_Miss)
+	replace `i'=max_`i'
+	}
+	eststo  model8: estpost summarize $`k'
 
-
-
-
-
-
-foreach k of local baseline {
-	sum `k' if Treat_V==1
-	sum `k' if Treat_V==0
-reg `k' Treat_V i.Panchatvillage i.BlockCode, cluster(village) 
+* 
+esttab model1 model2 model3 model4 model5 model8 using "${Table}Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "Number of days with diarrhea" "\hline Number of days with diarrhea" ///
+				   "Using govt. taps as primary drinking water_C" "\multicolumn{3}{l}{\textbf{Baseline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
+				   "Using govt. taps as primary drinking water_E" "\multicolumn{3}{l}{\textbf{Endline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 }
+
+use "${DataTemp}Temp.dta", clear
+global FE_control i.Panchatvillage i.BlockCode
+label var  R_C_water_source_prim_1 "Baseline control"
+label var Treat_V "Treatment"
+eststo: reg R_E_water_source_prim_1 Treat_V R_C_water_source_prim_1 $FE_control, cluster(village) 
+sum R_E_water_source_prim_1 if Treat_V==0
+estadd scalar Mean = r(mean)              
+
+eststo: reg R_E_sec_jjm_use sec_jjm_use              Treat_V  $FE_control, cluster(village) 
+sum R_E_sec_jjm_use if Treat_V==0
+estadd scalar Mean = r(mean)              
+
+eststo: reg R_E_jjm_drinking_1 R_Cen_a18_jjm_drinking_1 Treat_V $FE_control, cluster(village) 
+sum R_E_jjm_drinking_1 if Treat_V==0
+estadd scalar Mean = r(mean)              
+
+eststo: reg  R_E_water_treat_1 R_Cen_a16_water_treat_1  Treat_V $FE_control, cluster(village) 
+sum          R_E_water_treat_1 if Treat_V==0
+estadd scalar Mean = r(mean)              
+
+esttab using "${Table}Main_Panel_A_Reg.tex",label se ar2  ///
+             title("The impact of the ILC program on Water sources and treatment" \label{LabelD}) ///
+			 nonotes nobase nocons ///
+			 indicate("Stratification FE=**Panchatvillage *BlockCode") ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
+			 mtitle("\shortstack{Using JJM as\\Primary source}" "\shortstack{Using JJM as\\Secondary source}" "\shortstack{Drinking\\JJM water}" "\shortstack{Using any water\\treatment methods}") ///
+			 rename(sec_jjm_use R_C_water_source_prim_1 R_Cen_a18_jjm_drinking_1  R_C_water_source_prim_1 R_Cen_a16_water_treat_1  R_C_water_source_prim_1) ///
+			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
+			 substitute("{l}{\footnotesize" "{p{0.8\linewidth}}{\footnotesize" ///
+			 "Age_year=1" "\multicolumn{4}{l}{Age in years: Base is 0} \\\hline Age_year=1" ///
+			 "Age_year=" "~~~" "WT: " "~~~" "CHL Source:" "~~~" "DSW:" "~~~" "Distance_HF: " "~~~" "Gestation: " "~~~" "NumU5:" "~~~" ///
+			 ) ///
+			 addnote("`Notediarrhea_2w_c_1'") ///	
+			 replace
+eststo clear
+			 

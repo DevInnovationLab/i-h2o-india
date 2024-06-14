@@ -317,6 +317,7 @@ gen Type=1
 append using "${DataFinal}90_Village_Geo.dta"
 replace Type=30 if unique_id=="Tank"
 replace Type=31 if unique_id=="Anganwadi center"
+
 save  "${DataDeid}1_1_Census_cleaned_noid_maplab.dta", replace
 export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1) keepcellfmt 
 

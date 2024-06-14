@@ -40,7 +40,7 @@ label var C_Screened  "Screened"
 	label variable R_FU_consent "HH survey consent"
 	label var Non_R_Cen_consent "Refused"
 	label var C_HH_not_available "Respondent not available"
-
+	
 end
 
 //Remove HHIDs with differences between census and HH survey
@@ -79,6 +79,11 @@ merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", g
 
 
 
+drop R_E_r_cen_*
+* Village info is not complete. Deleting the redundant info
+replace village=R_Cen_village_name if village==.
+drop R_Cen_village_name R_Cen_block_name Treat_V
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
 
 save "${DataFinal}0_Master_HHLevel.dta", replace
 
