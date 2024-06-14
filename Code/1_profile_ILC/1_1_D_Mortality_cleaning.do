@@ -390,7 +390,7 @@ drop if _merge==1
 	gen month_day= day_of_month + " " + month + " " + "2023"
 */
 
-save "${DataPre}1_1_Mortality_cleaned.dta", replace
+save "${DataFinal}1_1_Mortality_cleaned.dta", replace
 savesome using "${DataPre}1_1_Mortality_cleaned_consented.dta" if R_mor_consent==1, replace
 
 ** Drop ID information  - to do : deidentify data
