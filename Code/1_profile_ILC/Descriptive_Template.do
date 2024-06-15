@@ -50,7 +50,7 @@ local LabelPanelA "MaintableHH"
 local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
 local ScalePanelA "1"
 
-* Treat_V
+* By R_Enr_treatment 
 foreach k in PanelA { //loop for all variables in the global marco 
 
 use "${DataTemp}Temp.dta", clear //using the saved dataset 
