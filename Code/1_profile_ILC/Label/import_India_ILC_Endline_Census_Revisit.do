@@ -697,9 +697,8 @@ do "import_India_ILC_Endline_Census_Revisit-accompaniment-survey_member_names.do
 do "import_India_ILC_Endline_Census_Revisit-comb_prvdrs_notnull_CBW-comb_tests_exp_loop_CBW.do"
 do "import_India_ILC_Endline_Census_Revisit-comb_prvdrs_notnull_U5-comb_tests_exp_loop_U5.do"
 
-cap do "import_India_ILC_Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_sought_med_care_CBW-comb_med_visits_not0_CBW-comb_prvdrs_exp_loop_CBW.do"
+do "Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_sought_med_care_CBW-comb_med_visits_not0_CBW-comb_prvdrs_exp_loop_CBW.do"
 
-cap do "C:\Users\Archi Gupta\Documents\GitHub\I-H2O-~1\Code\1_PROF~1\Label\IM198F~1.DO"
 
 
 do "import_India_ILC_Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.do"
