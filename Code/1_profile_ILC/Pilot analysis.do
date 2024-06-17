@@ -1132,16 +1132,8 @@ use "${DataDeid}Baseline HH survey_cleaned.dta", clear
 	reg `i' i.Treat_V i.Panchatvillage i.BlockCode, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 	
-	* SE
-	use "${DataDeid}Baseline HH survey_cleaned.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
-
 	* Significance
 	use "${DataDeid}Baseline HH survey_cleaned.dta", clear
 	foreach i in $`k' {
@@ -1190,9 +1182,9 @@ use "${DataDeid}Baseline HH survey_cleaned.dta", clear
 	replace `i'=max_`i'
 	}
 	eststo  model8: estpost summarize $`k'
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_BL_Chlor_Desc.csv",  cell("mean (fmt(2) label(_)) sd") replace
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_BL_Chlor_Desc.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
+ 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_BL_Chlor_Desc.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _\\" "" ///
 				   "Satisfied with taste of gov tap water" "\multicolumn{3}{l}{\textbf{Panel A: Perception about Government Water}} \\Satisfied with taste of gov tap water" ///
@@ -1201,10 +1193,8 @@ esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_BL_Chlor_
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
-eststo clear
 }
 
-* "0&" ""
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 * Looking at Baseline HH survey data (Michelle)
@@ -1358,15 +1348,7 @@ use "${DataDeid}Ecoli results baseline_cleaned_WIDE.dta", clear
 	reg `i' i.Treat_V i.Panchatvillage i.BlockCode, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
-	
-	* SE
-	use "${DataDeid}Ecoli results baseline_cleaned_WIDE.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 	
 	* Significance
 	use "${DataDeid}Ecoli results baseline_cleaned_WIDE.dta", clear
@@ -1416,9 +1398,9 @@ use "${DataDeid}Ecoli results baseline_cleaned_WIDE.dta", clear
 	replace `i'=max_`i'
 	}
 	eststo  model8: estpost summarize $`k'
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_BL_Ecoli_Desc.csv", cell("mean (fmt(2) label(_)) sd") replace
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_BL_Ecoli_Desc.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value") ///
+ 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_BL_Ecoli_Desc.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _\\" "" ///
 				   "E.coli presence in tap water" "\multicolumn{3}{l}{\textbf{Panel C: Bacterial Contamination Test}} \\E.coli presence in tap water" ///
@@ -2217,15 +2199,7 @@ use "${DataTemp}Temp.dta", clear
 	reg `i' i.Treat_V i.Panchatvillage i.BlockCode i.round, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
-	
-	* SE
-	use "${DataTemp}Temp.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 	
 	* Significance
 	use "${DataTemp}Temp.dta", clear
@@ -2275,19 +2249,18 @@ use "${DataTemp}Temp.dta", clear
 	}
 	eststo  model8: estpost summarize $`k'
 
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_FUP_Chlor_Desc.csv", replace cell("mean (fmt(2) label(_)) sd")
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_FUP_Chlor_Desc.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
+* 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_FUP_Chlor_Desc.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _\\" "" ///
 				   "Using JJM as Primary source" "\multicolumn{3}{l}{\textbf{Panel A: Water source and treatment}} \\Using JJM as Primary source" ///
-				   "Satisfied with taste of govt. tap water" "\multicolumn{3}{l}{\textbf{Panel A: Perceptions about government tap water}} \\Satisfied with taste of gov tap water" ///
+				   "Satisfied with taste of govt. tap water" "\multicolumn{3}{l}{\textbf{Panel A: Perceptions about government tap water}} \\Satisfied with taste of govt. tap water" ///
 				   "Total chlorine in tap water" "\multicolumn{3}{l}{\textbf{Panel B: Chlorine tests}} \\Total chlorine in tap water" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
-	   eststo clear
 }
 
 /*
@@ -2419,15 +2392,7 @@ use "${DataDeid}Ecoli results followup_cleaned_WIDE.dta", clear
 	reg `i' i.Treat_V i.Panchatvillage i.BlockCode i.round, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
-	
-	* SE
-	use "${DataDeid}Ecoli results followup_cleaned_WIDE.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 	
 	* Significance
 	use "${DataDeid}Ecoli results followup_cleaned_WIDE.dta", clear
@@ -2477,9 +2442,9 @@ use "${DataDeid}Ecoli results followup_cleaned_WIDE.dta", clear
 	replace `i'=max_`i'
 	}
 	eststo  model8: estpost summarize $`k'
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_FL_Ecoli_Desc.csv", replace cell("mean (fmt(2) label(_)) sd") 
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_FL_Ecoli_Desc.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
+ 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_FL_Ecoli_Desc.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Treatment\\Effect}" "Sig" "P-value") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _\\" "" ///
 				   "Satisfied with taste of gov tap water" "\multicolumn{3}{l}{\textbf{Panel A: Perception about Government Water}} \\Satisfied with taste of gov tap water" ///
@@ -2703,15 +2668,7 @@ use "${DataTemp}Temp.dta", clear
 	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
-	
-	* SE
-	use "${DataTemp}Temp.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
+	eststo  model3: estpost summarize $`k'
 	
 	* Significance
 	use "${DataTemp}Temp.dta", clear
@@ -2761,15 +2718,14 @@ use "${DataTemp}Temp.dta", clear
 	}
 	eststo  model8: estpost summarize $`k'
 
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Baseline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
+esttab model1 model2 model3 model4 model5 using "${Table}Main_Baseline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "Number of days with diarrhea" "\hline Number of days with diarrhea" ///
-				   "Using govt. taps as primary drinking water_C" "\multicolumn{3}{l}{\textbf{Baseline: Water sources \& treatment}} \\Using gov taps as primary drinking water" ///
+				   "Using govt. taps as primary drinking water_C" "\multicolumn{3}{l}{\textbf{Baseline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
-				   "0&" "" ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 }
@@ -2797,16 +2753,7 @@ drop if Merge_Baseline_Endline==1
 	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
 	replace `i'=_b[1.Treat_V]
 	}
-	eststo  model31: estpost summarize $`k'
-	
-	* SE
-	use "${DataTemp}Temp.dta", clear
-	foreach i in $`k' {
-	reg `i' i.Treat_V i.BlockCode Panchatvillage, cluster(village)
-	replace `i'=_se[1.Treat_V]
-	}
-	eststo  model32: estpost summarize $`k'
-
+	eststo  model3: estpost summarize $`k'
 	
 	* Significance
 	use "${DataTemp}Temp.dta", clear
@@ -2861,18 +2808,17 @@ drop if Merge_Baseline_Endline==1
 	}
 	eststo  model8: estpost summarize $`k'
 
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Endline_`k'.csv", replace cell("mean (fmt(2) label(_)) sd") 
-esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Endline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
+* 
+esttab model1 model2 model3 model4 model5 using "${Table}Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "Number of days with diarrhea" "\hline Number of days with diarrhea" ///
-				   "Using govt. taps as primary drinking water_E" "\multicolumn{3}{l}{\textbf{Endline: Water sources \& treatment}} \\Using gov taps as primary drinking water" ///
+				   "Using govt. taps as primary drinking water_E" "\multicolumn{3}{l}{\textbf{Endline: Water sources \& treatment}} \\Using govt. taps as primary drinking water" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
-	   eststo clear
 }
 
 use "${DataTemp}Temp.dta", clear
@@ -2898,9 +2844,9 @@ estadd scalar Mean = r(mean)
 esttab using "${Table}Main_Panel_A_Reg.tex",label se ar2  ///
              title("The impact of the ILC program on Water sources and treatment" \label{LabelD}) ///
 			 nonotes nobase nocons ///
-			 drop(*Panchatvillage *BlockCode _cons) ///
-			 stats(Mean N, fmt(%9.2fc %9.0fc) labels(`"Control Mean Dep Var"' `"Observations"')) ///
-			 mtitle("\shortstack{Using gov-provided\\taps as\\primary source}" "\shortstack{Using gov-provided\\taps as\\secondary source}" "\shortstack{Drinking\\gov-provided\\taps water}" "\shortstack{Using any water\\treatment methods}") ///
+			 indicate("Stratification FE=**Panchatvillage *BlockCode") ///
+			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
+			 mtitle("\shortstack{Using gov-provided\\taps as\\Primary source}" "\shortstack{Using gov-provided\\taps as\\secondary source}" "\shortstack{Drinking\\gove-provided\\taps water}" "\shortstack{Using any water\\treatment methods}") ///
 			 rename(sec_jjm_use R_C_water_source_prim_1 R_Cen_a18_jjm_drinking_1  R_C_water_source_prim_1 R_Cen_a16_water_treat_1  R_C_water_source_prim_1) ///
 			 starlevels(\sym{*} 0.10 \sym{**} 0.05 \sym{***} 0.010) b(3) ///
 			 substitute("{l}{\footnotesize" "{p{0.8\linewidth}}{\footnotesize" ///
