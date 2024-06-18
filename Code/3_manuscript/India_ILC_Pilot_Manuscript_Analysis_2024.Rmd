@@ -234,27 +234,31 @@ labelmaker <- function(x){
 
 #ilc_glm
 #Runs generalized linear model for comparing control and treatment group outcomes
-#x: overall dataset to pull from
+#data: overall dataset to pull from
 #var: vector containing binary outcome variable names in each dataset to model
-ilc_glm <- function(x, outcomes_variables){
-  lapply(outcome_variables,
-         function(var){
-           formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-           model <- glm(formula, data = x, family = binomial)
-           # Adjust for clustering at the village level
-           cluster_vcov <- vcovCL(model, cluster = x$village)
-           clustered_se <- sqrt(diag(cluster_vcov))
-           # Get the coefficients with clustered standard errors
-           clustered_results <- coeftest(model, vcov. = cluster_vcov)
-           #Tidying models -- need to understand how to use clustered results option
-           list(model = model,
-                table = tbl_regression(model, exponentiate = TRUE),
-                clustered_results = clustered_results) #Tidying models
-         }
-  )
-  }
+ilc_glm <- function(data, var){
+  #Initializing model list
+  #model_list <- list()
+  #for(i in var){
+    formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+    model <- glm(formula, data = data, family = binomial)
+    # Adjust for clustering at the village level
+    cluster_vcov <- vcovCL(model, cluster = data$village)
+    # Get the coefficients with clustered standard errors
+    clustered_results <- coeftest(model, vcov. = cluster_vcov)
+    
+    #Tidying models -- need to understand how to use clustered results option
+    tidy_results <- tidy(clustered_results)
+    # Rename the columns for better readability
+    colnames(tidy_results) <- c("covariate", "estimate", "std.error", "z_statistic", "p_value")
+    
+    #Appending to overall model list
+    #model_list <- append(model_list, tidy_results)
 
+  #}
 
+  return(tidy_results)
+}
 
 
 ```
@@ -1266,44 +1270,24 @@ desc_stats <- as_gt(desc_stats)%>%
 desc_stats
 
 
-
-#To be updated ----
 #Running regression models for each variable in the dataset
 
 #Variables
 outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
 
 #Running all models
-all_models <- lapply(outcome_vars,
-                     function(var){
-                       
-           formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-           model <- glm(formula, data = bl_tab, family = binomial)
-           # Adjust for clustering at the village level
-           cluster_vcov <- vcovCL(model, cluster = bl_tab$village)
-           clustered_se <- sqrt(diag(cluster_vcov))
-           # Get the coefficients with clustered standard errors
-           clustered_results <- coeftest(model, vcov. = cluster_vcov)
-           #Tidying models -- need to understand how to use clustered results option
-           list(model = model,
-                table = tbl_regression(model, exponentiate = TRUE),
-                clustered_results = clustered_results) #Tidying models
-         }
-  )
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_glm(data = bl_tab, var)
+                     }
+                       )
 
 #Assigning names to models
 names(all_models) <- outcome_vars
 
-#Need to select for treatment assignment to condense the table before this point
 
-#Forcing to be gt objects
-gt_tables <- lapply(all_models,
-                    function(model_info) {
-                      as_gt(model_info$table)
-})
 
-#Naming gt tables
-names(gt_tables) <- outcome_vars
+
 
 
 ```
