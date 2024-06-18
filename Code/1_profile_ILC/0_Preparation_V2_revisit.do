@@ -39,26 +39,26 @@ save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-N_CBW_start_eligible-N_st
 //HH AVASILABLE DATASETS
 //here the change from main endline census is that it has WASH_applicable as an extra field
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-wash_access-water_treatment-treat_resp_list.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-survey_start-consented-wash_access-water_treatment-treat_resp_list.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-wash_access-water_treatment-treat_resp_list.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-wash_access-water_sources-water_sec_list.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-wash_access-water_sources-water_sec_list.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-wash_access-water_sources-water_sec_list.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-consented-wash_access-burden_of_water_collection_and_treatment-people_prim_list.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-N_med_seek_lp_all.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-N_med_seek_lp_all.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-N_med_seek_lp_all.dta", replace
 
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-N_HH_member_names_loop.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-N_HH_member_names_loop.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-Cen_med_seek_lp_all.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-Cen_med_seek_lp_all.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_med_seek_lp_all.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.do"
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", replace
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.dta", replace
 
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Household_available-N_child_followup.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_child_followup.dta", replace
@@ -81,31 +81,35 @@ save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_u5child_nonull
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.dta", replace
 
-//I have to add 2 file paths here because windows doens't allow this long paths so I need to put the directory indibidually
-do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_sought_med_care_CBW-comb_med_visits_not0_CBW-comb_prvdrs_exp_loop_CBW.do"
+//I have to remove the prefix "import_India_ILC_" from this because the path became too long and exceeded windows limit. It is possible that mac users don't face this problem but to run it smoothly I couldn't remove anything else because of the name resonating with endline main census file   
+//Archi to Mac Users- Please check Akito, Jeremy and Niharika if this is working for you. 
+do "${Do_lab}Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_sought_med_care_CBW-comb_med_visits_not0_CBW-comb_prvdrs_exp_loop_CBW.do"
 
-cap do "C:\Users\Archi Gupta\Documents\GitHub\I-H2O-~1\Code\1_PROF~1\Label\IM198F~1.DO"
+save"${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_sought_med_care_CBW-comb_med_visits_not0_CBW-comb_prvdrs_exp_loop_CBW.dta", replace
 
-save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_sought_med_care_CBW-Cen_med_visits_not0_CBW-Cen_prvdrs_exp_loop_CBW.dta", replace
+//Archi- There is a Cen variable in the endline re-visit survey because in the main respondent section we ask about health of the non criteria members and for that we couldn't chnage variable names to comb so that is why you would see occurence of N and Cen prefix 
+do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_all.do"
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_all.dta", replace
 
-do "${Do_lab}import_India_ILC_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_all.do"
-save "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_prvdrs_notnull_all-Cen_tests_exp_loop_all.dta", replace
+//here Cen gets replaced by comb_
+do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_prvdrs_notnull_U5-comb_tests_exp_loop_U5.do"
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_prvdrs_notnull_U5-comb_tests_exp_loop_U5.dta", replace
 
-do "${Do_lab}import_India_ILC_Endline_Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.do"
-save "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_prvdrs_notnull_U5-Cen_tests_exp_loop_U5.dta", replace
+//here Cen gets replaced by comb_
 
-do "${Do_lab}import_India_ILC_Endline_Census-Cen_prvdrs_notnull_CBW-Cen_tests_exp_loop_CBW.do"
-save "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_prvdrs_notnull_CBW-Cen_tests_exp_loop_CBW.dta", replace
+do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_prvdrs_notnull_CBW-comb_tests_exp_loop_CBW.do"
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_prvdrs_notnull_CBW-comb_tests_exp_loop_CBW.dta", replace
 
-do "${Do_lab}import_India_ILC_Endline_Census-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.do"
-save "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.dta", replace
+do "${Do_lab}import_India_ILC_Endline_Census_Revisit-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.do"
+save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Cen_med_notnull_all-Cen_prvdrs_exp_lp_all.dta", replace
 
 }
 
 
-* Windows User
+/* Windows User
 else if c(username) == "cueva" | c(username) == "ABC"   {
 
 do   "${Do_lab}1_0_1_label_w.do"
 save "${DataRaw}1. Contact details.dta", replace
-}
+}*/
+
