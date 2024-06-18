@@ -204,6 +204,9 @@ bl <- bl%>%
 #rename(tc_tap = R_FU_tc_tap)%>%
 #rename(sample_ID_stored = R_FU_sample_ID_stored)
 
+
+
+
 #Correcting one sample ID in BL dataset
 for(i in (1:length(bl$unique_id))){
   if(bl$unique_id[i] == 50301106013){
@@ -279,12 +282,24 @@ bl_sample_ids <- bl_idexx$sample_ID
 idexx_id_check <- idexx%>%
   filter(!(sample_ID %in% bl_sample_ids))
 
+
 #combining idexx results to survey results
 bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
 idexx <- inner_join(idexx, bl_idexx, by = "sample_ID")
 abr$sample_ID <- as.character(abr$sample_ID)
 abr <- inner_join(abr, bl_idexx, by = "sample_ID")
 
+#checking duplicate IDs
+x <- idexx%>%
+  count(sample_ID)%>% 
+  filter(n > 1)
+#x_BL <- idexx%>%
+ # filter(sample_ID %in% x$sample_ID)
+
+#10237 is a duplicate that was incorrectly recorded during R1. 
+#Remove Bag ID 90274 from the baseline data
+idexx <- idexx%>%
+  filter(bag_ID != 90274)
 
 #creating new variable to tell the sample type
 idexx$sample_type <- idexx$sample_type%>%
@@ -389,13 +404,15 @@ idexx <- idexx%>%
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
 
-#Code for writing/updating final file
-#write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
-
 #Adding long-transformed data for baseline ABR
 abr <- abr%>%
   mutate(ec_log = log(ec_mpn, base = 10))%>%
   mutate(cf_log = log(cf_mpn, base = 10))
+
+#Code for writing/updating final file
+#write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
+
+
 
 
 
