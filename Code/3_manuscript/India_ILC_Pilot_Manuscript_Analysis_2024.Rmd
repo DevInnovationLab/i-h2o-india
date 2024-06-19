@@ -237,28 +237,123 @@ labelmaker <- function(x){
 #data: overall dataset to pull from
 #var: vector containing binary outcome variable names in each dataset to model
 ilc_glm <- function(data, var){
-  #Initializing model list
-  #model_list <- list()
-  #for(i in var){
-    formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-    model <- glm(formula, data = data, family = binomial)
-    # Adjust for clustering at the village level
-    cluster_vcov <- vcovCL(model, cluster = data$village)
-    # Get the coefficients with clustered standard errors
-    clustered_results <- coeftest(model, vcov. = cluster_vcov)
     
-    #Tidying models -- need to understand how to use clustered results option
-    tidy_results <- tidy(clustered_results)
-    # Rename the columns for better readability
-    colnames(tidy_results) <- c("covariate", "estimate", "std.error", "z_statistic", "p_value")
+  #Specifying the formula
+  formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+  #Running model
+  model <- glm(formula, data = data, family = binomial)
+  
+  #Storing N
+  N <- length(model$y)
+  
+  # Adjust for clustering at the village level
+  cluster_vcov <- vcovCL(model, cluster = data$village, type = "HC1")
+  # Get the coefficients with clustered standard errors
+  clustered_results <- coeftest(model, vcov. = cluster_vcov)
     
-    #Appending to overall model list
-    #model_list <- append(model_list, tidy_results)
+  #Tidying models -- need to understand how to use clustered results option
+  tidy_results <- tidy(clustered_results)
+  # Rename the columns for better readability
+  colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
+  
+  #Adding N
+  tidy_results <- tidy_results%>%
+    mutate(N = N)
 
-  #}
+  #exponentiate the estimates/std errors to get Odds Ratio
+  
+  tidy_results$estimate <- exp(tidy_results$estimate)
+  tidy_results$std_error <- exp(tidy_results$std_error)
+  
+  
+  return(tidy_results)
+}
+
+
+
+#ilc_lm
+#Runs LINEAR model for comparing control and treatment group outcomes
+#data: overall dataset to pull from
+#var: vector containing outcome variable names in each dataset to model
+ilc_lm <- function(data, var){
+    
+  #Specifying the formula
+  formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+  
+  #Running model
+  model <- lm(formula, data = data)
+  
+  #Storing N
+  N <- length(model$residuals)
+  
+  # Adjust for clustering at the village level
+  cluster_vcov <- vcovCL(model, cluster = data$village, type = "HC1")
+  # Get the coefficients with clustered standard errors
+  clustered_results <- coeftest(model, vcov. = cluster_vcov)
+    
+  #Tidying models -- need to understand how to use clustered results option
+  tidy_results <- tidy(clustered_results)
+  # Rename the columns for better readability
+  colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
+  
+  #Adding N
+  tidy_results <- tidy_results%>%
+    mutate(N = N)
 
   return(tidy_results)
 }
+
+
+
+
+
+#ilc_model_table
+#Converts model outputs to an organized latex table output using Kable()
+#models: regression models to pull information from
+ilc_model_table <- function(models = all_models){
+  #Gathering model name information
+  model_names <- names(models)
+  
+  #Initializing empty model table
+  model_table <- data.frame(model_name = NULL, covariate = NULL, estimate = NULL,
+                            std_error = NULL, p_value = NULL, signif = NULL, N = NULL)
+  
+  #Placing model into model_table
+  for(i in (1:length(model_names))){
+    one_model <- models[[i]]%>%
+      data.frame()
+    
+    
+    one_model <- one_model%>%
+      dplyr::filter(covariate == "assignmentTreatment")%>%
+      dplyr::select(!(z_statistic))%>% #Removing z statistic
+      mutate(model_name = model_names[i])%>%
+      dplyr::select(model_name, everything())%>% #moves model_name to front
+      mutate(signif = case_when(p_value > 0.10 ~ " ",
+                                p_value <= 0.10 & p_value > 0.05 ~ "*",
+                                p_value <= 0.05 & p_value > 0.01 ~ "**",
+                                p_value <= 0.01 ~ "***"))
+    
+    #Rounding numbers to 3 digits
+    one_model[3:4] <- round(one_model[3:4], digits = 3)
+      
+    
+  #Appending to model_table
+    model_table <- rbind(model_table, one_model)
+    
+  }
+  #Formatting Kable to print latex table
+  model_table_kbl <- 
+    kbl(model_table)%>%
+    kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+    add_header_above(c("Regression Results " = 7)) %>%
+    row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+    column_spec(1, bold = TRUE) %>%
+    column_spec(2, width = "75px")
+  
+  return(model_table_kbl)
+  
+  }
 
 
 ```
@@ -1267,7 +1362,7 @@ desc_stats <- all_tab%>%
 desc_stats <- as_gt(desc_stats)%>%
   tab_options(table.font.size = 11)
 
-desc_stats
+#desc_stats
 
 
 #Running regression models for each variable in the dataset
@@ -1276,17 +1371,21 @@ desc_stats
 outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
 
 #Running all models
+#Logistic regression
 all_models <- lapply(outcome_vars, 
                      function(var){ #This functions "subsets" the ilc_glm function
                        ilc_glm(data = bl_tab, var)
                      }
                        )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = bl_tab, var)
+                     }
+                       )
 
 #Assigning names to models
 names(all_models) <- outcome_vars
-
-
-
 
 
 
@@ -1305,7 +1404,6 @@ idexx_tab <- idexx%>%
   mutate(data_round = "BL")%>%
   mutate(pooled_round = "BL")
   
-
 idexx_r1_tab <- idexx_r1%>%
   dplyr::select(assignment, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
   mutate(data_round = "R1")%>%
@@ -1325,13 +1423,13 @@ idexx_r3_tab <- idexx_r3%>%
 idexx_tab <- rbind(idexx_tab, idexx_r1_tab, idexx_r2_tab, idexx_r3_tab)
 
 
-
 #Separating stored vs tap water tests
 idexx_ids <- idexx_tab%>%
   dplyr::select(assignment, village, block, panchayat_village, data_round, sample_ID, bag_ID_tap, bag_ID_stored)
 
 idexx_tab_tap <- idexx_tab%>%
   filter(sample_type == "Tap")%>%
+  filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_tap = "cf_pa_binary")%>%
   rename(ec_pa_tap = "ec_pa_binary")%>%
@@ -1340,6 +1438,7 @@ idexx_tab_tap <- idexx_tab%>%
 
 idexx_tab_stored <- idexx_tab%>%
   filter(sample_type == "Stored")%>%
+  filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_stored = "cf_pa_binary")%>%
   rename(ec_pa_stored = "ec_pa_binary")%>%
@@ -1415,7 +1514,7 @@ desc_stats <- idexx_tab_tap%>%
 desc_stats_tap <- as_gt(desc_stats)%>%
   tab_options(table.font.size = 11)
 
-desc_stats_tap
+#desc_stats_tap
 
 
 
@@ -1452,51 +1551,62 @@ desc_stats <- idexx_tab_stored%>%
 desc_stats_stored <- as_gt(desc_stats)%>%
   tab_options(table.font.size = 11)
 
-desc_stats_stored
+#desc_stats_stored
 
 
 
-
-
-
-#Running regression model results
+#Running regression model results --------------------------------------------
 
 
 #Tap Water
+#Variables
+outcome_vars <- c("cf_pa_tap", "ec_pa_tap")
 
+#Running all models
+#Logistic regression
+#all_models <- lapply(outcome_vars, 
+ #                    function(var){ #This functions "subsets" the ilc_glm function
+  #                     ilc_glm(data = idexx_tab_tap, var)
+   #                  }
+    #                   )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = idexx_tab_tap, var)
+                     }
+                       )
 
+#Assigning names to models
+names(all_models) <- outcome_vars
 
+#Formatting table output
+ilc_model_table(all_models)
 
 
 #Stored Water
-all_models <- lapply(c("cf_pa_stored", "ec_pa_stored"),
-                 function(var) {
-                   formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-                   model <- glm(formula, data = idexx_tab_stored, family = binomial)
-                   # Adjust for clustering at the village level
-                   cluster_vcov <- vcovCL(model, cluster = ~village)
-                   clustered_se <- sqrt(diag(cluster_vcov))
-                   # Get the coefficients with clustered standard errors
-                   clustered_results <- coeftest(model, vcov. = cluster_vcov)
-                   #Tidying models -- need to understand how to use clustered results option
-                   list(model = model,
-                        table = tbl_regression(model, exponentiate = TRUE)) #Tidying models
-                   })
+#Variables
+outcome_vars <- c("cf_pa_stored", "ec_pa_stored")
+
+#Running all models
+#Logistic regression
+#all_models <- lapply(outcome_vars, 
+ #                    function(var){ #This functions "subsets" the ilc_glm function
+  #                     ilc_glm(data = idexx_tab_stored, var)
+   #                  }
+    #                   )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = idexx_tab_stored, var)
+                     }
+                       )
+
 #Assigning names to models
-names(all_models) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+names(all_models) <- outcome_vars
 
 
-#Forcing to be gt objects
-gt_tables <- lapply(all_models,
-                    function(model_info) {
-                      as_gt(model_info$table)
-})
-
-#Naming gt tables
-names(gt_tables) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-
+#Formatting table output
+ilc_model_table(all_models)
 
 
 

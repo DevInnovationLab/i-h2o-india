@@ -195,7 +195,7 @@ overleaf <- overleaf_path()
 
 #el <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census.dta" ))
 
-df.preload <- read_stata(paste0(user_path(),"99_Preload/1_8_Endline_XXX.dta"))
+#df.preload <- read_stata(paste0(user_path(),"99_Preload/1_8_Endline_XXX.dta"))
 
 
 #Loading/saving most recent cleaned data
