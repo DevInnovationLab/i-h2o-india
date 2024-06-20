@@ -66,7 +66,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	use "${DataTemp}Temp.dta", clear
 	foreach i in $`k' {
 	reg `i' i.Treat_V, cluster(village) //regressing the variables on the treatment status 
-	replace `i'=_b[1.Treat_V] //replacing the value of variable with regression coefficient (estimate of treatment effect??)
+	replace `i'=_b[1.Treat_V] //replacing the value of variable with regression coefficient (estimate of treatment effect)
 	}
 	eststo  model3: estpost summarize $`k' //Storing summary stats of estimated treatment effects
 	
@@ -76,7 +76,8 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
 	matrix b = r(table) //storing the regression results in a matrix 'b'
 	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1' 
-	replace `i'=99996 if p_1> 0.1
+	//assigning temporary place holders to p values for categorization into significance levels in line 129
+	replace `i'=99996 if p_1> 0.1  
 	replace `i'=99997 if p_1<= 0.1
 	replace `i'=99998 if p_1<= 0.05
 	replace `i'=99999 if p_1<=0.01
