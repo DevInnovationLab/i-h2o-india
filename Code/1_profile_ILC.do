@@ -82,6 +82,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global pilot    "${box}2_Pilot/Data/"
 		global Endline  "${DataRaw}/1_8_Endline/"
 		global DataDeid "${pilot}/2_deidentified/"
+	    global DataTemp  "${pilot}99_temp/"
 		
 	}
 		
