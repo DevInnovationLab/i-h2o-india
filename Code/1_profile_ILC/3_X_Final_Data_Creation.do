@@ -72,83 +72,48 @@ merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", g
 * drop Merge_Baseline_Endline
 
 
+*** Relabelling the variables
+//the following variables were not properly labelled through surveycto do file : all variables have the same labels and value labels; changing it below (lines 694 to 718: import_india_ilc_pilot_census.do)
+
+*Whether HH members have attended school 
+	capture{
+		foreach rgvar of varlist R_Cen_a9_school_* {
+			label variable `rgvar' "A9) Has \${namefromearlier} ever attended school?"
+			note `rgvar': "A9) Has \${namefromearlier} ever attended school?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+*Highest level of schooling of HH members
+    capture{
+		foreach rgvar of varlist R_Cen_a9_school_level_* {
+			label drop `rgvar' //dropping the value labels assigned in line 83 before relabelling 
+			label variable `rgvar' "A9.1) What is the highest level of schooling that \${namefromearlier} has comple"
+			note `rgvar': "A9.1) What is the highest level of schooling that \${namefromearlier} has completed?"
+			label define `rgvar' 1 "Incomplete pre-school (pre-primary or Anganwadi schooling)" 2 "Completed pre-school (pre-primary or Anganwadi schooling)" 3 "Incomplete primary (1st-8th grade not completed)" 4 "Complete primary (1st-8th grade completed)" 5 "Incomplete secondary (9th-12th grade not completed)" 6 "Complete secondary (9th-12th grade not completed)" 7 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Refused" 999 "Don't know"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+*Whether HH members currently attend school
+	capture {
+		foreach rgvar of varlist R_Cen_a9_school_current_* {
+			label drop `rgvar' //dropping the value labels assigned in line 83 before relabelling
+			label variable `rgvar' "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
+			note `rgvar': "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
 
 
-***** Generating new variables
-* Combined variable for Number of HH members (both BL and EL including the new members)
-//changing the storage type of the no of HH members from baseline census
-destring R_Cen_hh_member_names_count, gen(R_Cen_hhmember_count_new) 
+*** Recoding the variables 
+*Relation with the HH member
+replace R_Cen_a5_hhmember_relation_1=1 if unique_id=="30301109034" //selected the relation with HH member as "Wife/Husband" although respondent herself was the HH member in question
 
-egen total_hhmembers=rowtotal(R_Cen_hhmember_count_new R_E_n_hhmember_count) 
-label var total_hhmembers "Number of HH members"
-
-
-* Number of U5 Children
-//Generating new binary variable if age of HH member is <5
-forvalues i=1/17 { //loop for all family members in Baseline Census
-	gen Cen_U5child_`i' =1 if R_Cen_a6_hhmember_age_`i'<5 
-}
-forvalues i=1/20{ //loop for all new members in Endline Census
-	gen E_n_U5child_`i'=1 if  R_E_n_fam_age`i'<5
-}
-//Generating variable for total no of U5 children in Baseline and Endline
-egen total_U5children= rowtotal(Cen_U5child_* E_n_U5child_*)
-label var total_U5children "Number of U5 Children"
-
-
-* Number of pregnant women
-//Generating new binary variable if HH member is pregnant 
-forvalues i = 1/17 { //loop for all HH memebers in Baseline Census
-	gen Cen_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
-}
-//Generating variable for total no of pregnant women in Baseline and Endline 
-egen total_pregnant= rowtotal(R_E_cen_preg_status* R_E_n_preg_status* Cen_total_pregnant_* )
-label var total_pregnant "Number of pregnant women" 
-	
-	
-* Number of Women of Child Bearing Age
-egen total_CBW= rowtotal(R_E_n_num_female_15to49 R_E_r_cen_num_female_15to49)
-label var total_CBW "Number of Women of Child Bearing Age"
-
-
-* Number of Other Members in the HH 
-//Generating binary variable if HH member is neither CBW nor U5
-forvalues i=1/17{ //loop for all HH members in Baseline
-	gen Cen_noncri_members_`i'=1 if (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a4_hhmember_gender_`i'==1) | (R_Cen_a6_hhmember_age_`i'>49 & R_Cen_a4_hhmember_gender_`i'==2) | (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a6_hhmember_age_`i'<15 & R_Cen_a4_hhmember_gender_`i'==2)
-}
-//Generating vairable for total no of non criteria/Other members in Baseline and Endline 
-egen total_noncri_members=rowtotal(Cen_noncri_members_* R_E_n_num_allmembers_h)
-label total_noncri_members "Number of Other Members"
-
-* Index of the HH Head (to ascertain which HH member is the head)
-//Extracting the index from name of HH Head
-gen hh_head_index =.
-replace hh_head_index=R_Cen_a10_hhhead
-label var hh_head_index "Househols Head's index"
-
-* Age of the HH head
-gen hh_head_age = .
-forval i = 1/17 { 
-    replace hh_head_age = R_Cen_a6_hhmember_age_`i' if hh_head_index== `i'
-}
-label var hh_head_age "Age of the HH Head"
-
-
-// * Education Level of the HH Head
-// gen hh_head_edu = .
-// forval i = 1/17 {
-//     replace hh_head_edu = R_Cen_a9_school_level_`i' if hh_head_index== `i'
-// }
-// label var hh_head_edu "Level of Education of HH Head"
-// label define hh_head_edu 1 "Incomplete pre-school (pre-primary or Anganwadi schooling)" 2 "Completed pre-school (pre-primary or Anganwadi schooling)" ///
-// 3 "Incomplete primary (1st-8th grade not completed)" 4 "Complete primary (1st-8th grade completed)" ///
-// 5 "Incomplete secondary (9th-12th grade not completed)" 6 "Complete secondary (9th-12th grade not completed)" ///
-// 7 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Refused" 999 "Don't know"
-// label values hh_head_edu hh_head_edu
-
-
-
-
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+* 30501107052 //unique ID --> tocheck with Archi
 
 
 
