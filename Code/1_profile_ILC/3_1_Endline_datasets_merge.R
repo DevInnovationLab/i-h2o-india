@@ -222,11 +222,7 @@ str(df.main)
 df.revisit <- read_stata(paste0(Final_path(),"1_9_Endline_revisit_final_cleaned.dta"))
 
 View(df.revisit)
-# I am filtering out cases where in the revisit main resp data wasn't done. So, that we will have lesser data to deal with because we only want to add those rows where new data is presnet 
 df.revisit.f <- subset(df.revisit, R_E_wash_applicable == 1)
-
-df.revisit.f <- subset(df.revisit, R_E_instruction == 1)
-
 
 # Display the filtered data frame to confirm the changes
 View(df.revisit.f)
@@ -296,8 +292,6 @@ flagged_df <- flagged_df %>% select_if(function(col) !all(is.na(col) | col == 0)
 # View the flagged dataframe
 View(flagged_df)
 
-#flags are present only in those variable which changed as a cause of respondents being available in the revisit 
-
 #After comparing everything we found no flags 
 
 #---------------------------------------------------------------
@@ -324,7 +318,6 @@ df.revisit <- read_stata(paste0(Final_path(),"1_9_Endline_revisit_final_cleaned.
 
 View(df.revisit)
 df.revisit.f <- subset(df.revisit, R_E_wash_applicable == 1)
-df.revisit.f <- subset(df.revisit, R_E_instruction == 1)
 
 # Display the filtered data frame to confirm the changes
 View(df.revisit.f)
@@ -399,7 +392,6 @@ subset_df <- final_df %>% select(unique_id, R_E_water_source_prim, R_E_resp_avai
 # View the subset dataset
 View(subset_df)
 
-View(final_df)
 
 # Save the final_df dataset to the specified directory as a .dta file
 output_path <- file.path(Final_path(), "Endline_HH_level_merged_dataset_final.dta")
@@ -408,23 +400,6 @@ write_dta(final_df, output_path)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-#>   ESTRA CHECKS THAT CAN BE IGNORED 
-#>
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #---------------------------------------------------------------
 #CHILD LEVEL DATASET MERGE 
@@ -653,6 +628,11 @@ names(final_df)
 # View the subset dataset
 #View(subset_df)
 
+
+# Save the final_df dataset to the specified directory as a .dta file
+output_path <- file.path(Final_path(), "Endline_Child_level_merged_dataset_final.dta")
+
+write_dta(final_df, output_path)
 
 
 
