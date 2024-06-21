@@ -15,18 +15,33 @@
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
 
-	
+
+********************************************************************************
+*** Using Endline_Long_Indiv_analysis.dta to get the pregnancy status variable
+********************************************************************************
+clear 
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
+preserve
+keep comb_preg_status R_E_key unique_id
+bys R_E_key: gen Num=_n
+reshape wide  comb_preg_status , i(R_E_key) j(Num)
+save "${DataTemp}Endline_Preg_status_wide.dta", replace
+restore 
+
 ********************************************************************************
 *** Opening the Dataset 
 ********************************************************************************
 clear
-use "${DataFinal}0_Master_HHLevel.dta", clear
+use "${DataFinal}0_Master_HHLevel_NB.dta", clear
+merge 1:1 unique_id using "${DataTemp}Endline_Preg_status_wide.dta", gen(merge_desc_stats)
+//875 obs matched (unmatched 40 obs are present in baseline only)
 
 ********************************************************************************
 *** Generating relevant variables
 ********************************************************************************
 drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
 //1 obs dropped
+
 
 * Combined variable for Number of HH members (both BL and EL including the new members)
 //changing the storage type of the no of HH members from baseline census
@@ -56,10 +71,9 @@ forvalues i = 1/17 { //loop for all HH memebers in Baseline Census
 	gen Cen_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
 }
 
-// Generating variable for total no of pregnant women in Baseline /*and Endline (endline variables on preg status not part of this dataset as of now*/
-// Question for Akito and Archi --> While creating 1_8_Endline_Census_cleaned_consented dataset in codefile 1_8_A_Endline_cleaning.do, variables on the pregnancy status of census and new women was dropped. Can i make changes to that file and include those variables? 
-egen total_pregnant= rowtotal(/*R_E_cen_preg_status* R_E_n_preg_status**/ Cen_total_pregnant_* )
-label var total_pregnant "Pregnant Women (Baseline)" 
+// Generating variable for total no of pregnant women in Endline 
+egen total_pregnant= rowtotal(comb_preg_status*)
+label var total_pregnant "Pregnant Women (Endline)" 
 	
 	
 * Number of Women of Child Bearing Age
@@ -94,22 +108,23 @@ forval i = 1/17 {
 }
 label var hh_head_age "Age of the HH Head"
 
-* Whether HH head ever attended school
-gen hh_head_attend_school=.
-forval i = 1/17 {
-    replace hh_head_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
-}
-label var hh_head_attend_school "HH head attended school"
-label define hh_head_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
-label values hh_head_attend_school hh_head_attend_school
+// * Whether HH head ever attended school
+// gen hh_head_attend_school=.
+// forval i = 1/17 {
+//     replace hh_head_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// }
+// label var hh_head_attend_school "HH head attended school"
+// label define hh_head_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+// label values hh_head_attend_school hh_head_attend_school
 
 * Education Level of the HH Head
 gen hh_head_edu = .
 forval i = 1/17 {
     replace hh_head_edu = R_Cen_a9_school_level_`i' if hh_head_index== `i'
+	replace hh_head_edu = 0 if R_Cen_a9_school_level_`i'==. & hh_head_index== `i'
 }
 label var hh_head_edu "Level of Education of HH Head"
-label define hh_head_edu 1 "HH head: Incomplete Pre-school" 2 "HH head: Completed Pre-school" ///
+label define hh_head_edu 0 "Never Attended School" 1 "HH head: Incomplete Pre-school" 2 "HH head: Completed Pre-school" ///
 3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
 5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
 7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
@@ -129,22 +144,23 @@ label var respondent_gender "Gender of the Respondent"
 label define respondent_gender 1 "Male" 2 "Female" 3 "Other" 
 label values respondent_gender respondent_gender
 
-* Whether respondent ever attended school
-gen resp_attend_school=.
-forval i = 1/17 {
-    replace resp_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
-}
-label var resp_attend_school "Respondent attended school"
-label define resp_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
-label values resp_attend_school resp_attend_school
+// * Whether respondent ever attended school
+// gen resp_attend_school=.
+// forval i = 1/17 {
+//     replace resp_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// }
+// label var resp_attend_school "Respondent attended school"
+// label define resp_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+// label values resp_attend_school resp_attend_school
 
 
 * Education Level of the Respondent
 gen respondent_edu = .
 replace respondent_edu = R_Cen_a9_school_level_1
+replace respondent_edu = 0 if R_Cen_a9_school_level_1==. //replcaing the missing values (in case respondent never attended school) with 0
 // replace respondent_edu =. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
 label var respondent_edu "Level of Education of Respondent"
-label define respondent_edu 1 "Incomplete Pre-school" 2 "Completed Pre-school" ///
+label define respondent_edu 0 "Never Attended School" 1 "Incomplete Pre-school" 2 "Completed Pre-school" ///
 3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
 5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
 7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
@@ -179,21 +195,21 @@ label values R_Cen_a37_caste R_Cen_a37_caste
 ********************************************************************************
 
 * -98 to 98
-foreach i in respondent_edu hh_head_edu hh_head_attend_school resp_attend_school {
+foreach i in respondent_edu hh_head_edu /*hh_head_attend_school resp_attend_school*/ {
 	replace `i'=98 if `i'==-98
 }	
 	
-* -99 to 99
-foreach i in  hh_head_attend_school resp_attend_school {
-	replace `i'=99 if `i'==-99
-}	
+// * -99 to 99
+// foreach i in  hh_head_attend_school resp_attend_school {
+// 	replace `i'=99 if `i'==-99
+// }	
 
 ********************************************************************************
 *** Creating Dummy variables
 ********************************************************************************
 
-foreach v in R_Cen_a10_hhhead_gender respondent_gender respondent_edu hh_head_edu asset_quintile R_Cen_a37_caste resp_attend_school hh_head_attend_school ///
- {
+foreach v in R_Cen_a10_hhhead_gender respondent_gender respondent_edu ///
+hh_head_edu asset_quintile R_Cen_a37_caste /*resp_attend_school hh_head_attend_school*/ {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -212,8 +228,8 @@ label var R_Cen_a10_hhhead_gender_1 "HH Head is Male"
 label var R_Cen_a10_hhhead_gender_2 "HH Head is Female"
 label var respondent_gender_1 "Respondent is Male"
 label var respondent_gender_2 "Respondent is Female"
-label var hh_head_attend_school_1 "HH Head Attended School"
-label var resp_attend_school_1 "Respondent Attended school" 
+// label var hh_head_attend_school_1 "HH Head Attended School"
+// label var resp_attend_school_1 "Respondent Attended school" 
 
 *** Saving the dataset 
 save "${DataTemp}Temp_HHLevel(for descriptive stats).dta", replace
@@ -221,27 +237,26 @@ save "${DataTemp}Temp_HHLevel(for descriptive stats).dta", replace
 *** Creation of the table
 *Setting up global macros for calling variables
 global HH_characteristics total_hhmembers total_CBW total_pregnant total_U5children total_noncri_members ///
-R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 hh_head_attend_school_1 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
-hh_head_edu_5 hh_head_edu_6 hh_head_edu_7 hh_head_age respondent_gender_1 respondent_gender_2 resp_attend_school_1 ///
-respondent_edu_1 respondent_edu_3 respondent_edu_4 respondent_edu_5 respondent_edu_6 respondent_edu_7 ///
+R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 /*hh_head_attend_school_1*/ hh_head_edu_0 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
+hh_head_edu_5 hh_head_edu_6 hh_head_edu_7 hh_head_age respondent_gender_1 respondent_gender_2 /*resp_attend_school_1*/ ///
+respondent_edu_0 respondent_edu_1 respondent_edu_3 respondent_edu_4 respondent_edu_5 respondent_edu_6 respondent_edu_7 ///
 respondent_age asset_quintile_1 asset_quintile_2 asset_quintile_3 asset_quintile_4 asset_quintile_5 ///
 R_Cen_a37_caste_1 R_Cen_a37_caste_2 R_Cen_a37_caste_3 R_Cen_a37_caste_4
 
 *Setting up local macros (to be used for labelling the table)
-local HH_characteristics "Household Demographics - Treatment vs Control Vilages"
+local HH_characteristics "Comparing Household Profiles: Insight into Demographic Trends"
 local LabelHH_characteristics "MaintableHH"
-local noteHH_characteristics "Notes: (1)This table presents the information on Household characteristics from the Census data- both Baseline and Endline"
+local noteHH_characteristics "Notes: (1)The table presents information on Household characteristics from Baseline and Endline Census (2) Missing value for age of household head: respondent didn't know the age of the household head (3)Asset Quintiles represent household wealth rankings(1 = lowest, 5 = highest)" 
 local ScaleHH_characteristics "1"
 
-* By R_Enr_treatment 
+* Descritive stats table: Treatment vs Control Groups 
 foreach k in HH_characteristics { //loop for all variables in the global marco 
 
 use "${DataTemp}Temp_HHLevel(for descriptive stats).dta", clear //using the saved dataset 
-***********
-** Table **
-***********
-* Mean
-	//Calculating the summary stats of treatment and control group for each variable and storing them
+	
+	* Mean
+	//Calculating the summary stats 
+	eststo  model0: estpost summarize $`k' //Total (for all villages)
 	eststo  model1: estpost summarize $`k' if Treat_V==1 //Treatment villages
 	eststo  model2: estpost summarize $`k' if Treat_V==0 //Control villages
 	
@@ -259,7 +274,7 @@ use "${DataTemp}Temp_HHLevel(for descriptive stats).dta", clear //using the save
 	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
 	matrix b = r(table) //storing the regression results in a matrix 'b'
 	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1' 
-	//assigning temporary place holders to p values for categorization into significance levels in line 129
+	//assigning temporary place holders to p values for categorization into significance levels in line 339
 	replace `i'=99996 if p_1> 0.1  
 	replace `i'=99997 if p_1<= 0.1
 	replace `i'=99998 if p_1<= 0.05
@@ -303,23 +318,20 @@ use "${DataTemp}Temp_HHLevel(for descriptive stats).dta", clear //using the save
 	eststo  model8: estpost summarize $`k' //summary stats of count of missing values
 
 //Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
-esttab model1 model2 model3 model4 model5 model6 model7 model8 using "${Table}DescriptiveStats_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value" "Min" "Max" "Missing") ///
-	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+esttab model0 model1 model2 model3 model4 model5 model6 model7 model8 using "${Table}DescriptiveStats_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\shortstack[c]{Total}" "\shortstack[c]{T}" "\shortstack[c]{C}" "\shortstack[c]{Diff}" "Sig" "P-value" "Min" "Max" "Missing") ///
+	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
-				   "Total HH Members" "\multicolumn{9}{c}{\textbf{Number of Household Members}} \\ Total HH Members" ///
+				   "Total HH Members" "\multicolumn{10}{c}{\textbf{Number of Household Members}} \\ Total HH Members" ///
 				   "HH Head is Male" "\hline \multicolumn{9}{c}{\textbf{Household Head Information}} \\ HH Head is Male" ///
-				   "HH head: Completed Pre-school" "\\ \textbf{Level of Schooling} \\ Completed Pre-school" ///
-				   "HH Head Attended School" "\\ HH Head Attended School" ///
-				   "Respondent Attended School" "\\ Respodent Attended School" ///
+				   "Never Attended School" "\\ \textbf{Level of Schooling} \\ Never Attended School" ///
 				   "Age of the HH Head" "\\ Age of the HH Head" ///
 				   "Respondent is Male" "\hline \multicolumn{9}{c}{\textbf{Respondent Information}} \\ Respondent is Male" ///
 				   "Age of the Respondent" "\\ Age of the Respondent" ///
-				   "Incomplete Pre-school" "\\ \textbf{Level of Schooling} \\ Incomplete Pre-School Education" ///
 				   "Quintile 1" "\hline \multicolumn{9}{c}{\textbf{Household Level Information}} \\ \textbf{Asset Quintiles} \\ Quintile 1" ///
 				   "Scheduled Caste" "\\ \textbf{Caste} \\ Scheduled Caste" /// 
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
-				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 	   }
