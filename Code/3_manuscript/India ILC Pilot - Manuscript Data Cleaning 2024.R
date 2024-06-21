@@ -1124,43 +1124,19 @@ el <- el%>%
 
 #---------------------------------BL IDEXX-----------------------------------#
 
-#Removing NA result
-idexx <- idexx%>%
-  filter(is.na(ec_mpn) == FALSE)
-
-#Renaming assignment names
-idexx$assignment <- factor(idexx$assignment)
-idexx$assignment <- fct_recode(idexx$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
-
-idexx <- idexx%>%
-  filter(is.na(assignment) == FALSE) #Removing results from Hathikamba
-
-#Renaming Panchayat village variable
-idexx <- idexx%>%
-  mutate(panchayat_village = `Panchat village`)
 
 
 #---------------------------------R1 IDEXX-----------------------------------#
 
-idexx_r1 <- idexx_r1%>%
-  mutate(panchayat_village = `Panchat village`)
 
 
 
 #---------------------------------R2 IDEXX-----------------------------------#
 
 
-idexx_r2 <- idexx_r2%>%
-  mutate(panchayat_village = `Panchat village`)
 
 
 #---------------------------------R3 IDEXX-----------------------------------#
 
-idexx_r3 <- idexx_r3%>%
-  mutate(panchayat_village = `Panchat village`)
 
-idexx_r3 <- idexx_r3%>%
-  filter(abr == 0)
 

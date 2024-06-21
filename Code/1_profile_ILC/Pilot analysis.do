@@ -1690,8 +1690,8 @@ replace treatment=0 if assignment=="Control"
 gen control= 1 if treatment==0
 replace control= 0 if treatment==1
 
-gen panchayat_village=0
-replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana" 
+*gen panchayat_village=0
+*replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana" 
 
 save "${DataDeid}Ecoli results followup R1_cleaned.dta", replace
 gen round=1
@@ -1941,8 +1941,8 @@ replace treatment=0 if assignment=="Control"
 gen control= 1 if treatment==0
 replace control= 0 if treatment==1
 
-gen panchayat_village=0
-replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana"
+*gen panchayat_village=0
+*replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana"
 
 save "${DataDeid}Ecoli results followup R2_cleaned.dta", replace
 drop block_code
@@ -2039,8 +2039,8 @@ tab secondary_water_source_JJM
 * tab secondary_water_source_JJM
 * tab sec_jjm_use
 
-gen panchayat_village=0
-replace panchayat_village=1 if R_FU3_village_str=="Asada" | R_FU3_village_str=="Jaltar" | R_FU3_village_str=="BK Padar" | R_FU3_village_str=="Mukundpur" | R_FU3_village_str=="Gudiabandh" | R_FU3_village_str=="Naira" | R_FU3_village_str=="Dangalodi" | R_FU3_village_str=="Karlakana" 
+*gen panchayat_village=0
+*replace panchayat_village=1 if R_FU3_village_str=="Asada" | R_FU3_village_str=="Jaltar" | R_FU3_village_str=="BK Padar" | R_FU3_village_str=="Mukundpur" | R_FU3_village_str=="Gudiabandh" | R_FU3_village_str=="Naira" | R_FU3_village_str=="Dangalodi" | R_FU3_village_str=="Karlakana" 
 
 **assign treatment
 
@@ -2125,8 +2125,8 @@ replace treatment=0 if assignment=="Control"
 gen control= 1 if treatment==0
 replace control= 0 if treatment==1
 
-gen panchayat_village=0
-replace panchayat_village=1 if village=="Asada" | village=="Jaltar" | village=="BK Padar" | village=="Mukundpur" | village=="Gudiabandh" | village=="Naira" | village=="Dangalodi" | village=="Karlakana"
+*gen panchayat_village=0
+*replace panchayat_village=1 if village=="Asada" | village=="Jaltar" | village=="BK Padar" | village=="Mukundpur" | village=="Gudiabandh" | village=="Naira" | village=="Dangalodi" | village=="Karlakana"
 
 save "${DataDeid}Ecoli results followup R3_cleaned.dta", replace
 *merge m:1 village_name using "${DataDeid}Village & block list.dta", force

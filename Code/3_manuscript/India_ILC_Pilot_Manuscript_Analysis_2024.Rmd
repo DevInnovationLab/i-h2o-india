@@ -214,6 +214,8 @@ el <- read_stata(paste0(user_path(),"3_final/1_8_Endline_Census_cleaned.dta" ))
 
 
 ```
+
+
 # Defining Functions
 
 ```{r defining misc functions}
