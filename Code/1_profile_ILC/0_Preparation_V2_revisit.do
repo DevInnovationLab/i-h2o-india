@@ -10,6 +10,7 @@ set maxvar 30000
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census_revisit.dta", replace
 
+//accomapniment
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-accompaniment-survey_member_names.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-accompaniment-survey_member_names.dta", replace
 
@@ -78,6 +79,7 @@ save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_start_u5child_nonull-comb_caregiver_present-comb_sought_med_care_U5-comb_med_visits_not0_U5-comb_prvdrs_exp_loop_U5.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_u5child_nonull-comb_caregiver_present-comb_sought_med_care_U5-comb_med_visits_not0_U5-comb_prvdrs_exp_loop_U5.dta", replace
 
+//mortality dataset
 do "${Do_lab}import_India_ILC_Endline_Census_Revisit-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.do"
 save "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.dta", replace
 
