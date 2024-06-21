@@ -113,7 +113,13 @@ merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", g
 replace R_Cen_a5_hhmember_relation_1=1 if unique_id=="30301109034" //selected the relation with HH member as "Wife/Husband" although respondent herself was the HH member in question
 
 //the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
-* 30501107052 //unique ID --> tocheck with Archi
+* 30501107052 //unique ID --> tocheck with Akito
+
+* Age of the HH member
+replace R_Cen_a6_hhmember_age_2=. if unique_id=="40201111025" //the age of the HH member is coded as 99 as the respondent didn't know the age; replacing it with missing value
+
+*** Saving the merged dataset
+save "${DataFinal}0_Master_HHLevel_NB.dta", replace //code for saving a copy of the file as I cannot replace the original one on Box
 
 
 drop R_E_r_cen_*
