@@ -86,7 +86,10 @@ idexx_r3 <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab 
 village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
 
-scoping <- read_stata("C:/Users/jerem/Box/India Water project/1_Scoping/04. Working/Household data_cleaned.dta")
+#scoping_2 <- read_stata("C:/Users/jerem/Box/India Water project/1_Scoping/04. Working/Household data_cleaned.dta")
+#This working dataset is missing 10 cases! Use the raw dataset instead
+
+scoping <- read_csv("C:/Users/jerem/Box/India Water project/1_Scoping/01. Raw/Households/may_scoping_household_v2_WIDE.csv")
 
 ```
 
@@ -255,9 +258,28 @@ scoping <- scoping%>%
   rename(water_treat_other = "A9__98")
   
 
-scoping$prim_source <- scoping$prim_source%>%
-  factor(levels = c("Government household tap","Private household tap","Community standpoint", "Handpump","Dug well", "Other"))
+#correcting district information
+scoping <- scoping%>%
+  mutate(district_name = case_when(district_name == 11 ~ "Rayagada",
+                                   district_name == 21 ~ "Kalahandi",
+                                   district_name == 31 ~ "Kandhamal"))
+scoping$district_name <- scoping$district_name%>%
+  factor(levels = c("Rayagada", "Kalahandi", "Kandhamal"))
+  
 
+#Fixing scoping source primary drinking water source labels
+scoping <- scoping%>%
+  mutate(prim_source = case_when(prim_source == 1 ~ "Government-provided tap",
+                                 prim_source == 2 ~ "Private household tap",
+                                 prim_source == 3 ~"Community tap",
+                                 prim_source == 4 ~ "Handpump",
+                                 prim_source == 5 ~ "Dug well",
+                                 prim_source == -98 ~ "Other"))
+
+scoping$prim_source <- scoping$prim_source%>%
+  factor(levels = c("Government-provided tap","Private household tap","Community tap", "Handpump","Dug well", "Other"))
+
+#Creating sec_source variable
 scoping <- scoping%>%
   mutate(sec_source = case_when(sec_source == "0" ~ 0,
                                 sec_source != "0" ~ 1))
@@ -266,7 +288,13 @@ scoping <- scoping%>%
   
   
 
+#Checking which households were removed in the working dataset
+#x <- unique(scoping$instanceID)
 
+#scoping_diff <- scoping_2%>%
+ # filter(!(instanceID %in% x)) 
+#The raw dataset should be used instead of the "working" dataset
+#The working dataset is missing 10 cases which were not captured because they were submitted on June 14, 2023 after the last time the dataset was cleaned.
 
 
 ```

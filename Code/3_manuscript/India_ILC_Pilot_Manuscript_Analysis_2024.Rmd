@@ -155,22 +155,22 @@ overleaf <- overleaf_path()
 #bl_raw <- read_csv(paste0(user_path(), "/1_raw/Baseline follow up survey_WIDE.csv"))
 
 #Baseline Survey
-bl <- read_stata(paste0(user_path(), "/2_deidentified/1_2_Followup_cleaned.dta"))
+bl <- read_stata(paste0(user_path(), "/3_final/1_2_Followup_cleaned.dta"))
 
 #Baseline Census
 cen <- read_stata(paste0(user_path(),"/3_final/Final_HH_Odisha_consented_Full.dta"))
 
 #Round 1 survey
-r1 <- read_stata(paste0(user_path(),"/2_deidentified/1_5_followup_R1_cleaned.dta"))
+r1 <- read_stata(paste0(user_path(),"/3_final/1_5_followup_R1_cleaned.dta"))
 
 #Round 2 survey
-r2 <- read_stata(paste0(user_path(),"/2_deidentified/1_6_followup_R2_cleaned.dta"))
+r2 <- read_stata(paste0(user_path(),"/3_final/1_6_followup_R2_cleaned.dta"))
 
 #Round 3 survey
-r3 <- read_stata(paste0(user_path(),"/2_deidentified/1_7_followup_R3_cleaned.dta"))
+r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
 
 #Chlorine Monitoring Survey
-mon <- read_stata(paste0(user_path(),"/2_deidentified/1_X_chlorine_monitoring.dta"))
+mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
 #Longitudinal chlorine monitoring form
 mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
@@ -181,7 +181,7 @@ mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/
 idexx <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv"))
 
 #Baseline ABR IDEXX
-abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
+#abr <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/raw/_India ILC_ABR_data_MASTER.xlsx", skip = 1)
 
 #IDEXX Round 1
 idexx_r1 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv"))
@@ -193,20 +193,24 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R2_idexx_mast
 #IDEXX Round 3
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv"))
 
+#Checking Michelle's cleaned IDEXX data
+idexx_mc <- read_stata(paste0(user_path(),"/2_deidentified/Ecoli results followup_cleaned_WIDE.dta"))
+
 #Village Details
-village_details_old <- read_xlsx(paste0(user_path(),"/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx"))
+#village_details_old <- read_xlsx(paste0(user_path(),"/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")) #Old method
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
 #Village Details
 villages <- read_stata(paste0(user_path(),"4_other/India ILC_Pilot_Rayagada Village Tracking_clean_final.dta" ))
 
+
 #Cen final
 cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta" ))
 
 
 #endline census
-el <- read_stata(paste0(user_path(),"1_raw/1_8_Endline/1_8_Endline_Census_cleaned.dta" ))
+el <- read_stata(paste0(user_path(),"3_final/1_8_Endline_Census_cleaned.dta" ))
 
 
 ```
@@ -231,6 +235,107 @@ labelmaker <- function(x){
 }
 
 
+
+#Microbiological contamination descriptive stats
+
+village_stats <- function(idexx_data){
+  idexx_data%>%
+  dplyr::group_by(village, sample_type) %>%
+  dplyr::summarise(
+    "Number of Samples" = n(),
+    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+    "Median MPN E. coli/100 mL" = median(ec_mpn),
+    "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+
+  
+}
+
+
+
+tc_stats <- function(idexx_data){
+  
+  tc <- idexx_data%>%
+        group_by(assignment, sample_type) %>%
+        summarise(
+            "Number of Samples" = n(),
+            "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+            #"Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+             # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+            #"Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+             # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+            "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
+            model <- glm(cf_pa_binary ~ 1, family = binomial)
+            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+            se <- sqrt(vcov_cluster[1, 1])
+            est <- (sum(cf_pa == "Presence") / n()) * 100
+            est - qt(0.975, df.residual(model)) * se
+          },
+          "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
+            model <- glm(cf_pa_binary ~ 1, family = binomial)
+            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+            se <- sqrt(vcov_cluster[1, 1])
+            est <- (sum(cf_pa == "Presence") / n()) * 100
+            est + qt(0.975, df.residual(model)) * se
+          },
+          "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+          #"Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+          # (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+          #"Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+          #  (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+          "Lower CI - EC" = {
+            model <- glm(ec_pa_binary ~ 1, family = binomial)
+            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+            se <- sqrt(vcov_cluster[1, 1])
+            est <- (sum(ec_pa == "Presence") / n()) * 100
+            est - qt(0.975, df.residual(model)) * se
+          },
+          "Upper CI - EC" = {
+            model <- glm(ec_pa_binary ~ 1, family = binomial)
+            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+            se <- sqrt(vcov_cluster[1, 1])
+            est <- (sum(ec_pa == "Presence") / n()) * 100
+            est + qt(0.975, df.residual(model)) * se
+          },
+          "Median MPN E. coli/100 mL" = median(ec_mpn),
+          "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+        )
+  
+  tc <- tc%>%
+    #Adjusting so the CI cannot be more or less than 0 or 100
+    mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
+                            `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+  mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
+                            `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+  return(tc)
+}
+
+
+
+
+all_stats <- function(idexx_data){
+  idexx_data%>%
+  group_by(sample_type) %>%
+  summarise(
+    "Number of Samples" = n(),
+    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+    "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
+    "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
+    "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+  )
+}
+
+
+risk_stats <- function(idexx_data){
+  idexx_data%>%
+  group_by(assignment, ec_risk)%>%
+  summarise(count = n())%>%
+  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
+}
+
+
+#Regression results functions
 
 #ilc_glm
 #Runs generalized linear model for comparing control and treatment group outcomes
@@ -428,103 +533,6 @@ paired <- inner_join(cen, el_pair, by = "unique_id")
 
 
 ```{r Defining functions to calculate stats}
-
-village_stats <- function(idexx_data){
-  idexx_data%>%
-  dplyr::group_by(village, sample_type) %>%
-  dplyr::summarise(
-    "Number of Samples" = n(),
-    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
-    "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
-    "Median MPN E. coli/100 mL" = median(ec_mpn),
-    "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
-  )
-
-  
-}
-
-
-
-tc_stats <- function(idexx_data){
-  
-  tc <- idexx_data%>%
-        group_by(assignment, sample_type) %>%
-        summarise(
-            "Number of Samples" = n(),
-            "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
-            #"Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
-             # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-            #"Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
-             # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-            "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-            model <- glm(cf_pa_binary ~ 1, family = binomial)
-            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-            se <- sqrt(vcov_cluster[1, 1])
-            est <- (sum(cf_pa == "Presence") / n()) * 100
-            est - qt(0.975, df.residual(model)) * se
-          },
-          "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-            model <- glm(cf_pa_binary ~ 1, family = binomial)
-            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-            se <- sqrt(vcov_cluster[1, 1])
-            est <- (sum(cf_pa == "Presence") / n()) * 100
-            est + qt(0.975, df.residual(model)) * se
-          },
-          "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
-          #"Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
-          # (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-          #"Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
-          #  (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-          "Lower CI - EC" = {
-            model <- glm(ec_pa_binary ~ 1, family = binomial)
-            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-            se <- sqrt(vcov_cluster[1, 1])
-            est <- (sum(ec_pa == "Presence") / n()) * 100
-            est - qt(0.975, df.residual(model)) * se
-          },
-          "Upper CI - EC" = {
-            model <- glm(ec_pa_binary ~ 1, family = binomial)
-            vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-            se <- sqrt(vcov_cluster[1, 1])
-            est <- (sum(ec_pa == "Presence") / n()) * 100
-            est + qt(0.975, df.residual(model)) * se
-          },
-          "Median MPN E. coli/100 mL" = median(ec_mpn),
-          "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
-        )
-  
-  tc <- tc%>%
-    #Adjusting so the CI cannot be more or less than 0 or 100
-    mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
-                            `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
-  mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
-                            `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
-  return(tc)
-}
-
-
-
-
-all_stats <- function(idexx_data){
-  idexx_data%>%
-  group_by(sample_type) %>%
-  summarise(
-    "Number of Samples" = n(),
-    "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
-    "% Positive for E. coli" = round(mean(ec_pa_binary), 3)*100,
-    "Average MPN E. coli/100 mL" = round(mean(ec_mpn),3),
-    "Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
-  )
-}
-
-
-risk_stats <- function(idexx_data){
-  idexx_data%>%
-  group_by(assignment, ec_risk)%>%
-  summarise(count = n())%>%
-  mutate("E. coli Risk Levels %" = round(count/sum(count) * 100, 2))
-}
-
 
 ```
 
@@ -1400,30 +1408,57 @@ names(all_models) <- outcome_vars
 #Combining Datasets
 #Selecting key variables and transforming the dataset
 idexx_tab <- idexx%>%
-  dplyr::select(assignment, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
   mutate(data_round = "BL")%>%
   mutate(pooled_round = "BL")
   
 idexx_r1_tab <- idexx_r1%>%
-  dplyr::select(assignment, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
   mutate(data_round = "R1")%>%
   mutate(pooled_round = "FU")
 
 idexx_r2_tab <- idexx_r2%>%
-  dplyr::select(assignment, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
   mutate(data_round = "R2")%>%
   mutate(pooled_round = "FU")
 
 idexx_r3_tab <- idexx_r3%>%
-  dplyr::select(assignment, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
   mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
 #combining
 idexx_tab <- rbind(idexx_tab, idexx_r1_tab, idexx_r2_tab, idexx_r3_tab)
 
+idexx_fu <- idexx_tab%>%
+  filter(pooled_round == "FU")
 
-#Separating stored vs tap water tests
+
+
+
+#checking michelle's code for cases of IDEXX tests that do not match ---------
+idexx_check <- idexx_mc%>%
+  filter(!(unique_id %in% unique(idexx_fu$unique_id)))
+#One ID which does match. In Michelle's data it's 1234567, which is not a real ID
+#Michelle's data doesn't include sample IDs unfortunately...
+idexx_check <- idexx_fu%>%
+  filter(!(unique_id %in% unique(idexx_mc$unique_id)))
+#No unique household IDs in my data that are not in Michelle's data
+#My data has 245 stored water samples and 241 tap samples. There are 4 more stored samples than in Michelle's data. The tap sample seem to align.
+
+#Tables
+table(idexx_mc$round)
+table(idexx_fu$data_round)
+#it looks like michelle has 81 households in R1 and R2. I have 83 in R1 and 80 in R2. R3 has the same
+#Looks like 1 sample is Michelle's R2 shouldn't be there
+
+#checking additional cases in R2
+idexx_check <- idexx_mc%>%
+  filter(village == 10101) #There are 5 households sampled in Nathma 10101 in R2. The 1234567 household doesn't exist and should be removed? Need to check
+
+
+
+#Separating stored vs tap water tests ------
 idexx_ids <- idexx_tab%>%
   dplyr::select(assignment, village, block, panchayat_village, data_round, sample_ID, bag_ID_tap, bag_ID_stored)
 
@@ -1465,13 +1500,6 @@ idexx_tab_stored <- idexx_tab%>%
 #idexx_tab <- left_join(idexx_ids, idexx_tab_tap, by = c("sample_ID", "bag_ID_tap"))
 
 
-#Checking duplicate IDs
-x <- idexx_ids%>%
-  count(sample_ID, data_round)%>% 
-  filter(n > 1)
-#x_BL <- idexx%>%
- # filter(sample_ID %in% x$sample_ID)
-#7 duplicate IDs that need to be handled
 
 
 

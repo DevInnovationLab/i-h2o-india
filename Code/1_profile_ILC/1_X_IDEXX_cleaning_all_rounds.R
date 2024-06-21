@@ -136,9 +136,28 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_
 
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_data_R3.csv"))
 
-village_details <- read_xlsx(paste0(user_path(),"/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx"))
+village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
 
+#-------------------------Village information cleaning-----------------------#
+
+#Making village IDs compatible to the surveys
+village_details <- village_details%>%
+  mutate(village_ID = `Village codes`)
+
+village_details$village_ID <- as.character(village_details$village_ID)
+
+#Making Panchayat village variable compatible with the existing data
+village_details <- village_details%>%
+  mutate(`Panchat village` = Panchayat)
+
+#Making block variable compatible with existing data
+village_details <- village_details%>%
+  rename(block = "Block")
+
+#Making village_name variable compatible
+village_details <- village_details%>%
+  rename(village_name = "Village")
 
 
 ###-------------------Defining overall functions------------------------####
@@ -298,6 +317,7 @@ x <- idexx%>%
 
 #10237 is a duplicate that was incorrectly recorded during R1. 
 #Remove Bag ID 90274 from the baseline data
+#Need to check why this ID was listed in the BL followup survey data
 idexx <- idexx%>%
   filter(bag_ID != 90274)
 
@@ -410,7 +430,7 @@ abr <- abr%>%
   mutate(cf_log = log(cf_mpn, base = 10))
 
 #Code for writing/updating final file
-#write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
+write_csv(idexx,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv")
 
 
 
@@ -521,12 +541,36 @@ idexx_r1 <- idexx_r1%>%
          sample_ID != "Field Blank")%>%
   filter(duplicate < 1)
 
+#Noting borehole water sample and dropping it
+idexx_r1 <- idexx_r1%>%
+  mutate(solar_water = ifelse((sample_ID == 20258), 1, 0))%>% #Sample ID for stored water from private borewell
+  replace_na(solar_water, value = 0)%>%
+  filter(solar_water == 0)
+
 #Checking IDs which do not match between survey data and lab data
 #this is where baseline samples are dropped from the idx dataset
 idexx_ids <- idexx_r1$sample_ID
 r1_sample_ids <- r1_for_idexx$sample_ID
 idexx_id_check <- idexx_r1%>%
   filter(!(sample_ID %in% r1_sample_ids))
+
+#Counting duplicate ids in R1 data
+idexx_id_check <- r1_for_idexx%>%
+  count(sample_ID)%>% 
+  filter(n > 1) #238 instances of NA
+idexx_id_check <- idexx_r1%>%
+  count(sample_ID)%>% 
+  filter(n > 1) #6 cases of duplicate IDs -- I have since removed them, see Github Issues
+
+#Filtering out duplicate IDs to understand why they exist
+idexx_check <- idexx_r1%>%
+  filter(sample_ID %in% idexx_id_check$sample_ID)
+
+#Checked the handwritten data
+#Cases with duplicate IDs were corrected in the raw data and listed on Github issues
+
+
+
 
 #combining idexx results to survey results
 r1_for_idexx$sample_ID <- as.character(r1_for_idexx$sample_ID)
@@ -604,7 +648,7 @@ idexx_r1 <- idexx_r1%>%
 
 
 #Writing/updating final csv file
-#write_csv(idexx_r1,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv")
+write_csv(idexx_r1,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R1_idexx_master_cleaned.csv")
 
 
 
@@ -743,6 +787,8 @@ idexx_r2 <- idexx_r2%>%
   replace_na(field_blank, value = 0)
 
 
+
+
 #Dropping lab blanks, field blanks, and duplicates
 #idexx_r2 <- idexx_r2%>%
 # filter(sample_ID != "Lab Blank",
@@ -843,7 +889,7 @@ idexx_r2 <- idexx_r2%>%
 
 
 #Writing/updating final csv file
-#write_csv(idexx_r2,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv")
+write_csv(idexx_r2,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R2_idexx_master_cleaned.csv")
 
 
 
@@ -1085,7 +1131,7 @@ idexx_r3 <- idexx_r3%>%
 
 
 #Writing/updating final file
-#write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv")
+write_csv(idexx_r3,"C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv")
 
 
 
