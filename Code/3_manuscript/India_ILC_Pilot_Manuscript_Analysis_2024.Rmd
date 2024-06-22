@@ -193,6 +193,9 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R2_idexx_mast
 #IDEXX Round 3
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv"))
 
+#Pooled IDEXX Rounds
+idexx_tab <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/POOLED_idexx_master_cleaned.csv"))
+
 #Checking Michelle's cleaned IDEXX data
 idexx_mc <- read_stata(paste0(user_path(),"/2_deidentified/Ecoli results followup_cleaned_WIDE.dta"))
 
@@ -1378,7 +1381,7 @@ desc_stats <- as_gt(desc_stats)%>%
 #Running regression models for each variable in the dataset
 
 #Variables
-outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "tap_trust_binary", "tap_taste_binary", "tap_future_binary")
 
 #Running all models
 #Logistic regression
@@ -1397,6 +1400,8 @@ all_models <- lapply(outcome_vars,
 #Assigning names to models
 names(all_models) <- outcome_vars
 
+#Making regression table output
+ilc_model_table(all_models)
 
 
 ```
@@ -1406,34 +1411,9 @@ names(all_models) <- outcome_vars
 
 ```{r Regression Results - Microbio contamination}
 
-
-#Combining Datasets
-#Selecting key variables and transforming the dataset
-idexx_tab <- idexx%>%
-  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
-  mutate(data_round = "BL")%>%
-  mutate(pooled_round = "BL")
-  
-idexx_r1_tab <- idexx_r1%>%
-  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
-  mutate(data_round = "R1")%>%
-  mutate(pooled_round = "FU")
-
-idexx_r2_tab <- idexx_r2%>%
-  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
-  mutate(data_round = "R2")%>%
-  mutate(pooled_round = "FU")
-
-idexx_r3_tab <- idexx_r3%>%
-  dplyr::select(assignment, unique_id, village, block, panchayat_village, sample_ID, bag_ID_tap, bag_ID_stored, cf_pa_binary, sample_type, ec_pa_binary, cf_log, ec_log)%>%
-  mutate(data_round = "R3")%>%
-  mutate(pooled_round = "FU")
-
-#combining
-idexx_tab <- rbind(idexx_tab, idexx_r1_tab, idexx_r2_tab, idexx_r3_tab)
-
-idexx_fu <- idexx_tab%>%
-  filter(pooled_round == "FU")
+#Selecting followup survey data only, dropping baseline
+ idexx_fu <- idexx_tab%>%
+   filter(pooled_round == "FU")
 
 
 
@@ -1590,7 +1570,7 @@ desc_stats_stored <- as_gt(desc_stats)%>%
 
 #Tap Water
 #Variables
-outcome_vars <- c("cf_pa_tap", "ec_pa_tap")
+outcome_vars <- c("cf_pa_tap", "ec_pa_tap", "cf_log_tap", "ec_log_tap")
 
 #Running all models
 #Logistic regression
@@ -1615,7 +1595,7 @@ ilc_model_table(all_models)
 
 #Stored Water
 #Variables
-outcome_vars <- c("cf_pa_stored", "ec_pa_stored")
+outcome_vars <- c("cf_pa_stored", "ec_pa_stored", "cf_log_stored", "ec_log_stored")
 
 #Running all models
 #Logistic regression
@@ -1640,6 +1620,214 @@ ilc_model_table(all_models)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+##Regression Results Table -- Baseline and Endline
+
+```{r Regression Results -- Endline, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
+
+#Baseline Census------------------------------------------------------------
+#Subsetting datasets with key variables
+
+cen_tab <- cen%>%
+  dplyr::select(assignment, unique_id, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary
+                )%>%
+  mutate(data_round = "BL")
+
+
+
+
+#Summarizing BL census data and running regression models ----
+
+#Selecting variables
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+
+
+#GT method
+#Summarizing desc stats for each variable
+desc_stats <- cen_tab%>%
+  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
+  tbl_summary(
+  by = assignment,
+  statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
+  digits = all_continuous() ~ 2
+)%>%
+  add_p()
+
+
+
+#Running all models
+#Logistic regression
+#all_models <- lapply(outcome_vars, 
+ #                    function(var){ #This functions "subsets" the ilc_glm function
+  #                     ilc_glm(data = el_tab, var)
+   #                  }
+    #                   )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = cen_tab, var)
+                     }
+                       )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+#ilc_model_table(all_models) #Need to fix
+
+
+
+
+
+
+#Endline Census-------------------------------------------------------------
+#Subsetting datasets with key variables
+
+el_tab <- el%>%
+  dplyr::select(assignment, unique_id, 
+                village, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary
+                )%>%
+  mutate(data_round = "EL")
+
+
+
+
+#Summarizing EL data and running regression models ----
+
+#Selecting variables
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+
+
+#GT method
+#Summarizing desc stats for each variable
+desc_stats <- el_tab%>%
+  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
+  tbl_summary(
+  by = assignment,
+  statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
+  digits = all_continuous() ~ 2
+)%>%
+  add_p()
+
+
+
+#Running all models
+#Logistic regression
+#all_models <- lapply(outcome_vars, 
+ #                    function(var){ #This functions "subsets" the ilc_glm function
+  #                     ilc_glm(data = el_tab, var)
+   #                  }
+    #                   )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = el_tab, var)
+                     }
+                       )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
+
+
+
+
+```
+
+
+
+
+## Example/test code
+
+```{r old robust standard error code}
+
+#Taken from WASHPaLS analysis
+
+
+#
+
+#AEL_sandwich <- adjusted%>%
+ # vcovCL(cluster = AEL_glm$village.x)
+
+#robust_adjusted <- coeftest(adjusted, vcov. = AEL_sandwich) -- Code formerly used to calculate std errors
+#Important to note that the code below already exponentiates the coefficients and std errors
+
+
+# std.err <- sqrt(diag(AEL_sandwich))
+# std.err <- std.err[1:((length(std.err)-4))]
+# robust_adjusted <- tibble("pr"= exp(coef(adjusted)), "Std. Error" = exp(std.err),
+# "Pr(>|z|)" = 2 * pnorm(abs(coef(adjusted)/std.err), lower.tail=FALSE),
+# "LL" = exp(coef(adjusted) - 1.96 * (std.err)),
+# "UL" = exp(coef(adjusted) + 1.96 * (std.err)))
+# 
+# #Creating readable 95% CI based on LL and UL
+# robust_adjusted <- tibble(robust_adjusted,
+#                            CI = paste("[", as.character(round(robust_adjusted$LL, digits = 3)), ",", as.character(round(robust_adjusted$UL, digits = 3)), "]"))
+# 
+# 
+# #Storing values to final results tibble
+# adjusted_pr <- robust_adjusted$pr[1]
+# adjusted_ci <- robust_adjusted$CI[1]
+# adjusted_p <- robust_adjusted$`Pr(>|z|)`[1]
+# 
+# 
+# 
+# outcome_result <- tibble(outcome = outcome,
+#                   unadjusted_or = unadjusted_pr,
+#                   unadjusted_ci = unadjusted_ci,
+#                   unadjusted_p = unadjusted_p,
+#                   adjusted_or = adjusted_pr,
+#                   adjusted_ci = adjusted_ci,
+#                   adjusted_p = adjusted_p,
+#                   n = n)
+# 
+
+
+
+
+
+
+#Stargazer Method ---- 
+#Calculating desc stats
+#stargazer(el_tab[binary_vars], type = "latex", title = "Descriptive Statistics", out = "Manuscript_endline.tex")
+
+
+#Running all models
+# all_models <- lapply(binary_vars, 
+#                      function(var) {
+#                        formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
+#                        glm(formula, data = el_tab, family = "binomial")
+# })
+
+#Creating tables
+# stargazer(all_models, type = "latex", title = "Regression Results", 
+#           dep.var.labels = binary_vars, 
+#           covariate.labels = c("Treatment", "Block (fixed effects)", "Panchayat Village (fixed effects)"),
+#           omit = c("block", "panchayat_village"),
+#           omit.labels = c("Block fixed effects", "Panchayat Village fixed effects"),
+#           align = TRUE, no.space = TRUE, out = "manuscript_regression_results.tex")
+
+#Outputting to overleaf
 
 
 
@@ -1691,153 +1879,6 @@ ilc_model_table(all_models)
 #   tab_options(table.font.size = 11)
 # 
 # desc_stats
-# 
-
-
-
-
-
-
-
-```
-
-
-##Regression Results Table -- Endline
-
-```{r Regression Results -- Endline, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
-
-#Subsetting datasets with key variables
-
-el_tab <- el%>%
-  dplyr::select(assignment, unique_id, 
-                village, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary
-                )%>%
-  mutate(data_round = "EL")
-
-
-
-
-#Summarizing EL data and running regression models ----
-
-#Selecting variables
-binary_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-#GT method
-#Summarizing desc stats for each variable
-desc_stats <- el_tab%>%
-  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
-  tbl_summary(
-  by = assignment,
-  statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
-  digits = all_continuous() ~ 2
-)%>%
-  add_p()
-
-#Running regression models for each variable in the dataset
-all_models <- lapply(c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary"),
-                 function(var) {
-                   formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-                   model <- glm(formula, data = el_tab, family = binomial)
-                   # Adjust for clustering at the village level
-                   cluster_vcov <- vcovCL(model, cluster = ~village)
-                   clustered_se <- sqrt(diag(cluster_vcov))
-                   # Get the coefficients with clustered standard errors
-                   clustered_results <- coeftest(model, vcov. = cluster_vcov)
-                   #Tidying models -- need to understand how to use clustered results option
-                   list(model = model,
-                        table = tbl_regression(model, exponentiate = TRUE)) #Tidying models
-                   })
-#Assigning names to models
-names(all_models) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-#Forcing to be gt objects
-gt_tables <- lapply(all_models,
-                    function(model_info) {
-                      as_gt(model_info$table)
-})
-
-#Naming gt tables
-names(gt_tables) <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
-
-
-
-
-
-
-#Stargazer Method ---- 
-#Calculating desc stats
-#stargazer(el_tab[binary_vars], type = "latex", title = "Descriptive Statistics", out = "Manuscript_endline.tex")
-
-
-#Running all models
-# all_models <- lapply(binary_vars, 
-#                      function(var) {
-#                        formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
-#                        glm(formula, data = el_tab, family = "binomial")
-# })
-
-#Creating tables
-# stargazer(all_models, type = "latex", title = "Regression Results", 
-#           dep.var.labels = binary_vars, 
-#           covariate.labels = c("Treatment", "Block (fixed effects)", "Panchayat Village (fixed effects)"),
-#           omit = c("block", "panchayat_village"),
-#           omit.labels = c("Block fixed effects", "Panchayat Village fixed effects"),
-#           align = TRUE, no.space = TRUE, out = "manuscript_regression_results.tex")
-
-#Outputting to overleaf
-
-
-```
-
-
-
-
-## Old robust standard error code
-
-```{r old robust standard error code}
-
-#Taken from WASHPaLS analysis
-
-
-#
-
-#AEL_sandwich <- adjusted%>%
- # vcovCL(cluster = AEL_glm$village.x)
-
-#robust_adjusted <- coeftest(adjusted, vcov. = AEL_sandwich) -- Code formerly used to calculate std errors
-#Important to note that the code below already exponentiates the coefficients and std errors
-
-
-# std.err <- sqrt(diag(AEL_sandwich))
-# std.err <- std.err[1:((length(std.err)-4))]
-# robust_adjusted <- tibble("pr"= exp(coef(adjusted)), "Std. Error" = exp(std.err),
-# "Pr(>|z|)" = 2 * pnorm(abs(coef(adjusted)/std.err), lower.tail=FALSE),
-# "LL" = exp(coef(adjusted) - 1.96 * (std.err)),
-# "UL" = exp(coef(adjusted) + 1.96 * (std.err)))
-# 
-# #Creating readable 95% CI based on LL and UL
-# robust_adjusted <- tibble(robust_adjusted,
-#                            CI = paste("[", as.character(round(robust_adjusted$LL, digits = 3)), ",", as.character(round(robust_adjusted$UL, digits = 3)), "]"))
-# 
-# 
-# #Storing values to final results tibble
-# adjusted_pr <- robust_adjusted$pr[1]
-# adjusted_ci <- robust_adjusted$CI[1]
-# adjusted_p <- robust_adjusted$`Pr(>|z|)`[1]
-# 
-# 
-# 
-# outcome_result <- tibble(outcome = outcome,
-#                   unadjusted_or = unadjusted_pr,
-#                   unadjusted_ci = unadjusted_ci,
-#                   unadjusted_p = unadjusted_p,
-#                   adjusted_or = adjusted_pr,
-#                   adjusted_ci = adjusted_ci,
-#                   adjusted_p = adjusted_p,
-#                   n = n)
 # 
 
 

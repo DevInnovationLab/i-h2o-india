@@ -87,12 +87,21 @@ cen <- cen%>%
 
 #--Assign the correct treatment to villages---#
 
-cen <- cen %>% mutate(assignment = ifelse(village_str %in%
-                                            c("Birnarayanpur","Nathma", "Badabangi","Naira", "Bichikote", "Karnapadu","Mukundpur", "Tandipur", "Gopi Kankubadi", "Asada"), "Treatment", "Control"))
+#Renaming village_ID variable
+cen <- cen%>%
+  rename(village_ID = "village_name")
+
+#Adding village information
+cen$village_ID <- as.character(cen$village_ID)
+x <- village_details%>%
+  dplyr::select(village_ID, block, assignment, `Panchat village`)%>%
+  rename(panchayat_village = `Panchat village`)
+cen <- left_join(cen, x, by = "village_ID")
+
 
 #Changing village variable name
 cen <- cen%>%
-  mutate(village_name = village_str)
+  mutate(village = village_str)
 
 
 #Using labelmaker to make transfer labels for the whole dataset
@@ -100,8 +109,8 @@ cen <- labelmaker(cen)
 
 #Filtering out backup villages
 cen <- cen%>%
-  filter(village_name != "Badaalubadi")%>%
-  filter(village_name != "Hatikhamba")
+  filter(village != "Badaalubadi")%>%
+  filter(village != "Hatikhamba")
 
 
 
@@ -130,6 +139,53 @@ cen$water_sec_yn <- cen$water_sec_yn%>%
     "No" = "SWS: No secondary water source",
     "Yes" = "SWS: Yes"
   )
+
+
+#Setting primary source binary variable
+cen <- cen%>%
+  mutate(prim_source_jjm = case_when(
+    prim_source == "Government-provided Tap" ~ 1,
+    prim_source != "Government-provided Tap" ~ 0
+  ))
+
+#Secondary source variable cleaning
+cen <- cen%>%
+  mutate(sec_source = case_when(
+    water_sec_yn == "Yes" ~ 1,
+    water_sec_yn == "No" ~ 0
+  ))
+
+#Secondary source type JJM
+cen <- cen%>%
+  mutate(sec_source_jjm = case_when(
+    sec_jjm_use == 1 ~ 1,
+    sec_jjm_use == 0 ~ 0
+  ))
+
+#recoding secondary source
+cen$water_treat <- cen$water_treat%>%
+  fct_recode(
+    "No" = "WT: No water treatment",
+    "Yes" = "WT: Yes"
+  )
+
+
+#Updating water treatment binary variable
+cen <- cen%>%
+  mutate(water_treat_binary = case_when(
+    water_treat == "Yes" ~ 1,
+    water_treat == "No" ~ 0
+  ))
+
+
+#Setting JJM use variable
+cen <- cen%>%
+  mutate(jjm_drinking_yn = jjm_yes)%>%
+  mutate(jjm_drinking = case_when(
+    jjm_yes == "Yes" ~ 1,
+    jjm_yes == "No" ~ 0))
+
+
 
 
 
