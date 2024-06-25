@@ -173,9 +173,9 @@ r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
 #Longitudinal chlorine monitoring form
-mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+#mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
-#gv <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1OvZT-yk52h58-dpnSfBkXyEFR_Kb-p7O6PmQ8io4n-s/edit#gid=0", )
+gv <- read_csv(paste0(user_path(), "/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv"))
 
 #Baseline IDEXX
 idexx <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv"))
@@ -528,6 +528,126 @@ paired <- inner_join(cen, el_pair, by = "unique_id")
 
 ```{r Chlorine Monitoring -- Weekly}
 
+#Transforming data -----------------------------------------------------------
+
+#Selecting for chlorine data
+mon <- mon%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc))
+
+mon_summary <- mon%>%
+  group_by(test_date, chlorine_test)%>%
+  summarise("chlorine_concentration" = mean(chlorine_concentration))
+
+
+
+#Filtering for dates after April 5th for readability
+mon <- mon%>%
+  filter(test_date > "2024-04-05")%>%
+  filter(village_name != "Karnapadu")%>% #and removing karnapadu
+  filter(is.na(chlorine_concentration) == FALSE)
+
+#Recoding chlorine concentration sample types
+mon$chlorine_test <- factor(mon$chlorine_test)
+mon$chlorine_test <- fct_recode(mon$chlorine_test,
+                                  "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
+                                  "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
+
+
+#Recoding chlorine concentration sample types
+mon_summary$chlorine_test <- factor(mon_summary$chlorine_test)
+mon_summary$chlorine_test <- fct_recode(mon_summary$chlorine_test,
+                                  "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
+                                  "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
+
+#Selecting data after February 13, the last date of modification
+mon_summary <- mon_summary%>%
+  filter(test_date > "2024-02-13")%>%
+  filter(is.na(chlorine_concentration) == FALSE)
+
+#Making presence/absence variable for the summary data
+mon_summary <- mon_summary%>%
+  mutate(cl_pa = case_when(chlorine_concentration >= 0.1 ~ 1,
+                           chlorine_concentration < 0.1 ~ 0
+                           ))
+
+#Creating summary stats for bar plot
+# mon_summary_percent <- mon_summary%>%
+#   group_by() %>%
+#   summarise(
+#     "Number of Samples" = n(),
+#     "Tap - % Positive for Free Chlorine" = round((sum(cl_pa == "1") / n()) * 100,
+#                                                  1),
+#     "Stored - % Positive for Free Chlorine" = round((sum(cl_pa == "1") / n()) * 100, 1)
+# )
+
+#Monitoring data for all villages -------------------------------------------
+
+
+
+
+#All village plot
+  p1 <- ggplot(data = mon) + 
+    geom_point(aes(x = test_date, y = chlorine_concentration,
+                   color = chlorine_test))+
+    geom_line(aes(x = test_date, y = chlorine_concentration,
+                  color = chlorine_test))+
+    geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+    geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+    scale_y_continuous(
+                     limits = c(0, 1.5),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       color = "Sample Type",
+       title = (paste("JPAL ILC Chlorine Monitoring for 2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
+    facet_wrap(~village_name, ncol = 3)+
+    geom_vline(data = gv_refill, aes(xintercept = refill_date_0),
+               linetype = "dashed", color = "darkgreen")+
+      #annotate("text", x = as.Date("2024-04-08"), y = 0.1, label = "Refill",
+       #        angle = 0, vjust = -0.5, size = 3, color = "darkgreen")
+    #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
+     #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-12"), y = 1.08), 
+            label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-18"), y = 1.2), 
+            label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
+  
+  print(p1)
+
+
+
+#Summary of monitoring data across all villages
+  
+p2 <- ggplot(data = mon_summary) + 
+    geom_point(aes(x = test_date, y = chlorine_concentration,
+                   color = chlorine_test))+
+    geom_line(aes(x = test_date, y = chlorine_concentration,
+                  color = chlorine_test))+
+    geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+    geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+    scale_y_continuous(
+                     limits = c(0, 2.0),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       color = "Sample Type",
+       title = (paste0("Chlorine Monitoring - February-June 2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  
+p2
+
+
+#Percentage of samples that test positive
+
+
 
 
 ```
@@ -536,10 +656,6 @@ paired <- inner_join(cen, el_pair, by = "unique_id")
 
 ## Desc Stats - Microbiological Contamination
 
-
-```{r Defining functions to calculate stats}
-
-```
 
 
 ###Baseline

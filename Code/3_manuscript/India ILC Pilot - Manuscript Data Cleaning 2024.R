@@ -3,7 +3,7 @@
 #Date: 6/5/24
 
 
-#-----------------------------Introduction----------------------------------#
+#-----------------------------Introduction----------------------------------
 
 
 #Defining Functions
@@ -22,7 +22,7 @@ labelmaker <- function(x){
 }
 
 
-#-------------------------Village information cleaning-----------------------#
+#-------------------------Village information cleaning-----------------------
 
 #Making village IDs compatible to the surveys
 village_details <- village_details%>%
@@ -40,7 +40,7 @@ village_details <- village_details%>%
 
 
 
-#--------------------------Baseline Census Data Cleaning-------------------#
+#--------------------------Baseline Census Data Cleaning-------------------
 
 
 
@@ -195,7 +195,7 @@ cen <- cen%>%
 
 
 
-#---------------------------Baseline Survey Data Cleaning-----------------#
+#---------------------------Baseline Survey Data Cleaning-----------------
 
 
 #Filtering out test data from training, based on village IDs
@@ -404,7 +404,7 @@ bl$unique_id <- as.character(bl$unique_id)
 
 
 
-#---------------------------Follow Up R1 Data Cleaning--------------------#
+#---------------------------Follow Up R1 Data Cleaning--------------------
 
 
 #Filtering out test data from training, based on village IDs
@@ -626,7 +626,7 @@ r1$unique_id <- as.character(r1$unique_id)
 
 
 
-#---------------------------Follow Up R2 Data Cleaning--------------------#
+#---------------------------Follow Up R2 Data Cleaning--------------------
 
 
 #Filtering out test data from training, based on village IDs
@@ -846,7 +846,7 @@ r2 <- r2%>%
 
 
 
-#---------------------------Follow Up R3 Data Cleaning--------------------#
+#---------------------------Follow Up R3 Data Cleaning--------------------
 
 
 
@@ -1058,7 +1058,7 @@ r3 <- r3%>%
 
 
 
-#---------------------------Endline Census Data Cleaning------------------#
+#---------------------------Endline Census Data Cleaning------------------
 
 
 
@@ -1178,21 +1178,66 @@ el <- el%>%
 
 
 
-#---------------------------------BL IDEXX-----------------------------------#
+#---------------------------------BL IDEXX-----------------------------------
 
 
 
-#---------------------------------R1 IDEXX-----------------------------------#
-
-
-
-
-#---------------------------------R2 IDEXX-----------------------------------#
+#---------------------------------R1 IDEXX-----------------------------------
 
 
 
 
-#---------------------------------R3 IDEXX-----------------------------------#
+#---------------------------------R2 IDEXX-----------------------------------
 
 
 
+
+#---------------------------------R3 IDEXX-----------------------------------
+
+
+
+
+
+#-------------------------------Gram Vikas Data-------------------------------
+
+
+
+
+
+#creating test date
+gv <- gv%>%
+  filter(is.na(Village) == FALSE)%>%
+  mutate(test_date = as_date(`valve_open (Time Answered)`))%>%
+  mutate(visit_date_alt = as_date(`Drafted On`))%>%
+  mutate(visit_date = as_date(`Date:`))
+
+#Replacing missing date values
+gv <- gv%>%
+  mutate(visit_date = coalesce(visit_date, visit_date_alt))
+
+
+#Processing refill data
+gv <- gv%>%
+  mutate(refill = `Did you/the pump operator refill chlorine tablets since the last visit?`)%>%
+  mutate(ilc_device = `What device is installed?`)%>%
+  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)
+
+
+#Selecting refill data
+gv_refill <- gv%>%
+  filter(refill == "Yes")
+
+#Creating refill check dates - date-based method
+#We ultimately want to get to a place where we can estimate tablet decay rate in each village
+gv_refill <- gv_refill%>%
+  mutate(refill_date_1 = visit_date + 14)%>%
+  mutate(refill_date_2 = visit_date + 18)%>%
+  mutate(refill_date_3 = visit_date + 20)%>%
+  mutate(refill_date_0 = visit_date)
+#Selecting dates
+gv_refill <- gv_refill%>%
+  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
+#making this dataset compatible with the plot below
+gv_refill <- gv_refill%>%
+  mutate(village_name = Village)%>%
+  mutate(village_name = ifelse(village_name == "Gopikankubadi", "GopiKankubadi", village_name))

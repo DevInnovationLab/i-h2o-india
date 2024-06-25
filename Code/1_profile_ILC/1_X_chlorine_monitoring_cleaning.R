@@ -130,9 +130,28 @@ mon <- read_csv(paste0(user_path(),"/1_raw/Daily Chlorine Monitoring Form_WIDE.c
 
 mon_full <- read_csv(paste0(user_path(),"/1_raw/india_ilc_pilot_monitoring_WIDE.csv"))
 
-village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
+village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
 
+#-------------------------Village information cleaning-----------------------#
+
+#Making village IDs compatible to the surveys
+village_details <- village_details%>%
+  mutate(village_ID = `Village codes`)
+
+village_details$village_ID <- as.character(village_details$village_ID)
+
+#Making Panchayat village variable compatible with the existing data
+village_details <- village_details%>%
+  mutate(panchayat_village = Panchayat)
+
+#Making block variable compatible with existing data
+village_details <- village_details%>%
+  rename(block = "Block")
+
+#Renaming village variable
+village_details <- village_details%>%
+  rename(village_name = "Village")
 
 
 
@@ -144,6 +163,7 @@ mon <- mon%>%
 
 mon_full <- mon_full%>%
   rename(village_ID = "village_name")
+
 
 #Pairing village information
 mon$village_ID <- as.character(mon$village_ID)
@@ -219,14 +239,11 @@ make_stata_compatible <- function(name) {
 new_names <- sapply(names(mon_wide), make_stata_compatible)
 names(mon_wide) <- new_names
 
-#Reducing length of variable name
-mon_wide <- mon_wide %>% 
-  rename(Village_ID = `Corresponding Village ID from census`)
 
 
 #Writing final chlorine monitoring file
-write_dta(mon_wide,paste0(user_path(), "/2_deidentified/1_X_chlorine_monitoring.dta"))
-write_csv(mon_wide,paste0(user_path(), "/2_deidentified/1_X_chlorine_monitoring.csv"))
+write_dta(mon_wide,paste0(user_path(), "/3_final/1_X_chlorine_monitoring.dta"))
+#write_csv(mon_wide,paste0(user_path(), "/3_final/1_X_chlorine_monitoring.csv"))
 
 
 
