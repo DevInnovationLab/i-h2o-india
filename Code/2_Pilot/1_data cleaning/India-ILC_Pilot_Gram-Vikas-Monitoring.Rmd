@@ -117,6 +117,8 @@ mon_far <- gv%>%
 # Get the current date
 visit_date <- Sys.Date()
 
+current_date <- visit_date
+
 # Calculate the start date of the current week (Monday)
 start_of_week <- visit_date - (wday(visit_date) - 2) %% 7
 
@@ -166,6 +168,7 @@ gv_refill <- gv%>%
 #Creating refill check dates - date-based method
 #We ultimately want to get to a place where we can estimate tablet decay rate in each village
 gv_refill <- gv_refill%>%
+  mutate(days_since_refill = current_date - visit_date)%>%
   mutate(refill_date_1 = visit_date + 14)%>%
   mutate(refill_date_2 = visit_date + 18)%>%
   mutate(refill_date_3 = visit_date + 20)%>%
@@ -174,7 +177,7 @@ gv_refill <- gv_refill%>%
 
 #Selecting dates + village to display in a kable
 gv_refill <- gv_refill%>%
-  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
+  dplyr::select(Village, days_since_refill, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
 
 #Selecting for the most recent village visits for each village
 gv_refill$Village <- factor(gv_refill$Village)
@@ -187,13 +190,13 @@ gv_refill <- gv_refill%>%
 
   
 #Renaming column names for the kable
-colnames(gv_refill) <- c("Village", "Refill Date", "Check Date #1", "Check Date #2",
-                         "Check Date #3")
+colnames(gv_refill) <- c("Village",  "Days since refill", "Refill Date",
+                         "Check Date #1", "Check Date #2","Check Date #3")
 
 #Displaying Kable
 kbl(gv_refill, "latex")%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Baseline - Water Quality Test Results " = 5)) %>%
+  add_header_above(c("Baseline - Water Quality Test Results " = 6)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(3, background = "lightgreen")%>%
