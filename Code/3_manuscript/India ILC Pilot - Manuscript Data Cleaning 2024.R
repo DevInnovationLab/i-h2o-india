@@ -118,6 +118,12 @@ cen <- cen%>%
 
 #---Cleaning specific variables---#
 
+#Recoding assignment variable
+cen$assignment <- factor(cen$assignment)
+cen$assignment <- cen$assignment%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
 #Recoding factor levels for ws_prim
 cen <- cen%>%
   mutate(prim_source = NA)
@@ -1241,3 +1247,69 @@ gv_refill <- gv_refill%>%
 gv_refill <- gv_refill%>%
   mutate(village_name = Village)%>%
   mutate(village_name = ifelse(village_name == "Gopikankubadi", "GopiKankubadi", village_name))
+
+
+
+#Weekly Chlorine Monitoring Data------------------------------------------------
+
+#Selecting for chlorine data
+mon <- mon%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc))
+
+
+
+
+
+mon_summary <- mon%>%
+  group_by(test_date, chlorine_test)%>%
+  summarise("chlorine_concentration" = mean(chlorine_concentration),
+            "village" = village_name)
+
+#Filtering for dates after April 5th for readability
+mon <- mon%>%
+  filter(test_date > "2024-04-05")%>%
+  filter(village_name != "Karnapadu")%>% #and removing karnapadu
+  filter(is.na(chlorine_concentration) == FALSE)
+
+
+#Recoding chlorine concentration sample types
+mon$chlorine_test <- factor(mon$chlorine_test)
+mon$chlorine_test <- fct_recode(mon$chlorine_test,
+                                "Nearest Tap" = "nearest_tap_fc",
+                                "Farthest Tap" = "farthest_tap_fc")
+
+
+#Recoding chlorine concentration sample types
+mon_summary$chlorine_test <- factor(mon_summary$chlorine_test)
+mon_summary$chlorine_test <- fct_recode(mon_summary$chlorine_test,
+                                        "Nearest Tap" = "nearest_tap_fc",
+                                        "Farthest Tap" = "farthest_tap_fc")
+
+#Selecting data after February 13, the last date of modification
+mon_summary <- mon_summary%>%
+  filter(test_date > "2024-02-13")%>%
+  filter(village != "Karnapadu")%>% #and removing karnapadu
+  filter(is.na(chlorine_concentration) == FALSE)
+
+#Making presence/absence variable for the summary data
+mon_summary <- mon_summary%>%
+  mutate(cl_pa = case_when(chlorine_concentration >= 0.1 ~ 1,
+                           chlorine_concentration < 0.1 ~ 0
+  ))
+
+#Summarizing percentage of samples that are positive for chlorine
+#by village
+mon_summary_percent_1 <- mon_summary%>%
+  group_by(village, chlorine_test) %>%
+  summarise(
+    "Number of Samples" = n(),
+    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+#aggregate
+mon_summary_percent_2 <- mon_summary%>%
+  group_by(chlorine_test) %>%
+  summarise(
+    "Number of Samples" = n(),
+    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+
