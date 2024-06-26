@@ -39,6 +39,17 @@ village_details <- village_details%>%
   rename(block = "Block")
 
 
+#-----------------------------------Map Data Cleaning-------------------------
+
+odisha <- shp_file_1%>%
+  filter(NAME_1 == "Odisha")
+
+
+rayagada <- shp_file_2%>%
+  filter(NAME_2 == "Rayagada")
+
+
+
 
 #--------------------------Baseline Census Data Cleaning-------------------
 
@@ -1181,7 +1192,16 @@ el <- el%>%
 
 
 
+#--------------------------------Paired Census Data--------------------------
 
+
+#Adding EL classification to the variables in the endline dataset
+el_pair <- el%>%
+  rename_with(~ paste0(., "_EL"))%>%
+  rename(unique_id = "unique_id_EL")
+
+
+paired <- inner_join(cen, el_pair, by = "unique_id")
 
 
 #---------------------------------BL IDEXX-----------------------------------
@@ -1298,6 +1318,16 @@ mon_summary <- mon_summary%>%
   mutate(cl_pa = case_when(chlorine_concentration >= 0.1 ~ 1,
                            chlorine_concentration < 0.1 ~ 0
   ))
+
+#Summarizing data on a weekly basis
+# Create a week variable
+mon_summary_weekly <- mon_summary %>%
+  mutate(test_week = floor_date(test_date, unit = "week"))
+
+# Group by week and calculate the average concentration
+mon_summary_weekly <- mon_summary_weekly%>%
+  group_by(test_week, chlorine_test) %>%
+  summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE))
 
 #Summarizing percentage of samples that are positive for chlorine
 #by village
