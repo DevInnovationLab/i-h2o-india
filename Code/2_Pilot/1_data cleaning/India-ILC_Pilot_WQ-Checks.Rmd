@@ -1579,7 +1579,7 @@ gv_refill <- gv_refill%>%
 
 #Selecting data
 scoping_tab <- scoping%>%
-  dplyr::select(district_name, prim_source, sec_source, tap_coverage, tap_supply_freq, water_treat)
+  dplyr::select(district_name, prim_source, sec_source, tap_supply_freq, water_treat)
 
 
 
@@ -1602,7 +1602,6 @@ tab <- scoping_tab%>%
                                   all_categorical() ~ 0),
                     label = list(prim_source ~ "Primary Drinking Water Source",
                                  sec_source ~ "Use a Secondary Drinking Water Source",
-                                 tap_coverage ~ "Tap Connection at House",
                                  tap_supply_freq ~ "Number of Times Water is Supplied Each Day",
                                  water_treat ~ "Treat Drinking Water"
                                  )
