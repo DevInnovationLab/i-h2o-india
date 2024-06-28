@@ -1308,7 +1308,7 @@ replace cf_mpn=. if date=="2023-11-08T00:00:00Z" & village_name=="Mariguda"
 replace cf_mpn=. if date=="2023-11-09T00:00:00Z" & village_name=="GopiKankubadi"
 //creating new vars
 
-drop village village_name panchatvillage correspondingvillageidfromcensus panchayatcode block block_code
+drop village village_name panchatvillage panchayatcode blockcode block
 rename   village_id village
 merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
 label var Treat_V "Treatment"
@@ -1444,37 +1444,37 @@ ttest positive_totalcoliform if sample_type=="Stored", by(treatment)
 use "${DataDeid}Ecoli results baseline_cleaned.dta", clear
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 sum ec_log if sample_type=="Tap" & treatment==1
 sum ec_log if sample_type=="Tap" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum ec_log if sample_type=="Stored" & treatment==1
 sum ec_log if sample_type=="Stored" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village)  
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Tap", cluster(village)  
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village)
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Stored", cluster(village)
 
 sum cf_log if sample_type=="Tap" & treatment==1
 sum cf_log if sample_type=="Tap" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 //log10 transformed density plots
 /* Akito: I do not see the variable
@@ -1699,7 +1699,7 @@ gen round=1
 save "${DataDeid}Ecoli results followup R1_for pooling.dta", replace
 
 preserve
-keep village_name village_id block_code block
+keep village_name village_id blockcode block
 duplicates drop village_name, force
 * Akito: Ask Jeremy to carefully check
 save "${DataDeid}Village & block list.dta", replace
@@ -1709,35 +1709,35 @@ restore
 ******regressions and ttests
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)  
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village)  
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 sum ec_log if sample_type=="Tap" & treatment==1
 sum ec_log if sample_type=="Tap" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village)
 
 sum ec_log if sample_type=="Stored" & treatment==1
 sum ec_log if sample_type=="Stored" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Tap", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Stored", cluster(village) 
 
 sum cf_log if sample_type=="Tap" & treatment==1
 sum cf_log if sample_type=="Tap" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 
 /*//log10 transformed density plots
@@ -1945,47 +1945,47 @@ replace control= 0 if treatment==1
 *replace panchayat_village=1 if village_name=="Asada" | village_name=="Jaltar" | village_name=="BK Padar" | village_name=="Mukundpur" | village_name=="Gudiabandh" | village_name=="Naira" | village_name=="Dangalodi" | village_name=="Karlakana"
 
 save "${DataDeid}Ecoli results followup R2_cleaned.dta", replace
-drop block_code
+drop blockcode
 merge m:1 village_name using "${DataDeid}Village & block list.dta"
 gen round=2
 
-replace unique_id="." if unique_id=="NA"
-destring unique_id, replace
+* replace unique_id="." if unique_id=="NA"
+* destring unique_id, replace
 format %20.0f unique_id
 save "${DataDeid}Ecoli results followup R2_for pooling.dta", replace
 ********Regressions
 
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 sum ec_log if sample_type=="Tap" & treatment==1
 sum ec_log if sample_type=="Tap" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)  
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village)  
 
 sum ec_log if sample_type=="Stored" & treatment==1
 sum ec_log if sample_type=="Stored" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village)
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Tap", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Stored", cluster(village) 
 
 sum cf_log if sample_type=="Tap" & treatment==1
 sum cf_log if sample_type=="Tap" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village)
 
 
 //log10 transformed density plots
@@ -2082,6 +2082,11 @@ save "${DataDeid}Followup R3 survey_for pooling data.dta", replace
 
 ************ TTests and regressions
 use "${DataDeid}Followup R3 survey_cleaned_additional vars.dta", clear
+drop R_Cen_village_str R_FU3_village_str R_Cen_block_name
+rename R_Cen_village_name village
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
+label var Treat_V "Treatment"
+
 local followup3 R_FU3_water_source_prim_1 sec_jjm_use R_FU3_tap_use_drinking_yesno_1 R_FU3_water_treat_1 taste_satisfy_1 tap_trust_1 tap_use_future_1 tap_tc stored_tc tap_rc stored_rc
 
 /*
@@ -2094,7 +2099,7 @@ ttest `k', by(treatment)
 foreach k of local followup3 {
 	sum `k' if treatment==1
 	sum `k' if treatment==0
-reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_FU3_village_str) 
+reg `k' treatment Panchatvillage i.BlockCode, cluster(village) 
 }
 
 
@@ -2131,7 +2136,7 @@ replace control= 0 if treatment==1
 save "${DataDeid}Ecoli results followup R3_cleaned.dta", replace
 *merge m:1 village_name using "${DataDeid}Village & block list.dta", force
 gen round=3
-destring block_code, replace
+destring blockcode, replace
 destring unique_id, replace
 format %20.0f unique_id
 save "${DataDeid}Ecoli results followup R3_for pooling.dta", replace
@@ -2139,36 +2144,36 @@ save "${DataDeid}Ecoli results followup R3_for pooling.dta", replace
 
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
+reg positive_ecoli treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village)
 
 sum ec_log if sample_type=="Tap" & treatment==1
 sum ec_log if sample_type=="Tap" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village)  
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village)  
 
 sum ec_log if sample_type=="Stored" & treatment==1
 sum ec_log if sample_type=="Stored" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village) 
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village) 
 
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Tap", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Tap", cluster(village) 
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code  if sample_type=="Stored", cluster(village) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode  if sample_type=="Stored", cluster(village) 
 
 sum cf_log if sample_type=="Tap" & treatment==1
 sum cf_log if sample_type=="Tap" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village) 
 
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village)
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village)
 
 													/*  ---------------------------------------------------------
 														Pooled Follow-up rounds survey data (Akito revision)
@@ -2345,16 +2350,11 @@ reg `k' treatment panchayat_village i.R_Cen_block_name i.round, cluster(R_Cen_vi
 use "${DataDeid}Ecoli results followup R1_for pooling.dta", clear
 append using "${DataDeid}Ecoli results followup R2_for pooling.dta", force
 append using "${DataDeid}Ecoli results followup R3_for pooling.dta", force
-drop village village_name panchayatcode panchatvillage block block_code
+drop village village_name panchayatcode panchatvillage block blockcode
 rename village_id village
 merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
 label var Treat_V "Treatment"
 
-* Ask Jeremy what is this 1 case
-replace sample_type="Stored" if sample_type=="Blank"
-
-* One case with missing unqiue ID
-replace unique_id=1234567 if unique_id==.
 format %20.0f unique_id
 mdesc unique_id
 save "${Temp}Temp.dta", replace
@@ -2499,35 +2499,35 @@ append using "${DataDeid}Ecoli results followup R3_for pooling.dta", force
 
 sum positive_ecoli if sample_type=="Tap" & treatment==1
 sum positive_ecoli if sample_type=="Tap" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code i.round if sample_type=="Tap", cluster(village_name) 
+reg positive_ecoli treatment panchayat_village i.blockcode i.round if sample_type=="Tap", cluster(village_name) 
 
 sum positive_ecoli if sample_type=="Stored" & treatment==1
 sum positive_ecoli if sample_type=="Stored" & treatment==0
-reg positive_ecoli treatment panchayat_village i.block_code i.round if sample_type=="Stored", cluster(village_name) 
+reg positive_ecoli treatment panchayat_village i.blockcode i.round if sample_type=="Stored", cluster(village_name) 
 
 sum ec_log if sample_type=="Tap" & treatment==1
 sum ec_log if sample_type=="Tap" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name)  
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village_name)  
 
 sum ec_log if sample_type=="Stored" & treatment==1
 sum ec_log if sample_type=="Stored" & treatment==0
-reg ec_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+reg ec_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village_name)
 
 sum positive_totalcoliform if sample_type=="Tap" & treatment==1
 sum positive_totalcoliform if sample_type=="Tap" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code i.round  if sample_type=="Tap", cluster(village_name) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode i.round  if sample_type=="Tap", cluster(village_name) 
 
 sum positive_totalcoliform if sample_type=="Stored" & treatment==1
 sum positive_totalcoliform if sample_type=="Stored" & treatment==0
-reg positive_totalcoliform treatment panchayat_village i.block_code i.round if sample_type=="Stored", cluster(village_name) 
+reg positive_totalcoliform treatment panchayat_village i.blockcode i.round if sample_type=="Stored", cluster(village_name) 
 
 sum cf_log if sample_type=="Tap" & treatment==1
 sum cf_log if sample_type=="Tap" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Tap", cluster(village_name) 
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Tap", cluster(village_name) 
 
 sum cf_log if sample_type=="Stored" & treatment==1
 sum cf_log if sample_type=="Stored" & treatment==0
-reg cf_log treatment panchayat_village i.block_code if sample_type=="Stored", cluster(village_name)
+reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", cluster(village_name)
 */
 
 /*----------------------------------------------------
@@ -2760,7 +2760,7 @@ use "${DataTemp}Temp.dta", clear
 	replace `i'=max_`i'
 	}
 	eststo  model8: estpost summarize $`k'
-
+esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Baseline_`k'.csv", replace cell("mean (fmt(2) label(_)) sd")
 esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Baseline_`k'.tex", ///
 	   replace cell("mean (fmt(2) label(_)) sd") mtitles("\shortstack[c]{Treatment}" "\shortstack[c]{Control}" "\shortstack[c]{Diff}" "Sig" "P-value" "Missing") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
@@ -2769,7 +2769,6 @@ esttab model1 model2 model31 model32 model4 model5 using "${Table}Main_Baseline_
 				   "Using govt. taps as primary drinking water_C" "\multicolumn{3}{l}{\textbf{Baseline: Water sources \& treatment}} \\Using gov taps as primary drinking water" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
-				   "0&" "" ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 }
