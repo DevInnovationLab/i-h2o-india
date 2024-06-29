@@ -2630,20 +2630,20 @@ p_ec_risk_bl + p_ec_risk_r1 + p_ec_risk_r2 + p_ec_risk_r3
 
 #Combining all 4 IDEXX datasets into 1
 idexx_total_bl <- idexx%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, ec_risk, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "BL")
 
 idexx_total_r1 <- idexx_r1%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, ec_risk, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "R1")
 
 idexx_total_r2 <- idexx_r2%>%
-  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log)%>%
+  dplyr::select(assignment, village_name, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, ec_risk, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log)%>%
   mutate(data_round = "R2")%>%
   mutate(fc_tap_avg = NA)
 
 idexx_total_r3 <- idexx_r3%>%
-  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
+  dplyr::select(assignment, village_name.x, sample_type, ec_mpn, ec_mpn_2, ec_pa, ec_pa_binary, ec_95lo, ec_95hi, ec_log, ec_risk, cf_mpn, cf_pa, cf_pa_binary, cf_95lo, cf_95hi, cf_log, fc_tap_avg)%>%
   mutate(data_round = "R3")%>%
   mutate(village_name = village_name.x)%>%
   dplyr::select(!(village_name.x))
@@ -2736,7 +2736,7 @@ idexx_total$cf_pa_binary <- as.numeric(idexx_total$cf_pa_binary)
 
 tab <- idexx_total%>%
   filter(sample_type == "Tap")%>%
-  dplyr::select(assignment, data_round, cf_pa_binary, ec_pa_binary)%>%
+  dplyr::select(assignment, data_round, cf_pa_binary, ec_pa_binary, ec_risk)%>%
   tbl_strata(
     strata = data_round,
     .tbl_fun =
@@ -2761,6 +2761,9 @@ tab
 
 
 #tab <- table1(data = tap_total_stats, ~ `% Positive for Total Coliform` + `% Positive for E. coli` | data_round*assignment)
+
+table1(data = idexx_total, ~ ec_risk | data_round*sample_type)
+
 
 
 ```
