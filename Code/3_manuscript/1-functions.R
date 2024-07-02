@@ -149,7 +149,9 @@ pooled_stats <- function(idexx_data){
       #   est + qt(0.975, df.residual(model)) * se
       # },
       # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
-      #"Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap), 3)
+      "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
+      "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2)
+      
     )
   
   tc <- tc%>%

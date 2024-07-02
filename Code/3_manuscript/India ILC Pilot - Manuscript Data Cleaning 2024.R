@@ -38,6 +38,21 @@ village_details <- village_details%>%
 village_details <- village_details%>%
   rename(block = "Block")
 
+#Adding anonymous village code
+village_details <- village_details%>%
+  mutate(village_code = case_when(Village == "Asada" ~ "AS",
+                                  Village == "Mukundpur" ~ "MU",
+                                  Village == "Gopi Kankubadi" ~ "GO",
+                                  Village == "Bichikote" ~ "BI",
+                                  Village == "Badabangi" ~ "BA",
+                                  Village == "Nathma" ~ "NAT",
+                                  Village == "Tandipur" ~ "TA",
+                                  Village == "Birnarayanpur" ~ "BN",
+                                  Village == "Naira" ~ "NAI",
+                                  Village == "Karnapadu" ~ "KA"
+                                  
+  ))
+
 
 #-----------------------------------Map Data Cleaning-------------------------
 
@@ -105,7 +120,7 @@ cen <- cen%>%
 #Adding village information
 cen$village_ID <- as.character(cen$village_ID)
 x <- village_details%>%
-  dplyr::select(village_ID, block, assignment, `Panchat village`)%>%
+  dplyr::select(village_ID, block, assignment, village_code, `Panchat village`)%>%
   rename(panchayat_village = `Panchat village`)
 cen <- left_join(cen, x, by = "village_ID")
 
@@ -1071,11 +1086,49 @@ r3 <- r3%>%
     tap_use_drinking_yesno == "No" ~ 0))
 
 
+#------------------------Combining HH Survey Data----------------------------
+
+
+#Subsetting datasets with key variables
+bl_tab <- bl%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "BL")
+
+r1_tab <- r1%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R1")
+
+r2_tab <- r2%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R2")
+
+r3_tab <- r3%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                tap_trust_binary, tap_taste_binary, tap_future_binary, 
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+  mutate(data_round = "R3")
+
+#Combining Datasets
+all_rounds <- rbind(bl_tab, r1_tab, r2_tab, r3_tab)
 
 
 
 
-#---------------------------Endline Census Data Cleaning------------------
+#---------------------------Endline Census Data Cleaning---------------------
 
 
 

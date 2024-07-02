@@ -159,6 +159,22 @@ village_details <- village_details%>%
 village_details <- village_details%>%
   rename(village_name = "Village")
 
+#Adding anonymous village code
+village_details <- village_details%>%
+  mutate(village_code = case_when(village_name == "Asada" ~ "AS",
+                                  village_name == "Mukundpur" ~ "MU",
+                                  village_name == "Gopi Kankubadi" ~ "GO",
+                                  village_name == "Bichikote" ~ "BI",
+                                  village_name == "Badabangi" ~ "BA",
+                                  village_name == "Nathma" ~ "NAT",
+                                  village_name == "Tandipur" ~ "TA",
+                                  village_name == "Birnarayanpur" ~ "BN",
+                                  village_name == "Naira" ~ "NAI",
+                                  village_name == "Karnapadu" ~ "KA"
+                                  
+  ))
+
+
 
 ###-------------------Defining overall functions------------------------####
 
@@ -1182,7 +1198,7 @@ idexx_comb <- idexx%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "BL")%>%
   mutate(pooled_round = "BL")
 
@@ -1190,7 +1206,7 @@ idexx_r1_comb <- idexx_r1%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log)%>%  
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
   mutate(data_round = "R1")%>%
   mutate(pooled_round = "FU")
 
@@ -1198,7 +1214,7 @@ idexx_r2_comb <- idexx_r2%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "R2")%>%
   mutate(pooled_round = "FU")
 
@@ -1206,7 +1222,7 @@ idexx_r3_comb <- idexx_r3%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
