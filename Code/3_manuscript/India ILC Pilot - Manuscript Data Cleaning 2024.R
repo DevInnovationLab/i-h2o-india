@@ -421,6 +421,11 @@ bl <- bl%>%
 bl <- bl%>%
   mutate(jjm_drinking = tap_use_1)
 
+#Checking median stored water time
+bl <- bl%>%
+  mutate(stored_water_time = case_when(bag_stored_time_unit == "Hours" ~ bag_stored_time,
+                                       bag_stored_time_unit == "Days" ~ bag_stored_time*24
+  ))
 
 
 
@@ -645,6 +650,11 @@ r1 <- r1%>%
     tap_use_drinking_yesno == "No" ~ 0))
 
 
+#Checking median stored water time
+r1 <- r1%>%
+  mutate(stored_water_time = case_when(bag_stored_time_unit == "Hours" ~ bag_stored_time,
+                                           bag_stored_time_unit == "Days" ~ bag_stored_time*24
+  ))
 
 
 
@@ -875,6 +885,11 @@ r2 <- r2%>%
     tap_use_drinking_yesno == "No" ~ 0))
 
 
+#Checking median stored water time
+r2 <- r2%>%
+  mutate(stored_water_time = case_when(bag_stored_time_unit == "Hours" ~ bag_stored_time,
+                                       bag_stored_time_unit == "Days" ~ bag_stored_time*24
+  ))
 
 
 
@@ -1085,6 +1100,13 @@ r3 <- r3%>%
     tap_use_drinking_yesno == "Yes" ~ 1,
     tap_use_drinking_yesno == "No" ~ 0))
 
+#Checking median stored water time
+r3 <- r3%>%
+  mutate(stored_water_time = case_when(bag_stored_time_unit == "Hours" ~ bag_stored_time,
+                                       bag_stored_time_unit == "Days" ~ bag_stored_time*24
+  ))
+
+
 
 #------------------------Combining HH Survey Data----------------------------
 
@@ -1093,7 +1115,7 @@ r3 <- r3%>%
 bl_tab <- bl%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "BL")
@@ -1101,7 +1123,7 @@ bl_tab <- bl%>%
 r1_tab <- r1%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "R1")
@@ -1109,7 +1131,7 @@ r1_tab <- r1%>%
 r2_tab <- r2%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "R2")
@@ -1117,7 +1139,7 @@ r2_tab <- r2%>%
 r3_tab <- r3%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
   mutate(data_round = "R3")

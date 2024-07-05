@@ -1601,12 +1601,12 @@ tab <- scoping_tab%>%
                     digits = list(all_continuous() ~ 2, 
                                   all_categorical() ~ 0),
                     label = list(prim_source ~ "Primary Drinking Water Source",
-                                 sec_source ~ "Use a Secondary Drinking Water Source",
-                                 tap_supply_freq ~ "Number of Times Water is Supplied Each Day",
-                                 water_treat ~ "Treat Drinking Water"
+                                 sec_source ~ "Uses a Secondary Drinking Water Source",
+                                 tap_supply_freq ~ "Number of Times Water is Supplied Each Day from Government-provided Taps",
+                                 water_treat ~ "Treats Drinking Water from Primary Source"
                                  )
                     )%>%
-     modify_footnote(all_stat_cols() ~ "% (N)"),#%>%
+     modify_footnote(all_stat_cols() ~ "% (N); Water is supplied intermittently from government-provided tap connections once or twice a day for a 1-3 hours before the tank is depleted.; Respondents were asked if they treat their drinking water from their primary source any time before consuming it."),#%>%
  # as_gt()%>%
   #tab_options(table.font.size = pct(50),
               #table_body.hlines.width = 

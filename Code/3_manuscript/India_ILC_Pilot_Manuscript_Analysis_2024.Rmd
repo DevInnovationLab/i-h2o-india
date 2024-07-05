@@ -254,7 +254,12 @@ combined_plot
 
 ```{r}
 
+#Median Stored water time
+x <- all_rounds%>%
+  filter(is.na(stored_water_time) == FALSE)
 
+median(x$stored_water_time)
+  
 
 
 ```
