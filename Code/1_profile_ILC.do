@@ -83,7 +83,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global Endline  "${DataRaw}/1_8_Endline/"
 		global DataDeid "${pilot}/2_deidentified/"
 	    global DataTemp  "${pilot}99_temp/"
-		
+		global external  "/Users/uchicago/Library/CloudStorage/Box-Box/India ILC_Survey External/"
 	}
 		
 
