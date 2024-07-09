@@ -2,10 +2,10 @@
 *
 * 	Imports and aggregates "pump_operator_survey" (ID: india_ilc_pump_operator_survey) data.
 *
-*	Inputs:  "pump_operator_survey_WIDE.csv"
-*	Outputs: "pump_operator_survey.dta"
+*	Inputs:  "C:/Users/Archi Gupta/Box/Data/1_raw/pump_operator_survey_WIDE.csv"
+*	Outputs: "C:/Users/Archi Gupta/Box/Data/1_raw/pump_operator_survey.dta"
 *
-*	Output by SurveyCTO July 8, 2024 11:38 AM.
+*	Output by SurveyCTO July 9, 2024 6:58 AM.
 
 * initialize Stata
 clear all
@@ -22,8 +22,9 @@ local overwrite_old_data 0
 
 * initialize form-specific parameters
 local csvfile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey_WIDE.csv"
-local dtafile "${DataRaw}1_10_Pump_Operator_Survey/1_10_Pump_Operator_Survey.dta"
-local corrfile "pump_operator_survey_corrections.csv"
+local dtafile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey.dta"
+
+local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/pump_operator_survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum username caseid district_id district_name block_id block_name gp_id gp_name village_id village_name info_update enum_name_label unique_id unique_id_label"
 local text_fields2 "noconsent_reason_oth consent_duration resp_name phone_num phone_num_re job_duration_units_label job_duration_oth appoint_salary_addtlduties duties_po duties_po_oth appointment_po_person_oth"
@@ -50,7 +51,6 @@ insheet using "`csvfile'", names clear
 * drop extra table-list columns
 cap drop reserved_name_for_field_*
 cap drop generated_table_list_lab*
-
 
 * continue only if there's at least one row of data to import
 if _N>0 {
@@ -769,7 +769,7 @@ disp
 * Rather than using SurveyCTO's review and correction workflow, the code below can apply a list of corrections
 * listed in a local .csv file. Feel free to use, ignore, or delete this code.
 *
-*   Corrections file path and filename:  pump_operator_survey_corrections.csv
+*   Corrections file path and filename:  C:/Users/Archi Gupta/Box/Data/1_raw/pump_operator_survey_corrections.csv
 *
 *   Corrections file columns (in order): key, fieldname, value, notes
 
