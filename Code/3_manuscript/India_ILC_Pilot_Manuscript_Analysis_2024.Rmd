@@ -255,10 +255,12 @@ combined_plot
 ```{r}
 
 #Median Stored water time
-x <- all_rounds%>%
-  filter(is.na(stored_water_time) == FALSE)
+# x <- all_rounds%>%
+#   filter(is.na(stored_water_time) == FALSE)
+# 
+# median(x$stored_water_time)
 
-median(x$stored_water_time)
+
   
 
 
@@ -272,6 +274,8 @@ median(x$stored_water_time)
 ```{r Chlorine Monitoring -- Surveys}
 
 
+
+#By round ----
 #Using pooled survey data to track % of positive chlorine samples alongside average chlorine dose
 
 #Selecting for follow-up rounds
@@ -1211,11 +1215,11 @@ p_pooled
 
 ## Regression Results Table -- Household Surveys
 
-```{r Regression Results -- WASH variables, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
+```{r Regression Results -- Pooled Household Surveys, results='asis', output.dir = "C:/Users/jerem/Dropbox/Apps/Overleaf/India ILC Pilot- analysis"}
 
 
-
-#Summarizing EL data and running regression models ----
+#WASH Variables ---- 
+#Summarizing data and running regression models ----
 
 #Selecting outcome variables
 binary_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary",
@@ -1293,6 +1297,86 @@ names(all_models) <- outcome_vars
 ilc_model_table(all_models)
 
 
+
+
+#Chlorine Monitoring Results----
+
+#Running desc stats
+
+#Pooled Results ----
+fu_rounds <- all_rounds%>%
+  filter(data_round != "BL")
+
+
+#Making desc stat table for summarizing chlorine results from followup
+desc_stats_tap <- fu_rounds%>%
+  filter(fc_tap_binary == 1 | tc_tap_binary == 1)%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Tap - Average Free Chlorine Concentration (mg/L)" = mean(fc_tap_avg, na.rm = TRUE),
+    "Tap - Average Total Chlorine Concentration (mg/L)" = mean(tc_tap_avg, na.rm = TRUE),
+    "Tap - Free Chlorine - SD" = sd(fc_tap_avg, na.rm = TRUE),
+    "Tap - Total Chlorine - SD" = sd(tc_tap_avg, na.rm = TRUE)
+    )
+
+
+kbl(desc_stats_tap)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+desc_stats_stored <- fu_rounds%>%
+  filter(fc_stored_binary == 1 | tc_stored_binary == 1)%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Stored - Average Free Chlorine Concentration (mg/L)" = mean(fc_stored_avg, na.rm = TRUE),
+    "Stored - Average Total Chlorine Concentration (mg/L)" = mean(tc_stored_avg, na.rm = TRUE),
+    "Stored - Free Chlorine - SD" = sd(fc_stored_avg, na.rm = TRUE),
+    "Stored - Total Chlorine - SD" = sd(tc_stored_avg, na.rm = TRUE)
+    )
+
+kbl(desc_stats_stored)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
+#Running regression models -- linear models based on Akito's code
+
+#Variables
+outcome_vars <- c("fc_tap_avg", "tc_tap_avg", "fc_stored_avg", "tc_stored_avg")
+
+#Running all models
+#Logistic regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_glm(data = fu_rounds, var)
+#                      }
+#                        )
+
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = fu_rounds, var)
+                     }
+                       )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Making regression table output
+ilc_model_table(all_models)
+
+
+
 ```
 
 
@@ -1335,7 +1419,7 @@ idexx_ids <- idexx_tab%>%
 
 idexx_tab_tap <- idexx_tab%>%
   filter(sample_type == "Tap")%>%
-  filter(pooled_round == "FU")%>%
+  #filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_tap = "cf_pa_binary")%>%
   rename(ec_pa_tap = "ec_pa_binary")%>%
@@ -1344,7 +1428,7 @@ idexx_tab_tap <- idexx_tab%>%
 
 idexx_tab_stored <- idexx_tab%>%
   filter(sample_type == "Stored")%>%
-  filter(pooled_round == "FU")%>%
+  #filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_stored = "cf_pa_binary")%>%
   rename(ec_pa_stored = "ec_pa_binary")%>%
@@ -1384,10 +1468,10 @@ idexx_tab_stored <- idexx_tab%>%
 #Tap water
 
 desc_stats <- idexx_tab_tap%>%
-  dplyr::select(assignment, pooled_round, cf_pa_tap, ec_pa_tap, cf_log_tap, ec_log_tap
+  dplyr::select(assignment, data_round, cf_pa_tap, ec_pa_tap, cf_log_tap, ec_log_tap
                 )%>%
   tbl_strata(
-    strata = pooled_round,
+    strata = data_round,
     .tbl_fun =
       ~ .x %>%
         tbl_summary(by = assignment, 
@@ -1421,10 +1505,10 @@ desc_stats_tap <- as_gt(desc_stats)%>%
 
 
 desc_stats <- idexx_tab_stored%>%
-  dplyr::select(assignment, pooled_round, cf_pa_stored, ec_pa_stored, cf_log_stored, ec_log_stored
+  dplyr::select(assignment, data_round, cf_pa_stored, ec_pa_stored, cf_log_stored, ec_log_stored
                 )%>%
   tbl_strata(
-    strata = pooled_round,
+    strata = data_round,
     .tbl_fun =
       ~ .x %>%
         tbl_summary(by = assignment, 
@@ -1451,6 +1535,10 @@ desc_stats_stored <- as_gt(desc_stats)%>%
   tab_options(table.font.size = 11)
 
 #desc_stats_stored
+
+
+#By round ----
+
 
 
 

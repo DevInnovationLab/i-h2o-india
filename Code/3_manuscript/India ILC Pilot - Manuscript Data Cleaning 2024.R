@@ -1117,7 +1117,8 @@ bl_tab <- bl%>%
                 village, village_code, block, panchayat_village,
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
-                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
   mutate(data_round = "BL")
 
 r1_tab <- r1%>%
@@ -1125,7 +1126,8 @@ r1_tab <- r1%>%
                 village, village_code, block, panchayat_village,
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
-                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
   mutate(data_round = "R1")
 
 r2_tab <- r2%>%
@@ -1133,7 +1135,8 @@ r2_tab <- r2%>%
                 village, village_code, block, panchayat_village,
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
-                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
   mutate(data_round = "R2")
 
 r3_tab <- r3%>%
@@ -1141,7 +1144,8 @@ r3_tab <- r3%>%
                 village, village_code, block, panchayat_village,
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
-                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary)%>%
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
   mutate(data_round = "R3")
 
 #Combining Datasets

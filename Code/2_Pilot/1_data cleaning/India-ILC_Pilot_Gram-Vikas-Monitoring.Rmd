@@ -88,7 +88,10 @@ mon_villages <- unique(gv$Village)
 gv <- gv%>%
   mutate(refill = `Did you/the pump operator refill chlorine tablets since the last visit?`)%>%
   mutate(ilc_device = `What device is installed?`)%>%
-  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)
+  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)%>%
+  mutate(tablets_remaining = `How many tablets were remaining?`)%>%
+  mutate(tablets_added = `How many chlorine tablets did you provide?`)
+  
 
 
 
@@ -202,6 +205,25 @@ kbl(gv_refill, "latex")%>%
   column_spec(3, background = "lightgreen")%>%
   column_spec(4, background = "lightyellow")%>%
   column_spec(5, background = "red")
+
+
+
+
+#Calculating Cost/Liters treated for tablet refills
+
+#Selecting "ideal" villages -- BNPur and Badabangi
+gv_refill_bnpur <- gv%>%
+  filter(Village == "Birnarayanpur")%>%
+  filter(refill == "Yes")
+
+gv_refill_badabangi <- gv%>%
+  filter(Village == "Badabangi")%>%
+  filter(refill == "Yes")
+
+gv_refill_asada <- gv%>%
+  filter(Village == "Asada")%>%
+  filter(refill == "Yes")
+
 
 
 
