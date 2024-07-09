@@ -24,7 +24,7 @@ local overwrite_old_data 0
 local csvfile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey_WIDE.csv"
 local dtafile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey.dta"
 
-local corrfile "C:/Users/Archi Gupta/Box/Data/1_raw/pump_operator_survey_corrections.csv"
+local corrfile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey_corrections.csv"
 local note_fields1 ""
 local text_fields1 "deviceid subscriberid simid devicephonenum username caseid district_id district_name block_id block_name gp_id gp_name village_id village_name info_update enum_name_label unique_id unique_id_label"
 local text_fields2 "noconsent_reason_oth consent_duration resp_name phone_num phone_num_re job_duration_units_label job_duration_oth appoint_salary_addtlduties duties_po duties_po_oth appointment_po_person_oth"
