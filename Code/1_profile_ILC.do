@@ -97,7 +97,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 				if c(username) == "Archi Gupta" {		
 		global box 		"C:\Users\Archi Gupta\Box\Data\"
 		global github	"C:\Users\Archi Gupta\Documents\GitHub\i-h2o-india\Code\1_profile_ILC\"
-		global Overleaf "C:\Users\Archi Gupta\Dropbox\Overleaf"
+		global Overleaf "C:\Users\Archi Gupta\Dropbox\Apps\Overleaf"
 	    global pilot    "C:\Users\Archi Gupta\Box\Data\" 
 		global git_trim "C:\Users\Archi Gupta\Documents\GitHub\"
 	}
