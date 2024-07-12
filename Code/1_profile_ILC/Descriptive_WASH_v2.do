@@ -469,8 +469,9 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	
 //Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
 
+//arranging the models in a way so that Obs Mean Missing SD order is followed for both baseline and endline
 esttab model11 model1 model7 model9 model12 model2 model8 model10  using "${Table}Test_Main_Endline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\multicolumn{4}{c}{Baseline}" "\multicolumn{4}{c}{Endline}"  "\\ \cmidrule(l){2-3} \cmidrule(l){4-5}" "Obs" "Mean" "Missing" "SD" "Obs" "Mean" "Missing" "SD") ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\multicolumn{4}{c}{Baseline}" "\multicolumn{4}{c}{Endline}"  \\ "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}" "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&                _\\" "" ///
 				   "Using govt. taps as primary drinking water" "\hline \multicolumn{5}{c}{\textbf{Water sources}} \\ Using govt. taps as primary drinking water" ///
