@@ -692,6 +692,7 @@ ggplot(merged_df) +
 # endline census 
 # does it relaly matter? and check if the distance says something
 # distnace from the nearest and check the density plot 
+# 
 
 
 #-------------------------------------------------------------------
