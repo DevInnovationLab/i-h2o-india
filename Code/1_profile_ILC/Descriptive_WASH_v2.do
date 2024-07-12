@@ -443,16 +443,34 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	eststo  model10: estpost summarize $`k'
 
 
-use "${DataTemp}Temp.dta", clear
-count if survey_type_num == 0
-local baseline_obs = r(N)
-count if survey_type_num == 1
-local endline_obs = r(N)
+	* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model11: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+	
+	
+		* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model12: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+
+	
 //Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
 
-//this produces the separate tables for baseline and endline
-esttab model1 model7 model9 model2 model8 model10  using "${Table}Test_Main_Endline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles(  "Baseline Mean"  "Baseline Missing" "Endline Mean"   "Endline Missing" "Baseline SD" "Endline SD") ///
+esttab model11 model1 model7 model9 model12 model2 model8 model10  using "${Table}Test_Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") mtitles("\multicolumn{4}{c}{Baseline}" "\multicolumn{4}{c}{Endline}"  "\\ \cmidrule(l){2-3} \cmidrule(l){4-5}" "Obs" "Mean" "Missing" "SD" "Obs" "Mean" "Missing" "SD") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&                _\\" "" ///
 				   "Using govt. taps as primary drinking water" "\hline \multicolumn{5}{c}{\textbf{Water sources}} \\ Using govt. taps as primary drinking water" ///
@@ -467,11 +485,3 @@ esttab model1 model7 model9 model2 model8 model10  using "${Table}Test_Main_Endl
 	   label title("``k''" \label{`Label`k''}) note("`note`k''")
 }
 
-
-* Store number of observations (N) for each variable in scalars
-foreach var in water_source_prim  {
-     count if !missing(`var')
-    scalar Nobs_`var' = r(N)
-}
-
-eststo model9, replace scalars(Nobs_*)
