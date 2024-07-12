@@ -399,8 +399,218 @@ save "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", replace
  
  
  
+ //common IDs
+import excel "${DataTemp}JPAL HH level tracker for Endline Census.xlsx", sheet("Main_Updated_endline_revisit_co") firstrow clear
+
+drop if UniqueID == ""
+isid UniqueID
+
+save "${DataTemp}Temp_R0.dta", replace
+
+//HH lock IDs 
+import excel "${DataTemp}JPAL HH level tracker for Endline Census.xlsx", sheet("Main_Supervisor_Endline_House l") firstrow clear
+
+drop if UniqueID == ""
+
+isid UniqueID
+
+save "${DataTemp}Temp_R1.dta", replace
+
+
+
+
+ //importing HH level data
  
+ clear
  
+ set maxvar 20000
  
+use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear
  
- 
+gen newvar1 = substr(unique_id, 1, 5)
+gen newvar2 = substr(unique_id, 6, 3)
+gen newvar3 = substr(unique_id, 9, 3)
+gen ID=newvar1 + "-" + newvar2 + "-" + newvar3
+
+rename ID UniqueID
+
+destring R_E_day, replace
+destring R_E_month_num , replace
+destring R_E_yr_num, replace
+drop End_date 
+gen End_date = mdy(R_E_month_num, R_E_day, R_E_yr_num)
+
+
+merge 1:1 UniqueID using "${DataTemp}Temp_R0.dta", keepusing(UniqueID Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main)
+
+rename _merge common_IDs
+
+//105 common IDs were revisited 
+
+merge 1:1 UniqueID using "${DataTemp}Temp_R1.dta", keepusing( UniqueID)
+
+rename _merge HH_lock
+
+
+cap drop _merge
+
+merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_temp\Temp_R3.dta", keepusing(instruction resp_available comb_resp_avail_cbw_1 comb_resp_avail_cbw_2 comb_resp_avail_cbw_3 comb_resp_avail_cbw_4 comb_child_caregiver_present_1 comb_child_caregiver_present_2)
+
+
+//RV represents here the revisit HH 
+rename  instruction RV_instruction
+rename resp_available RV_resp_available
+rename comb_resp_avail_cbw_1 RV_comb_resp_avail_cbw_1
+rename comb_resp_avail_cbw_2 RV_comb_resp_avail_cbw_2
+rename comb_resp_avail_cbw_3 RV_comb_resp_avail_cbw_3
+rename comb_resp_avail_cbw_4 RV_comb_resp_avail_cbw_4
+rename comb_child_caregiver_present_1 RV_comb_child_caregiver_pre_1
+rename comb_child_caregiver_present_2 RV_comb_child_caregiver_pre_2
+
+//status of HH lock Ids 
+preserve
+keep if HH_lock == 3
+tab R_E_resp_available
+restore
+
+//status of main resp 
+preserve
+keep if WASH_applicable == 1
+tab R_E_instruction
+restore
+
+
+/*
+(HH revisited for child, women or main respondent survey) 
+tab RV_resp_available 
+
+Enumerator to record after knocking at	
+the door of a house: Did you find a	
+house	Freq.	Percent	Cum.
+			
+Household available for an interview an	101	96.19	96.19
+This is my 2nd re-visit: The revisit wi	2	1.90	98.10
+This is my 2nd re-visit: The family is	2	1.90	100.00
+			
+Total	105	100.00*/
+
+****************************************************************
+
+/*tab RV_instruction
+
+(Out of 105, 7 HH were re-visited for main resp survey 
+
+Instructions for Enumerator to identify	
+the primary respondent: 1. The	
+primary/t	Freq.	Percent	Cum.
+			
+Respondent available for an interview	7	100.00	100.00
+			
+Total	7	100.00*/
+
+****************************************************************
+
+
+
+/*
+
+ID WISE DISTRIBUTION OF RE-VISITS 
+
+
+Out of 105 IDs, 93 HH were visited for Child bearing women 
+Out of 105, 53 HH were visited for U5 child 
+Out of 105, 7 were re-visited for main resp 
+
+tab RV_comb_resp_avail_cbw_1
+
+
+
+C2) Did you find	
+${comb_name_CBW_woman_earlier} to	
+interview?	Freq.	Percent	Cum.
+			
+Refused to answer	2	2.20	2.20
+Other, please specify	25	27.47	29.67
+Respondent available for an interview	37	40.66	70.33
+Respondent has left the house permanent	5	5.49	75.82
+This is my 2rd re-visit (3rd visit): Th	7	7.69	83.52
+This is my 2rd re-visit (3rd visit): Th	13	14.29	97.80
+Respondent no longer falls in the crite	1	1.10	98.90
+Respondent is a visitor and is not avai	1	1.10	100.00
+			
+Total	91	100.00
+
+. tab RV_comb_resp_avail_cbw_2
+
+comb_resp_a 
+vail_CBW_2       Freq.     Percent	Cum.
+	
+98           1        4.76	4.76
+77           4       19.05	23.81
+1           7       33.33	57.14
+2           1        4.76	61.90
+5           3       14.29	76.19
+6           3       14.29	90.48
+9           2        9.52	100.00
+	
+Total          21      100.00
+
+. tab RV_comb_resp_avail_cbw_3
+
+comb_resp_a 
+vail_CBW_3       Freq.     Percent	Cum.
+	
+1           2       66.67	66.67
+5           1       33.33	100.00
+	
+Total           3      100.00
+
+. tab RV_comb_resp_avail_cbw_4
+
+comb_resp_a 
+vail_CBW_4       Freq.     Percent	Cum.
+	
+77           1       50.00	50.00
+1           1       50.00	100.00
+	
+Total           2      100.00
+
+*/
+
+
+use "${DataTemp}U5_Child_23_24_part1.dta", clear
+
+rename unique_id  UniqueID
+
+cap drop _merge 
+
+merge m:1 UniqueID using "${DataTemp}Temp_R1.dta", keepusing( UniqueID)
+
+rename _merge HH_lock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***********************************************************
+
+
