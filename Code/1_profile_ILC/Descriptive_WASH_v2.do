@@ -148,13 +148,10 @@ save "${DataTemp}Temp_Cen.dta", replace
 restore
 
 use "${DataTemp}Temp_RE.dta", clear
-
 append using "${DataTemp}Temp_Cen.dta"
 
 gen survey_type_num = .
-
 replace survey_type_num = 0 if survey_type == "C"
-
 replace survey_type_num = 1 if survey_type == "E"
 
 label define water_source_prim_x 1 "JJM"  2 "Government provided community standpipe" 3	"Gram Panchayat/Other Community Standpipe (e.g. non-Basudha source)" ///
@@ -166,17 +163,12 @@ label define water_prim_source_kids_x 1 "JJM"  2 "Government provided community 
 4 "Manual handpump" 5	"Covered dug well" 6 "Directly fetched by surface water"  7 "Uncovered dug well" 8 "Private Surface well" 9	"Borewell operated by electric pump" 10 "Non-JJM Household tap connections" 77 "Other"  
  
 label values water_prim_source_kids water_prim_source_kids_x
-
-
 replace water_stored = 0 if water_stored == 2
 
 label define water_stored_x 1 "Yes" 0 "No" 
-
 label values water_stored water_stored_x
 
 *Generating indicator variables for each unique value of variables specified in the loop
-
-
 foreach v in water_source_prim water_source_kids water_prim_source_kids water_source_preg water_prim_source_preg quant water_sec_yn water_sec_freq water_treat water_stored a16_stored_treat_freq water_treat_kids not_treat_tim  {
 	levelsof `v' //get the unique values of each variable
 	foreach value in `r(levels)' { //Looping through each unique value of each variable
@@ -208,7 +200,6 @@ replace  water_source_kids = 1 if water_source_kids == 0 & water_prim_source_kid
 
 
 //Youngest child primary water source being non-JJM but main HH source being JJM 
-
 gen U5_nonjjm_water_source = .
 replace U5_nonjjm_water_source  = 1 if water_source_prim_1 == 1 &  water_source_kids_0 == 1 & water_prim_source_kids_1 == 0
 
@@ -216,7 +207,6 @@ br U5_nonjjm_water_source water_source_prim water_source_kids water_prim_source_
 
 
 //Youngest child primary water source being JJM but main HH source being non-JJM 	
-
 gen U5_jjm_water_source = .
 replace U5_jjm_water_source  = 1 if water_source_prim_1 != 1 &  water_source_kids_0 == 1 & water_prim_source_kids_1 == 1
 
@@ -227,17 +217,14 @@ br U5_jjm_water_source water_source_prim water_source_kids water_prim_source_kid
 gen treat_JJM = .
 replace treat_JJM = 1  if water_treat_1 == 1 & water_source_prim_1 == 1
 
-
-
 *** Labelling the variables for use in descriptive stats table
 label var water_source_prim_1 "Using govt. taps as primary drinking water"
 label var water_source_sec_1 "Using govt. taps as secondary drinking water"
-label var water_source_kids_0 "U5 children drinking from a different primary water source"
+label var water_source_kids_0 "U5 drinking from a different water source"
 label var water_prim_source_kids_1 "U5 children primary source is JJM" 
 label var U5_nonjjm_water_source "U5 children drinking from other primary sources(non-JJM)"
 label var U5_jjm_water_source "U5 children drinking from JJM but not HH"
 label var water_source_preg_1 "Pregnant women drinking from the same primary water source as HH"
-
 
 label var water_treat_1 "Water treatment for primary source"
 
@@ -271,13 +258,11 @@ label var a16_stored_treat_freq_5   "No fixed schedule"
 label var water_treat_kids_1  "Water treatment for youngest children in HH" 
 
 label var water_treat_kids_type_1 "Filter the water through a cloth or sieve for U5 kids" 
-label var  water_treat_kids_type_2  "Let the water stand for some time before drinking for U5 kids" 
+label var  water_treat_kids_type_2  "Let the water stand for some time for U5" 
 label var  water_treat_kids_type_3 "Boil the water for U5 kids" 
 label var  water_treat_kids_type_4 "Add chlorine/ bleaching powder for U5 kids" 
 label var water_treat_kids_type__77 "Other" 
 label var water_treat_kids_type_999 "Don't know" 
-
-
 
 label var treat_kids_freq_1 "Always treat the water for U5 kids" 
 label var  treat_kids_freq_2 "Treat the water in the summers for U5 kids" 
@@ -288,11 +273,13 @@ label var  treat_kids_freq_6 "Treat the water when it looks or smells dirty for 
 label var treat_kids_freq__77 "Other"
 
 
-
-
-
 *** Saving the dataset 
 save "${DataTemp}Temp.dta", replace
+
+*********************
+** Good up to hear **
+*********************
+
 
 //water_prim_source_kids_1 U5_nonjjm_water_source water_source_preg_1
 
@@ -315,8 +302,6 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 ***********
 
 * obs 
-
-
 * Mean
 	//Calculating the summary stats of treatment and control group for each variable and storing them
 		
@@ -356,48 +341,21 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	eststo  model5: estpost summarize $`k' //storing summary stats of p values
 */
 
-
-
-
 	* Min
-	//for baseline 
 	use "${DataTemp}Temp.dta", clear
-	keep if survey_type_num == 0
 	foreach i in $`k' {
 	egen min_`i'=min(`i')
 	replace `i'=min_`i'
 	}
 	eststo  model3: estpost summarize $`k' //storing summary stats of minimum value
-	
-	*Min
-	//for endline 
-    use "${DataTemp}Temp.dta", clear
-	keep if survey_type_num == 1
-	foreach i in $`k' {
-	egen min_`i'=min(`i')
-	replace `i'=min_`i'
-	}
-	eststo  model4: estpost summarize $`k' //storing summary 
-	
+		
 	* Max
-	//for baseline 
 	use "${DataTemp}Temp.dta", clear
-	keep if survey_type_num == 0
 	foreach i in $`k' {
 	egen max_`i'=max(`i')
 	replace `i'=max_`i'
 	}
-	eststo  model5: estpost summarize $`k' //storing summary stats of maximum value
-	
-	//for endline 
-	use "${DataTemp}Temp.dta", clear
-	keep if survey_type_num == 1
-	foreach i in $`k' {
-	egen max_`i'=max(`i')
-	replace `i'=max_`i'
-	}
-	eststo  model6: estpost summarize $`k' //storing summary stats of maximum value
-
+	eststo  model4: estpost summarize $`k' //storing summary stats of maximum value
 	
 	* Missing 
 	//for baseline
@@ -470,19 +428,23 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 //Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
 
 //arranging the models in a way so that Obs Mean Missing SD order is followed for both baseline and endline
-esttab model11 model1 model7 model9 model12 model2 model8 model10  using "${Table}Test_Main_Endline_`k'.tex", ///
-	   replace cell("mean (fmt(2) label(_))") mtitles("\multicolumn{4}{c}{Baseline}" "\multicolumn{4}{c}{Endline}"  \\ "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}" "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}") ///
+esttab  model1 model11 model2 model12 model3 model4  using "${Table}Test_Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))")  ///
+	   mtitles("Baseline" "Count" "Endline" "Count" "Min" "Max") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "&           _&           _&           _&                _\\" "" ///
-				   "Using govt. taps as primary drinking water" "\hline \multicolumn{5}{c}{\textbf{Water sources}} \\ Using govt. taps as primary drinking water" ///
-				   "Water treatment for primary source" "\hline \multicolumn{5}{c}{\textbf{Water Treatment}} \\ Water treatment for primary source" ///
-				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment} \\ Filter the water through a cloth or sieve" ///
+				   "Using govt. taps as primary drinking water" "\hline \multicolumn{5}{l}{\textbf{Water sources}} \\ Using govt. taps as primary drinking water" ///
+				   "Water treatment for primary source" "\hline \multicolumn{5}{l}{\textbf{Water Treatment}} \\ Water treatment for primary source" ///
 				   "Always treat the water" "\textbf{Frequency of the treatment} \\ Always treat the water" ///
 				   "Once at the time of storing" "\textbf{Frequency of the stored water treatment} \\ Once at the time of storing" ///
 				   "Filter the water through a cloth or sieve for U5 kids" "\textbf{Types of Treatment for U5 kids} \\ Filter the water through a cloth or sieve for U5 kids" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   ".00" "" ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''")
 }
+
+* mtitles("\multicolumn{4}{c}{Baseline}" "\multicolumn{4}{c}{Endline}"  \\ "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}" "\multicolumn{1}{c}{Obs}" "\multicolumn{1}{c}{Mean}" "\multicolumn{1}{c}{Missing}" "\multicolumn{1}{c}{SD}") ///
+
+* "Filter the water through a cloth or sieve" "\textbf{Types of Treatment} \\ Filter the water through a cloth or sieve" ///
 

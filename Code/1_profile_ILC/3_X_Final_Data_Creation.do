@@ -30,9 +30,9 @@ program define   start_from_clean_BL_final
 use  "${DataPre}1_1_Census_cleaned.dta", clear
 drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
 gen     C_Census=1
-* There are 3,848 households: 915 sample goes to the: Final_HH_Odisha_consented_Full
+* There are 3,848 households: 915 sample goes to the:  (Original dataset)
 merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
-          keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
+          keepusing(unique_id   R_FU_consent Merge_C_F R_Cen_survey_time R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
 
 label var C_Screened  "Screened"
@@ -67,10 +67,10 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
 * 40 household were not followed in the endline
+* Endline_HH_level_merged_dataset_final
 merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", gen(Merge_Baseline_Endline)
 * keep if Merge_Baseline_Endline==3
 * drop Merge_Baseline_Endline
-
 
 *** Relabelling the variables
 //the following variables were not properly labelled through surveycto do file : all variables have the same labels and value labels; changing it below (lines 694 to 718: import_india_ilc_pilot_census.do)
