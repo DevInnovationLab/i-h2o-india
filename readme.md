@@ -11,7 +11,7 @@ The final village list of 20 villages info with block and Panchayatta code is sa
 
 ### Baseline and Endline (3_X_Final_Data_Creation.do)
 Household Level Information:
-The baseline census consists of 3,848 households from 20 villages. There are 915 households with children under age 5 or pregnant women. Among these, there were 1,002 children under age 5. In the endline survey, 915 households were targeted for the survey, and interviews were conducted with 875 households (${DataFinal}1_1_Endline_XXX_consented.dta).
+The baseline census consists of 3,848 households from 20 villages. There are 915 households with children under age 5 or pregnant women. Among these, there were 1,002 children under age 5. In the endline survey, 914 households were targeted for the survey, and interviews were conducted with 881 households (${DataFinal}UPDATE.dta).
 
 Child Level Information:
 There are 1,006 children from the 915 households. In the endline survey, 847 children were followed up, and 155 children were not found to be interviewed (4 cases are still to be resolved). Additionally, 116 children under age 5 were newly added in the endline survey.
