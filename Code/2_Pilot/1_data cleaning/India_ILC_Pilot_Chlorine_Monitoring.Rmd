@@ -1,0 +1,532 @@
+---
+title: "India_ILC_Pilot_Chlorine_Monitoring"
+author: "Jeremy Lowe"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE)
+
+```
+
+# Introduction
+
+This report summarizes weekly chlorine monitoring data from JPAL across the 9 treatment villages.
+
+```{r package loading, include=FALSE}
+
+library(rsurveycto)
+library(expss)
+library(labelled)
+library(httr)
+library(lubridate)
+library(quantitray)
+library(sjmisc)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(experiment)
+library(stargazer)
+library(readxl)
+library(haven)
+library(googlesheets4)
+library(ggsignif)
+library(patchwork)
+library(table1)
+library(gtsummary)
+library(gt)
+library(webshot2)
+library(clubSandwich)
+library(tidyverse)
+
+
+
+
+```
+
+
+```{r dataset loading}
+
+#from Box
+
+#Jeremy's file path
+mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+
+mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+
+village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
+
+gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
+
+
+```
+
+
+
+```{r profile}
+#------------------------ setting user path ----------------------------------------#
+
+
+user_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  #
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+    github =	"/Users/akitokamei/GitHub/i-h2o-india/"
+		overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
+		DataRaw = "${box}01. 2_Pilot/Data/1_raw/"
+  } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = user_path())
+
+# setting github directory
+github_path <- function() {
+  user <- Sys.info()["user"]
+  if (user == "asthavohra") {
+    github = "/Users/asthavohra/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user=="akitokamei"){
+    github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
+  } 
+  else if (user == "jerem") {
+    github = "C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    github = getwd()
+  }
+  
+  stopifnot(file.exists(github))
+  return(github)
+}
+
+github <- github_path()
+
+#Setting overleaf
+overleaf_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  #
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+    github =	"/Users/akitokamei/GitHub/i-h2o-india/"
+		overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
+		DataRaw = "${box}01. 2_Pilot/Data/1_raw/"
+  } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(overleaf))
+  return(overleaf)
+}
+
+
+overleaf <- overleaf_path()
+
+```
+
+```{r Village details cleaning}
+
+
+#-------------------------Village information cleaning-----------------------
+
+#Making village IDs compatible to the surveys
+village_details <- village_details%>%
+  mutate(village_ID = `Village codes`)
+
+village_details$village_ID <- as.character(village_details$village_ID)
+
+#Making Panchayat village variable compatible with the existing data
+village_details <- village_details%>%
+  mutate(`Panchat village` = Panchayat)
+
+#Making block variable compatible with existing data
+village_details <- village_details%>%
+  rename(block = "Block")
+
+#Adding anonymous village code
+village_details <- village_details%>%
+  mutate(village_code = case_when(Village == "Asada" ~ "AS",
+                                  Village == "Mukundpur" ~ "MU",
+                                  Village == "Gopi Kankubadi" ~ "GO",
+                                  Village == "Bichikote" ~ "BI",
+                                  Village == "Badabangi" ~ "BA",
+                                  Village == "Nathma" ~ "NAT",
+                                  Village == "Tandipur" ~ "TA",
+                                  Village == "Birnarayanpur" ~ "BN",
+                                  Village == "Naira" ~ "NAI",
+                                  Village == "Karnapadu" ~ "KA"
+                                  
+  ))
+
+village_details <- village_details%>%
+  rename(village_name = "Village")
+  
+
+
+
+
+```
+
+
+```{r Gram Vikas Data cleaning}
+
+
+#creating test date
+gv <- gv%>%
+  filter(is.na(Village) == FALSE)%>%
+  mutate(test_date = as_date(`valve_open (Time Answered)`))%>%
+  mutate(visit_date_alt = as_date(`Drafted On`))%>%
+  mutate(visit_date = as_date(`Date:`))
+
+#Replacing missing date values
+gv <- gv%>%
+  mutate(visit_date = coalesce(visit_date, visit_date_alt))
+
+#Selecting village names to repeat through in a for loop
+mon_villages <- unique(gv$Village)
+
+#Processing refill data
+gv <- gv%>%
+  mutate(refill = `Did you/the pump operator refill chlorine tablets since the last visit?`)%>%
+  mutate(ilc_device = `What device is installed?`)%>%
+  mutate(purall_cartridge_1 = `Did you provide a new PurAll chlorine cartridge? (1)`)
+
+
+
+#Selecting nearest and farthest tap data to be displayed
+mon_near <- gv%>%
+  dplyr::select(test_date, Village, nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, nearest_tap_tc, nearest_stored_fc, nearest_stored_tc))
+
+mon_far <- gv%>%
+  dplyr::select(test_date, Village, farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(farthest_tap_fc, farthest_tap_tc, farthest_stored_fc, farthest_stored_tc))
+  
+
+
+
+#Selecting refill data
+gv_refill <- gv%>%
+  filter(refill == "Yes")
+
+#Creating refill check dates - date-based method
+#We ultimately want to get to a place where we can estimate tablet decay rate in each village
+gv_refill <- gv_refill%>%
+  mutate(refill_date_1 = visit_date + 14)%>%
+  mutate(refill_date_2 = visit_date + 18)%>%
+  mutate(refill_date_3 = visit_date + 20)%>%
+  mutate(refill_date_0 = visit_date)
+#Selecting dates
+gv_refill <- gv_refill%>%
+  dplyr::select(Village, refill_date_0, refill_date_1, refill_date_2, refill_date_3)
+#making this dataset compatible with the plot below
+gv_refill <- gv_refill%>%
+  mutate(village_name = Village)%>%
+  mutate(village_name = ifelse(village_name == "Gopikankubadi", "Gopi Kankubadi", village_name))
+
+```
+
+
+
+
+
+
+
+\newpage
+
+# Longitudinal Chlorine Monitoring
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+```{r JPAL Chlorine monitoring data cleaning}
+
+#Assigning more meaningful variable names
+mon <- mon%>%
+  rename(village_ID = "village_name")
+
+mon_full <- mon_full%>%
+  rename(village_ID = "village_name")
+
+#Pairing village information
+mon$village_ID <- as.character(mon$village_ID)
+mon <- left_join(mon, village_details, by = "village_ID")
+
+mon_full$village_ID <- as.character(mon_full$village_ID)
+mon_full <- left_join(mon_full, village_details, by = "village_ID")
+
+#Averaging chlorine data
+mon <- mon%>%
+  mutate(nearest_tap_fc = (first_nearest_tap_fc + second_nearest_tap_fc)/2)%>%
+  mutate(nearest_tap_tc = (first_nearest_tap_tc + second_nearest_tap_tc)/2)%>%
+  mutate(farthest_tap_fc = (first_farthest_tap_fc + second_farthest_tap_fc)/2)%>%
+  mutate(farthest_tap_tc = (first_farthest_tap_tc + second_farthest_tap_tc)/2)%>%
+  mutate(nearest_stored_fc = (first_stored_water_fc + second_stored_water_fc)/2)%>%
+  mutate(nearest_stored_tc = (first_stored_water_tc + second_stored_water_tc)/2)%>%
+  mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
+  mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
+
+mon_full <- mon_full%>%
+  mutate(nearest_tap_fc = (first_nearest_tap_fc + second_nearest_tap_fc)/2)%>%
+  mutate(nearest_tap_tc = (first_nearest_tap_tc + second_nearest_tap_tc)/2)%>%
+  mutate(farthest_tap_fc = (first_farthest_tap_fc + second_farthest_tap_fc)/2)%>%
+  mutate(farthest_tap_tc = (first_farthest_tap_tc + second_farthest_tap_tc)/2)%>%
+  mutate(nearest_stored_fc = (first_stored_water_fc + second_stored_water_fc)/2)%>%
+  mutate(nearest_stored_tc = (first_stored_water_tc + second_stored_water_tc)/2)%>%
+  mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
+  mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
+
+
+#Getting date of test
+mon$valve_open_time <- mdy_hms(mon$valve_open_time)
+mon <- mon%>%
+  mutate(test_date = date(valve_open_time))
+
+mon_full$valve_open_time <- mdy_hms(mon_full$valve_open_time)
+mon_full <- mon_full%>%
+  mutate(test_date = date(valve_open_time))
+
+#Selecting for variables only in the shorter daily monitoring form
+mon <- bind_rows(mon, mon_full)
+
+
+### Cleaning and formatting datasets ### 
+mon_villages <- unique(mon$village_name)
+
+
+#Pivoting to make datasets only have a single column for chlorine concentration measurement
+#saving wide format
+mon_wide <- mon
+mon <- mon%>%
+  pivot_longer(cols = c(nearest_tap_fc, nearest_tap_tc, farthest_tap_fc, farthest_tap_tc, nearest_stored_fc, nearest_stored_tc, farthest_stored_fc, farthest_stored_tc), names_to = "chlorine_test", values_to = "chlorine_concentration")
+
+
+#Subsetting for nearest and farthest tap connections
+mon_near <- mon%>%
+  filter(chlorine_test %in% c("nearest_tap_fc", "nearest_stored_fc", "nearest_tap_tc", "nearest_stored_tc"))
+
+mon_far <- mon%>%
+  filter(chlorine_test %in% c("farthest_tap_fc", "farthest_stored_fc", "farthest_tap_tc", "farthest_stored_tc"))
+
+
+
+
+
+
+```
+
+
+
+
+## JPAL Chlorine Monitoring Results
+
+
+
+```{r JPAL Chlorine Monitoring Data Analysis, message=FALSE}
+
+
+#Creating time series plot of the data for each village
+
+for (i in mon_villages){
+  x_near <- mon_near%>%
+    filter(village_name == i)
+  x_far <- mon_far%>%
+    filter(village_name == i)
+  
+  p1 <- ggplot(data = x_near) + 
+    geom_jitter(aes(x = test_date, y = chlorine_concentration, color = chlorine_test), width = 0.05, height = 0.001) +
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  #print(p1) #Uncomment to run
+  
+  p2 <- ggplot(data = x_far) + 
+    geom_jitter(aes(x = test_date, y = chlorine_concentration, color = chlorine_test), width = 0.05, height = 0.001) +
+    scale_y_continuous(
+                     limits = c(0, 1),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       fill = "Sample Type",
+       title = (paste("Chlorine Concentration for", i,"for 2023-2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  #print(p2) #Uncomment to run
+
+  
+}
+
+#Creating table of most 2 recent chlorine concentration measurements by JPAL team for each village
+mon_wide <- mon_wide%>%
+  dplyr::select(village_name, test_date, nearest_tap_fc, nearest_stored_fc, farthest_tap_fc, farthest_stored_fc)
+
+#Removing NA value
+mon_villages <- mon_villages[-11]
+
+#initializing empty dataframe
+y <- mon_wide[0,]
+
+for (i in mon_villages){
+  #Selecting each village in the loop
+  x <- mon_wide%>%
+    filter(village_name == i)
+  #sorting and filtering for 4 most recent tests
+  x <- x%>%
+    arrange(desc(test_date))
+  x <- x[1:2,]
+  
+  #binding rows to table dataframe
+  y <- bind_rows(y,x)
+  
+}
+
+
+# Printing kable with 4 most recent test results
+  kbl(y)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("JPAL Chlorine Monitoring" = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+  
+
+
+
+```
+
+
+
+
+```{r JPAL Chlorine Monitoring results - pt 2, message = FALSE, fig.height=8, fig.width=9}
+
+  
+#Representing them on facet_wrap()
+
+#Selecting for chlorine data
+mon_wide <- mon_wide%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc))
+
+#Making a plot for Karnapadu
+#mon_karnapadu <- mon_wide%>%
+ # filter(village_name == "Karnapadu")
+
+# p1 <- ggplot(data = mon_karnapadu) + 
+#     geom_point(aes(x = test_date, y = chlorine_concentration,
+#                    color = chlorine_test))+
+#     geom_line(aes(x = test_date, y = chlorine_concentration,
+#                   color = chlorine_test))+
+#     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+#     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+#     scale_y_continuous(
+#                      limits = c(0, 2.0),
+#                      expand = c(0,0))+
+#     labs(x = "Date", 
+#        y = "Chlorine Concentration (mg/L)",
+#        fill = "Sample Type",
+#        title = (paste("JPAL ILC Chlorine Monitoring in Karnapadu Village")))+
+#     theme_bw() + 
+#     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+#   
+#   print(p1)
+
+
+#Filtering for dates after April 5th for readability
+mon_wide <- mon_wide%>%
+  filter(test_date > "2024-04-05")%>%
+  filter(village_name != "Karnapadu")%>% #and removing karnapadu
+  filter(is.na(chlorine_concentration) == FALSE)
+
+#Recoding chlorine concentration sample types
+mon_wide$chlorine_test <- factor(mon_wide$chlorine_test)
+mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
+                                  "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
+                                  "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
+
+
+
+  p1 <- ggplot(data = mon_wide) + 
+    geom_point(aes(x = test_date, y = chlorine_concentration,
+                   color = chlorine_test))+
+    geom_line(aes(x = test_date, y = chlorine_concentration,
+                  color = chlorine_test))+
+    geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
+    geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+    scale_y_continuous(
+                     limits = c(0, 1.5),
+                     expand = c(0,0))+
+    labs(x = "Date", 
+       y = "Chlorine Concentration (mg/L)",
+       color = "Sample Type",
+       title = (paste("JPAL ILC Chlorine Monitoring for 2024")))+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))+
+    facet_wrap(~village_name, ncol = 3)+
+    geom_vline(data = gv_refill, aes(xintercept = refill_date_0),
+               linetype = "dashed", color = "darkgreen")+
+      #annotate("text", x = as.Date("2024-04-08"), y = 0.1, label = "Refill",
+       #        angle = 0, vjust = -0.5, size = 3, color = "darkgreen")
+    #annotate("label", x = as.Date("2024-04-10"), y = 1.5, label = "         ", angle = 0, 
+     #      vjust = -0.5, color = "black", size = 12, fill = "white", label.size = NA)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-12"), y = 1.08), 
+            label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
+    geom_text(data = filter(mon_wide, village_name == "Asada"), 
+            aes(x = as.Date("2024-04-18"), y = 1.2), 
+            label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
+  
+  print(p1)
+
+
+
+```
+
+
+
+
