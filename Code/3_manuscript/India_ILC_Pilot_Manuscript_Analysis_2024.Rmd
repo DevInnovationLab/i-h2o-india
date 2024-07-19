@@ -1135,7 +1135,15 @@ idexx_fu <- idexx_fu%>%
   mutate(fc_tap_pa_1 = case_when(fc_tap_avg >= 0.1 ~ ">= 0.1 mg/L",
                                   fc_tap_avg < 0.1 ~ "< 0.1 mg/L"))%>%
   mutate(fc_stored_pa_1 = case_when(fc_stored_avg >= 0.1 ~ ">= 0.1 mg/L",
-                                  fc_stored_avg < 0.1 ~ "< 0.1 mg/L"))
+                                  fc_stored_avg < 0.1 ~ "< 0.1 mg/L"))%>%
+  mutate(fc_ec_tap = case_when(fc_tap_avg >= 0.2 & ec_pa_binary == 0 ~ ">= 0.2 mg/L and absence of E. coli",
+                                  fc_tap_avg >= 0.2 & ec_pa_binary == 1 ~ ">= 0.2 mg/L and presence of E. coli",
+                               fc_tap_avg < 0.2 & ec_pa_binary == 0 ~ "< 0.2 mg/L and absence of E. coli",
+                               fc_tap_avg < 0.2 & ec_pa_binary == 1 ~ "< 0.2 mg/L and presence of E. coli"
+                               ))
+#IDEXX crosstab
+idexx_crosstab <- idexx_fu%>%
+  filter(assignment == "Treatment")
   
 
 tap_stats_pooled <- idexx_fu%>%
@@ -1219,12 +1227,27 @@ p_pooled
 
 #Making crosstab of the same chlorine vs idexx results
 
-p_crosstab_tap <- idexx_fu%>%
-  crosstable( fc_tap_pa_1, by = ec_pa, total = "both")%>%
+#Renaming variables for readability
+idexx_crosstab <- idexx_crosstab%>%
+  rename(`E. coli Presence/Absence` = "ec_pa")%>%
+  rename(`Total Coliform Presence/Absence` = "cf_pa")%>%
+  rename(`Tap Free Chlorine Concentration` = "fc_tap_pa_2")%>%
+  rename(`Stored Free Chlorine Concentration` = "fc_stored_pa_2")
+
+p_crosstab_tap_ec <- idexx_crosstab%>%
+  crosstable( `Tap Free Chlorine Concentration`, by = `E. coli Presence/Absence`, total = "both")%>%
   as_flextable(keep_id = FALSE)
 
-p_crosstab_stored <- idexx_fu%>%
-  crosstable( fc_stored_pa_1, by = ec_pa, total = "both")%>%
+p_crosstab_stored_ec <- idexx_crosstab%>%
+  crosstable(`Stored Free Chlorine Concentration` , by = `E. coli Presence/Absence`, total = "both")%>%
+  as_flextable(keep_id = FALSE)
+
+p_crosstab_tap_cf <- idexx_crosstab%>%
+  crosstable( `Tap Free Chlorine Concentration`, by = `Total Coliform Presence/Absence`, total = "both")%>%
+  as_flextable(keep_id = FALSE)
+
+p_crosstab_stored_cf <- idexx_crosstab%>%
+  crosstable(`Stored Free Chlorine Concentration` , by = `Total Coliform Presence/Absence`, total = "both")%>%
   as_flextable(keep_id = FALSE)
 
 
