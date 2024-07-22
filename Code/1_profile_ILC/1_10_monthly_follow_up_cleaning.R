@@ -7,32 +7,47 @@
 #------------------------ Load the libraries ----------------------------------------
 
 
-library(rsurveycto)
-library(expss)
-library(labelled)
-library(httr)
-library(lubridate)
-library(quantitray)
-library(sjmisc)
-library(knitr)
-library(kableExtra)
-library(readxl)
-library(experiment)
-library(stargazer)
-library(readxl)
+install.packages("RSQLite")
+install.packages("haven")
+install.packages("expss")
+install.packages("stargazer")
+install.packages("Hmisc")
+install.packages("labelled")
+install.packages("data.table")
+install.packages("haven")
+install.packages("remotes")
+# Attempt using devtools package
+install.packages("devtools")
+install.packages("geosphere")
+
+#please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
+install.packages("remotes")
+remotes::install_github("ChandlerLutz/starpolishr")
+install.packages("ggrepel")
+install.packages("reshape2")
+# load the libraries
 library(haven)
+library(data.table)
+library(readxl) 
+library(googledrive)
 library(googlesheets4)
-library(ggsignif)
-library(patchwork)
-library(table1)
-library(gtsummary)
-library(gt)
-library(webshot2)
-library(clubSandwich)
-library(sandwich)
-library(lmtest)
-library(broom)
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(lubridate)
+library(haven)
+library(expss)
+library(stargazer)
 library(tidyverse)
+library(Hmisc)
+library(ggplot2)
+library(labelled)
+library(starpolishr)
+library(geosphere)
+library(leaflet)
+library(ggrepel)
+library(reshape2)
+#library(xtable)
 
 
 
@@ -55,6 +70,9 @@ user_path <- function() {
   } 
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -80,6 +98,9 @@ github_path <- function() {
   else if (user == "jerem") {
     github = "C:/Users/jerem/Documents/i-h2o-india/Code"
   } 
+  else if (user == "Archi Gupta") {
+    github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     github = getwd()
@@ -91,36 +112,150 @@ github_path <- function() {
 
 github <- github_path()
 
-#Setting overleaf
-overleaf_path <- function() {
-  # Return a hardcoded path to Overleaf that depends on the current user, or the current 
-  # working directory for an unrecognized user. If the path isn't readable,
-  # stop.
-  #
-  
+
+# setting overleaf directory
+overleaf <- function() {
   user <- Sys.info()["user"]
-  
-  if (user == "asthavohra") { 
-    
+  if (user == "asthavohra") {
+    overleaf = "/Users/asthavohra/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user=="akitokamei"){
-    
-    overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
-    
+    overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "Archi Gupta") {
+    overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "jerem"){
     overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
   }  
   else {
     warning("No path found for current user (", user, ")")
-    path = getwd()
+    overleaf = getwd()
   }
   
   stopifnot(file.exists(overleaf))
   return(overleaf)
 }
 
-overleaf <- overleaf_path()
+
+
+#Jeremy to add rest of the paths for his directory 
+
+pre_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/99_Preload/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = pre_path())
+
+
+
+temp_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/99_temp/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = temp_path())
+
+
+Final_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = Final_path())
+
+
+raw_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/1_raw/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = raw_path())
 
 
 
@@ -128,15 +263,17 @@ overleaf <- overleaf_path()
 
 #Monthly Surveys - ms
 ms <- read_csv(paste0(user_path(), "1_raw/Chlorine and IDEXX Monitoring Survey_WIDE.csv"))
+View(ms)
 
 #Key village details
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
+View(village_details)
 
 #IDEXX results
 idexx <- read_csv(paste0(user_path(), "1_raw/IDEXX Results Reporting - July 2024_WIDE.csv"))
 
-
+View(idexx)
 #-------------------------------Cleaning Village Details for Joining----------
 
 
@@ -192,12 +329,239 @@ labelmaker <- function(x){
 
 #----------------------------Monthly Follow up Cleaning-----------------------
 
+#Archi to Jeremy- I am commenting this out
+#ms <- ms%>%
+  #rename(sample_ID_stored = "stored_sample_id",
+         #sample_ID_tap = "tap_sample_id")
 
-ms <- ms%>%
-  rename(sample_ID_stored = "stored_sample_id",
-         sample_ID_tap = "tap_sample_id")
+names(ms)
+
+#------------------------------------------------------------------------
+#HH availability stats 
+#------------------------------------------------------------------------
+
+HH_available <- ms %>%  filter(resp_available == 1) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("HH available" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+HH_permanently_left <- ms %>%  filter(resp_available == 2  ) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("HH permanently left" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
 
 
+HH_unavailable <- ms %>%  filter(resp_available != 1 & resp_available != 2) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("HH unavailable" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+Consented <- ms %>%  filter(consent == 1) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("HH consented" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+
+df.progress <- left_join(HH_available,HH_permanently_left) %>% 
+  left_join(HH_unavailable)  %>% left_join(Consented) %>% 
+  rename(Village = R_Cen_village_name_str)
+df.progress[is.na(df.progress)]<-0
+
+Total <- df.progress %>% summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
+Total$Village <- "Total"
+df.progress<- rbind(df.progress, Total)
+
+View(df.progress)
+
+#output to tex 
+stargazer(df.progress, summary=F, title= "Overall Progress: Monthly IDEXX Survey",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Table_Progress_idexx.tex"))
+
+
+
+star.out <- stargazer(df.progress, 
+                      summary = FALSE, 
+                      title = "Overall Progress: Monthly IDEXX Survey", 
+                      float = FALSE,
+                      rownames = FALSE,
+                      covariate.labels = NULL,
+                      type = "latex")
+
+
+star.out <- sub("cccccccc", " |L|L|L|L|L|L|L|L|L|", star.out)
+
+star.out <- sub("cccccccc", "lccccccc", star.out)
+
+
+starpolishr::star_tex_write(star.out, file = paste0(overleaf(), "Table/Table_Progress_idexx.tex"))
+
+
+#------------------------------------------------------------------------
+#checking for replacements 
+#------------------------------------------------------------------------
+
+
+
+submissions <- ms  %>% select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate(Submission=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+Original_submissions <- ms %>%  filter(resp_available == 1 & replacement == 0 ) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("Original HH Found" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+Not_found <- ms  %>%  filter(resp_available != 1  ) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate("NOT Found" =n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+replacements <- ms %>%  filter( replacement == 1 ) %>% 
+  select(R_Cen_village_name_str) %>%
+  group_by(R_Cen_village_name_str) %>% mutate(Replacements=n()) %>% ungroup()  %>% unique() %>% 
+  arrange(R_Cen_village_name_str)
+
+df.rep <- left_join(submissions,Original_submissions)%>% left_join(Not_found) %>% left_join(replacements) %>% 
+  rename(Village = R_Cen_village_name_str)
+df.rep[is.na(df.rep)]<-0
+
+Total <- df.rep %>% summarise(across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))
+Total$Village <- "Total"
+df.rep<- rbind(df.rep, Total)
+
+#output to tex 
+stargazer(df.rep, summary=F, title= "Distribution of Replacements by Village",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/replacements_idexx.tex"))
+
+
+
+star.out <- stargazer(df.rep, 
+                      summary = FALSE, 
+                      title = "Distribution of Replacements by Village", 
+                      float = FALSE,
+                      rownames = FALSE,
+                      covariate.labels = NULL,
+                      type = "latex")
+
+
+
+
+
+#------------------------------------------------------------------------
+# Drop rows where resp_available != 1
+#------------------------------------------------------------------------
+
+ms_consent <- subset(ms, consent == 1)
+View(ms_consent)
+
+#------------------------------------------------------------------------
+#checking for duplicate UIDs
+#------------------------------------------------------------------------
+
+# Check for duplicates in the unique_id column
+duplicates <- ms_consent[duplicated(ms_consent$unique_id) | duplicated(ms_consent$unique_id, fromLast = TRUE), ]
+
+# Display the duplicate rows
+print(duplicates)
+
+# Alternatively, to get only the unique_id values that are duplicated
+duplicate_ids <- ms_consent$unique_id[duplicated(ms_consent$unique_id)]
+print(duplicate_ids)
+
+#------------------------------------------------------------------------
+#MANUAL CLEANING OF SAMPLE IDs
+#------------------------------------------------------------------------
+# Replace the value
+View(ms)
+names(ms)
+
+#enumerator made a data entry error and by mistake put 20351 for this UID 
+
+ms_consent$stored_sample_id[ms_consent$unique_id == "40202110019" & ms_consent$stored_sample_id == 20351] <- 20354
+ms_consent$stored_sample_id_again[ms_consent$unique_id == "40202110019" & ms_consent$stored_sample_id_again == 20351] <- 20354
+
+ms_view <- ms_consent %>% select(unique_id, stored_sample_id, stored_sample_id_again)
+
+View(ms_view)
+correct_replacement <- all(ms_consent$stored_sample_id[ms_consent$unique_id == "40202110019"] == 20354)
+if (correct_replacement) {
+  cat("The replacement is correct.\n")
+} else {
+  cat("The replacement is incorrect. Some values do not match 20354.\n")
+}
+
+names(ms)
+
+#------------------------------------------------------------------------
+#CHECKING DUPLICATES IN SAMPLE ID AND TAP ID 
+#------------------------------------------------------------------------
+
+#stored sample ID 
+duplicates <- ms_consent[duplicated(ms_consent$stored_sample_id) | duplicated(ms_consent$stored_sample_id, fromLast = TRUE), ]
+
+print(duplicates)
+
+#stored bag ID 
+duplicates <- ms_consent[duplicated(ms_consent$stored_bag_id) | duplicated(ms_consent$stored_bag_id, fromLast = TRUE), ]
+
+print(duplicates)
+
+#tap sample ID
+duplicates <- ms_consent[duplicated(ms_consent$tap_sample_id) | duplicated(ms_consent$tap_sample_id, fromLast = TRUE), ]
+
+print(duplicates)
+
+#tap bag ID 
+duplicates <- ms_consent[duplicated(ms_consent$tap_bag_id) | duplicated(ms_consent$tap_bag_id, fromLast = TRUE), ]
+
+print(duplicates)
+
+
+#------------------------------------------------------------------------
+#RANGE OF CHLORINE VALUES IN FC AND TC 
+#------------------------------------------------------------------------
+
+stored_water_fc
+stored_water_tc
+HR_stored_fc
+HR_stored_tc
+tap_water_fc
+tap_water_tc
+HR_tap_fc
+HR_tap_tc
+
+# Variables to check
+variables <- c("stored_water_fc", "stored_water_tc", "HR_stored_fc", "HR_stored_tc", 
+               "tap_water_fc", "tap_water_tc", "HR_tap_fc", "HR_tap_tc")
+
+# Check the range of each variable
+for (var in variables) {
+  cat(paste("Range of", var, ":", range(ms_avail[[var]], na.rm = TRUE), "\n"))
+}
+
+
+variables_x <- c("stored_water_fc", "stored_water_tc", 
+               "tap_water_fc", "tap_water_tc")
+
+# Melt the data for ggplot2
+ms_melt <- melt(ms_avail, measure.vars = variables_x)
+
+# Create the boxplot
+# Create the boxplot with increased text size
+tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Types of test",
+       x = "Variables",
+       y = "Values") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) # Increase plot title size and center it
+print(tests)
+
+# Save the plot
+ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
 
 #---------------------IDEXX Data Cleaning------------------------------------
 
@@ -207,6 +571,10 @@ ms <- ms%>%
 ms_idexx <- ms%>%
   pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
 
+View(ms_idexx)
+
+
+#---------------------IDEXX reporting form-----------------------------
 #Noting duplicate samples
 idexx <- idexx%>%
   mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
