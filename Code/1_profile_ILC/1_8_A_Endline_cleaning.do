@@ -73,6 +73,12 @@ drop if date_final < mdy(4,21,2024)
     drop if End_date < mdy(4,21,2024)
 	format End_date  %d
 
+gen HH_lock_IDs = .
+replace HH_lock_IDs = 1 if date_final > mdy(5,24,2024)
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
 
 
 /*------------------------------------------------------------------------------

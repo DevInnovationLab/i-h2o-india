@@ -336,6 +336,8 @@ drop R_Cen_a1_resp_name R_Cen_a3_hhmember_name_1 R_Cen_a3_hhmember_name_2 R_Cen_
 save "${DataDeid}1_1_Census_cleaned_noid.dta", replace
 
 
+STOP 
+
 keep if C_Screened == 1
 
 
