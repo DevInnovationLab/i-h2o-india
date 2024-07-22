@@ -563,6 +563,26 @@ print(tests)
 # Save the plot
 ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
 
+
+names(ms_avail)
+
+# Assuming ms_melt includes a 'village' column
+ms_melt <- melt(ms_avail, measure.vars = variables_x, id.vars = "R_Cen_village_name_str")
+
+# Create the boxplot with facet wrap by village
+tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Types of Test by Village",
+       x = "Variables",
+       y = "Values") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ R_Cen_village_name_str) # Facet wrap by village
+print(tests)
+
 #---------------------IDEXX Data Cleaning------------------------------------
 
 
