@@ -88,7 +88,7 @@ keep if ineligible==0
 	gen     S_BLWQ=_n
 	recode  S_BLWQ 11/15=20 16/99999=0
 	replace S_BLS=S_BLWQ
-	recode  S_BLS 1/2=1 3/20=2 0=0 //Archi : Please note that if we want to customise the number of HH selected for IDEXX this number has to be changed i.e. 1/`i' so whatever i you put here those many values get selected and 3/`j' j represents the number of replacemenst you will have 
+	recode  S_BLS 1/4=1 5/20=2 0=0 //Archi : Please note that if we want to customise the number of HH selected for IDEXX this number has to be changed i.e. 1/`i' so whatever i you put here those many values get selected and 3/`j' j represents the number of replacemenst you will have 
 
 	label define S_BLSl 1 "Primary" 2 "Replacement" 0 "No visit", modify
 	label values S_BLS S_BLSl
@@ -173,32 +173,28 @@ restore
 * Step 5: Creating the data for pre-load
 ***********************************************************************
 //removed 30601 and 50601
-local mylist 10101 10201 20101 20201 30202 30301 30501  30602 30701 ///
+local mylist  10201 20101 20201 30202 30301 30501  30602 30701 ///
  40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 
+ 
+use "${DataPre}Selected_10101_IDEXX_5 July 2024.dta", clear
 
 foreach i of local mylist {
 	
-	
-use "${DataPre}Selected_`i'_IDEXX_5 July 2024.dta", clear
-
-tempfile vill_`i'
-save `vill_`i'', replace
-
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
-merge 1:1 unique_id using `vill_`i'', keep(master matched) gen(Merge_WS)
-
-drop if Merge_WS==1
-
-save `vill_`i'', replace
-
+append using "${DataPre}Selected_`i'_IDEXX_5 July 2024.dta"
 }
 
+save "${DataTemp}Appended-IDEXX_village_HH.dta", replace
+
+use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+merge 1:1 unique_id using "${DataTemp}Appended-IDEXX_village_HH.dta"
+
+keep if _merge = 3
 
 
 
-* Drop households not using JJM for drinking
-drop if Merge_WS==1
-* Dropping househods not selected for the revisit
+
+
+
 drop if S_BLWQ==0 
 
 
