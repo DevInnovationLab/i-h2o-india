@@ -259,6 +259,37 @@ knitr::opts_knit$set(root.dir = raw_path())
 
 
 
+DI_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/2_deidentified/"
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = DI_path())
+
+
+
+
 #----------------------------------Loading Data-------------------------------
 
 #Monthly Surveys - ms
@@ -521,22 +552,13 @@ print(duplicates)
 #RANGE OF CHLORINE VALUES IN FC AND TC 
 #------------------------------------------------------------------------
 
-stored_water_fc
-stored_water_tc
-HR_stored_fc
-HR_stored_tc
-tap_water_fc
-tap_water_tc
-HR_tap_fc
-HR_tap_tc
-
 # Variables to check
 variables <- c("stored_water_fc", "stored_water_tc", "HR_stored_fc", "HR_stored_tc", 
                "tap_water_fc", "tap_water_tc", "HR_tap_fc", "HR_tap_tc")
 
 # Check the range of each variable
 for (var in variables) {
-  cat(paste("Range of", var, ":", range(ms_avail[[var]], na.rm = TRUE), "\n"))
+  cat(paste("Range of", var, ":", range(ms_consent[[var]], na.rm = TRUE), "\n"))
 }
 
 
@@ -544,7 +566,7 @@ variables_x <- c("stored_water_fc", "stored_water_tc",
                "tap_water_fc", "tap_water_tc")
 
 # Melt the data for ggplot2
-ms_melt <- melt(ms_avail, measure.vars = variables_x)
+ms_melt <- melt(ms_consent, measure.vars = variables_x)
 
 # Create the boxplot
 # Create the boxplot with increased text size
@@ -564,10 +586,9 @@ print(tests)
 ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
 
 
-names(ms_avail)
 
 # Assuming ms_melt includes a 'village' column
-ms_melt <- melt(ms_avail, measure.vars = variables_x, id.vars = "R_Cen_village_name_str")
+ms_melt <- melt(ms_consent, measure.vars = variables_x, id.vars = "R_Cen_village_name_str")
 
 # Create the boxplot with facet wrap by village
 tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
@@ -582,6 +603,397 @@ tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
         plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
   facet_wrap(~ R_Cen_village_name_str) # Facet wrap by village
 print(tests)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_village_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
+
+
+#---------------chlorine decay plots village wise----------------------------#
+
+
+#---------------------------------------------
+# OVER STORAGE TIME 
+#-----------------------------------------------
+
+#geenrating auniform time measurement variable 
+
+# Create a conversion factor
+ms_consent$stored_time_in_hours <- with(ms_consent, ifelse(stored_time_unit == 1, stored_time / 60, 
+                                                           ifelse(stored_time_unit == 2, stored_time, 
+                                                                  ifelse(stored_time_unit == 3, stored_time * 24, 
+                                                                         ifelse(stored_time_unit == 4, stored_time * 24 * 7, NA)))))
+
+
+# Now ms_consent will have a new column stored_time_in_hours with all times converted to hours
+ms_view <- ms_consent %>% select(unique_id, stored_water_fc, stored_water_tc, stored_time, stored_time_unit, stored_time_in_hours  )
+View(ms_view)
+
+
+# Assuming your data frame is named ms_consent and it contains stored_time_in_hours, stored_water_fc, stored_water_tc, and village
+
+# Scatter plot for stored_time_in_hours vs stored_water_fc
+plot_fc <- ggplot(ms_consent, aes(x = stored_time_in_hours, y = stored_water_fc)) +
+  geom_point() +
+  labs(title = "Stored Water FC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Stored Water FC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ R_Cen_village_name_str) # Facet wrap by village
+
+print(plot_fc)
+
+# Scatter plot for stored_time_in_hours vs stored_water_tc
+plot_tc <- ggplot(ms_consent, aes(x = stored_time_in_hours, y = stored_water_tc)) +
+  geom_point() +
+  labs(title = "Stored Water TC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Stored Water TC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ R_Cen_village_name_str) # Facet wrap by village
+
+print(plot_tc)
+
+
+
+# Assuming your data frame is named ms_consent and it contains stored_time_in_hours, stored_water_fc, stored_water_tc, and village
+
+# Melt the data to long format
+ms_melted <- melt(ms_consent, id.vars = c("stored_time_in_hours", "R_Cen_village_name_str"), 
+                  measure.vars = c("stored_water_fc", "stored_water_tc"),
+                  variable.name = "Type", value.name = "Value")
+
+# Create the combined scatter plot
+combined_plot <- ggplot(ms_melted, aes(x = stored_time_in_hours, y = Value, color = Type)) +
+  geom_point() +
+  labs(title = "Stored Water FC and TC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ R_Cen_village_name_str) + # Facet wrap by village
+  scale_color_manual(values = c("stored_water_fc" = "blue", "stored_water_tc" = "red"), 
+                     labels = c("Stored Water FC", "Stored Water TC"))
+
+print(combined_plot)
+
+
+
+# Assuming your data frame is named ms_consent and it contains stored_time_in_hours, stored_water_fc, stored_water_tc, and R_Cen_village_name_str
+
+# Melt the data to long format
+ms_melted <- melt(ms_consent, id.vars = c("stored_time_in_hours", "R_Cen_village_name_str"), 
+                  measure.vars = c("stored_water_fc", "stored_water_tc"),
+                  variable.name = "Type", value.name = "Value")
+
+# Create the combined scatter plot with lines
+combined_plot <- ggplot(ms_melted, aes(x = stored_time_in_hours, y = Value, color = Type)) +
+  geom_point() +
+  geom_line(aes(group = Type)) +
+  labs(title = "Stored Water FC and TC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ R_Cen_village_name_str) + # Facet wrap by village
+  scale_color_manual(values = c("stored_water_fc" = "blue", "stored_water_tc" = "red"), 
+                     labels = c("Stored Water FC", "Stored Water TC"))
+
+print(combined_plot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_test_types.png"), combined_plot, bg = "white", width = 7, height = 7, dpi = 200)
+
+
+
+#checking chlorine concentration over number of supply times in village 
+
+#---------------------------------------------
+# OVER SUPPLY FREQUENCY
+#-----------------------------------------------
+
+
+df.PO <- read_stata(paste0(DI_path(),"pump_operator_survey.dta" ))
+View(df.PO)
+
+names(df.PO)
+
+df.PO.sub <- df.PO %>% select(po_village_name, po_water_supply_freq)
+View(df.PO.sub)
+
+#renaming village variable name
+
+
+# Example: Renaming specific columns
+names(ms_consent)[names(ms_consent) == "R_Cen_village_name_str"] <- "village"
+names(df.PO.sub)[names(df.PO.sub) == "po_village_name"] <- "village"
+
+
+unique(df.PO.sub$village)
+
+unique(ms_consent$village)
+
+# Merge datasets with an inner join
+merged_data <- merge(df.PO.sub, ms_consent, by = "village")
+View(merged_data)
+
+#stored_water_fc
+#stored_water_tc
+#stored_time
+#stored_time_unit
+
+merged_data_view <- merged_data %>% select(village, stored_water_fc)
+View(merged_data_view)
+
+#------------------------------------------------------------------------
+# STORED WATER 
+#------------------------------------------------------------------------
+
+# Extract unique values for each village
+unique_data <- merged_data %>%
+  group_by(village) %>%
+  distinct(stored_water_fc, po_water_supply_freq, .keep_all = TRUE)
+
+# Create the scatter plot with facet wrap by village
+scatter_plot_fc <- ggplot(merged_data, aes(x = po_water_supply_freq, y = stored_water_fc)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Stored Water FC vs PO Water Supply Frequency by Village",
+       x = "PO Water Supply Frequency",
+       y = "Stored Water FC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) # Facet wrap by village
+
+# Print the plot
+print(scatter_plot_fc)
+
+
+
+# Extract unique values for each village
+unique_data <- merged_data %>%
+  group_by(village) %>%
+  distinct(stored_water_tc, po_water_supply_freq, .keep_all = TRUE)
+
+# Create the scatter plot with facet wrap by village
+scatter_plot_tc <- ggplot(merged_data, aes(x = po_water_supply_freq, y = stored_water_tc)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Stored Water TC vs PO Water Supply Frequency by Village",
+       x = "PO Water Supply Frequency",
+       y = "Stored Water TC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) # Facet wrap by village
+
+# Print the plot
+print(scatter_plot_tc)
+
+
+ms_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                  measure.vars = c("stored_water_fc", "stored_water_tc"),
+                  variable.name = "Type", value.name = "Value")
+
+# Create the combined scatter plot with lines
+combined_plot <- ggplot(ms_melted, aes(x = po_water_supply_freq, y = Value, color = Type)) +
+  geom_point() +
+  geom_line(aes(group = Type)) +
+  labs(title = "Stored Water FC and TC vs Supply time frequency by Village",
+       x = "JJM water supply frequency",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) + # Facet wrap by village
+  scale_color_manual(values = c("stored_water_fc" = "blue", "stored_water_tc" = "red"), 
+                     labels = c("Stored Water FC", "Stored Water TC"))
+
+print(combined_plot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq.png"), combined_plot, bg = "white", width = 7, height = 7, dpi = 200)
+
+
+#------------------------------------------------------------------------
+# TAPWATER 
+#------------------------------------------------------------------------
+
+#tap_water_fc
+#tap_water_tc
+
+# Extract unique values for each village
+unique_data <- merged_data %>%
+  group_by(village) %>%
+  distinct(stored_water_fc, po_water_supply_freq, .keep_all = TRUE)
+
+# Create the scatter plot with facet wrap by village
+scatter_plot_fc <- ggplot(merged_data, aes(x = po_water_supply_freq, y = tap_water_fc)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Tap Water FC vs PO Water Supply Frequency by Village",
+       x = "PO Water Supply Frequency",
+       y = "Tap Water FC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) # Facet wrap by village
+
+# Print the plot
+print(scatter_plot_fc)
+
+
+
+# Extract unique values for each village
+unique_data <- merged_data %>%
+  group_by(village) %>%
+  distinct(stored_water_tc, po_water_supply_freq, .keep_all = TRUE)
+
+# Create the scatter plot with facet wrap by village
+scatter_plot_tc <- ggplot(merged_data, aes(x = po_water_supply_freq, y = tap_water_tc)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Stored Water TC vs PO Water Supply Frequency by Village",
+       x = "PO Water Supply Frequency",
+       y = "Tap Water TC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) # Facet wrap by village
+
+# Print the plot
+print(scatter_plot_tc)
+
+
+ms_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                  measure.vars = c("tap_water_fc", "tap_water_tc"),
+                  variable.name = "Type", value.name = "Value")
+
+# Create the combined scatter plot with lines
+combined_plot <- ggplot(ms_melted, aes(x = po_water_supply_freq, y = Value, color = Type)) +
+  geom_point() +
+  geom_line(aes(group = Type)) +
+  labs(title = "Tap Water FC and TC vs Supply time frequency by Village",
+       x = "JJM water supply frequency",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) + # Facet wrap by village
+  scale_color_manual(values = c("tap_water_fc" = "blue", "tap_water_tc" = "red"), 
+                     labels = c("Tap Water FC", "Tap Water TC"))
+
+print(combined_plot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_Tap.png"), combined_plot, bg = "white", width = 7, height = 7, dpi = 200)
+
+#_______________________________________________________________________
+#combining the graphs of stored and tap
+#---------------------------------------------------------------------
+
+# Melting the data for stored water
+stored_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                      measure.vars = c("stored_water_fc", "stored_water_tc"),
+                      variable.name = "Type", value.name = "Value")
+
+# Melting the data for tap water
+tap_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                   measure.vars = c("tap_water_fc", "tap_water_tc"),
+                   variable.name = "Type", value.name = "Value")
+
+# Combining both melted data frames
+combined_melted <- rbind(
+  transform(stored_melted, WaterType = "Stored"),
+  transform(tap_melted, WaterType = "Tap")
+)
+
+# Create the combined scatter plot with lines
+combined_plot <- ggplot(combined_melted, aes(x = po_water_supply_freq, y = Value, color = Type)) +
+  geom_point() +
+  geom_line(aes(group = interaction(Type, WaterType))) +
+  labs(title = "Stored and Tap Water FC and TC vs Supply Time Frequency by Village",
+       x = "JJM Water Supply Frequency",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ village) + # Facet wrap by village
+  scale_color_manual(values = c("stored_water_fc" = "blue", "stored_water_tc" = "red", 
+                                "tap_water_fc" = "green", "tap_water_tc" = "purple"), 
+                     labels = c("Stored Water FC", "Stored Water TC", "Tap Water FC", "Tap Water TC"))
+
+print(combined_plot)
+
+# Save the plot
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_combined.png"), combined_plot, bg = "white", width = 7, height = 7, dpi = 200)
+
+
+
+#-------------------------------------------------------------------------------
+# Doing a combined for stored and tap water 
+#------------------------------------------------------------------------------
+
+# Assuming merged_data is your dataset containing both stored and tap water data
+# Melting the data for stored water
+stored_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                      measure.vars = c("stored_water_fc", "stored_water_tc"),
+                      variable.name = "Type", value.name = "Value")
+
+# Melting the data for tap water
+tap_melted <- melt(merged_data, id.vars = c("po_water_supply_freq", "village"), 
+                   measure.vars = c("tap_water_fc", "tap_water_tc"),
+                   variable.name = "Type", value.name = "Value")
+
+# Adding a new column to indicate the type of water
+stored_melted$WaterType <- "Stored"
+tap_melted$WaterType <- "Tap"
+
+# Combining both melted data frames
+combined_melted <- rbind(stored_melted, tap_melted)
+
+# Create the combined scatter plot with lines
+combined_plot <- ggplot(combined_melted, aes(x = po_water_supply_freq, y = Value, color = Type)) +
+  geom_point() +
+  geom_line(aes(group = interaction(Type, village))) +
+  labs(title = "Stored and Tap Water FC and TC vs Supply Time Frequency by Village",
+       x = "JJM Water Supply Frequency",
+       y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_grid(village ~ WaterType) + # Facet grid by village and water type
+  scale_color_manual(values = c("stored_water_fc" = "blue", "stored_water_tc" = "red", 
+                                "tap_water_fc" = "green", "tap_water_tc" = "purple"), 
+                     labels = c("Stored Water FC", "Stored Water TC", "Tap Water FC", "Tap Water TC"))
+
+print(combined_plot)
+
+# Save the plot
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_bothTS.png"), combined_plot, bg = "white", width = 10, height = 10, dpi = 200)
+
 
 #---------------------IDEXX Data Cleaning------------------------------------
 
