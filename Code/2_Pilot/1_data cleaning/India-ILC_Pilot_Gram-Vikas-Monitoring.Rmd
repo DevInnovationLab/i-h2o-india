@@ -133,12 +133,12 @@ visit_date <- seq.Date(start_of_week, length.out = 7, by = "day")
 weekly_plan <- tibble(Date = date(visit_date),
        Day = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
                "Saturday", "Sunday"),
-       Plan = c("Naira", #Needs to be manually updated
-                "Mukundpur, Tandipur",
-                "Gopi Kankubadi?",
-                "Nathma",
+       Plan = c("Mukundpur", #Needs to be manually updated
+                "Tandipur",
+                "Gopi Kankubadi",
                 "BNPur",
-                "Badabangi or Bichikote?",
+                "Badabangi",
+                "Naira - Village meeting?",
                 "Flexible Day")
        )
 

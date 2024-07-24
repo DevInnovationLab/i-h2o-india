@@ -1231,8 +1231,8 @@ p_pooled
 idexx_crosstab <- idexx_crosstab%>%
   rename(`E. coli Presence/Absence` = "ec_pa")%>%
   rename(`Total Coliform Presence/Absence` = "cf_pa")%>%
-  rename(`Tap Free Chlorine Concentration` = "fc_tap_pa_2")%>%
-  rename(`Stored Free Chlorine Concentration` = "fc_stored_pa_2")
+  rename(`Tap Free Chlorine Concentration` = "fc_tap_pa_1")%>%
+  rename(`Stored Free Chlorine Concentration` = "fc_stored_pa_1")
 
 p_crosstab_tap_ec <- idexx_crosstab%>%
   crosstable( `Tap Free Chlorine Concentration`, by = `E. coli Presence/Absence`, total = "both")%>%
