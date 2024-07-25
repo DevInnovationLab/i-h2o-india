@@ -377,6 +377,24 @@ bl <- bl%>%
 #Secondary source type
 
 
+#Updating stored bag water quality testing sources
+bl$stored_bag_source <- bl$stored_bag_source%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Government-provided Tap" = "Other (please specify)"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
 
 #Updating satisfaction and confidence questions to be binary
 bl <- bl%>%
@@ -602,7 +620,23 @@ r1 <- r1%>%
     water_source_sec_1 == 0 ~ 0
   ))
 
-
+#Updating stored bag sources
+r1$stored_bag_source <- r1$stored_bag_source%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other (please specify)"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
 
 #Updating satisfaction and confidence questions to be binary
 r1 <- r1%>%
@@ -837,6 +871,23 @@ r2 <- r2%>%
     water_source_sec_1 == 0 ~ 0
   ))
 
+#Updating stored bag water quality testing sources
+r2$stored_bag_source <- r2$stored_bag_source%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other (please specify)"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
 
 
 #Updating satisfaction and confidence questions to be binary
@@ -1055,6 +1106,24 @@ r3 <- r3%>%
 
 
 
+#Updating stored bag water quality testing sources
+r3$stored_bag_source <- r3$stored_bag_source%>%
+  fct_recode(
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    "Surface Water" = "Private Surface well",
+    "Surface Water" = "Uncovered dug well",
+    "Borehole"  = "Borewell operated by electric pump",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other (please specify)"
+  )%>%
+  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+              "Borehole", "Covered Dug Well", "Other")
+
 #Updating satisfaction and confidence questions to be binary
 r3 <- r3%>%
   mutate(tap_trust_binary = case_when(
@@ -1118,8 +1187,10 @@ bl_tab <- bl%>%
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
-                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
-  mutate(data_round = "BL")
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                stored_bag_source)%>%
+  mutate(data_round = "BL")%>%
+  mutate(available_jjm = NA)
 
 r1_tab <- r1%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
@@ -1127,7 +1198,8 @@ r1_tab <- r1%>%
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
-                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                stored_bag_source, available_jjm)%>%
   mutate(data_round = "R1")
 
 r2_tab <- r2%>%
@@ -1136,7 +1208,8 @@ r2_tab <- r2%>%
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
-                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary, 
+                stored_bag_source, available_jjm)%>%
   mutate(data_round = "R2")
 
 r3_tab <- r3%>%
@@ -1145,7 +1218,8 @@ r3_tab <- r3%>%
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
-                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary)%>%
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                stored_bag_source, available_jjm)%>%
   mutate(data_round = "R3")
 
 #Combining Datasets

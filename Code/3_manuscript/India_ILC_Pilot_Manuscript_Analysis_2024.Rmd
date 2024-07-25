@@ -1347,10 +1347,12 @@ ilc_model_table(all_models)
 
 #Pooled Results ----
 fu_rounds <- all_rounds%>%
-  filter(data_round != "BL")
+  filter(data_round != "BL")%>%
+  filter(stored_bag_source == "Government-provided Tap" | is.na(stored_bag_source) == TRUE)
 
 
 #Making desc stat table for summarizing chlorine results from followup
+#Summarizing desc stats for positive results only
 desc_stats_tap <- fu_rounds%>%
   filter(fc_tap_binary == 1 | tc_tap_binary == 1)%>%
   group_by(assignment)%>%
@@ -1380,6 +1382,45 @@ desc_stats_stored <- fu_rounds%>%
     "Stored - Average Total Chlorine Concentration (mg/L)" = mean(tc_stored_avg, na.rm = TRUE),
     "Stored - Free Chlorine - SD" = sd(fc_stored_avg, na.rm = TRUE),
     "Stored - Total Chlorine - SD" = sd(tc_stored_avg, na.rm = TRUE)
+    )
+
+kbl(desc_stats_stored)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+#Making desc stat table for summarizing chlorine results from followup
+#Summarizing presence absence results after removing non-JJM samples
+desc_stats_tap <- fu_rounds%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Tap - Free Chlorine Presence" = mean(fc_tap_binary, na.rm = TRUE),
+    "Tap - Total Chlorine Presence" = mean(tc_tap_binary, na.rm = TRUE),
+    "Tap - Free Chlorine - SD" = sd(fc_tap_binary, na.rm = TRUE),
+    "Tap - Total Chlorine - SD" = sd(tc_tap_binary, na.rm = TRUE)
+    )
+
+
+kbl(desc_stats_tap)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+desc_stats_stored <- fu_rounds%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Stored - Free Chlorine Presence" = mean(fc_stored_binary, na.rm = TRUE),
+    "Stored - Total Chlorine Presence" = mean(tc_stored_binary, na.rm = TRUE),
+    "Stored - Free Chlorine - SD" = sd(fc_stored_binary, na.rm = TRUE),
+    "Stored - Total Chlorine - SD" = sd(tc_stored_binary, na.rm = TRUE)
     )
 
 kbl(desc_stats_stored)%>%
