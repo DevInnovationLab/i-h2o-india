@@ -1348,7 +1348,7 @@ ilc_model_table(all_models)
 #Pooled Results ----
 fu_rounds <- all_rounds%>%
   filter(data_round != "BL")%>%
-  filter(stored_bag_source == "Government-provided Tap" | is.na(stored_bag_source) == TRUE)
+  filter(available_jjm == "Both stored and running water are from JJM")
 
 
 #Making desc stat table for summarizing chlorine results from followup
