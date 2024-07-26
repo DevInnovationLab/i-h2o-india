@@ -109,8 +109,11 @@ overleaf <- function() {
     overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "Archi Gupta") {
-    overleaf = "C:/Users/Archi Gupta/Dropbox/Overleaf/"
+    overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
+  else if (user == "jerem"){
+    overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+  }  
   else {
     warning("No path found for current user (", user, ")")
     overleaf = getwd()
@@ -2003,11 +2006,12 @@ for (i in village_list) {
   print(Stored_after_L)
   plot_list_tap[[i]] <- Stored_after_L
   file_path <- paste0("C:/Users/Archi Gupta/Box/Data/99_Archi_things in progress/Stored_Village_Free_L", i, ".png")
-  
-  # Now, save the plot to the specified path
+  #file_path <- paste0(overleaf(), "/Figure/Stored_Village_Free_L", i, ".png")
   ggsave(file_path, plot = Stored_after_L, device = 'png', width = 10, height = 6, dpi = 300)
-}
+  
+  }
 
+  # Now, save the plot to the specified path
 print("Plots generated for all villages.")
 
 #------------------------------------------------------------------------------
