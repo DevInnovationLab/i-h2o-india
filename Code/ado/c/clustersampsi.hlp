@@ -1,0 +1,326 @@
+{smcl}
+{cmd:help clustersampsi}{right: ({browse "http://www.stata-journal.com/article.html?article=up0047":SJ15-2: st0286_2})}
+{hline}
+
+{title:Title}
+
+{p2colset 5 22 24 2}{...}
+{p2col :{hi:clustersampsi} {hline 2}}Sample size, power, and detectable
+difference determination for cluster randomized controlled trials{p_end}
+{p2colreset}{...}
+
+
+{title:Syntax}
+
+{p 8 11 2}{cmd:clustersampsi} [{cmd:,} {it:options}]
+
+
+{synoptset 22 tabbed}{...}
+{synopthdr}
+{synoptline}
+{syntab:Main}
+{synopt :{cmd:power}}specify a power calculation{p_end}
+{synopt :{cmd:detectabledifference}}specify a detectable difference calculation{p_end}
+{synopt :{cmd:samplesize}}specify a sample-size calculation (default){p_end}
+{synopt :{cmd:binomial}}specify a comparison of proportions (comparison of means is the default){p_end}
+{synopt :{cmd:rates}}specify a comparison of rates (comparison of means is the default){p_end}
+{synopt :{opt rho(#)}}intraclass correlation coefficient{p_end}
+{synopt :{opt cluster_cv(#)}}coefficient of variation of outcomes; default is {cmd:cluster_cv(0)}{p_end}
+
+{syntab:Options}
+{synopt :{opt alpha(#)}}the significance level of the test; default is {cmd:alpha(0.05)}{p_end}
+{synopt :{opt beta(#)}}the power of the test; default is {cmd:beta(0.8)}{p_end}
+{synopt :{opt k(#)}}number of clusters in each arm{p_end}
+{synopt :{opt m(#)}}average cluster size{p_end}
+{synopt :{cmd:size_cv(#)}}coefficient of variation of cluster sizes; default is {cmd:size_cv(0)}{p_end}
+
+{syntab:Values}
+{synopt :{opt mu1(#)}}mean for sample 1{p_end}
+{synopt :{opt mu2(#)}}mean for sample 2 {p_end}
+{synopt :{opt p1(#)}}proportion for sample 1{p_end}
+{synopt :{opt p2(#)}}proportion for sample 2 {p_end}
+{synopt :{opt sd1(#)}}standard deviation of sample 1; default is {cmd:sd1(1)}{p_end}
+{synopt :{opt sd2(#)}}standard deviation of sample 2; default is {cmd:sd2(1)}{p_end}
+{synopt :{opt base_correl(#)}}correlation between  baseline measurements (or other predictive covariates) and outcome{p_end}
+{synoptline}
+
+
+{title:Menu}
+
+{phang}{cmd:User > Cluster RCTs > Sample size for cluster RCTs (clustersampsi)}
+
+
+{title:Description}
+
+{pstd}{cmd:clustersampsi} calculates the {cmd:power} or {cmd:samplesize}
+(the number of clusters or cluster sizes) or the
+{cmd:detectabledifference} for the comparison of two means, two
+proportions, or two rates in the presence of clustering.  In a request
+for a {cmd:samplesize} calculation, if {cmd:m()} or {cmd:k()} is
+specified, {cmd:clustersampsi} computes the other; in a request for a
+power or detectable difference calculation, both {cmd:m()} and {cmd:k()}
+must be specified.  Varying cluster sizes can be accommodated through
+specification of the coefficient of variation of cluster sizes
+({cmd:size_cv()}).  Adjustment for baseline measures (or other
+predictive covariates) can be accommodated through specification of the
+correlation coefficient, {cmd:base_correl()} (correlation between
+baseline measurements, or other predictive covariates, and outcome).
+
+
+{title:Options}
+
+{dlgtab:Main}
+
+{phang}{cmd:power} specifies a power calculation.
+
+{phang}{cmd:detectabledifference} specifies a detectable difference
+calculation.
+
+{phang}{cmd:samplesize} specifies a sample-size calculation (default).
+If users specify a sample-size calculation, then they must also specify
+whether they desire to prespecify the average cluster size (the default,
+in which case the command computes the number of clusters required) or
+whether they wish to prespecify the number of clusters available (in
+which case the command computes the average cluster size needed).
+
+{phang}{cmd:binomial} specifies a comparison of proportions (comparison
+of means is the default).
+
+{phang}{cmd:rates} specifies a comparison of rates (comparison of means
+is the default).
+
+{phang}{opt rho(#)} specifies the intraclass correlation coefficient.
+{it:#} can be any number between 0 and 1.
+
+{phang}{opt cluster_cv(#)} specifies the coefficient of variation of
+outcomes.  {it:#} can be any number greater than 0.
+
+{dlgtab:Options}
+
+{phang}{opt alpha(#)} specifies the significance level of the test.  The
+default is {cmd:alpha(0.05)}.  {it:#} can be any number between 0 and 1.
+
+{phang}{opt beta(#)} specifies the power of the test.  The default is
+{cmd:beta(0.8)}.  {it:#} can be any number between 0 and 1.
+
+{phang}{opt k(#)} specifies the number of clusters in each arm.
+
+{phang}{opt m(#)} specifies the average cluster size.
+
+{phang}{opt size_cv(#)} specifies the coefficient of variation of
+cluster sizes.  The default is {cmd:size_cv(0)}, which indicates all the
+clusters are the same size.  {it:#} can be any number greater than 1.
+
+{dlgtab:Values}
+
+{phang}{opt mu1(#)} specifies the mean for sample 1.
+
+{phang}{opt mu2(#)} specifies the  mean for sample 2.
+
+{phang}{opt p1(#)} specifies the proportion for sample 1.  {it:#} can be
+any number between 0 and 1.
+
+{phang}{opt p2(#)} specifies the proportion for sample 2.  {it:#} can be
+any number between 0 and 1.
+
+{phang}{opt sd1(#)} specifies the standard deviation of sample 1.  The
+default is {cmd:sd1(1)}.  {it:#} can be any number greater than 0.
+
+{phang}{opt sd2(#)} specifies the standard deviation of sample 2.  The
+default is {cmd:sd2(1)}.  {it:#} can be any number greater than 0.
+
+{phang}{opt base_correl(#)} specifies the correlation between baseline
+measurements (or other predictive covariates) and outcome.  {it:#} can
+be any number between 0 and 1.  The command is limited to a maximum of
+one before and one after measurement (that is, it cannot accommodate
+additional repeated measurements).
+
+
+{title:Remarks}
+
+{p 4 7 2}1.  Power for fixed sample size ({cmd:power}):{p_end}
+{pmore2}The user is required to specify the number of clusters, the
+average cluster size (that is, the sample size), and the difference to
+be detected.  The difference to be detected is specified by two means
+(with corresponding standard deviations), by two proportions, or by two
+rates.
+
+{p 4 7 2}2.  Detectable difference for fixed sample size
+({cmd:detectabledifference}):{p_end}
+{pmore2}The user is required to specify the number of clusters and the
+average cluster size (that is, the sample size) and the power and values
+for {cmd:mu1()}, {cmd:p1()}, or {cmd:rate1}.
+
+{p 4 7 2}3.  Sample size ({cmd:samplesize}):{p_end}
+{p 10 14 2}(i) The user is required to specify either the number of
+clusters and the average cluster size (whichever is not specified is
+determined) or the power and the difference to be detected (via
+specification of both {cmd:mu1()} and {cmd:mu2()} or both {cmd:p1()} and
+{cmd:p2()} or both {cmd:rate1} and {cmd:rate2}).  Note that the required
+sample size is rounded up to a multiple of either the average cluster
+size or the number of clusters (whichever is specified).{p_end}
+{p 9 14 2}(ii) For trials which specify the number of clusters
+available, the numbers of clusters might be insufficient and so the
+design infeasible.{p_end}
+{p 8 14 2}(iii) If this is the case the user will be alerted.  The user
+will be told the minimum number of clusters required under the specified
+power and detectable difference.  The user will also be informed of the
+minimum detectable difference (at the user-specified power and number of
+clusters) or the maximum available power (to detect the user-specified
+difference and number of clusters).{p_end}
+
+{p 4 7 2}4.  Binomial comparison ({cmd:binomial}):{p_end}
+{pmore2}Specifies a comparison of two proportions as opposed to a
+comparison of two means.  This method uses normal approximation without
+continuity correction.
+
+{p 4 7 2}5.  Rate comparison ({cmd:rates}):{p_end}
+{pmore2}Specifies a comparison of two rates as opposed to a comparison
+of two means.  This method uses normal approximations.  Under this
+specification, observations refer to person-years.
+
+{p 4 7 2}6.  Parameterization of between-cluster heterogeneity:{p_end}
+{pmore2}The between-cluster heterogeneity may be parameterized by using
+either the intracluster correlation coefficient (ICC) or the coefficient
+of variation of the outcomes ({cmd:cluster_cv()}).  However, the command
+does not currently permit parameterizing the between-cluster
+heterogeneity by using the coefficient of variation of the outcomes
+({cmd:cluster_cv()}) and adjusting for varying cluster sizes through
+specification of the coefficient of the variation for the cluster sizes
+({cmd:size_cv()}).  Should a user wish to use {cmd:clustersampsi} with
+unequal cluster sizes, then the between-cluster heterogeneity must be
+parameterized by using the ICC.
+
+
+{title:Examples}
+
+{p 5 8 2}1.  Power for fixed sample size: compute the power available to
+detect a change in proportions from 0.9 to 0.7 with 30 clusters per arm
+each of size 10 and ICC of 0.01.{p_end}
+{phang2}{cmd:. clustersampsi, binomial power p1(0.9) p2(0.7) m(10) k(30) rho(0.01)}
+
+{p 5 8 2}2.  Power for fixed sample size: compute the power available to
+detect a change in proportions from 0.3 to 0.4 with 20 clusters per arm
+each of size 20 and ICC of 0.05.{p_end}
+{phang2}{cmd:. clustersampsi, binomial power p1(0.3) p2(0.4) m(20) k(20) rho(0.05)}
+
+{p 5 8 2}3.  Detectable difference for fixed sample size: compute the
+difference detectable with 20 clusters per arm each of size 20 between
+two means where the baseline mean is 30 with standard deviation 2 at 80%
+power.{p_end}
+{phang2}{cmd:. clustersampsi, detectabledifference mu1(30) sd1(2) m(20) k(20) rho(0.05)}
+
+{p 5 8 2}4.  Detectable difference for fixed sample size: compute the
+difference detectable with 20 clusters per arm each of size 20 between
+two proportions where the baseline proportion is 0.3 and ICC is
+0.05.{p_end}
+{phang2}{cmd:. clustersampsi, binomial detectabledifference p1(0.3) m(20) k(20) rho(0.05)}
+
+{p 5 8 2}5.  Number of clusters required: compute the number of clusters
+required at 80% power to detect a change in proportions from 0.6 to 0.7
+with ICC 0.01 for average cluster size 20 with coefficient of variation
+of cluster sizes 0.9.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.7) m(20) rho(0.01) size_cv(0.9)}
+
+{p 5 8 2}6.  Number of clusters required: compute the number of clusters
+required at 80% power to detect a change in proportions from 0.7 to 0.6
+with ICC 0.01 for average cluster size 20 with coefficient of variation
+of cluster sizes 0.9.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.7) m(20) rho(0.01) size_cv(0.9)}
+
+{p 5 8 2}7.  Number of clusters required: compute the number of clusters
+required at 80% power to detect a change in means from 39 to 43 with
+standard deviation 0.7 with ICC 0.01 for average cluster size 20 with
+coefficient of variation of cluster sizes 0.9.{p_end}
+{phang2}{cmd:. clustersampsi, samplesize mu1(39) mu2(43) sd1(0.7) sd2(0.7) m(20) rho(0.01) size_cv(0.9)}
+
+{p 5 8 2}8.  Average cluster size required: compute the average cluster
+size required at 80% power to detect a change in proportions from 0.6 to
+0.7 with ICC 0.01 where 20 clusters are available per arm each of a
+constant size.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.7) k(20) rho(0.01) alpha(0.05) beta(0.8)}
+
+{p 5 8 2}9.  Average cluster size required: compute the average cluster
+size required at 80% power to detect a change in proportions from 0.6 to
+0.7 with ICC 0.01 where there are 20 clusters available per arm with
+variable size and estimated coefficient of variation of cluster sizes
+0.7.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.7) k(20) rho(0.01) size_cv(0.7)}
+
+{p 4 8 2}10.  Average cluster size required: compute the average cluster
+size required at 80% power to detect a change in proportions from 0.6 to
+0.63 with ICC 0.01 where there are 20 clusters available per arm with
+variable size and estimated coefficient of variation of cluster sizes
+0.7.  This is an example with an insufficient number of clusters.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.63) k(20) rho(0.01) size_cv(0.7)}
+
+{p 4 8 2}11.  The same example as immediately above: only now the
+addition of baseline measurements has been included with a repeated
+measures correlation of 0.9.  This design is now feasible.{p_end}
+{phang2}{cmd:. clustersampsi, binomial samplesize p1(0.6) p2(0.63) k(20) rho(0.01) size_cv(0.7) base_correl(0.9)}
+
+
+{title:Saved results}
+
+{pstd}{cmd:clustersampsi} saves the following in {cmd:r()}:
+
+{synoptset 15 tabbed}{...}
+{p2col 5 15 19 2: Macros}{p_end}
+{synopt:{cmd:r(power)}}power{p_end}
+{synopt:{cmd:r(powerm)}}power under m clusters{p_end}
+{synopt:{cmd:r(powermmin1)}}power under m-1 clusters{p_end}
+{synopt:{cmd:r(vif)}}variance inflation factor (design effect){p_end}
+{synopt:{cmd:r(cvif)}}coefficient of variation inflation factor (when specifying heterogeneity via the CV){p_end}
+{synopt:{cmd:r(m)}}average cluster size{p_end}
+{synopt:{cmd:r(k)}}number of clusters in sample 1{p_end}
+{synopt:{cmd:r(Min_k)}}minimum number of required clusters{p_end}
+{synopt:{cmd:r(MDD_neg)}}minimum detectable difference less than prespecified mean{p_end}
+{synopt:{cmd:r(MDD_pos)}}minimum detectable difference greater than prespecified mean{p_end}
+{synopt:{cmd:r(MDD)}}minimum detectable difference{p_end}
+{synopt:{cmd:r(DD)}}detectable difference{p_end}
+{synopt:{cmd:r(DD_neg)}}detectable difference when value to be detected is less than prespecified mean{p_end}
+{synopt:{cmd:r(DD_pos)}}detectable difference when value to be detected is greater than prespecified mean{p_end}
+{synopt:{cmd:r(mean_neg)}}mean value corresponding to detectable difference (less than){p_end}
+{synopt:{cmd:r(mean_pos)}}mean value corresponding to detectable difference (greater than){p_end}
+{synopt:{cmd:r(powerRCT)}}power under individual randomization{p_end}
+{synopt:{cmd:r(DD_RCT)}}detectable difference  under individual randomization{p_end}
+{synopt:{cmd:r(DD_negRCT)}}detectable difference when value to be detected is less than prespecified mean under individual randomization{p_end}
+{synopt:{cmd:r(DD_posRCT)}}detectable difference when value to be detected is greater than prespecified mean under individual randomization{p_end}
+{synopt:{cmd:r(mean_negRCT)}}mean value corresponding to detectable difference (less than) under individual randomization{p_end}
+{synopt:{cmd:r(mean_posRCT)}}mean value corresponding to detectable difference (greater than) under individual randomization{p_end}
+
+{pstd}Only a subset of this will be saved, depending on what part of the
+function was executed.
+
+
+{title:Notes}
+
+{pstd}This command has a corresponding dialog box.  To
+install the dialog box (sometimes called a drop-down command box), follow
+these commands:{p_end}
+{phang2}{cmd:. window menu append submenu "stUser" "&Cluster RCTs"}{p_end}
+{phang2}{cmd:. window menu append item "Cluster RCTs" "Sample size for cluster RCTs (&clustersampsi)" "db clustersampsi"}{p_end}
+{phang2}{cmd:. window menu refresh}
+
+{pstd}To permanently install this dialog box, place these commands in your
+{cmd:profile.do} file
+
+
+{title:Authors}
+
+{pstd}Karla Hemming{p_end}
+{pstd}University of Birmingham{p_end}
+{pstd}Birmingham, UK{p_end}
+{pstd}k.hemming@bham.ac.uk{p_end}
+
+{pstd}Jen Marsh{p_end}
+{pstd}University of Birmingham{p_end}
+{pstd}Birmingham, UK{p_end}
+{pstd}j.l.marsh@bham.ac.uk{p_end}
+
+
+{title:Also see}
+
+{p 4 14 2}Article:  {it:Stata Journal}, volume 15, number 2: {browse "http://www.stata-journal.com/article.html?article=up0047":st0286_2},{break}
+                    {it:Stata Journal}, volume 14, number 3: {browse "http://www.stata-journal.com/article.html?article=up0044":st0286_1},{break}
+                    {it:Stata Journal}, volume 13, number 1: {browse "http://www.stata-journal.com/article.html?article=st0286":st0286}{p_end}

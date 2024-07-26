@@ -1,4 +1,4 @@
-* 000000203
+* 000000223
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -1426,4 +1426,46 @@ f i/ieduplicates.ado
 f i/ieduplicates.sthlp
 f i/ietestform.ado
 f i/ietestform.sthlp
+e
+S http://fmwww.bc.edu/repec/bocode/c
+N clustersampsim.pkg
+D 25 Jul 2024
+U 21
+d 'CLUSTERSAMPSIM': module to simulate cluster-randomized trial sample size requirements
+d 
+d  clustersampsim is an extension of the clustersampsi command that
+d allows the user to specify either 1) a range of numbers of
+d clusters per study arm to find the required  sample sizes per
+d cluster 2) a range of cluster sizes to find the numbers of
+d required    clusters per study arm.
+d 
+d KW: randomized trial
+d KW: clustering
+d KW: sample size
+d 
+d Requires: Stata version 12 and clustersampsi from Stata Journal
+d 
+d Distribution-Date: 20200516
+d 
+d Author: Jonathan Seiden, Harvard Graduate School of Education
+d Support: email jseiden@@g.harvard.edu
+d 
+f c\clustersampsim.ado
+f c\clustersampsim.sthlp
+e
+S http://www.stata-journal.com/software/sj15-2
+N st0286_2.pkg
+D 25 Jul 2024
+U 22
+d SJ15-2 st0286_2. Update: Sample size, power,...
+d Update: Sample size, power, and detectable
+d   difference determination for cluster
+d   randomized controlled trials
+d by Karla Hemming, University of Birmingham
+d    Jen Marsh, University of Birmingham
+d Support:  k.hemming@@bham.ac.uk
+d After installation, type help ^clustersampsi^
+f c\clustersampsi.ado
+f c\clustersampsi.hlp
+f c\clustersampsi.dlg
 e

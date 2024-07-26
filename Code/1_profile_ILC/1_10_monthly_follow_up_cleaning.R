@@ -477,6 +477,36 @@ star.out <- stargazer(df.rep,
 
 
 
+#-------------------------------------------------------------------------------------------------------------------
+# reason of replacement
+#-------------------------------------------------------------------------------------------------------------------
+
+ms_consent_v <- ms_consent %>% select(reason_replacement)
+view(ms_consent_v)
+
+# Recode the variable reason_replacement
+ms_consent <- ms_consent %>%
+  mutate(reason_replacement = ifelse(reason_replacement == 2, 1, reason_replacement))
+
+ms_consent$reason_replacement <- ifelse(ms_consent$reason_replacement == "1", "HH was unavailable", 
+                                              ifelse(ms_consent$water_source_prim == "3", "Household refused", 
+                                                     ifelse(ms_consent$water_source_prim == "4", "No stored or running water", 
+                                                            ms_consent$water_source_prim)))
+
+replace_percentage <- ms_consent %>%
+  group_by(reason_replacement) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)
+
+
+View(replace_percentage)
+
+stargazer(replace_percentage, summary=F, title= "Reasons of Replacement breakdown",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/replacement_reason_idexx.tex"))
+
+
+
+
 
 #------------------------------------------------------------------------
 # Drop rows where resp_available != 1
@@ -605,6 +635,272 @@ tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
 print(tests)
 
 ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_village_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
+
+
+#water_source_prim
+
+#-------------------------------------------------------------------------------------------------------------------
+# PRIMARY SOURCE DISTRIBUTION IN GENERAL
+#-------------------------------------------------------------------------------------------------------------------
+
+ms_consent$water_source_prim <- ifelse(ms_consent$water_source_prim == "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM", "JJM", 
+                                                ifelse(ms_consent$water_source_prim == "Government provided community standpipe (connected to piped system, through Vasu", "Govt provided community standpipe", 
+                                                       ifelse(ms_consent$water_source_prim == "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)", "Gram Panchayat/other community standpipe", 
+                                                              ifelse(ms_consent$water_source_prim == "Manual handpump", "Manual handpump", 
+                                                                     ifelse(ms_consent$water_source_prim == "Covered dug well", "Covered dug well", 
+                                                                            ifelse(ms_consent$water_source_prim == "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c", "surface water",
+                                                                                   ifelse(ms_consent$water_source_prim == "Uncovered dug well", "Uncovered dug well", 
+                                                                                          ifelse(ms_consent$water_source_prim == "Private Surface well", "Private Surface well", 
+                                                                                                 ifelse(ms_consent$water_source_prim == "Borewell operated by electric pump", "Borewell", 
+                                                                                                        ifelse(ms_consent$water_source_prim == "Household tap connections not connected to RWSS/Basudha/JJM tank", "Non-JJM household tap connections", 
+                                                                                                               ifelse(ms_consent$water_source_prim == "Other", "Other", 
+                                                                                                                      ms_consent$water_source_prim)))))))))))
+
+water_source_percentage <- ms_consent %>%
+  group_by(water_source_prim) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = (count / sum(count)) * 100)
+
+
+View(water_source_percentage)
+
+stargazer(water_source_percentage, summary=F, title= "Primary water source breakdown",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Prim_source_idexx.tex"))
+
+
+#-------------------------------------------------------------------------------------------------------------------
+# SECONDARY WATER SOURCE DISTRIBUTION IN GENERAL
+#-------------------------------------------------------------------------------------------------------------------
+# Summarize the data to get the count of each response
+response_counts <- ms_consent %>%
+  group_by(water_sec_yn) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+# Calculate the total number of responses
+total_responses <- sum(response_counts$count)
+
+# Calculate the percentage for each response
+response_percentages <- response_counts %>%
+  mutate(percentage = (count / total_responses) * 100)
+
+# Print the result
+print(response_percentages)
+
+stargazer(response_percentages, summary=F, title= "",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/sec_source_idexx.tex"))
+
+var_label(ms_consent$water_source_sec_1) <- "JJM"
+var_label(ms_consent$water_source_sec_2) <- "Govt provided community standpipe"
+var_label(ms_consent$water_source_sec_3) <- "Gram Panchayat/other community standpipe"
+var_label(ms_consent$water_source_sec_4) <- "Manual handpump"
+var_label(ms_consent$water_source_sec_5) <- "Covered dug well"
+var_label(ms_consent$water_source_sec_6) <- "surface water"
+var_label(ms_consent$water_source_sec_7) <- "Uncovered dug well"
+var_label(ms_consent$water_source_sec_8) <- "Private Surface well"
+var_label(ms_consent$water_source_sec_9) <- "Borewell"
+var_label(ms_consent$water_source_sec_10) <- "Non-JJM household tap connections"
+var_label(ms_consent$water_source_sec__77) <- "Other secondary source"
+
+
+variables <- c("water_source_sec_1", 
+               "water_source_sec_2", 
+               "water_source_sec_3", 
+               "water_source_sec_4", 
+               "water_source_sec_5", 
+               "water_source_sec_6", 
+               "water_source_sec_7", 
+               "water_source_sec_8", 
+               "water_source_sec_9", 
+               "water_source_sec_10", 
+               "water_source_sec__77")
+
+
+sums <- ms_consent %>%
+  summarise(across(all_of(variables), sum, na.rm = TRUE))
+
+sums_long <- sums %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Sum")
+
+print(sums_long)
+
+View(sums_long)
+
+# Calculate the total sum of all the variables
+total_sum <- sum(sums_long$Sum)
+
+# Add a percentage column
+sums_long <- sums_long %>%
+  mutate(Percentage = (Sum / total_sum) * 100)
+
+# Print the results
+print(sums_long)
+
+
+sums_long$Variable <- sapply(sums_long$Variable, function(x) var_label(ms_consent[[x]]))
+
+
+# Generate the LaTeX table
+stargazer(sums_long, 
+          summary = FALSE, 
+          title = "Secondary water source breakdown", 
+          float = FALSE, 
+          rownames = FALSE, 
+          out = paste0(overleaf(), "Table/Sec_source_break_idexx.tex"))
+
+
+
+
+#------------------------------------------------------------------------
+#--------------------------------------------------------------
+#--------------------------------------------------------------
+
+
+# Assuming `ms_consent` is your data frame
+
+# Step 1: Calculate the percentage of "Yes" and "No" for `water_sec_yn`
+water_sec_yn_summary <- ms_consent %>%
+  group_by(water_sec_yn) %>%
+  summarise(Sum = n()) %>%
+  mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
+print(water_sec_yn_summary)
+
+# Step 2: For those who said "Yes" (assuming "Yes" is coded as 1), calculate the percentage of each secondary water source
+ms_consent_yes <- ms_consent %>%
+  filter(water_sec_yn == 1)
+
+variables <- c("water_source_sec_1", 
+               "water_source_sec_2", 
+               "water_source_sec_3", 
+               "water_source_sec_4", 
+               "water_source_sec_5", 
+               "water_source_sec_6", 
+               "water_source_sec_7", 
+               "water_source_sec_8", 
+               "water_source_sec_9", 
+               "water_source_sec_10", 
+               "water_source_sec__77")
+
+sums_yes <- ms_consent_yes %>%
+  summarise(across(all_of(variables), sum, na.rm = TRUE))
+
+sums_long_yes <- sums_yes %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Sum")
+
+# Calculate the total sum of all the variables for "Yes"
+total_sum_yes <- sum(sums_long_yes$Sum)
+
+# Add a percentage column for "Yes"
+sums_long_yes <- sums_long_yes %>%
+  mutate(Percentage = (Sum / total_sum_yes) * 100)
+print(sums_long_yes)
+
+# Step 3: Combine the `water_sec_yn_summary` with `sums_long_yes`
+# Create a combined table
+combined_table <- bind_rows(
+  water_sec_yn_summary %>% mutate(Variable = if_else(water_sec_yn == 1, "Yes to secondary source", "No to secondary source"), .keep = "unused"),
+  sums_long_yes %>% mutate(Variable = sapply(Variable, function(x) var_label(ms_consent[[x]])))
+)
+
+View(combined_table)
+# Select and reorder columns
+combined_table <- combined_table %>% select(Variable, Sum, Percentage)
+
+# Rename columns for clarity
+colnames(combined_table) <- c("Variable", "Sum", "Percentage")
+
+
+# Generate the LaTeX table
+stargazer(combined_table, 
+          summary = FALSE, 
+          title = "Breakdown of Secondary Water Source Usage", 
+          float = FALSE, 
+          rownames = FALSE, 
+          out = paste0(overleaf(), "Table/Sec_source_combined_breakdown.tex"))
+
+# Print the combined table
+print(combined_table)
+
+
+
+star.out <- stargazer(combined_table, summary=F, title= "Breakdown of Secondary Water Source Usage",float=F,rownames = F,
+                      covariate.labels=NULL)
+
+star.out <- sub("Yes to secondary source","\hline", star.out) 
+
+# Example: Insert \hline after the header row
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source_combined_breakdown.tex"))
+
+
+#------------------------------------------------------------------------------------------------------
+# Consistency checks 
+#-----------------------------------------------------------------------------------------------------
+
+#_____________________________________________
+
+#stored_sample_collection
+#_____________________________________________
+
+
+# Filter the dataset where replacement is 0
+filtered_data <- ms_consent %>%
+  filter(replacement == 0)
+
+# Calculate the percentages of Yes and No for stored_sample_collection
+stored_sample_summary <- filtered_data %>%
+  group_by(stored_sample_collection) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(stored_sample_summary)
+
+#_____________________________________________
+
+#stored_tap
+#_____________________________________________
+
+# Calculate the percentages of Yes and No for stored_sample_collection
+stored_sample_summary <- filtered_data %>%
+  group_by(stored_tap) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(stored_sample_summary)
+
+#_____________________________________________
+#tap_sample_collection
+#_____________________________________________
+
+# Calculate the percentages of Yes and No for stored_sample_collection
+tap_sample_summary <- filtered_data %>%
+  group_by(tap_sample_collection) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(tap_sample_summary)
+
+#_____________________________________________
+
+#tap_error
+#_____________________________________________
+
+tap_error_sum <- ms_consent %>%
+  group_by(tap_error) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(tap_error_sum)
+
+#_____________________________________________
+
+#stored_error
+#_____________________________________________
+stored_error_sum <- ms_consent %>%
+  group_by(stored_error) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(stored_error_sum)
 
 
 #---------------chlorine decay plots village wise----------------------------#
@@ -830,6 +1126,8 @@ print(combined_plot)
 ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq.png"), combined_plot, bg = "white", width = 7, height = 7, dpi = 200)
 
 
+
+
 #------------------------------------------------------------------------
 # TAPWATER 
 #------------------------------------------------------------------------
@@ -993,6 +1291,23 @@ print(combined_plot)
 
 # Save the plot
 ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_bothTS.png"), combined_plot, bg = "white", width = 10, height = 10, dpi = 200)
+
+
+
+#-----------------------------------------------------------------------------
+
+# PULLING IN FOLLOW UP ROUNDS DATA TO CHECK FOR CHLORINE DECAY 
+
+#-------------------------------------------------------------------------------------
+
+#Cleaned baseline HH round 
+
+
+
+
+
+
+
 
 
 #---------------------IDEXX Data Cleaning------------------------------------
