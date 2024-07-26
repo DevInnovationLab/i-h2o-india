@@ -6,25 +6,29 @@
 
 #------------------------ Load the libraries ----------------------------------------
 
+#Jeremy to Archi -- Commenting out package install so it doesn't run every time
+# install.packages("RSQLite")
+# install.packages("haven")
+# install.packages("expss")
+# install.packages("stargazer")
+# install.packages("Hmisc")
+# install.packages("labelled")
+# install.packages("data.table")
+# install.packages("haven")
+# install.packages("remotes")
+# # Attempt using devtools package
+# install.packages("devtools")
+# install.packages("geosphere")
+# 
+# #please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
+# install.packages("remotes")
+# remotes::install_github("ChandlerLutz/starpolishr")
+# install.packages("ggrepel")
+# install.packages("reshape2")
 
-install.packages("RSQLite")
-install.packages("haven")
-install.packages("expss")
-install.packages("stargazer")
-install.packages("Hmisc")
-install.packages("labelled")
-install.packages("data.table")
-install.packages("haven")
-install.packages("remotes")
-# Attempt using devtools package
-install.packages("devtools")
-install.packages("geosphere")
+#install.packages("remotes")
+#remotes::install_github("jknappe/quantitray") #Quantitray package installation
 
-#please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
-install.packages("remotes")
-remotes::install_github("ChandlerLutz/starpolishr")
-install.packages("ggrepel")
-install.packages("reshape2")
 # load the libraries
 library(haven)
 library(data.table)
@@ -47,6 +51,7 @@ library(geosphere)
 library(leaflet)
 library(ggrepel)
 library(reshape2)
+library(quantitray)
 #library(xtable)
 
 
@@ -294,17 +299,17 @@ knitr::opts_knit$set(root.dir = DI_path())
 
 #Monthly Surveys - ms
 ms <- read_csv(paste0(user_path(), "1_raw/Chlorine and IDEXX Monitoring Survey_WIDE.csv"))
-View(ms)
+#View(ms)
 
 #Key village details
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
-View(village_details)
+#View(village_details)
 
 #IDEXX results
 idexx <- read_csv(paste0(user_path(), "1_raw/IDEXX Results Reporting - July 2024_WIDE.csv"))
 
-View(idexx)
+#View(idexx)
 #-------------------------------Cleaning Village Details for Joining----------
 
 
@@ -321,6 +326,9 @@ village_details <- village_details%>%
 #Making block variable compatible with existing data
 village_details <- village_details%>%
   rename(block = "Block")
+
+
+
 
 #Making village_name variable compatible
 village_details <- village_details%>%
@@ -340,6 +348,7 @@ village_details <- village_details%>%
                                   village_name == "Karnapadu" ~ "KA"
                                   
   ))
+
 
 
 ###-------------------Defining overall functions------------------------####
@@ -366,6 +375,15 @@ labelmaker <- function(x){
          #sample_ID_tap = "tap_sample_id")
 
 names(ms)
+
+#Adding village details to Monthly Survey
+ms <- ms%>%
+  mutate(village_name = R_Cen_village_name_str) #Renaming to easier variable name
+
+#Left join village_details and ms
+ms <- left_join(ms, village_details, by = "village_name")
+
+
 
 #------------------------------------------------------------------------
 #HH availability stats 
@@ -552,6 +570,9 @@ if (correct_replacement) {
 }
 
 names(ms)
+
+
+
 
 #------------------------------------------------------------------------
 #CHECKING DUPLICATES IN SAMPLE ID AND TAP ID 
@@ -1313,25 +1334,39 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_bothTS.pn
 #---------------------IDEXX Data Cleaning------------------------------------
 
 
-#PREPARING IDEXX DATA##########################################################
 #Pivoting dataset to be longer for pairing IDEXX data to sample IDs
 ms_idexx <- ms%>%
-  pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
+  pivot_longer(cols = c(stored_sample_id, tap_sample_id), values_to = "sample_ID", names_to = "sample_type")
 
-View(ms_idexx)
+#View(ms_idexx)
 
 
-#---------------------IDEXX reporting form-----------------------------
+
+#------------------------------------------------------------------------
+#Generating IDEXX Data Variables (MPN, Presence/Absence, Log transformation, etc.)
+#------------------------------------------------------------------------
+
+
+
 #Noting duplicate samples
+#Not needed because we are not running duplicates
+# idexx <- idexx%>%
+#   mutate(duplicate = ifelse(end_comments == "DUPLICATE", 1, 0))%>%
+#   tidyr::replace_na(duplicate, value = 0)
+
+#Renaming sample_ID variable
 idexx <- idexx%>%
-  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-  replace_na(duplicate, value = 0)
+  rename(sample_ID = "unique_sample_id")
+
+#Noting blank samples
+idexx <- idexx%>%
+  mutate(blank = ifelse(sample_ID == 0, 1, 0))
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
-  filter(sample_ID != "Lab Blank",
-         sample_ID != "Field Blank")%>%
-  filter(duplicate < 1)
+  filter(blank != 1)#%>%
+  #filter(duplicate != 1) #No duplicates, not running
+
 
 #Checking IDs which do not match between survey data and lab data
 idexx_ids <- idexx$sample_ID
@@ -1341,7 +1376,8 @@ idexx_id_check <- idexx%>%
 
 
 #combining idexx results to survey results
-ms_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
+ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
+idexx$sample_ID <- as.character(idexx$sample_ID)
 idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
 
 #checking duplicate IDs
@@ -1356,6 +1392,9 @@ idexx$sample_type <- idexx$sample_type%>%
   fct_recode("Stored" = "sample_ID_stored",
              "Tap" = "sample_ID_tap")
 
+#need to relabel idexx variables
+
+
 #Renaming assignment names
 idexx$assignment <- factor(idexx$assignment)
 idexx$assignment <- fct_recode(idexx$assignment,
@@ -1367,25 +1406,19 @@ idexx$assignment <- fct_recode(idexx$assignment,
 #   mutate(panchayat_village = `Panchat village`)
 
 #Calculating MPN for each IDEXX test
+#Calculating MPN for each IDEXX test
 idexx <- idexx%>%
-  mutate(cf_95lo = quantify_95lo(y_large, y_small, "qt-2000"),
-         cf_mpn  = quantify_mpn(y_large, y_small, "qt-2000"),
-         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))%>%
+  mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
   mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
 
-
 idexx <- idexx%>%
-  mutate(ec_95lo = quantify_95lo(f_large, f_small, "qt-2000"),
-         ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
-         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))%>%
+  mutate(ec_95lo = quantify_95lo(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_mpn  = quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))%>%
   mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
 
-
-#Checking cases of NA for total coliform and e coli
-#xx <- idexx%>%
-# filter(is.na(cf_mpn) == TRUE)
-#xxx <- idexx%>%
-# filter(y_large == 49 & y_small == 48)
 
 
 #Adding presence/absence data
@@ -1412,7 +1445,6 @@ idexx <- idexx%>%
     ec_mpn == 0 ~ 0))
 
 
-
 #log transforming data
 idexx <- idexx%>%
   mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
@@ -1421,7 +1453,7 @@ idexx <- idexx%>%
                               cf_mpn > 0 ~ cf_mpn))%>%
   mutate(ec_log = log(ec_mpn_2, base = 10))%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
-
+#Make - inf values be 0
 
 #Adding in WHO risk levels
 idexx <- idexx%>%
@@ -1429,6 +1461,7 @@ idexx <- idexx%>%
                              (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
+
 
 
 #Code for writing/updating final file
