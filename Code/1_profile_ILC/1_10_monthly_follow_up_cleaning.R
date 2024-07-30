@@ -131,7 +131,7 @@ overleaf <- function() {
     overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "jerem"){
-    overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+    overleaf = "C:/Users/jerem/Dropbox/Apps/Overleaf/Everything document -ILC/"
   }  
   else {
     warning("No path found for current user (", user, ")")
@@ -280,6 +280,10 @@ DI_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/2_deidentified/"
   } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -384,6 +388,10 @@ ms <- ms%>%
 ms <- left_join(ms, village_details, by = "village_name")
 
 
+#Consented cases
+ms_consent <- ms%>%  
+  filter(consent == 1)
+
 
 #------------------------------------------------------------------------
 #HH availability stats 
@@ -405,7 +413,8 @@ HH_unavailable <- ms %>%  filter(resp_available != 1 & resp_available != 2) %>%
   group_by(R_Cen_village_name_str) %>% mutate("HH unavailable" =n()) %>% ungroup()  %>% unique() %>% 
   arrange(R_Cen_village_name_str)
 
-Consented <- ms %>%  filter(consent == 1) %>% 
+Consented <- ms %>%  
+  filter(consent == 1) %>% 
   select(R_Cen_village_name_str) %>%
   group_by(R_Cen_village_name_str) %>% mutate("HH consented" =n()) %>% ungroup()  %>% unique() %>% 
   arrange(R_Cen_village_name_str)
@@ -420,7 +429,7 @@ Total <- df.progress %>% summarise(across(where(is.numeric), ~ sum(.x, na.rm = T
 Total$Village <- "Total"
 df.progress<- rbind(df.progress, Total)
 
-View(df.progress)
+#View(df.progress)
 
 #output to tex 
 stargazer(df.progress, summary=F, title= "Overall Progress: Monthly IDEXX Survey",float=F,rownames = F,
@@ -500,7 +509,7 @@ star.out <- stargazer(df.rep,
 #-------------------------------------------------------------------------------------------------------------------
 
 ms_consent_v <- ms_consent %>% select(reason_replacement)
-view(ms_consent_v)
+#view(ms_consent_v)
 
 # Recode the variable reason_replacement
 ms_consent <- ms_consent %>%
@@ -517,7 +526,7 @@ replace_percentage <- ms_consent %>%
   mutate(percentage = (count / sum(count)) * 100)
 
 
-View(replace_percentage)
+#View(replace_percentage)
 
 stargazer(replace_percentage, summary=F, title= "Reasons of Replacement breakdown",float=F,rownames = F,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/replacement_reason_idexx.tex"))
@@ -531,7 +540,7 @@ stargazer(replace_percentage, summary=F, title= "Reasons of Replacement breakdow
 #------------------------------------------------------------------------
 
 ms_consent <- subset(ms, consent == 1)
-View(ms_consent)
+#View(ms_consent)
 
 #------------------------------------------------------------------------
 #checking for duplicate UIDs
@@ -551,7 +560,7 @@ print(duplicate_ids)
 #MANUAL CLEANING OF SAMPLE IDs
 #------------------------------------------------------------------------
 # Replace the value
-View(ms)
+#View(ms)
 names(ms)
 
 #enumerator made a data entry error and by mistake put 20351 for this UID 
@@ -561,7 +570,7 @@ ms_consent$stored_sample_id_again[ms_consent$unique_id == "40202110019" & ms_con
 
 ms_view <- ms_consent %>% select(unique_id, stored_sample_id, stored_sample_id_again)
 
-View(ms_view)
+#View(ms_view)
 correct_replacement <- all(ms_consent$stored_sample_id[ms_consent$unique_id == "40202110019"] == 20354)
 if (correct_replacement) {
   cat("The replacement is correct.\n")
@@ -683,7 +692,7 @@ water_source_percentage <- ms_consent %>%
   mutate(percentage = (count / sum(count)) * 100)
 
 
-View(water_source_percentage)
+#View(water_source_percentage)
 
 stargazer(water_source_percentage, summary=F, title= "Primary water source breakdown",float=F,rownames = F,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/Prim_source_idexx.tex"))
@@ -745,7 +754,7 @@ sums_long <- sums %>%
 
 print(sums_long)
 
-View(sums_long)
+#View(sums_long)
 
 # Calculate the total sum of all the variables
 total_sum <- sum(sums_long$Sum)
@@ -823,7 +832,7 @@ combined_table <- bind_rows(
   sums_long_yes %>% mutate(Variable = sapply(Variable, function(x) var_label(ms_consent[[x]])))
 )
 
-View(combined_table)
+#View(combined_table)
 # Select and reorder columns
 combined_table <- combined_table %>% select(Variable, Sum, Percentage)
 
@@ -847,7 +856,8 @@ print(combined_table)
 star.out <- stargazer(combined_table, summary=F, title= "Breakdown of Secondary Water Source Usage",float=F,rownames = F,
                       covariate.labels=NULL)
 
-star.out <- sub("Yes to secondary source","\hline", star.out) 
+#Jeremy to Archi: This line broke my code so I'm just commenting out for now until it can be fixed
+#star.out <- sub("Yes to secondary source","\hline", star.out) 
 
 # Example: Insert \hline after the header row
 starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source_combined_breakdown.tex"))
@@ -942,7 +952,7 @@ ms_consent$stored_time_in_hours <- with(ms_consent, ifelse(stored_time_unit == 1
 
 # Now ms_consent will have a new column stored_time_in_hours with all times converted to hours
 ms_view <- ms_consent %>% select(unique_id, stored_water_fc, stored_water_tc, stored_time, stored_time_unit, stored_time_in_hours  )
-View(ms_view)
+#View(ms_view)
 
 
 # Assuming your data frame is named ms_consent and it contains stored_time_in_hours, stored_water_fc, stored_water_tc, and village
@@ -1042,12 +1052,12 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_test_types.png"), com
 
 
 df.PO <- read_stata(paste0(DI_path(),"pump_operator_survey.dta" ))
-View(df.PO)
+#View(df.PO)
 
 names(df.PO)
 
 df.PO.sub <- df.PO %>% select(po_village_name, po_water_supply_freq)
-View(df.PO.sub)
+#View(df.PO.sub)
 
 #renaming village variable name
 
@@ -1063,7 +1073,7 @@ unique(ms_consent$village)
 
 # Merge datasets with an inner join
 merged_data <- merge(df.PO.sub, ms_consent, by = "village")
-View(merged_data)
+#View(merged_data)
 
 #stored_water_fc
 #stored_water_tc
@@ -1071,7 +1081,7 @@ View(merged_data)
 #stored_time_unit
 
 merged_data_view <- merged_data %>% select(village, stored_water_fc)
-View(merged_data_view)
+#View(merged_data_view)
 
 #------------------------------------------------------------------------
 # STORED WATER 
@@ -1464,10 +1474,18 @@ idexx <- idexx%>%
 
 
 
-#Code for writing/updating final file
+
+
+#-------------------------Writing Cleaned Final Datasets----------------------
+
+#IDEXX Results
 #Writing files to lab_data and final folders
 write_csv(idexx,paste0(user_path(),"/5_lab data/idexx/cleaned/idexx_monthly_master_cleaned.csv"))
 write_csv(idexx,paste0(user_path(),"/3_final/idexx_monthly_master_cleaned.csv"))
+
+
+#Monthly Survey
+write_csv(ms)
 
 
 
