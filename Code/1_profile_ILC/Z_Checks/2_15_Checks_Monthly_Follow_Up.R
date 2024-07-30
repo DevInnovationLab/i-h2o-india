@@ -127,10 +127,11 @@ overleaf <- overleaf_path()
 
 #----------------------------------Loading Cleaned Data---------------------------------
 
+#Monthly IDEXX data
+idexx <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned.csv"))
 
-
-
-
+#Monthly household survey data
+ms <- read_csv(paste0(user_path(), "/3_final/1_10_monthly_follow_up_cleaned.csv"))
 
 
 
@@ -140,11 +141,16 @@ overleaf <- overleaf_path()
 
 
 
-#Checking cases of NA for total coliform and e coli
-#xx <- idexx%>%
-# filter(is.na(cf_mpn) == TRUE)
-#xxx <- idexx%>%
-# filter(y_large == 49 & y_small == 48)
+#Checking for duplicate IDs
+idexx%>%
+  count(sample_ID)%>% 
+  filter(n > 1)
+x <- idexx%>%
+  filter(unique_bag_id == 90722)
+#Sample ID 20351 is duplicated
+#Sample ID was recorded incorrectly in the survey
+#Bag ID 90722 corresponds to ID 20354
+#Change made in cleaning code
 
 
 

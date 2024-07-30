@@ -1384,16 +1384,20 @@ ms_sample_ids <- ms_idexx$sample_ID
 idexx_id_check <- idexx%>%
   filter(!(sample_ID %in% ms_sample_ids))
 
+#Cleaning incorrect sample and bag IDs
+#Sample ID 20351 was duplicated. Bag ID 90722 corresponds to ID 20354.
+ms_idexx <- ms_idexx%>%
+  mutate(sample_ID = ifelse(stored_bag_id == 90722 & sample_ID == 20351, 20354, sample_ID))
+
+
+
 
 #combining idexx results to survey results
 ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
 idexx$sample_ID <- as.character(idexx$sample_ID)
 idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
 
-#checking duplicate IDs
-x <- idexx%>%
-  count(sample_ID)%>% 
-  filter(n > 1)
+
 
 
 #creating new variable to tell the sample type
@@ -1476,6 +1480,7 @@ idexx <- idexx%>%
 
 
 
+
 #-------------------------Writing Cleaned Final Datasets----------------------
 
 #IDEXX Results
@@ -1485,7 +1490,7 @@ write_csv(idexx,paste0(user_path(),"/3_final/idexx_monthly_master_cleaned.csv"))
 
 
 #Monthly Survey
-write_csv(ms)
+write_csv(ms, paste0(user_path(), "/3_final/1_10_monthly_follow_up_cleaned.csv"))
 
 
 
