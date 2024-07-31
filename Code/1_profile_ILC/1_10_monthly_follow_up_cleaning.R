@@ -1391,7 +1391,6 @@ ms_idexx <- ms_idexx%>%
 
 
 
-
 #combining idexx results to survey results
 ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
 idexx$sample_ID <- as.character(idexx$sample_ID)

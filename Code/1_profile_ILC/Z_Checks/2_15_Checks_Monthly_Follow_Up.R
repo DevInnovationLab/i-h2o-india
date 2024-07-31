@@ -91,37 +91,90 @@ github_path <- function() {
 
 github <- github_path()
 
-#Setting overleaf
-overleaf_path <- function() {
-  # Return a hardcoded path to Overleaf that depends on the current user, or the current 
-  # working directory for an unrecognized user. If the path isn't readable,
-  # stop.
-  #
-  
+
+# setting overleaf directory
+overleaf <- function() {
   user <- Sys.info()["user"]
-  
-  if (user == "asthavohra") { 
-    
+  if (user == "asthavohra") {
+    overleaf = "/Users/asthavohra/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user=="akitokamei"){
-    
-    overleaf = "/Users/akitokamei/Dropbox/Apps/Overleaf"
-    
+    overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "Archi Gupta") {
+    overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "jerem"){
-    overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+    overleaf = "C:/Users/jerem/Dropbox/Apps/Overleaf/Everything document -ILC/"
   }  
   else {
     warning("No path found for current user (", user, ")")
-    path = getwd()
+    overleaf = getwd()
   }
   
   stopifnot(file.exists(overleaf))
   return(overleaf)
 }
 
-overleaf <- overleaf_path()
+#---------------------------------Loading functions------------------------------
 
+
+tc_stats <- function(idexx_data){
+  
+  tc <- idexx_data%>%
+    group_by(assignment, sample_type) %>%
+    summarise(
+      "Number of Samples" = n(),
+      "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+      #"Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
+      # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+      #"Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
+      # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
+      "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
+        model <- glm(cf_pa_binary ~ 1, family = binomial)
+        vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+        se <- sqrt(vcov_cluster[1, 1])
+        est <- (sum(cf_pa == "Presence") / n()) * 100
+        est - qt(0.975, df.residual(model)) * se
+      },
+      "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
+        model <- glm(cf_pa_binary ~ 1, family = binomial)
+        vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+        se <- sqrt(vcov_cluster[1, 1])
+        est <- (sum(cf_pa == "Presence") / n()) * 100
+        est + qt(0.975, df.residual(model)) * se
+      },
+      "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+      #"Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
+      # (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+      #"Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
+      #  (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
+      "Lower CI - EC" = {
+        model <- glm(ec_pa_binary ~ 1, family = binomial)
+        vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+        se <- sqrt(vcov_cluster[1, 1])
+        est <- (sum(ec_pa == "Presence") / n()) * 100
+        est - qt(0.975, df.residual(model)) * se
+      },
+      "Upper CI - EC" = {
+        model <- glm(ec_pa_binary ~ 1, family = binomial)
+        vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
+        se <- sqrt(vcov_cluster[1, 1])
+        est <- (sum(ec_pa == "Presence") / n()) * 100
+        est + qt(0.975, df.residual(model)) * se
+      },
+      "Median MPN E. coli/100 mL" = median(ec_mpn),
+      "Average Free Chlorine Concentration (mg/L)" = round(mean(tap_water_fc), 3)
+    )
+  
+  tc <- tc%>%
+    #Adjusting so the CI cannot be more or less than 0 or 100
+    mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
+                                       `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+    mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
+                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+  return(tc)
+}
 
 
 
@@ -145,14 +198,31 @@ ms <- read_csv(paste0(user_path(), "/3_final/1_10_monthly_follow_up_cleaned.csv"
 idexx%>%
   count(sample_ID)%>% 
   filter(n > 1)
-x <- idexx%>%
-  filter(unique_bag_id == 90722)
-#Sample ID 20351 is duplicated
-#Sample ID was recorded incorrectly in the survey
+idexx%>%
+  count(unique_bag_id)%>% 
+  filter(n > 1)
+#Sample ID 20351 is duplicated. Sample ID was recorded incorrectly in the survey. 
 #Bag ID 90722 corresponds to ID 20354
 #Change made in cleaning code
 
+#Checking IDs which do not match between survey data and lab data
+#Gathering IDEXX sample IDs
+idexx_ids <- idexx$sample_ID
+#Gathering monthly survey sample IDs
+ms_sample_ids <- cbind(ms$tap_sample_id, ms$stored_sample_id)%>%
+  data.frame()%>%
+  pivot_longer(cols = c("X1", "X2"), values_to = "sample_ID", values_drop_na = TRUE, names_to = "sample_type")
+#Filtering out
+idexx_id_check <- idexx%>%
+  filter(!(sample_ID %in% ms_sample_ids$sample_ID))
 
+
+#Summarizing desc stats
+idexx_desc_stats <- tc_stats(idexx)
+
+#Creating table output
+stargazer(idexx_desc_stats, summary=F, title= "Monthly Survey - IDEXX Results",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Desc_stats_idexx.tex"))
 
 
 
