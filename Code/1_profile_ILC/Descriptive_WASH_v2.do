@@ -50,10 +50,86 @@ If Other, please specify:
 Do you treat the water before drinking in your household?
 
 ***************************************************************/
+
+
+use "${DataTemp}U5_Child_Endline_Census.dta", clear
+drop if comb_child_comb_name_label== ""
+keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Cen_Type
+
+split comb_child_comb_name_label, generate(common_u5_names) parse("111")
+replace comb_child_comb_name_label = common_u5_names2 if common_u5_names2 != ""
+
+//here CEn_Type = 5 means these are entries from new rosters and Cen_Type = 4 means children name from baseline census 
+tab Cen_Type
+/*tab Cen_Type
+
+	Cen_Type	Freq.	Percent	Cum.
+				
+	4	977	76.15	76.15
+	5	306	23.85	100.00
+				
+	Total	1,283	100.00 */
+gen total_U5_kids = 1
+bys unique_id: gen Num=_n
+drop common_u5_names1 common_u5_names2
+
+rename comb_child_comb_name_label U5_Child_label
+rename comb_child_comb_caregiver_label U5_caregiver_label
+reshape wide U5_Child_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence U5_caregiver_label Cen_Type, i(unique_id) j(Num)
+drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
+
+
+save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
+
 use "${DataFinal}0_Master_HHLevel.dta", clear
 
 
-drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
+merge 1:1 unique_id using "${DataTemp}U5_Child_Endline_Census_for_merge.dta"
+
+
+//finding number of U5 kids for baseline vs endline 
+/* U5 Kids */
+ds Cen_Type*
+foreach var of varlist `r(varlist)'{
+clonevar Cl_`var' = `var'
+}
+
+egen temp_group = group(unique_id)
+ds Cl_*
+foreach var of varlist `r(varlist)'{
+replace `var' = 1 if `var' == 4
+replace `var' = 0 if `var' == 5
+}
+egen R_Cen_u5_kids_total = rowtotal(Cl_Cen_Type*)
+
+
+drop Cl_*
+ds Cen_Type*
+foreach var of varlist `r(varlist)'{
+clonevar Cl_`var' = `var'
+}
+
+drop temp_group
+egen temp_group = group(unique_id)
+ds Cl_*
+foreach var of varlist `r(varlist)'{
+replace `var' = 1 if `var' == 5
+replace `var' = 0 if `var' == 4
+}
+egen R_E_u5_kids_total = rowtotal(Cl_Cen_Type*)
+
+
+//finding HH level U5 kids i.e. what are the number of HH that have any U5 kids
+gen R_Cen_HH_level_U5 = .
+replace R_Cen_HH_level_U5 = 1 if R_Cen_u5_kids_total != 0
+gen R_E_HH_level_U5 = .
+replace R_E_HH_level_U5 = 1 if R_E_u5_kids_total != 0
+//all the baseline U5 kids are going to be included in the endline sample that is why we need to replace all the values with 1 where R_Cen_HH_level_U5 is 1 
+replace R_E_HH_level_U5 = 1 if R_Cen_HH_level_U5 == 1
+
+
+
+
 
 //HH level availability stats 
 // Endline : 
@@ -66,6 +142,9 @@ cap replace gender_Endline = 0 if R_E_cen_resp_name == "`i'" & R_Cen_a4_hhmember
 
 br R_E_cen_resp_name R_E_cen_resp_label  R_Cen_a1_resp_name R_Cen_a4_hhmember_gender_* gender_Endline if gender_Endline == 0
 
+
+
+
 *Recoding the 'other' response as '77' (for creation of indicator variables in lines 21 to 29)
 foreach i in R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_source_kids R_E_water_source_kids R_Cen_water_prim_source_kids R_E_water_prim_source_kids R_E_water_source_preg R_E_water_prim_source_preg R_E_quant R_E_water_sec_yn R_Cen_a13_water_sec_yn R_Cen_a15_water_sec_freq R_Cen_a16_water_treat  R_E_water_treat R_Cen_a16_stored_treat R_E_water_stored R_E_not_treat_tim R_Cen_a16_stored_treat_freq R_Cen_a17_water_treat_kids R_E_water_treat_kids  {
     destring `i', replace
@@ -74,7 +153,8 @@ foreach i in R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_s
 	replace `i' = 999 if `i' == -99 | `i' == 99
 }
 
-keep unique_id R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_source_kids R_E_water_source_kids R_Cen_water_prim_source_kids R_E_water_prim_source_kids R_E_water_source_preg R_E_water_prim_source_preg R_E_quant R_Cen_a13_water_sec_yn R_E_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 R_Cen_a13_water_source_sec__77 R_E_water_source_sec R_E_water_source_sec_1 R_E_water_source_sec_2 R_E_water_source_sec_3 R_E_water_source_sec_4 R_E_water_source_sec_5 R_E_water_source_sec_6 R_E_water_source_sec_7 R_E_water_source_sec_8 R_E_water_source_sec_9 R_E_water_source_sec_10 R_E_water_source_sec__77 R_Cen_a14_sec_source_reason R_Cen_a14_sec_source_reason_1 R_Cen_a14_sec_source_reason_2 R_Cen_a14_sec_source_reason_3 R_Cen_a14_sec_source_reason_4 R_Cen_a14_sec_source_reason_5 R_Cen_a14_sec_source_reason_6 R_Cen_a14_sec_source_reason_7 R_Cen_a14_sec_source_reason__77 R_Cen_a14_sec_source_reason_999 R_E_sec_source_reason R_E_sec_source_reason_1 R_E_sec_source_reason_2 R_E_sec_source_reason_3 R_E_sec_source_reason_4 R_E_sec_source_reason_5 R_E_sec_source_reason_6 R_E_sec_source_reason_7 R_E_sec_source_reason__77 R_E_sec_source_reason_999 R_E_sec_source_reason_oth R_E_water_source_main_sec R_Cen_a15_water_sec_freq R_E_water_sec_freq R_Cen_a16_water_treat R_E_water_treat R_Cen_a16_stored_treat R_E_water_stored R_Cen_a16_water_treat_type R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type_999 R_Cen_a16_water_treat_type__77 R_E_water_treat_type R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_3 R_E_water_treat_type_4 R_E_water_treat_type_999 R_E_water_treat_type__77 R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_freq_1 R_Cen_a16_water_treat_freq_2 R_Cen_a16_water_treat_freq_3 R_Cen_a16_water_treat_freq_4 R_Cen_a16_water_treat_freq_5 R_Cen_a16_water_treat_freq_6 R_Cen_a16_water_treat_freq__77 R_E_water_treat_freq R_E_water_treat_freq_1 R_E_water_treat_freq_2 R_E_water_treat_freq_3 R_E_water_treat_freq_4 R_E_water_treat_freq_5 R_E_water_treat_freq_6 R_E_water_treat_freq__77 R_E_not_treat_tim R_Cen_a16_stored_treat_freq R_Cen_a17_water_treat_kids R_E_water_treat_kids R_Cen_water_treat_kids_type R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type__77 R_E_water_treat_kids_type R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type_999 R_E_water_treat_kids_type__77 R_Cen_a17_treat_kids_freq R_Cen_a17_treat_kids_freq_1 R_Cen_a17_treat_kids_freq_2 R_Cen_a17_treat_kids_freq_3 R_Cen_a17_treat_kids_freq_4 R_Cen_a17_treat_kids_freq_5 R_Cen_a17_treat_kids_freq_6 R_Cen_a17_treat_kids_freq__77 R_E_treat_kids_freq R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_Cen_consent R_E_consent R_E_quant Treat_V village R_Cen_hamlet_name
+
+keep unique_id R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_source_kids R_E_water_source_kids R_Cen_water_prim_source_kids R_E_water_prim_source_kids R_E_water_source_preg R_E_water_prim_source_preg R_E_quant R_Cen_a13_water_sec_yn R_E_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 R_Cen_a13_water_source_sec__77 R_E_water_source_sec R_E_water_source_sec_1 R_E_water_source_sec_2 R_E_water_source_sec_3 R_E_water_source_sec_4 R_E_water_source_sec_5 R_E_water_source_sec_6 R_E_water_source_sec_7 R_E_water_source_sec_8 R_E_water_source_sec_9 R_E_water_source_sec_10 R_E_water_source_sec__77 R_Cen_a14_sec_source_reason R_Cen_a14_sec_source_reason_1 R_Cen_a14_sec_source_reason_2 R_Cen_a14_sec_source_reason_3 R_Cen_a14_sec_source_reason_4 R_Cen_a14_sec_source_reason_5 R_Cen_a14_sec_source_reason_6 R_Cen_a14_sec_source_reason_7 R_Cen_a14_sec_source_reason__77 R_Cen_a14_sec_source_reason_999 R_E_sec_source_reason R_E_sec_source_reason_1 R_E_sec_source_reason_2 R_E_sec_source_reason_3 R_E_sec_source_reason_4 R_E_sec_source_reason_5 R_E_sec_source_reason_6 R_E_sec_source_reason_7 R_E_sec_source_reason__77 R_E_sec_source_reason_999 R_E_sec_source_reason_oth R_E_water_source_main_sec R_Cen_a15_water_sec_freq R_E_water_sec_freq R_Cen_a16_water_treat R_E_water_treat R_Cen_a16_stored_treat R_E_water_stored R_Cen_a16_water_treat_type R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type_999 R_Cen_a16_water_treat_type__77 R_E_water_treat_type R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_3 R_E_water_treat_type_4 R_E_water_treat_type_999 R_E_water_treat_type__77 R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_freq_1 R_Cen_a16_water_treat_freq_2 R_Cen_a16_water_treat_freq_3 R_Cen_a16_water_treat_freq_4 R_Cen_a16_water_treat_freq_5 R_Cen_a16_water_treat_freq_6 R_Cen_a16_water_treat_freq__77 R_E_water_treat_freq R_E_water_treat_freq_1 R_E_water_treat_freq_2 R_E_water_treat_freq_3 R_E_water_treat_freq_4 R_E_water_treat_freq_5 R_E_water_treat_freq_6 R_E_water_treat_freq__77 R_E_not_treat_tim R_Cen_a16_stored_treat_freq R_Cen_a17_water_treat_kids R_E_water_treat_kids R_Cen_water_treat_kids_type R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type__77 R_E_water_treat_kids_type R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type_999 R_E_water_treat_kids_type__77 R_Cen_a17_treat_kids_freq R_Cen_a17_treat_kids_freq_1 R_Cen_a17_treat_kids_freq_2 R_Cen_a17_treat_kids_freq_3 R_Cen_a17_treat_kids_freq_4 R_Cen_a17_treat_kids_freq_5 R_Cen_a17_treat_kids_freq_6 R_Cen_a17_treat_kids_freq__77 R_E_treat_kids_freq R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_Cen_consent R_E_consent R_E_quant Treat_V village R_Cen_hamlet_name  R_E_key R_Cen_u5_kids_total R_E_u5_kids_total R_Cen_HH_level_U5 R_E_HH_level_U5
 
 /*************************************************************
 //VARIABLE NAMES THAT NEED TO BE CHNAGED 
@@ -133,9 +213,13 @@ rename R_Cen_a17_treat_kids_freq__77 R_Cen_treat_kids_freq__77
 
 rename R_Cen_a15_water_sec_freq R_Cen_water_sec_freq
 
+
+
+
+
 preserve
 
-drop R_Cen_*
+drop R_Cen_* 
 
 renpfix R_E_
 
@@ -162,6 +246,8 @@ save "${DataTemp}Temp_Cen.dta", replace
 restore
 
 //making variable types uniform so that datasets can be appended easily
+
+
 
 use "${DataTemp}Temp_RE.dta", clear
 destring consent, replace
@@ -214,7 +300,6 @@ label define water_stored_x 1 "Yes" 0 "No"
 label values water_stored water_stored_x
 
 
-replace water_source_prim = 77 if water_source_prim == 10
 
 *Generating indicator variables for each unique value of variables specified in the loop
 foreach v in water_source_prim water_source_kids water_prim_source_kids water_source_preg water_prim_source_preg quant water_sec_yn water_sec_freq water_treat water_stored a16_stored_treat_freq water_treat_kids not_treat_tim{
@@ -289,19 +374,165 @@ br water_source_prim village hamlet_name if village == 50301 & bapuji == 1 & (wa
 
 replace water_source_prim = 77 if village == 50301 & bapuji == 1 & water_source_prim == 1 
 
+/***************************************************************
+//VARIABLE MANIPULATION (FOR MISSING VALUES)
+****************************************************************/
+
+STOP
+
+//Using JJM as secondary source
+replace water_source_sec_1 = 0 if  water_source_sec_1  == .
+
+br water_source_kids HH_level_U5
+
+replace water_source_kids_0 = 0 if water_source_kids_0 == .
+
+//here missing values are because of the relevance
+replace water_prim_source_kids_1 = 0 if water_prim_source_kids_1 == .
+
+
+//add a variable how many U5 children are there 
+//dont know and refused to answer as sepaarte category 
+
+
+
+
+/***************************************************************GENERATING NEW VARIABLES TO MAKE SURE OPTIONS ARE CONSISTENT ACROSS BASELINE VS ENDLINE
+***************************************************************/
+
+/****************************************
+//For primary sources
+
+Archi- For this variable we don't have to generate a recoded variable because labeling solved the issue  
+
+Reason: Changes made: few answer options added from FU1; changed text of options 1 and 2: 
+Options in Baseline Census:
+(1)Government provided household Taps (supply paani)
+(2)Government provided community standpipe (part of JJM taps)
+(3)Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
+(4)Manual handpump
+(5)Covered dug well
+(6)Uncovered dug well
+(7)Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation channel)
+(8)Private Surface well
+(-77)Other
+
+All answer options are same in Baseline HH Survey except option 2 (Government provided community standpipe (connected to piped system, through Vasudha tank))
+
+Answer options from Folllow up1 onwards: 
+(1)Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM tank
+(2)Government provided community standpipe (connected to piped system, through Vasudha tank)
+(3)Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)
+(4)Manual handpump
+(5)Covered dug well
+(6)Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation channel
+(7)Uncovered dug well
+(8)Private Surface well
+(9)Borewell operated by electric pump
+(10)Household tap connections not connected to RWSS/Basudha/JJM tank
+(-77)Other
+******************************************/
+
+
+
+/***************************************************************GENERATING RECODED VARIABLES WITH PREFIX C_ to create combined categories
+***************************************************************/
+/* water_source_prim
+. tab water_source_prim
+
+                      water_source_prim |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                    JJM |      1,372       76.48       76.48
+Government provided community standpipe |         20        1.11       77.59
+Gram Panchayat/Other Community Standpip |         66        3.68       81.27
+                        Manual handpump |        152        8.47       89.74
+                       Covered dug well |          7        0.39       90.13
+      Directly fetched by surface water |          5        0.28       90.41
+                     Uncovered dug well |          1        0.06       90.47
+                   Private Surface well |         25        1.39       91.86
+     Borewell operated by electric pump |         72        4.01       95.88
+                                  Other |         74        4.12      100.00
+----------------------------------------+-----------------------------------
+                                  Total |      1,794      100.0
+Here we will see that use percentage of Uncovered dug well is very low, surface water, covered dug well so we will put them in other categories 
+							  
+*/
+
+//Recoding primary water source variable 
+gen C_water_source_prim  = .
+replace C_water_source_prim = 1 if water_source_prim == 1
+replace C_water_source_prim = 2 if water_source_prim == 2
+replace C_water_source_prim = 3 if water_source_prim == 3
+replace C_water_source_prim = 4 if water_source_prim == 4
+replace C_water_source_prim = 77 if water_source_prim == 8
+replace C_water_source_prim = 77 if water_source_prim == 10
+replace C_water_source_prim = 77 if water_source_prim == 5
+replace C_water_source_prim = 77 if water_source_prim == 6
+replace C_water_source_prim = 77 if water_source_prim == 7
+replace C_water_source_prim = 77 if water_source_prim == 77
+replace C_water_source_prim = 77 if water_source_prim == 9
+
+
+*Generating indicator variables for each unique value of variables specified in the loop
+foreach v in C_water_source_prim{
+	levelsof `v' //get the unique values of each variable
+	foreach value in `r(levels)' { //Looping through each unique value of each variable
+		//generating indicator variables
+		gen     `v'_`value'=0 
+		replace `v'_`value'=1 if `v'==`value' 
+		replace `v'_`value'=. if `v'==.
+		//labelling indicator variable with original variable's label and unique value
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+
+
+//recodidng secondary water source variable 
+*water_source_sec_5 water_source_sec_6 water_source_sec_7 water_source_sec_8 water_source_sec_9 water_source_sec_10 water_source_sec__77
+
+gen C_water_source_sec__77 = .
+replace C_water_source_sec__77 = 1 if water_source_sec__77 == 1
+replace C_water_source_sec__77 = 1 if water_source_sec_5  == 1
+replace C_water_source_sec__77 = 1 if water_source_sec_6  == 1
+replace C_water_source_sec__77 = 1 if water_source_sec_7  == 1
+replace C_water_source_sec__77 = 1 if water_source_sec_10 == 1
+replace C_water_source_sec__77 = 1 if water_source_sec_9 == 1
+replace C_water_source_sec__77 = 0 if C_water_source_sec__77 == .
+replace C_water_source_sec__77 = 1 if water_source_sec_8 == 1
+
+
+gen C_water_source_sec_1 = .
+replace C_water_source_sec_1 = 1 if water_source_sec_1 == 1
+replace C_water_source_sec_1 = 0 if C_water_source_sec_1 == .
+gen C_water_source_sec_2 = .
+replace C_water_source_sec_2 = 1 if water_source_sec_2 == 1
+replace C_water_source_sec_2 = 0 if C_water_source_sec_2 == .
+gen C_water_source_sec_3 = .
+replace C_water_source_sec_3 = 1 if water_source_sec_3 == 1
+replace C_water_source_sec_3 = 0 if C_water_source_sec_3 == .
+gen C_water_source_sec_4 = .
+replace C_water_source_sec_4 = 1 if water_source_sec_4 == 1
+replace C_water_source_sec_4 = 0 if C_water_source_sec_4 == .
+
+
+
+
 
 *** Labelling the variables for use in descriptive stats table
-label var water_source_prim_1 "Using govt. taps as primary drinking water"
-label var water_source_prim_2 "Govt. provided community standpipe"
-label var water_source_prim_3 "Gram Panchayat/Other community standpipe"
-label var water_source_prim_4 "Manual handpump"
-label var water_source_prim_5 "Covered dug well" 
-label var water_source_prim_6 "Surface water" 
-label var water_source_prim_7 "Uncovered dug well"
-label var water_source_prim_8 "Private Surface well" 
-label var water_source_prim_9 "Electric Borewell" 
-label var water_source_prim_77 "" 
-label var water_source_sec_1 "Using govt. taps as secondary drinking water"
+label var C_water_source_prim_1 "JJM taps"
+label var C_water_source_prim_2 "Govt. provided community standpipe"
+label var C_water_source_prim_3 "Gram Panchayat/Other community standpipe"
+label var C_water_source_prim_4 "Manual handpump"
+label var C_water_source_prim_77 "Other" 
+label var water_sec_yn_0 "Not using any secondary drinking water source"
+label var water_sec_yn_1 "Using any secondary drinking water source:"
+label var C_water_source_sec_1 "JJM tap"
+label var C_water_source_sec_2 "Govt. provided community standpipe"
+label var C_water_source_sec_3 "Gram Panchayat/Other community standpipe"
+label var C_water_source_sec_4 "Manual handpump"
+label var C_water_source_sec__77 "Other" 
+
+label var u5_kids_total "Total U5 kids" 
 label var water_source_kids_0 "U5 drinking from a different water source"
 label var water_prim_source_kids_1 "U5 children primary source is JJM" 
 label var U5_nonjjm_water_source "U5 children drinking from other primary sources(non-JJM)"
@@ -355,6 +586,7 @@ label var  treat_kids_freq_6 "Treat the water when it looks or smells dirty for 
 label var treat_kids_freq__77 "Other"
 label var lastweekJJM  "In the past week, all of the primary drinking water came from JJM" 
 label var not_treat_tim_1 "In the past 2 weeks, water not treated due to lack of time" 
+label var HH_level_U5 "Households that have U5 kids"
 
 
 *** Saving the dataset 
@@ -369,7 +601,9 @@ save "${DataTemp}Temp.dta", replace
 
 *** Creation of the table
 *Setting up global macros for calling variables
-global PanelA water_source_prim_1  water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
+global PanelA C_water_source_prim_1 C_water_source_prim_2 C_water_source_prim_3 C_water_source_prim_4  C_water_source_prim_77  water_sec_yn_0 water_sec_yn_1 C_water_source_sec_1 C_water_source_sec_2 C_water_source_sec_3 C_water_source_sec_4 C_water_source_sec__77 HH_level_U5 water_source_kids_0 water_prim_source_kids_1 
+
+*global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
 *Setting up local macros (to be used for labelling the table)
 local PanelA "WASH Characteristics Baseline vs Endline"
@@ -395,7 +629,6 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 		
 	eststo  model1: estpost summarize $`k' if survey_type_num  == 0 //baseline villages
 	eststo  model2: estpost summarize $`k' if survey_type_num  == 1 //endline villages
-	
 /*	* Diff 
 	use "${DataTemp}Temp.dta", clear
 	foreach i in $`k' {
@@ -522,9 +755,10 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 	   prefix(\multicolumn{@span}{c}{)suffix(})span erepeat(\cmidrule(lr){@span})) ///
 	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-	               "Water sources" "\vspace{0.5cm} Water sources" ///
-				   "Using govt. taps as primary drinking water" "\multicolumn{9}{c}{\textbf{Panel A: Water sources HH vs U5 kids}} \\ Using govt. taps as primary drinking water" ///
+				   "JJM taps" "\multicolumn{9}{c}{\textbf{Panel A: Primary Water Source Distribution}} \\ JJM taps" ///
 				   "Panel A: Water sources HH vs U5 kids" "\vspace{0.5cm} Panel A: Water sources HH vs U5 kids" ///
+				   "Not using any secondary drinking water source" "\multicolumn{9}{c}{\textbf{Panel B: Secondary Water Source Distribution}} \\ Not using any secondary drinking water source" ///
+				   "Using any secondary drinking water source:" "\textbf{Using any secondary drinking water source:}" ///
 				   "Using govt. taps as primary drinking water" "\textbf{JJM usage as a drinking water source} \\ Using govt. taps as primary drinking water" ///
 				   "Water treatment for primary source" "\multicolumn{9}{c}{\textbf{Panel B: Water Treatment HH vs U5 kids}} \\ Water treatment for primary source" ///
 				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
@@ -548,7 +782,6 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 				   "Let the water stand before drinking" "\hspace{0.5cm} Let the water stand before drinking" ///
 				   "Boil the water" "\hspace{0.5cm} Boil the water" ///
 				   "Add chlorine/ bleaching powder" "\hspace{0.5cm} Add chlorine/ bleaching powder" ///
-				   "Other" "\hspace{0.5cm} Other" ///
 				   "Always treat the water" "\hspace{0.5cm} Always treat the water" /// 	
 				   "Treat the water in the summers" "\hspace{0.5cm} Treat the water in the summers" ///
 				   "Treat the water in the monsoons" "\hspace{0.5cm} Treat the water in the monsoons" ///
@@ -573,6 +806,8 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 * "Filter the water through a cloth or sieve" "\textbf{Types of Treatment} \\ Filter the water through a cloth or sieve" ///
 
 // Histogram for water quantity (assuming it's a numerical variable)
+
+STOP 
 
 /*
 ///////////////////////////////////////////////////////////////
@@ -717,3 +952,58 @@ matrix C = corr(R_E_water_source_prim R_E_tap_supply_freq)
 * Export the matrix to LaTeX using esttab
 esttab matrix(C) using corr_table.tex, replace title("Correlation Matrix") nonum compress
 
+
+
+
+/*
+esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table_2}Test_Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))")  ///
+	   mgroups("Baseline" "Endline" "Range", pattern(1 0 0 1 0 0 1 0 ) ///
+	   prefix(\multicolumn{@span}{c}{)suffix(})span erepeat(\cmidrule(lr){@span})) ///
+	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+				   "JJM taps" "\multicolumn{9}{c}{\textbf{Panel A: Primary Water Source Distribution}} \\ JJM taps" ///
+				   "Panel A: Water sources HH vs U5 kids" "\vspace{0.5cm} Panel A: Water sources HH vs U5 kids" ///
+				   "Using govt. taps as primary drinking water" "\textbf{JJM usage as a drinking water source} \\ Using govt. taps as primary drinking water" ///
+				   "Water treatment for primary source" "\multicolumn{9}{c}{\textbf{Panel B: Water Treatment HH vs U5 kids}} \\ Water treatment for primary source" ///
+				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
+				   "Always treat the water" "\textbf{Frequency of the treatment***} \\ Always treat the water" ///
+				   "Water treatment for primary source"  "\hline \textbf{Water treatment usage\textsuperscript{5}} \\ Water treatment for primary source" ///
+				   "Once at the time of storing" "\textbf{Frequency of the stored water treatment} \\ Once at the time of storing" ///
+				   "U5 children primary source is JJM" "U5 children primary source is JJM\textsuperscript{1}" ///
+				   "Stored water treatment" "Stored water treatment\textsuperscript{2}" ///
+				   "Water treatment for primary source" "Water treatment for primary source\textsuperscript{3}" ///
+				   "Using govt. taps as primary drinking water" "Using govt. taps as primary drinking water\textsuperscript{4}" ///
+				   "Water treatment for youngest children in HH" "\textbf{Water Treatment for U5 kids} \\ Water treatment for youngest children in HH" ///
+				   "Filter water through a cloth or sieve for U5 kids" "\textbf{Types of Treatment for U5 kids**} \\ Filter water through a cloth or sieve for U5 kids" ///
+				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment**} \\ Filter the water through a cloth or sieve" ///
+				   "Using govt. taps as primary drinking water" "\hspace{0.5cm} Using govt. taps as primary drinking water" ///
+				   "Using any secondary drinking water source" "\hspace{0.5cm} Using any secondary drinking water source" ///
+				   "Using govt. taps as secondary drinking water" "\hspace{0.5cm} Using govt. taps as secondary drinking water" ///
+				   "U5 drinking from a different water source" "\hspace{0.5cm} U5 drinking from a different water source" ///
+				   "U5 children primary source is JJM" "\hspace{0.5cm} U5 children primary source is JJM" ///
+				   "Water treatment for primary source" "\hspace{0.5cm} Water treatment for primary source" ///
+				   "Stored water treatment" "\hspace{0.5cm} Stored water treatment" ///
+				   "Filter the water through a cloth or sieve" "\hspace{0.5cm} Filter the water through a cloth or sieve" ///				 
+				   "Let the water stand before drinking" "\hspace{0.5cm} Let the water stand before drinking" ///
+				   "Boil the water" "\hspace{0.5cm} Boil the water" ///
+				   "Add chlorine/ bleaching powder" "\hspace{0.5cm} Add chlorine/ bleaching powder" ///
+				   "Other" "\hspace{0.5cm} Other" ///
+				   "Always treat the water" "\hspace{0.5cm} Always treat the water" /// 	
+				   "Treat the water in the summers" "\hspace{0.5cm} Treat the water in the summers" ///
+				   "Treat the water in the monsoons" "\hspace{0.5cm} Treat the water in the monsoons" ///
+				   "Treat the water in the winters" "\hspace{0.5cm} Treat the water in the winters" ///
+				   "Treat the water when kids/ old people fall sick" "\hspace{0.5cm} Treat the water when kids/ old people fall sick" ///
+				   "Treat the water when it looks or smells dirty" "\hspace{0.5cm} Treat the water when it looks or smells dirty" /// 
+				   "Water treatment for youngest children in HH" "\hspace{0.5cm} Water treatment for youngest children in HH" ///
+				   "Filter water through a cloth or sieve for U5 kids" "\hspace{0.5cm} Filter water through a cloth or sieve for U5 kids"  ///
+				   "Let water stand before drinking for U5" "\hspace{0.5cm} Let water stand before drinking for U5" /// 
+				   "Boil water for U5 kids" "\hspace{0.5cm} Boil water for U5 kids" ///
+				   "Add chlorine/bleaching powder for U5 kids" "\hspace{0.5cm} Add chlorine/bleaching powder for U5 kids" ///	
+				   "Don't know" "\hspace{0.5cm} Don't know" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   ".00" "" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''")
+*/

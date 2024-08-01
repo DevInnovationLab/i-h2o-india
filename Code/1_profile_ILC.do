@@ -164,7 +164,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	
 	* Overleaf
 	global Table =  "${Overleaf}/Everything document -ILC/Table/"
-	global Table_2 = "${Overleaf}/Descriptive Statistics - T vs C/Tables/"
+	global Table_2 = "${Overleaf}/Descriptive Statistics/Tables/"
 	global Figure = "${Overleaf}/Everything document -ILC/Figure/"
 	global Table_Pilot_analysis =  "${Overleaf}/India ILC Pilot- analysis/Table/"
 
