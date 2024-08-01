@@ -329,6 +329,7 @@ rename R_E_village_name_str Village
 * Village
 replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
+save "${DataTemp}U5_Child_Endline_Census.dta", replace
 save "${DataTemp}U5_Child_23_24_part1.dta", replace
 
 * Respondent available for an interview 

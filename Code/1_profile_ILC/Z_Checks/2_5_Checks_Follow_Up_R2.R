@@ -42,6 +42,9 @@ user_path <- function() {
   else if (user=="akitokamei"){
     path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
   } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/"
+  } 
   else if (user == ""){
     path = ""
   } 
@@ -66,6 +69,9 @@ github_path <- function() {
   else if (user=="akitokamei"){
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
+  else if (user == "Archi Gupta") {
+    github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
   else if (user == "") {
     github = ""
   } 
@@ -86,6 +92,9 @@ overleaf <- function() {
   } 
   else if (user=="akitokamei"){
     overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "Archi Gupta") {
+    overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "") {
     overleaf = ""
