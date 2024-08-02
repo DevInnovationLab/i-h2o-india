@@ -68,7 +68,9 @@ rayagada <- shp_file_2%>%
 
 #--------------------------Baseline Census Data Cleaning-------------------
 
-
+#Removing duplicate variables
+cen <- cen%>%
+  dplyr::select(!c(submissiondate, starttime, endtime))
 
 #Changing variable names
 cen <- cen%>%
@@ -188,11 +190,11 @@ cen <- cen%>%
   ))
 
 #Secondary source type JJM
-cen <- cen%>%
-  mutate(sec_source_jjm = case_when(
-    sec_jjm_use == 1 ~ 1,
-    sec_jjm_use == 0 ~ 0
-  ))
+# cen <- cen%>%
+#   mutate(sec_source_jjm = case_when(
+#     sec_jjm_use == 1 ~ 1,
+#     sec_jjm_use == 0 ~ 0
+#   ))
 
 #recoding secondary source
 cen$water_treat <- cen$water_treat%>%
