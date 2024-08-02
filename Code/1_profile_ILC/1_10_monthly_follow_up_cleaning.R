@@ -26,6 +26,10 @@
 # install.packages("ggrepel")
 # install.packages("reshape2")
 
+#Archi to Jeremy: If you dont have this already plz donwload it to convert dates proeprly 
+#install.packages("lubridate")
+
+
 #install.packages("remotes")
 #remotes::install_github("jknappe/quantitray") #Quantitray package installation
 
@@ -52,6 +56,7 @@ library(leaflet)
 library(ggrepel)
 library(reshape2)
 library(quantitray)
+
 #library(xtable)
 
 
@@ -644,6 +649,41 @@ print(tests)
 
 # Save the plot
 ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
+
+#cases of HR testing village wise and dates for it 
+#_______________________________________________________________
+# HIGH RANGE TESTING VILLAGE AND DATE WISE
+#_____________________________________________________________
+# Variables to check
+variables_H <- c( "HR_stored_fc", "HR_stored_tc", "HR_tap_fc", "HR_tap_tc")
+
+names(ms_consent)
+ms_consent_view <- ms_consent %>% select(SubmissionDate,FormattedDate )
+View(ms_consent_view)
+
+#SubmissionDate R_Cen_village_name_str
+
+# Convert SubmissionDate to Date type
+
+ms_consent$SubmissionDate <- mdy_hms(ms_consent$SubmissionDate)
+
+#Format SubmissionDate to MDY format for displaying
+ms_consent$FormattedDate <- format(ms_consent$SubmissionDate, "%m/%d/%Y")
+
+
+# Loop through each variable and create scatter plots
+for (var in variables_H) {
+  ggplot(ms_consent, aes(x = SubmissionDate, y = .data[[var]], color = R_Cen_village_name_str)) +
+    geom_point() +
+    labs(title = paste("Scatter plot of", var, "over SubmissionDate"),
+         x = "Submission Date",
+         y = var,
+         color = "Village Name") +
+    theme_minimal() +
+    theme(legend.position = "bottom") +
+    ggsave(paste0("scatter_plot_", var, ".png"), width = 10, height = 6)
+}
+
 
 
 
