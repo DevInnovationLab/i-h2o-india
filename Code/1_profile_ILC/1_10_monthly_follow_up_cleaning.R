@@ -658,8 +658,6 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg =
 variables_H <- c( "HR_stored_fc", "HR_stored_tc", "HR_tap_fc", "HR_tap_tc")
 
 names(ms_consent)
-ms_consent_view <- ms_consent %>% select(SubmissionDate,FormattedDate )
-View(ms_consent_view)
 
 #SubmissionDate R_Cen_village_name_str
 
@@ -667,23 +665,47 @@ View(ms_consent_view)
 
 ms_consent$SubmissionDate <- mdy_hms(ms_consent$SubmissionDate)
 
-#Format SubmissionDate to MDY format for displaying
-ms_consent$FormattedDate <- format(ms_consent$SubmissionDate, "%m/%d/%Y")
+#Format SubmissionDate to MDY format for displaying - The date right now is in character format
+ms_consent$Date <- format(ms_consent$SubmissionDate, "%m/%d/%Y")
+
+# Convert SubmissionDate to POSIXct type- The date now is in thje fomr that can be used in ggpplot
+ms_consent$Date <- as.POSIXct(ms_consent$Date, format = "%m/%d/%Y")
 
 
-# Loop through each variable and create scatter plots
+ms_consent_view <- ms_consent %>% select(SubmissionDate,Date, R_Cen_village_name_str, HR_stored_fc, HR_stored_tc, HR_tap_fc, HR_tap_tc)
+View(ms_consent_view)
+
+class(ms_consent_view$Date)
+
+
+
+plots <- list()
 for (var in variables_H) {
-  ggplot(ms_consent, aes(x = SubmissionDate, y = .data[[var]], color = R_Cen_village_name_str)) +
+  p <- ggplot(ms_consent, aes(x = Date, y = .data[[var]], color = R_Cen_village_name_str)) +
     geom_point() +
-    labs(title = paste("Scatter plot of", var, "over SubmissionDate"),
-         x = "Submission Date",
+    facet_wrap(~R_Cen_village_name_str) +
+    scale_x_datetime(labels = scales::date_format("%m/%d/%Y")) +
+    labs(title = paste("Scatter plot of", var, "over Date"),
+         x = "Date",
          y = var,
          color = "Village Name") +
     theme_minimal() +
-    theme(legend.position = "bottom") +
-    ggsave(paste0("scatter_plot_", var, ".png"), width = 10, height = 6)
+    theme(
+      legend.position = "bottom",
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Store the plot in the list
+  plots[[var]] <- p
+  
+  # Print the plot
+  print(p)
 }
 
+# Save the plots as PNG files
+for (var in names(plots)) {
+  ggsave(paste0(overleaf(),"Figure/scatter_plot_", var, ".png"), plot = plots[[var]], bg = "white", width = 10, height = 6)
+}
 
 
 
@@ -713,17 +735,17 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_village_test_types.png"), tes
 # PRIMARY SOURCE DISTRIBUTION IN GENERAL
 #-------------------------------------------------------------------------------------------------------------------
 
-ms_consent$water_source_prim <- ifelse(ms_consent$water_source_prim == "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM", "JJM", 
-                                                ifelse(ms_consent$water_source_prim == "Government provided community standpipe (connected to piped system, through Vasu", "Govt provided community standpipe", 
-                                                       ifelse(ms_consent$water_source_prim == "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)", "Gram Panchayat/other community standpipe", 
-                                                              ifelse(ms_consent$water_source_prim == "Manual handpump", "Manual handpump", 
-                                                                     ifelse(ms_consent$water_source_prim == "Covered dug well", "Covered dug well", 
-                                                                            ifelse(ms_consent$water_source_prim == "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c", "surface water",
-                                                                                   ifelse(ms_consent$water_source_prim == "Uncovered dug well", "Uncovered dug well", 
-                                                                                          ifelse(ms_consent$water_source_prim == "Private Surface well", "Private Surface well", 
-                                                                                                 ifelse(ms_consent$water_source_prim == "Borewell operated by electric pump", "Borewell", 
-                                                                                                        ifelse(ms_consent$water_source_prim == "Household tap connections not connected to RWSS/Basudha/JJM tank", "Non-JJM household tap connections", 
-                                                                                                               ifelse(ms_consent$water_source_prim == "Other", "Other", 
+ms_consent$water_source_prim <- ifelse(ms_consent$water_source_prim == "1", "JJM", 
+                                                ifelse(ms_consent$water_source_prim == "2", "Govt provided community standpipe", 
+                                                       ifelse(ms_consent$water_source_prim == "3", "Gram Panchayat/other community standpipe", 
+                                                              ifelse(ms_consent$water_source_prim == "4", "Manual handpump", 
+                                                                     ifelse(ms_consent$water_source_prim == "5", "Covered dug well", 
+                                                                            ifelse(ms_consent$water_source_prim == "6", "surface water",
+                                                                                   ifelse(ms_consent$water_source_prim == "7", "Uncovered dug well", 
+                                                                                          ifelse(ms_consent$water_source_prim == "8", "Private Surface well", 
+                                                                                                 ifelse(ms_consent$water_source_prim == "9", "Borewell", 
+                                                                                                        ifelse(ms_consent$water_source_prim == "10", "Non-JJM household tap connections", 
+                                                                                                               ifelse(ms_consent$water_source_prim == "-77", "Other", 
                                                                                                                       ms_consent$water_source_prim)))))))))))
 
 water_source_percentage <- ms_consent %>%
@@ -731,6 +753,7 @@ water_source_percentage <- ms_consent %>%
   summarise(count = n()) %>%
   mutate(percentage = (count / sum(count)) * 100)
 
+print(water_source_percentage)
 
 #View(water_source_percentage)
 
@@ -1371,13 +1394,264 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_bothTS.pn
 
 #-------------------------------------------------------------------------------------
 
+#___________________________________________________________
+
 #Cleaned baseline HH round 
+#___________________________________________________________
+
+
+BH_Clean <- read_dta(paste0(user_path(),"2_deidentified/1_2_Followup_cleaned.dta" ))
+#wq_chlorine_storedfc wq_chlorine_storedfc_again wq_chlorine_storedtc wq_chlorine_storedtc_again
+#wq_tap_fc wq_tap_fc_again wq_tap_tc wq_tap_tc_again
+#stored_bag_source #bag_stored_time #bag_stored_time_unit
+
+View(BH_Clean)
+names(BH_Clean)
+BH_Clean_view <- BH_Clean %>% select(R_FU_r_cen_village_name_str, R_FU_stored_bag_source, R_FU_stored_bag_source_oth, R_FU_bag_stored_time, R_FU_bag_stored_time_unit,  R_FU_fc_stored,  R_FU_wq_chlorine_storedfc_again, R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again )
+View(BH_Clean_view )
+
+#Since there are a lot of NA values we need to use coalesce function to make sure original Non NA values are retained
+BH_Clean_view <- BH_Clean_view %>%
+  rowwise() %>%
+  mutate(
+    stored_water_fc = ifelse(is.na(R_FU_fc_stored) | is.na(R_FU_wq_chlorine_storedfc_again), 
+                             coalesce(R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again), 
+                             (R_FU_fc_stored + R_FU_wq_chlorine_storedfc_again) / 2),
+    stored_water_tc = ifelse(is.na(R_FU_tc_stored) | is.na(R_FU_wq_chlorine_storedtc_again), 
+                             coalesce(R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again), 
+                             (R_FU_tc_stored + R_FU_wq_chlorine_storedtc_again) / 2)
+  ) %>%
+  ungroup()
+
+BH_Clean_view_f <- BH_Clean_view %>%
+  filter(R_FU_stored_bag_source == 1 | is.na(R_FU_stored_bag_source))
+View(BH_Clean_view_f)
+
+
+
+#geenrating auniform time measurement variable 
+
+# removing prefix R_FU_
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  rename_all(~ sub("^R_FU_", "", .))
+
+# Create a conversion factor
+BH_Clean_view_f$stored_time_in_hours <- with(BH_Clean_view_f, ifelse(bag_stored_time_unit == 1, bag_stored_time / 60, 
+                                                           ifelse(bag_stored_time_unit == 2, bag_stored_time, 
+                                                                  ifelse(bag_stored_time_unit == 3, bag_stored_time * 24, 
+                                                                         ifelse(bag_stored_time_unit == 4, bag_stored_time * 24 * 7, NA)))))
+
+
+
+# Assuming BH_Clean_view is your dataframe
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  mutate(stored_time_in_hours = round(stored_time_in_hours, 1))
+
+View(BH_Clean_view_f)
+
+# Assuming df is your dataframe
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  rename(
+    Village = r_cen_village_name_str
+  )
+
+
+# Assuming BH_Clean_view_f is your dataframe
+BH_Clean_view_f_x <- BH_Clean_view_f %>%
+  filter(!is.na(stored_water_fc))
+
+BH_Clean_view_f_x <- BH_Clean_view_f_x %>%
+  filter(!is.na(stored_time_in_hours))
+
+
+View(BH_Clean_view_f_x)
+
+# Scatter plot for stored_time_in_hours vs stored_water_fc
+plot_fc <- ggplot(BH_Clean_view_f_x, aes(x = stored_time_in_hours, y = stored_water_fc)) +
+  geom_point() +
+  labs(title = "Stored Water FC vs Stored Time for Baseline Housheold round",
+       x = "Stored Time (hours)",
+       y = "Stored Water FC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ Village) # Facet wrap by village
+
+print(plot_fc)
+
+BH_Clean_view_f_y <- BH_Clean_view_f %>%
+  filter(!is.na(stored_water_tc))
+
+BH_Clean_view_f_y <- BH_Clean_view_f_y %>%
+  filter(!is.na(stored_time_in_hours))
+
+
+View(BH_Clean_view_f_y)
+
+
+# Scatter plot for stored_time_in_hours vs stored_water_tc
+plot_tc <- ggplot(BH_Clean_view_f_y, aes(x = stored_time_in_hours, y = stored_water_tc)) +
+  geom_point() +
+  labs(title = "Stored Water TC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Stored Water TC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ Village) # Facet wrap by village
+
+print(plot_tc)
+
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_stored_time_BH.png"), plot_fc, bg = "white", width = 7, height = 7, dpi = 200)
 
 
 
 
+#___________________________________________________________
+
+#FOLLOW UP R1
+#___________________________________________________________
+#stored_bag_source #bag_stored_time #bag_stored_time_unit
+F1_Clean <- read_dta(paste0(user_path(),"2_deidentified/1_5_Followup_R1_cleaned.dta" ))
+names(F1_Clean)
+F1_Clean_view <- F1_Clean %>% select(R_FU1_r_cen_village_name_str, R_FU1_fc_stored,  R_FU1_wq_chlorine_storedfc_again, R_FU1_tc_stored, R_FU1_wq_chlorine_storedtc_again )
+View(F1_Clean_view )
+
+#Since there are a lot of NA values we need to use coalesce function to make sure original Non NA values are retained
+BH_Clean_view <- BH_Clean_view %>%
+  rowwise() %>%
+  mutate(
+    stored_water_fc = ifelse(is.na(R_FU_fc_stored) | is.na(R_FU_wq_chlorine_storedfc_again), 
+                             coalesce(R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again), 
+                             (R_FU_fc_stored + R_FU_wq_chlorine_storedfc_again) / 2),
+    stored_water_tc = ifelse(is.na(R_FU_tc_stored) | is.na(R_FU_wq_chlorine_storedtc_again), 
+                             coalesce(R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again), 
+                             (R_FU_tc_stored + R_FU_wq_chlorine_storedtc_again) / 2)
+  ) %>%
+  ungroup()
+
+BH_Clean_view_f <- BH_Clean_view %>%
+  filter(R_FU_stored_bag_source == 1 | is.na(R_FU_stored_bag_source))
+View(BH_Clean_view_f)
 
 
+
+#geenrating auniform time measurement variable 
+
+# removing prefix R_FU_
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  rename_all(~ sub("^R_FU_", "", .))
+
+# Create a conversion factor
+BH_Clean_view_f$stored_time_in_hours <- with(BH_Clean_view_f, ifelse(bag_stored_time_unit == 1, bag_stored_time / 60, 
+                                                                     ifelse(bag_stored_time_unit == 2, bag_stored_time, 
+                                                                            ifelse(bag_stored_time_unit == 3, bag_stored_time * 24, 
+                                                                                   ifelse(bag_stored_time_unit == 4, bag_stored_time * 24 * 7, NA)))))
+
+
+
+# Assuming BH_Clean_view is your dataframe
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  mutate(stored_time_in_hours = round(stored_time_in_hours, 1))
+
+View(BH_Clean_view_f)
+
+# Assuming df is your dataframe
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  rename(
+    Village = r_cen_village_name_str
+  )
+
+
+# Assuming BH_Clean_view_f is your dataframe
+BH_Clean_view_f_x <- BH_Clean_view_f %>%
+  filter(!is.na(stored_water_fc))
+
+BH_Clean_view_f_x <- BH_Clean_view_f_x %>%
+  filter(!is.na(stored_time_in_hours))
+
+
+View(BH_Clean_view_f_x)
+
+# Scatter plot for stored_time_in_hours vs stored_water_fc
+plot_fc <- ggplot(BH_Clean_view_f_x, aes(x = stored_time_in_hours, y = stored_water_fc)) +
+  geom_point() +
+  labs(title = "Stored Water FC vs Stored Time for Baseline Housheold round",
+       x = "Stored Time (hours)",
+       y = "Stored Water FC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ Village) # Facet wrap by village
+
+print(plot_fc)
+
+BH_Clean_view_f_y <- BH_Clean_view_f %>%
+  filter(!is.na(stored_water_tc))
+
+BH_Clean_view_f_y <- BH_Clean_view_f_y %>%
+  filter(!is.na(stored_time_in_hours))
+
+
+View(BH_Clean_view_f_y)
+
+
+# Scatter plot for stored_time_in_hours vs stored_water_tc
+plot_tc <- ggplot(BH_Clean_view_f_y, aes(x = stored_time_in_hours, y = stored_water_tc)) +
+  geom_point() +
+  labs(title = "Stored Water TC vs Stored Time (in hours) by Village",
+       x = "Stored Time (hours)",
+       y = "Stored Water TC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # Increase x-axis text size
+        axis.text.y = element_text(size = 12),  # Increase y-axis text size
+        axis.title.x = element_text(size = 14), # Increase x-axis title size
+        axis.title.y = element_text(size = 14), # Increase y-axis title size
+        plot.title = element_text(size = 16, hjust = 0.5)) + # Increase plot title size and center it
+  facet_wrap(~ Village) # Facet wrap by village
+
+print(plot_tc)
+
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_stored_time_BH.png"), plot_fc, bg = "white", width = 7, height = 7, dpi = 200)
+
+
+
+
+#wq_chlorine_storedfc #wq_chlorine_storedfc_again #wq_chlorine_storedtc #wq_chlorine_storedtc_again #wq_tap_fc #wq_tap_fc_again #wq_tap_tc #wq_tap_tc_again
+
+#___________________________________________________________
+
+#FOLLOW UP R2
+#___________________________________________________________
+
+#stored_bag_source #bag_stored_time #bag_stored_time_unit
+F2_Clean <- read_dta(paste0(user_path(),"2_deidentified/1_6_Followup_R2_cleaned.dta" ))
+names(F2_Clean)
+F2_Clean_view <- F2_Clean %>% select(R_FU2_r_cen_village_name_str, R_FU2_fc_stored,  R_FU2_wq_chlorine_storedfc_again, R_FU2_tc_stored, R_FU2_wq_chlorine_storedtc_again )
+View(F2_Clean_view )
+
+#wq_chlorine_storedfc #wq_chlorine_storedfc_again #wq_chlorine_storedtc #wq_chlorine_storedtc_again #wq_tap_fc #wq_tap_fc_again #wq_tap_tc #wq_tap_tc_again
+
+#___________________________________________________________
+
+#FOLLOW UP R3
+#___________________________________________________________
+
+#stored_bag_source #bag_stored_time #bag_stored_time_unit
+
+F3_Clean <- read_dta(paste0(user_path(),"2_deidentified/1_7_Followup_R3_cleaned.dta" ))
+names(F3_Clean)
+F3_Clean_view <- F3_Clean %>% select(R_FU3_r_cen_village_name_str, R_FU3_fc_stored,  R_FU3_wq_chlorine_storedfc_again, R_FU3_tc_stored, R_FU3_wq_chlorine_storedtc_again )
+View(F3_Clean_view )
+
+#wq_chlorine_storedfc #wq_chlorine_storedfc_again #wq_chlorine_storedtc #wq_chlorine_storedtc_again #wq_tap_fc #wq_tap_fc_again #wq_tap_tc #wq_tap_tc_again
 
 
 
