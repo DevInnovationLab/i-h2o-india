@@ -338,8 +338,11 @@ tc_stats <- function(idexx_data){
       #   est <- (sum(ec_pa == "Presence") / n()) * 100
       #   round(est + qt(0.975, df.residual(model)) * se, 1)
       # },
-      "Median MPN E. coli/100 mL" = median(ec_mpn),
-      "Average Free Chlorine Concentration (mg/L)" = round(mean(tap_water_fc), 3)
+      #"Median MPN E. coli/100 mL" = median(ec_mpn),
+      "Mean Log10 MPN Total Coliform/100 mL" = round(mean(cf_log), 3),
+      "Mean Log10 MPN E. coli/100 mL" = round(mean(ec_log), 3),
+      "WHO Risk - % of Samples with 'High Risk' (> 100 MPN/100 mL)" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
+      "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(tap_water_fc), 3)
     )
   
   # tc <- tc%>%
@@ -936,11 +939,34 @@ idexx_id_check <- idexx%>%
 
 #Summarizing desc stats
 idexx_desc_stats <- tc_stats(idexx)
-t(idexx_desc_stats)
+idexx_desc_stats <- t(idexx_desc_stats) #Transposing data
+idexx_desc_stats <- idexx_desc_stats[,c(1,3,2,4)]%>%
+  data.frame() #Switching Columns
+colnames(idexx_desc_stats) <-  c("Control - Stored Water", "Treatment - Stored Water",
+                             "Control - Tap Water", "Treatment - Tap Water") #Setting Column Names
+idexx_desc_stats <- idexx_desc_stats[3:9,] #Indexing for rows of interest
+rownames(idexx_desc_stats) <- c("Number of Samples",
+                                "% Positive for Total Coliform",
+                                "% Positive for E. coli",
+                                "Average Log10 MPN Total Coliform/100 mL",
+                                "Average Log10 MPN E. coli/100 mL",
+                                "% 'High Risk' Samples (> 100 MPN E. coli/100 mL)",
+                                #"Median MPN E. coli/100 mL",
+                                #expression(paste0("% Positive for ", italic("E. coli"))),
+                                #expression(paste0("Median MPN ", italic("E. coli"),"/100 mL")),
+                                "Tap Average Free Chlorine Concentration (mg/L)")
+
+
 
 #Creating table output
-idexx_desc_stats <- stargazer(idexx_desc_stats, summary=F, title= "Monthly Survey - IDEXX Results",float=F,rownames = F,
-          covariate.labels=NULL, font.size = "tiny", column.sep.width = "1pt", out=paste0(overleaf(),"Table/Desc_stats_idexx.tex"))
+idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,
+                              title= "Monthly Survey - IDEXX Results",
+                              float=FALSE,
+                              rownames = TRUE,
+                              covariate.labels=NULL,
+                              font.size = "tiny",
+                              column.sep.width = "1pt",
+                              out=paste0(overleaf(),"Table/Desc_stats_idexx.tex"))
 
 
 
