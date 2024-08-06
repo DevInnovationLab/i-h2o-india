@@ -318,7 +318,7 @@ village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5
 #IDEXX results
 idexx <- read_csv(paste0(user_path(), "1_raw/IDEXX Results Reporting - July 2024_WIDE.csv"))
 
-#View(idexx)
+View(idexx)
 #-------------------------------Cleaning Village Details for Joining----------
 
 
@@ -358,6 +358,9 @@ village_details <- village_details%>%
                                   
   ))
 
+View(village_details)
+
+write_csv(village_details, paste0(user_path(), "/3_final/village_details.csv"))
 
 
 ###-------------------Defining overall functions------------------------####

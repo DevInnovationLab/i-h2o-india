@@ -594,6 +594,60 @@ print(stored_error_sum)
 
 
 
+#-----------------------------------------------------------------
+#  stored_water_fc    stored_water_tc   tap_water_tc tap_water_fc
+#------------------------------------------------------------------
+
+# NO values greater than 0.1 in C
+
+# Filter the dataset for assignment == "C"
+ms_C <- ms_consent %>% filter(assignment == "C")
+
+View(ms_C)
+# Count values greater than 1 for each variable
+count_stored_water_fc <- sum(ms_C$stored_water_fc > 0.1, na.rm = TRUE)
+count_stored_water_tc <- sum(ms_C$stored_water_tc > 0.1, na.rm = TRUE)
+count_tap_water_tc <- sum(ms_C$tap_water_tc > 0.1, na.rm = TRUE)
+count_tap_water_fc <- sum(ms_C$tap_water_fc > 0.1, na.rm = TRUE)
+
+# Create a summary dataframe
+summary_counts <- data.frame(
+  Variable = c("stored_water_fc", "stored_water_tc", "tap_water_tc", "tap_water_fc"),
+  Count_Greater_Than_0.1 = c(count_stored_water_fc, count_stored_water_tc, count_tap_water_tc, count_tap_water_fc)
+)
+
+# Print the summary dataframe
+print(summary_counts)
+
+
+
+#--------------------------------------------------------------------
+# how many cases are there where values of FC is greater than TC 
+#-------------------------------------------------------------------
+
+
+
+# Count cases and include values for each unique_id
+summary_counts <- ms_consent %>%
+  group_by(unique_id) %>%
+  summarise(
+    stored_flag = sum(stored_water_tc < stored_water_fc, na.rm = TRUE),
+    tap_flag = sum(tap_water_tc < tap_water_fc, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  # Join with the original dataset to include the values
+  inner_join(ms_consent, by = "unique_id") %>%
+  filter(stored_flag > 0 | tap_flag > 0) %>%
+  select(unique_id, stored_water_fc, stored_water_tc, tap_water_tc, tap_water_fc,
+         stored_flag, tap_flag)
+
+# Print the summary dataframe
+print(summary_counts)
+
+stargazer(summary_counts, summary=F, title= "Cases where FC is lower than TC",float=F,rownames = F,
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/TC_lower_than_FC_idexx.tex"))
+
+
 #------------------------------------------------------------------------
 #RANGE OF CHLORINE VALUES IN FC AND TC 
 #------------------------------------------------------------------------
@@ -606,7 +660,6 @@ variables <- c("stored_water_fc", "stored_water_tc", "HR_stored_fc", "HR_stored_
 for (var in variables) {
   cat(paste("Range of", var, ":", range(ms_consent[[var]], na.rm = TRUE), "\n"))
 }
-
 
 variables_x <- c("stored_water_fc", "stored_water_tc", 
                  "tap_water_fc", "tap_water_tc")
@@ -936,6 +989,8 @@ ms_sample_ids <- cbind(ms$tap_sample_id, ms$stored_sample_id)%>%
 idexx_id_check <- idexx%>%
   filter(!(sample_ID %in% ms_sample_ids$sample_ID))
 
+print(idexx_id_check)
+
 
 #Summarizing desc stats
 idexx_desc_stats <- tc_stats(idexx)
@@ -955,8 +1010,6 @@ rownames(idexx_desc_stats) <- c("Number of Samples",
                                 #expression(paste0("% Positive for ", italic("E. coli"))),
                                 #expression(paste0("Median MPN ", italic("E. coli"),"/100 mL")),
                                 "Tap Average Free Chlorine Concentration (mg/L)")
-
-
 
 #Creating table output
 idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,

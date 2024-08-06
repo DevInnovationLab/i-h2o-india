@@ -25,6 +25,10 @@
 
 
 #install.packages("remotes")
+#install.packages("ggplot2")
+#install.packages("RColorBrewer")
+#install.packages("patchwork")
+
 #remotes::install_github("jknappe/quantitray") #Quantitray package installation
 
 # load the libraries
@@ -50,6 +54,11 @@ library(leaflet)
 library(ggrepel)
 library(reshape2)
 library(quantitray)
+# Install and load required packages
+library(ggplot2)
+library(RColorBrewer)
+library(patchwork)
+
 
 #library(xtable)
 
@@ -310,6 +319,11 @@ knitr::opts_knit$set(root.dir = DI_path())
 
 ms_consent <- read_csv(paste0(user_path(),"/3_final/2_11_monthly_follow_up_cleaned_consented.csv"))
 
+village_details_x <- read_csv(paste0(user_path(), "/3_final/village_details.csv"))
+View(village_details_x)
+
+ms_consent_v <- ms_consent %>% select(SubmissionDate, Date)
+View(ms_consent_v)
 
 ms_consent$stored_time_in_hours <- with(ms_consent, ifelse(stored_time_unit == 1, stored_time / 60, 
                                                            ifelse(stored_time_unit == 2, stored_time, 
@@ -691,6 +705,104 @@ print(combined_plot)
 ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_bothTS.png"), combined_plot, bg = "white", width = 10, height = 10, dpi = 200)
 
 
+#---------------------------------------------------------
+#Density plots- T vs C
+#--------------------------------------------------------
+
+
+#Format SubmissionDate to MDY format for displaying - The date right now is in character format
+ms_consent$Date_f <- format(ms_consent$SubmissionDate, "%m/%d/%Y")
+
+# Convert SubmissionDate to POSIXct type- The date now is in thje fomr that can be used in ggpplot
+ms_consent$Date_f <- as.POSIXct(ms_consent$Date_f, format = "%m/%d/%Y")
+
+
+ms_consent_v <- ms_consent %>% select(stored_water_fc, village, tap_water_fc, Date, Date_f, SubmissionDate)
+View(ms_consent_v)
+
+
+names(village_details_x)
+#village_name #assignment
+
+village_details_x <- village_details_x %>% 
+  rename(
+    village = village_name,
+  )
+
+village_details_f <- village_details_x %>% select(village, assignment )
+  
+merged_data <- ms_consent %>%
+  left_join(village_details_f, by = "village")
+
+View(merged_data)
+
+
+
+
+############################
+
+
+# Assuming ms_consent is your dataframe
+# Define the x-axis limits
+x_limits <- c(min(c(ms_consent$tap_water_fc, ms_consent$stored_water_fc), na.rm = TRUE),
+              max(c(ms_consent$tap_water_fc, ms_consent$stored_water_fc), na.rm = TRUE))
+
+# Create the density plot for tap water
+density_plot <- ggplot(ms_consent, aes(x = tap_water_fc, fill = assignment)) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Density Plot of Tap Water FC",
+       x = "Tap Water FC",
+       y = "Density",
+       fill = "Assignment") +
+  xlim(x_limits) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, hjust = 0.5),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  ) +
+  scale_fill_brewer(palette = "Set3")
+
+# Print the plot
+print(density_plot)
+
+
+# Create the density plot for stored water
+density_plot_s <- ggplot(ms_consent, aes(x = stored_water_fc, fill = assignment)) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Density Plot of Stored Water FC",
+       x = "Stored Water FC",
+       y = "Density",
+       fill = "Assignment") +
+  xlim(x_limits) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, hjust = 0.5),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  ) +
+  scale_fill_brewer(palette = "Set3")
+
+# Print the plot
+print(density_plot_s)
+
+
+# Combine the plots using patchwork
+combined_plot <- density_plot + density_plot_s + 
+  plot_annotation(title = "Density Plots of Tap Water FC and Stored Water FC by Assignment") &
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+
+# Print the combined plot
+print(combined_plot)
+
+# Save the combined plot
+ggplot2::ggsave(paste0(overleaf(), "Figure/combined_density_plot.png"), combined_plot, bg = "white", width = 10, height = 10, dpi = 200)
 
 #----------------------------------------------------------------------------------------------
 
