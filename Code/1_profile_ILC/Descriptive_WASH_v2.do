@@ -125,6 +125,7 @@ replace R_Cen_HH_level_U5 = 1 if R_Cen_u5_kids_total != 0
 gen R_E_HH_level_U5 = .
 replace R_E_HH_level_U5 = 1 if R_E_u5_kids_total != 0
 //all the baseline U5 kids are going to be included in the endline sample that is why we need to replace all the values with 1 where R_Cen_HH_level_U5 is 1 
+
 replace R_E_HH_level_U5 = 1 if R_Cen_HH_level_U5 == 1
 
 
@@ -378,7 +379,6 @@ replace water_source_prim = 77 if village == 50301 & bapuji == 1 & water_source_
 //VARIABLE MANIPULATION (FOR MISSING VALUES)
 ****************************************************************/
 
-STOP
 
 //Using JJM as secondary source
 replace water_source_sec_1 = 0 if  water_source_sec_1  == .
@@ -516,8 +516,6 @@ replace C_water_source_sec_4 = 0 if C_water_source_sec_4 == .
 
 
 
-
-
 *** Labelling the variables for use in descriptive stats table
 label var C_water_source_prim_1 "JJM taps"
 label var C_water_source_prim_2 "Govt. provided community standpipe"
@@ -533,8 +531,17 @@ label var C_water_source_sec_4 "Manual handpump"
 label var C_water_source_sec__77 "Other" 
 
 label var u5_kids_total "Total U5 kids" 
+label var water_source_kids_1 "U5 drinking from the same primary source"
 label var water_source_kids_0 "U5 drinking from a different water source"
-label var water_prim_source_kids_1 "U5 children primary source is JJM" 
+//check with NB
+label var water_source_kids_3 "No U5 child present in the HH" 
+label var water_source_kids_4 "U5 child is being breastfed exclusively"
+label var water_source_kids_999 "Don't know"
+label var water_source_kids_98 "Refused to answer" 
+label var water_prim_source_kids_1 "JJM" 
+label var water_prim_source_kids_4 "Manual handpump" 
+label var water_prim_source_kids_8 "Private Surface well"
+label var water_prim_source_kids_77 "Other"
 label var U5_nonjjm_water_source "U5 children drinking from other primary sources(non-JJM)"
 label var U5_jjm_water_source "U5 children drinking from JJM but not HH"
 label var water_source_preg_1 "Pregnant women drinking from the same primary water source as HH"
@@ -570,23 +577,47 @@ label var a16_stored_treat_freq_5   "No fixed schedule"
 
 label var water_treat_kids_1  "Water treatment for youngest children in HH" 
 
-label var water_treat_kids_type_1 "Filter water through a cloth or sieve for U5 kids" 
-label var  water_treat_kids_type_2  "Let water stand before drinking for U5" 
-label var  water_treat_kids_type_3 "Boil water for U5 kids" 
-label var  water_treat_kids_type_4 "Add chlorine/bleaching powder for U5 kids" 
+label var water_treat_kids_type_1 "Filter the water through a cloth or sieve"  
+label var  water_treat_kids_type_2  "Let the water stand before drinking"
+label var  water_treat_kids_type_3 "Boil the water"
+label var  water_treat_kids_type_4 "Add chlorine/ bleaching powder" 
 label var water_treat_kids_type__77 "Other" 
 label var water_treat_kids_type_999 "Don't know" 
 
-label var treat_kids_freq_1 "Always treat the water for U5 kids" 
-label var  treat_kids_freq_2 "Treat the water in the summers for U5 kids" 
-label var treat_kids_freq_3 "Treat the water in the monsoons for U5 kids" 
-label var treat_kids_freq_4 "Treat the water in the winters for U5 kids" 
-label var treat_kids_freq_5 "Treat the water when kids/ old people fall sick for U5 kids" 
-label var  treat_kids_freq_6 "Treat the water when it looks or smells dirty for U5 kids" 
+label var treat_kids_freq_1 "Always treat the water"  
+label var  treat_kids_freq_2 "Treat the water in the summers"
+label var treat_kids_freq_3 "Treat the water in the monsoons" 
+label var treat_kids_freq_4 "Treat the water in the winters"
+label var treat_kids_freq_5 "Treat the water when kids/ old people fall sick"
+label var  treat_kids_freq_6 "Treat the water when it looks or smells dirty"  
 label var treat_kids_freq__77 "Other"
+
 label var lastweekJJM  "In the past week, all of the primary drinking water came from JJM" 
 label var not_treat_tim_1 "In the past 2 weeks, water not treated due to lack of time" 
 label var HH_level_U5 "Households that have U5 kids"
+
+label var sec_source_reason_1 "Primary source is not working" 
+label var sec_source_reason_2 "Primary source does not give adequate water" 
+label var sec_source_reason_3 "Primary source gives water intermittently" 
+label var sec_source_reason_4 "Primary water source is muddy or smelly" 
+label var sec_source_reason_5 "During the summer season"
+label var sec_source_reason_6 "During monsoon season"
+label var sec_source_reason_7 "No fixed reason"
+label var sec_source_reason__77   "Other"
+label var sec_source_reason_999  "Don't know"
+
+label var water_sec_freq_1 "Daily" 
+label var water_sec_freq_2 "Every 2-3 days in a week" 
+label var water_sec_freq_3 "Once a week" 
+label var water_sec_freq_4 "Once every two weeks" 
+label var water_sec_freq_5 "Once a month" 
+label var water_sec_freq_6 "Once every few months" 
+label var water_sec_freq_8 "No fixed schedule" 
+label var water_sec_freq_999 "Don’t know" 
+
+label var water_treat_kids_0 "Do not treat for U5 kids"
+label var water_treat_kids_98 "Refused to asnwer"
+label var water_treat_kids_999  "Don't know"
 
 
 *** Saving the dataset 
@@ -601,8 +632,7 @@ save "${DataTemp}Temp.dta", replace
 
 *** Creation of the table
 *Setting up global macros for calling variables
-global PanelA C_water_source_prim_1 C_water_source_prim_2 C_water_source_prim_3 C_water_source_prim_4  C_water_source_prim_77  water_sec_yn_0 water_sec_yn_1 C_water_source_sec_1 C_water_source_sec_2 C_water_source_sec_3 C_water_source_sec_4 C_water_source_sec__77 HH_level_U5 water_source_kids_0 water_prim_source_kids_1 
-
+global PanelA C_water_source_prim_1 C_water_source_prim_2 C_water_source_prim_3 C_water_source_prim_4  C_water_source_prim_77  water_sec_yn_0 water_sec_yn_1 C_water_source_sec_1 C_water_source_sec_2 C_water_source_sec_3 C_water_source_sec_4 C_water_source_sec__77 sec_source_reason_1 sec_source_reason_2 sec_source_reason_3 sec_source_reason_4 sec_source_reason_5 sec_source_reason_6 sec_source_reason_7 sec_source_reason__77 sec_source_reason_999 water_sec_freq_1 water_sec_freq_2 water_sec_freq_3 water_sec_freq_4 water_sec_freq_5 water_sec_freq_6 water_sec_freq_8 water_sec_freq_999
 *global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
 *Setting up local macros (to be used for labelling the table)
@@ -757,8 +787,13 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 				   "JJM taps" "\multicolumn{9}{c}{\textbf{Panel A: Primary Water Source Distribution}} \\ JJM taps" ///
 				   "Panel A: Water sources HH vs U5 kids" "\vspace{0.5cm} Panel A: Water sources HH vs U5 kids" ///
+				   "Daily" "\textbf{Frequency of water collection from other sources:} \\Daily" ///
 				   "Not using any secondary drinking water source" "\multicolumn{9}{c}{\textbf{Panel B: Secondary Water Source Distribution}} \\ Not using any secondary drinking water source" ///
+				   "Households that have U5 kids" "\multicolumn{9}{c}{\textbf{Panel C: Water sources distribution of U5 kids}} \\ Households that have U5 kids" ///
+				   "U5 drinking from the same primary source" "\textbf{Source of Drinking Water for U5 kids:} \\U5 drinking from the same primary source" ///
+				   "Refused to answer" "Refused to answer \\ \textbf{U5 kids drinking from a different source:}" ///
 				   "Using any secondary drinking water source:" "\textbf{Using any secondary drinking water source:}" ///
+				   "Primary source is not working" "\textbf{Circumstances in which other sources are used:} \\Primary source is not working" ///
 				   "Using govt. taps as primary drinking water" "\textbf{JJM usage as a drinking water source} \\ Using govt. taps as primary drinking water" ///
 				   "Water treatment for primary source" "\multicolumn{9}{c}{\textbf{Panel B: Water Treatment HH vs U5 kids}} \\ Water treatment for primary source" ///
 				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
@@ -774,8 +809,6 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment**} \\ Filter the water through a cloth or sieve" ///
 				   "Using govt. taps as primary drinking water" "\hspace{0.5cm} Using govt. taps as primary drinking water" ///
 				   "Using govt. taps as secondary drinking water" "\hspace{0.5cm} Using govt. taps as secondary drinking water" ///
-				   "U5 drinking from a different water source" "\hspace{0.5cm} U5 drinking from a different water source" ///
-				   "U5 children primary source is JJM" "\hspace{0.5cm} U5 children primary source is JJM" ///
 				   "Water treatment for primary source" "\hspace{0.5cm} Water treatment for primary source" ///
 				   "Stored water treatment" "\hspace{0.5cm} Stored water treatment" ///
 				   "Filter the water through a cloth or sieve" "\hspace{0.5cm} Filter the water through a cloth or sieve" ///				 
@@ -793,7 +826,6 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 				   "Let water stand before drinking for U5" "\hspace{0.5cm} Let water stand before drinking for U5" /// 
 				   "Boil water for U5 kids" "\hspace{0.5cm} Boil water for U5 kids" ///
 				   "Add chlorine/bleaching powder for U5 kids" "\hspace{0.5cm} Add chlorine/bleaching powder for U5 kids" ///	
-				   "Don't know" "\hspace{0.5cm} Don't know" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   ".00" "" ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
@@ -807,7 +839,345 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 
 // Histogram for water quantity (assuming it's a numerical variable)
 
-STOP 
+
+global PanelA2 HH_level_U5 water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999 treat_kids_freq_1 treat_kids_freq_2 treat_kids_freq_3 treat_kids_freq_4 treat_kids_freq_5 treat_kids_freq_6 treat_kids_freq__77
+
+*global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
+
+*Setting up local macros (to be used for labelling the table)
+local PanelA2 "WASH Characteristics Baseline vs Endline for U5 kids"
+local LabelPanelA2 "WASH"
+*local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
+local ScalePanelA2 "1"
+//local notePanelA "N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline N: 914 - Number of main respondents who consented to participate in the Baseline Survey \newline \textbf{Notes:} \newline(a)262 Count for Baseline: Only 262 HH use any secondary source of drinking water \newline(b)317 Count for Endline: Only 317 HH use any secondary source of drinking water  \newline(c)419 Count for Baseline: Information collected for 419 HHs out of 914 who do water treatment of either the primary drinking water or stored water  \newline(d)629 Count for Endline: Information collected for 629 HHs out of 874 who do water treatment of either the primary drinking water or stored water \newline(f)**: Respondents allowed to select multiple options \newline(g)***: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(h) There are no pregnant women from Endline that drink from a different primary source \newline \textbf{Clarifications:} \newline 1: Out of 0.04 U5 children that drink from a different primary source 0.17 drink from JJM \newline 2: The treatment for stored water was irrespective of the source of stored water and it was asked irrespective of the people saying Yes/No to primary water source treatment. The refernce period was current stored water \newline 3: Time refernce period is of last 1 month \newline 4: In Endline,516 HH say that in the last one week all of their drinking water came from JJM \newline 5: In the past 2 weeks, 87 out of 693 HH said they decided not to treat water because they didn't have time. Here 693 are those HH who either treat their primary or stored water" 
+
+
+
+foreach k in PanelA2 { //loop for all variables in the global marco 
+
+use "${DataTemp}Temp.dta", clear //using the saved dataset 
+***********
+** Table **
+***********
+
+* obs 
+* Mean
+	//Calculating the summary stats of treatment and control group for each variable and storing them
+		
+	eststo  model1: estpost summarize $`k' if survey_type_num  == 0 //baseline villages
+	eststo  model2: estpost summarize $`k' if survey_type_num  == 1 //endline villages
+/*	* Diff 
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	///reg `i' i.Treat_V, cluster(village) //regressing the variables on the treatment status 
+	replace `i'=_b[1.Treat_V] //replacing the value of variable with regression coefficient (estimate of treatment effect)
+	}
+	eststo  model3: estpost summarize $`k' //Storing summary stats of estimated treatment effects
+	
+	* Significance
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
+	matrix b = r(table) //storing the regression results in a matrix 'b'
+	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1' 
+	//assigning temporary place holders to p values for categorization into significance levels in line 129
+	replace `i'=99996 if p_1> 0.1  
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model4: estpost summarize $`k' //storing the summary stats of the transformed variable
+	
+	* P-value
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
+	matrix b = r(table) //storing the regression results in a matrix 'b'
+	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1'
+	replace `i'=p_1 //replacing the value of variable with corresponding p value 
+	}
+	eststo  model5: estpost summarize $`k' //storing summary stats of p values
+*/
+
+	* Min
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model3: estpost summarize $`k' //storing summary stats of minimum value
+		
+	* Max
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model4: estpost summarize $`k' //storing summary stats of maximum value
+	
+	* Missing 
+	//general
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model7: estpost summarize $`k' //summary stats of count of missing values
+	
+	* Missing 
+	//for endline
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model8: estpost summarize $`k' //summary stats of count of missing values
+
+
+		* SD 
+		//for baseline
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model9: estpost summarize $`k'
+	
+		* SD 
+		//for endline	
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model10: estpost summarize $`k'
+
+
+	* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model11: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+	
+	
+		* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model12: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+
+	
+//Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
+
+//arranging the models in a way so that Obs Mean Missing SD order is followed for both baseline and endline
+esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table_2}Test_Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))")  ///
+	   mgroups("Baseline" "Endline" "Range", pattern(1 0 0 1 0 0 1 0 ) ///
+	   prefix(\multicolumn{@span}{c}{)suffix(})span erepeat(\cmidrule(lr){@span})) ///
+	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+				   "Not using any secondary drinking water source" "\multicolumn{9}{c}{\textbf{Panel B: Secondary Water Source Distribution}} \\ Not using any secondary drinking water source" ///
+				   "Households that have U5 kids" "\multicolumn{9}{c}{\textbf{Panel C: Water sources distribution of U5 kids}} \\ Households that have U5 kids" ///
+				   "U5 drinking from the same primary source" "\textbf{Source of Drinking Water for U5 kids:} \\U5 drinking from the same primary source" ///
+				   "Refused to answer" "Refused to answer \\ \textbf{U5 kids drinking from a different source:}" ///
+				   "Always treat the water" "\textbf{Frequency of the treatment} \\ Always treat the water" ///
+				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment} \\ Filter the water through a cloth or sieve" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   ".00" "" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''")
+}
+ 
+
+ 
+global PanelA3 water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 
+
+*global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
+
+*Setting up local macros (to be used for labelling the table)
+local PanelA3 "WASH Characteristics Baseline vs Endline for U5 kids"
+local LabelPanelA3 "WASH"
+*local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
+local ScalePanelA3 "1"
+//local notePanelA "N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline N: 914 - Number of main respondents who consented to participate in the Baseline Survey \newline \textbf{Notes:} \newline(a)262 Count for Baseline: Only 262 HH use any secondary source of drinking water \newline(b)317 Count for Endline: Only 317 HH use any secondary source of drinking water  \newline(c)419 Count for Baseline: Information collected for 419 HHs out of 914 who do water treatment of either the primary drinking water or stored water  \newline(d)629 Count for Endline: Information collected for 629 HHs out of 874 who do water treatment of either the primary drinking water or stored water \newline(f)**: Respondents allowed to select multiple options \newline(g)***: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(h) There are no pregnant women from Endline that drink from a different primary source \newline \textbf{Clarifications:} \newline 1: Out of 0.04 U5 children that drink from a different primary source 0.17 drink from JJM \newline 2: The treatment for stored water was irrespective of the source of stored water and it was asked irrespective of the people saying Yes/No to primary water source treatment. The refernce period was current stored water \newline 3: Time refernce period is of last 1 month \newline 4: In Endline,516 HH say that in the last one week all of their drinking water came from JJM \newline 5: In the past 2 weeks, 87 out of 693 HH said they decided not to treat water because they didn't have time. Here 693 are those HH who either treat their primary or stored water" 
+
+ 
+ * By R_Enr_treatment 
+foreach k in PanelA3 { //loop for all variables in the global marco 
+
+use "${DataTemp}Temp.dta", clear //using the saved dataset 
+***********
+** Table **
+***********
+
+* obs 
+* Mean
+	//Calculating the summary stats of treatment and control group for each variable and storing them
+		
+	eststo  model1: estpost summarize $`k' if survey_type_num  == 0 //baseline villages
+	eststo  model2: estpost summarize $`k' if survey_type_num  == 1 //endline villages
+/*	* Diff 
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	///reg `i' i.Treat_V, cluster(village) //regressing the variables on the treatment status 
+	replace `i'=_b[1.Treat_V] //replacing the value of variable with regression coefficient (estimate of treatment effect)
+	}
+	eststo  model3: estpost summarize $`k' //Storing summary stats of estimated treatment effects
+	
+	* Significance
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
+	matrix b = r(table) //storing the regression results in a matrix 'b'
+	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1' 
+	//assigning temporary place holders to p values for categorization into significance levels in line 129
+	replace `i'=99996 if p_1> 0.1  
+	replace `i'=99997 if p_1<= 0.1
+	replace `i'=99998 if p_1<= 0.05
+	replace `i'=99999 if p_1<=0.01
+	}
+	eststo model4: estpost summarize $`k' //storing the summary stats of the transformed variable
+	
+	* P-value
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	reg `i' i.Treat_V, cluster(village) //regressing the variables on treatment status
+	matrix b = r(table) //storing the regression results in a matrix 'b'
+	scalar p_1 = b[4,2] //storing the p values from the matrix in a scalar 'p_1'
+	replace `i'=p_1 //replacing the value of variable with corresponding p value 
+	}
+	eststo  model5: estpost summarize $`k' //storing summary stats of p values
+*/
+
+	* Min
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model3: estpost summarize $`k' //storing summary stats of minimum value
+		
+	* Max
+	use "${DataTemp}Temp.dta", clear
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model4: estpost summarize $`k' //storing summary stats of maximum value
+	
+	* Missing 
+	//general
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model7: estpost summarize $`k' //summary stats of count of missing values
+	
+	* Missing 
+	//for endline
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model8: estpost summarize $`k' //summary stats of count of missing values
+
+
+		* SD 
+		//for baseline
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model9: estpost summarize $`k'
+	
+		* SD 
+		//for endline	
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+	foreach i in $`k' {
+	egen m_`i'=sd(`i')
+	replace `i'=m_`i'
+	}
+	eststo  model10: estpost summarize $`k'
+
+
+	* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 0
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model11: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+	
+	
+		* Count 
+		//endline
+	//Calculating the summary stats 
+	use "${DataTemp}Temp.dta", clear
+	keep if survey_type_num == 1
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model12: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+
+	
+//Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
+
+//arranging the models in a way so that Obs Mean Missing SD order is followed for both baseline and endline
+esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table_2}Test_Main_Endline_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))")  ///
+	   mgroups("Baseline" "Endline" "Range", pattern(1 0 0 1 0 0 1 0 ) ///
+	   prefix(\multicolumn{@span}{c}{)suffix(})span erepeat(\cmidrule(lr){@span})) ///
+	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
+	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
+				   "Always treat the water" "\textbf{Frequency of the treatment***} \\ Always treat the water" ///
+				   "Water treatment for primary source"  "\hline \textbf{Water treatment usage\textsuperscript{5}} \\ Water treatment for primary source" ///
+				   "Once at the time of storing" "\textbf{Frequency of the stored water treatment} \\ Once at the time of storing" ///
+				   "U5 children primary source is JJM" "U5 children primary source is JJM\textsuperscript{1}" ///
+				   "Stored water treatment" "Stored water treatment\textsuperscript{2}" ///
+				   "Water treatment for primary source" "Water treatment for primary source\textsuperscript{3}" ///
+				   "Using govt. taps as primary drinking water" "Using govt. taps as primary drinking water\textsuperscript{4}" ///
+				   "Water treatment for youngest children in HH" "\textbf{Water Treatment for U5 kids} \\ Water treatment for youngest children in HH" ///
+				   "Filter water through a cloth or sieve for U5 kids" "\textbf{Types of Treatment for U5 kids**} \\ Filter water through a cloth or sieve for U5 kids" ///
+				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment**} \\ Filter the water through a cloth or sieve" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   ".00" "" ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''")
+}
+
+STOP
 
 /*
 ///////////////////////////////////////////////////////////////
@@ -933,24 +1303,6 @@ esttab  model0 model1 model2 model3 model4 model5 model6 model7 using "${Table_2
 	   }
 
 	   
-
-use "${DataFinal}0_Master_HHLevel.dta", clear
-	   
-destring R_E_tap_supply_freq, replace
-destring R_E_water_source_prim, replace	   
-
-* Calculate pairwise correlations
-pwcorr R_E_water_source_prim R_E_tap_supply_freq , sig
-
-* If you want a correlation matrix
-correlate R_E_water_source_prim R_E_tap_supply_freq
-
-
-* Calculate the correlations and save the matrix
-matrix C = corr(R_E_water_source_prim R_E_tap_supply_freq)
-
-* Export the matrix to LaTeX using esttab
-esttab matrix(C) using corr_table.tex, replace title("Correlation Matrix") nonum compress
 
 
 
