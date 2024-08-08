@@ -355,6 +355,8 @@ tc_stats <- function(idexx_data){
 }
 
 
+names(ms)
+#stored_water_fc #tap_water_fc #R_Cen_village_name_str #assignment 
 
 #----------------------------------Loading Cleaned Data---------------------------------
 
@@ -785,9 +787,12 @@ ms_consent$water_source_prim <- ifelse(ms_consent$water_source_prim == "1", "JJM
 water_source_percentage <- ms_consent %>%
   group_by(water_source_prim) %>%
   summarise(count = n()) %>%
-  mutate(percentage = (count / sum(count)) * 100)
+  mutate(percentage = round((count / sum(count)) * 100, 1))
 
 print(water_source_percentage)
+
+#"% free chlorine samples > 0.6" = round((sum(chlorine_fc > 0.6, na.rm = TRUE) / n()) * 100, 1),
+
 
 #View(water_source_percentage)
 
@@ -856,9 +861,11 @@ print(sums_long)
 # Calculate the total sum of all the variables
 total_sum <- sum(sums_long$Sum)
 
+
+
 # Add a percentage column
 sums_long <- sums_long %>%
-  mutate(Percentage = (Sum / total_sum) * 100)
+  mutate(Percentage = round((Sum / total_sum) * 100, 1))
 
 # Print the results
 print(sums_long)
@@ -917,9 +924,11 @@ sums_long_yes <- sums_yes %>%
 # Calculate the total sum of all the variables for "Yes"
 total_sum_yes <- sum(sums_long_yes$Sum)
 
+#"% free chlorine samples > 0.6" = round((sum(chlorine_fc > 0.6, na.rm = TRUE) / n()) * 100, 1),
+
 # Add a percentage column for "Yes"
 sums_long_yes <- sums_long_yes %>%
-  mutate(Percentage = (Sum / total_sum_yes) * 100)
+  mutate(Percentage = round((Sum / total_sum_yes) * 100, 1))
 print(sums_long_yes)
 
 # Step 3: Combine the `water_sec_yn_summary` with `sums_long_yes`
@@ -1023,3 +1032,89 @@ idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,
 
 
 
+
+
+filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, assignment )
+View(filtered)
+filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, assignment)
+
+# Convert to long format, ensuring assignment is retained
+long_dataset <- filtered %>%
+  pivot_longer(
+    cols = c(stored_water_fc, tap_water_fc),
+    names_to = "sample_type",
+    values_to = "chlorine_fc"
+  ) %>%
+  mutate(
+    sample_type = case_when(
+      sample_type == "stored_water_fc" ~ "stored",
+      sample_type == "tap_water_fc" ~ "tap"
+    )
+  ) %>%
+  select(assignment, sample_type, chlorine_fc)
+
+
+
+
+
+# Calculate the percentage of chlorine samples above 0.1 and average chlorine concentration by assignment variable
+chlorine_stats <- long_dataset %>%
+  group_by(assignment, sample_type) %>%
+  summarise(
+    "% free chlorine samples > 0.1" = round((sum(chlorine_fc > 0.1, na.rm = TRUE) / n()) * 100, 1),
+    "% free chlorine samples > 0.6" = round((sum(chlorine_fc > 0.6, na.rm = TRUE) / n()) * 100, 1),
+    "Average free chlorine" = round(mean(chlorine_fc, na.rm = TRUE), 3),
+  )
+
+# Print the result
+View(chlorine_stats)
+
+# Transform the data to long format for pivoting
+chlorine_stats_long <- chlorine_stats %>%
+  pivot_longer(
+    cols = c(`% free chlorine samples > 0.1`, `% free chlorine samples > 0.6`, `Average free chlorine`),
+    names_to = "Statistic",
+    values_to = "Value"
+  )
+
+View(chlorine_stats_long)
+
+
+# Pivot the data to wide format with statistics as rows and conditions as columns
+chlorine_stats_wide <- chlorine_stats_long %>%
+  unite("Condition", assignment, sample_type, sep = " - ") %>%
+  pivot_wider(
+    names_from = Condition,
+    values_from = Value
+  )
+
+View(chlorine_stats_wide)
+# Adjust column names to match desired format
+colnames(chlorine_stats_wide) <- c(
+  "Variables",
+  "Control - Stored Water", "Control - Tap Water",
+  "Treatment - Stored Water", "Treatment - Tap Water"
+)
+
+# Print the result
+print(chlorine_stats_wide)
+View(chlorine_stats_wide)
+
+chlorine_stats_wide <- stargazer(chlorine_stats_wide, summary=FALSE,
+                              title= "Monthly Survey - Chlorine Results",
+                              float=FALSE,
+                              rownames = TRUE,
+                              covariate.labels=NULL,
+                              font.size = "tiny",
+                              column.sep.width = "1pt",
+                              out=paste0(overleaf(),"Table/chlorine_stats_wide .tex"))
+
+
+# Convert all columns except 'Statistic' to numeric
+chlorine_stats_wide <- chlorine_stats_wide %>%
+  mutate(across(-Variables, as.character))
+
+# Combine the data frames
+
+
+# Replace NA values in the 'Variables' column with the values from the first column
