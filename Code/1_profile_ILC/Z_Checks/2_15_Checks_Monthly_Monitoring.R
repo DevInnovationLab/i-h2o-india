@@ -970,6 +970,14 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source
 
 
 
+
+#JJM drinking
+jjm_drinking_sum <- ms_consent %>%
+  group_by(jjm_drinking) %>%
+  summarise(Sum = n()) %>%
+  mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
+print(jjm_drinking_sum)
+
 write_csv(ms_consent, paste0(user_path(), "/3_final/2_11_monthly_follow_up_cleaned_consented.csv"))
 
 #-----------------------------------IDEXX Data Check-----------------------------------
