@@ -98,7 +98,9 @@ cen <- cen%>%
   rename_all(~stringr::str_replace(.,"a21_",""))%>%
   rename_all(~stringr::str_replace(.,"a22_",""))%>%
   rename_all(~stringr::str_replace(.,"a23_",""))%>%
-  rename_all(~stringr::str_replace(.,"a24_",""))
+  rename_all(~stringr::str_replace(.,"a24_",""))%>%
+  rename_all(~stringr::str_replace(.,"a33_",""))
+  
 #rename_all(~stringr::str_replace(.,"a25_",""))
 
 
@@ -152,6 +154,14 @@ cen$assignment <- cen$assignment%>%
   fct_recode("Control" = "C",
              "Treatment" = "T")
 
+#Recoding literacy variable
+cen$read_write_1 <- cen$read_write_1%>%
+  droplevels() #This removes "Don't know" and "Refused" responses
+
+#Recoding gender variable
+cen$hhhead_gender <- cen$hhhead_gender%>%
+  droplevels()
+
 #Recoding factor levels for ws_prim
 cen <- cen%>%
   mutate(prim_source = NA)
@@ -165,7 +175,13 @@ cen$prim_source <- cen$ws_prim%>%
     "Covered Dug Well" = "PWS: Covered dug well",
     "Borehole" = "PWS: Manual handpump",
     "Other" = "PWS: Other"
-  )
+  )%>%
+  as.character()
+
+#Other sources reported in baseline were for private electric boreholes
+#Changing responses to reflect this
+cen <- cen%>%
+  mutate(prim_source = ifelse(prim_source == "Other", "Borehole", prim_source))
 
 #recoding secondary source
 cen$water_sec_yn <- cen$water_sec_yn%>%
@@ -1482,19 +1498,22 @@ mon_summary_weekly <- mon_summary %>%
 # Group by week and calculate the average concentration
 mon_summary_weekly <- mon_summary_weekly%>%
   group_by(test_week, chlorine_test) %>%
-  summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE))
+  summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
+            se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
+            lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
+            upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration)
 
 #Summarizing percentage of samples that are positive for chlorine
 #by village
-mon_summary_percent_1 <- mon_summary%>%
-  group_by(village, chlorine_test) %>%
-  summarise(
-    "Number of Samples" = n(),
-    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
-#aggregate
-mon_summary_percent_2 <- mon_summary%>%
-  group_by(chlorine_test) %>%
-  summarise(
-    "Number of Samples" = n(),
-    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+# mon_summary_percent_1 <- mon_summary%>%
+#   group_by(village, chlorine_test) %>%
+#   summarise(
+#     "Number of Samples" = n(),
+#     "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+# #aggregate
+# mon_summary_percent_2 <- mon_summary%>%
+#   group_by(chlorine_test) %>%
+#   summarise(
+#     "Number of Samples" = n(),
+#     "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
 

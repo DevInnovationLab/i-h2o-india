@@ -22,6 +22,22 @@ labelmaker <- function(x){
   return(x)
 }
 
+#factormaker
+#Converts all selected variables to factors. Used for Poisson regression
+#x: Data
+#vars: List of variables
+
+factormaker <- function(x, vars){
+  x <- x%>%
+    select(all_of(vars))
+  
+  for(i in vars){
+    x[[i]] <- factor(x[[i]])
+    x[[i]] <- as.numeric(x[[i]])
+  }
+  return(x)
+}
+
 
 
 #Microbiological contamination descriptive stats -----------------------------
@@ -193,7 +209,7 @@ risk_stats <- function(idexx_data){
 #Regression results functions ----------------------------------------------
 
 #ilc_glm
-#Runs generalized linear model for comparing control and treatment group outcomes
+#Runs generalized linear model for comparing control and treatment group outcomes using Poisson regression
 #data: overall dataset to pull from
 #var: vector containing binary outcome variable names in each dataset to model
 ilc_glm <- function(data, var){
@@ -201,7 +217,7 @@ ilc_glm <- function(data, var){
   #Specifying the formula
   formula <- as.formula(paste(var, "~ assignment + block + panchayat_village"))
   #Running model
-  model <- glm(formula, data = data, family = binomial)
+  model <- glm(formula, data = data, family = poisson)
   
   #Storing N
   N <- length(model$y)
@@ -220,7 +236,7 @@ ilc_glm <- function(data, var){
   tidy_results <- tidy_results%>%
     mutate(N = N)
   
-  #exponentiate the estimates/std errors to get Odds Ratio
+  #exponentiate the estimates/std errors to get Prevalence Ratio
   
   tidy_results$estimate <- exp(tidy_results$estimate)
   tidy_results$std_error <- exp(tidy_results$std_error)

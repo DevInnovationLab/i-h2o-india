@@ -175,18 +175,79 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 ```
 
 
+\newpage
 # Baseline Household Characteristics
 
 ```{r Baseline household characteristics}
 
+outcome_vars <- c("assignment","hhmember_count", "hhhead_gender", "read_write_1", "prim_source", "sec_source", "water_treat_binary")
 
+#GT method
+#Summarizing desc stats for each variable
+#reset_gtsummary_theme()
+
+desc_stats <- cen%>%
+  dplyr::select(all_of(outcome_vars))%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    # type = list(c("hhmember_count","sec_source"
+                    #          "water_treat_binary") ~ "continuous",
+                    #         c("hhhead_gender", "read_write_1",
+                    #          "mobile","electricity", "prim_source") ~ "categorical"
+                    #         ),
+                    
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(hhmember_count ~ "Average household size",
+                                 hhhead_gender ~ "Household head gender",
+                                 read_write_1 ~ "Respondent can read and write",
+                                 prim_source ~ "Primary drinking water source",
+                                 sec_source ~ "Use of a secondary source",
+                                 water_treat_binary ~ "Water treatment used")
+                    )%>%
+                      modify_footnote(update =  ~ 
+                      "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
+
+
+
+outcome_vars <- c("hhmember_count",
+                  #"hhhead_gender",
+                  #"read_write_1",
+                  #"prim_source",
+                  "sec_source",
+                  "water_treat_binary")
+
+cen_model <- factormaker(cen, outcome_vars)
+
+#Running all models
+#Logistic regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = cen, var)
+                 }
+                  )
+# #linear regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = el_tab, var)
+#                      }
+#                        )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
 
 
 
 ```
 
 
-
+\newpage
 # Weekly Chlorine Monitoring
 
 ```{r Weekly Chlorine Monitoring}
@@ -195,19 +256,22 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 #Summary of monitoring data across all villages
   
 cl_p1 <- ggplot(data = mon_summary_weekly) + 
+    geom_errorbar(aes(x = test_week, ymin = lower_ci, ymax = upper_ci,  color = chlorine_test),
+                  width = 2) +
     geom_point(aes(x = test_week, y = avg_concentration,
                    color = chlorine_test))+
     geom_line(aes(x = test_week, y = avg_concentration,
                   color = chlorine_test))+
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
+  
     scale_y_continuous(
                      limits = c(0, 2.0),
                      expand = c(0,0))+
     labs(x = "Date", 
        y = "Chlorine Concentration (mg/L)",
        color = "Sample Type",
-       title = (paste0("Chlorine Monitoring - February-June 2024")),
+       title = (paste0("Chlorine Monitoring - February-August 2024")),
        caption = "Concentrations were averaged on a weekly-basis across the 10 treatment villages.")+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -217,4 +281,179 @@ cl_p1
 
 
 ```
+
+
+\newpage
+# Follow-up Surveys WASH Variables
+
+```{r}
+
+#WASH Variables ---- 
+#Summarizing data and running regression models ----
+
+#Selecting outcome variables
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary",
+                 "tap_trust_binary", "tap_taste_binary", "tap_future_binary",
+                 "fc_tap_binary", "fc_stored_binary")
+
+
+
+#GT method
+#Summarizing desc stats for each variable
+#reset_gtsummary_theme()
+
+desc_stats <- all_rounds%>%
+  dplyr::select("assignment","data_round","prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary","tap_trust_binary", "tap_taste_binary", "tap_future_binary","fc_tap_binary", "fc_stored_binary")%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("prim_source_jjm", "sec_source", "jjm_drinking",
+                             "water_treat_binary", "tap_trust_binary", "tap_taste_binary",
+                             "tap_future_binary","fc_tap_binary",
+                             "fc_stored_binary") ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source_jjm ~ "Government-provided tap as primary source",
+                                 sec_source ~ "Use of a secondary source",
+                                 jjm_drinking ~ "Use of government-provided taps for drinking",
+                                 water_treat_binary ~ "Water treatment used",
+                                 tap_trust_binary ~ "Trust in safety of taps",
+                                 tap_taste_binary ~ "Satisfaction with taste from taps",
+                                 tap_future_binary ~ "Likelihood of using taps in future",
+                                 fc_tap_binary ~ "Presence of free chlorine in taps (>0.1 mg/L)",
+                                 fc_stored_binary ~ "Presence of free chlorine in stored water (>0.1 mg/L)"
+                                 )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
+    .header = "**{strata}**"
+  )%>%
+  modify_footnote(update =  ~ "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
+
+# desc_stats <- as_gt(desc_stats)%>%
+#   tab_options(table.font.size = 11)
+
+```
+
+
+
+
+\newpage
+# Follow-up Surveys Chlorine and Microbiological Contamination
+
+```{r Followup Surveys - Chlorine and Microbiological Contamination}
+
+
+
+
+```
+
+
+\newpage
+# Endline Census Comparison
+
+```{r Endline Census Comparison}
+
+
+#Summarizing EL data and running regression models ----
+
+#Selecting variables
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+
+
+#GT method
+#Summarizing desc stats for each variable
+desc_stats <- el_tab%>%
+  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
+  tbl_summary(
+  by = assignment,
+  statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
+  digits = all_continuous() ~ 2
+)%>%
+  add_p()
+
+
+
+#Running all models
+#Logistic regression
+#all_models <- lapply(outcome_vars, 
+ #                    function(var){ #This functions "subsets" the ilc_glm function
+  #                     ilc_glm(data = el_tab, var)
+   #                  }
+    #                   )
+#linear regression
+all_models <- lapply(outcome_vars, 
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_lm(data = el_tab, var)
+                     }
+                       )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
+
+
+
+
+
+
+# Combined Desc Stats -------------------------------------------------------
+
+#Selecting jjm variables
+el_jjm <- el%>%
+  dplyr::select(assignment, prim_source, water_sec_yn, jjm_drinking, tap_issues, tap_issues_type_1)%>%
+  mutate(data_round = "Endline")
+
+cen_jjm <- cen%>%
+  dplyr::select(assignment, prim_source, water_sec_yn, jjm_drinking)%>%
+  mutate(data_round = "Baseline")%>%
+  mutate(tap_issues = NA)%>%
+  mutate(tap_issues_type_1 = NA)
+#Combining EL and BL datasets
+total_jjm <- rbind(cen_jjm, el_jjm)
+
+
+
+#Summarizing combined results in a table
+tab <- total_jjm%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no", 
+                    #type = c() ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}% ({n})"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary Drinking Water Source",
+                                 jjm_drinking ~ "Use Government-provided Tap for Drinking",
+                                 water_sec_yn ~ "Used a Secondary Drinking Water Source in Last Month",
+                                 tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
+                                 tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue"
+                                 )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "% (N); BL - Oct 2023, EL - May 2024"),#%>%
+ # as_gt()%>%
+  #tab_options(table.font.size = pct(50),
+              #table_body.hlines.width = 
+   #             table.width = pct(50)),
+    .header = "**{strata}**"
+  )
+
+# Convert to gt object
+gt_tab <- as_gt(tab)
+
+
+```
+
 
