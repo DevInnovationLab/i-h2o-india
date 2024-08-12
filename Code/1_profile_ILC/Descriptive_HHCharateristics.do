@@ -22,11 +22,22 @@
 *** Using Endline_Long_Indiv_analysis.dta to get the pregnancy status variable
 ********************************************************************************
 clear 
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //${DataFinal}Endline_CBW_level_merged_dataset_final.dta
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //does not include revisit data
 preserve 
 keep comb_preg_status R_E_key unique_id
 bys R_E_key: gen Num=_n
 reshape wide  comb_preg_status , i(R_E_key) j(Num)
+save "${DataTemp}Endline_Preg_status_wide.dta", replace
+restore 
+
+clear 
+use  "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear //includes revisit data
+gen R_E_key_final= R_E_key
+replace R_E_key_final= Revisit_R_E_key if R_E_key_final==""
+preserve 
+keep comb_preg_status R_E_key Revisit_R_E_key R_E_key_final unique_id
+bys unique_id: gen Num=_n
+reshape wide  comb_preg_status , i(unique_id) j(Num)
 save "${DataTemp}Endline_Preg_status_wide.dta", replace
 restore 
 
@@ -241,10 +252,10 @@ save "${DataTemp}Temp_HHLevel(for descriptive stats).dta", replace
 *** Creation of the table
 *Setting up global macros for calling variables
 global HH_characteristics total_hhmembers total_CBW total_pregnant total_U5children total_noncri_members ///
-R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 /*hh_head_attend_school_1*/ hh_head_edu_0 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
-hh_head_edu_5 hh_head_edu_6 hh_head_edu_7 hh_head_age respondent_gender_1 respondent_gender_2 /*resp_attend_school_1*/ ///
+R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 /*hh_head_attend_school_1*/ hh_head_age hh_head_edu_0 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
+hh_head_edu_5 hh_head_edu_6 hh_head_edu_7  respondent_gender_1 respondent_gender_2 respondent_age /*resp_attend_school_1*/ ///
 respondent_edu_0 respondent_edu_1 respondent_edu_3 respondent_edu_4 respondent_edu_5 respondent_edu_6 respondent_edu_7 ///
-respondent_age asset_quintile_1 asset_quintile_2 asset_quintile_3 asset_quintile_4 asset_quintile_5 ///
+ asset_quintile_1 asset_quintile_2 asset_quintile_3 asset_quintile_4 asset_quintile_5 ///
 R_Cen_a37_caste_1 R_Cen_a37_caste_2 R_Cen_a37_caste_3 R_Cen_a37_caste_4
 
 *Setting up local macros (to be used for labelling the table)
@@ -1350,7 +1361,7 @@ tap_use_drink_9 tap_use_oth_1 tap_use_oth_2
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_use "Comparing JJM Tap Water Usage across time"
 local LabelGovt_tap_use "MaintableGovttap3"
-local NoteGovt_tap_use "N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) Missing observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
+local NoteGovt_tap_use "N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) NA observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
 local ScaleGovt_tap_use "1"
 
 * Descritive stats table: Baseline and Endline
@@ -1428,7 +1439,7 @@ esttab  model0 model1 model2 model3 model4  model5 model6 model7  using  "${Tabl
 	   replace cell("mean (fmt(2) label(_))") /// 	
 	   mgroups("Baseline" "Endline" "Range", pattern(1 0 0 1 0 0 1 0) ///
 	   prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
-	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max" \\) ///
+	   mtitles("Obs" "Mean" "NA" "Obs" "Mean" "NA" "Min" "Max" \\) ///
 	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "Use JJM tap water for drinking" "\\ Use JJM tap water for drinking" ///
@@ -1465,7 +1476,7 @@ tap_use_drink_9 tap_use_oth_1 tap_use_oth_2
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_use_TvsC "Comparing JJM Tap Water Usage: Treatment vs Control across time"
 local LabelGovt_tap_use_TvsC "MaintableGovttap4"
-local NoteGovt_tap_use_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) Missing observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
+local NoteGovt_tap_use_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) NA observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
 local ScaleGovt_tap_use_TvsC "1"
 	   
 	   
@@ -1608,10 +1619,28 @@ drop R_E_comb_hhmember_gender*
 
 ********************************************************************************
 *** Cleaning and generating new variables
-********************************************************************************
+*******************************************************************************
+
 
 *** Changing the storage type of relevant variables
 destring R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers , replace
+
+
+*** Manual corrections
+*Replacing the values of vars to misssing
+//respondent does not treat water but enumertaor incorrectly selected that respondent treats water and later mentioned that they don't treat water in the "other" category for treat_water_type
+//replcing R_E_water_treat to 0: does not treat water
+replace R_E_water_treat=0 if unique_id=="50401117020"
+
+//replacing follow-up numeric vars to missing 
+foreach var in R_E_collect_treat_difficult R_E_treat_freq R_E_treat_time R_E_treat_primresp   {
+replace `var'=. if unique_id=="50401117020"
+}
+
+//replacing follow-up string vars to missing 
+foreach var in R_E_water_treat_type R_E_treat_resp  R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_4 R_E_water_treat_type_3 R_E_water_treat_type_999 R_E_water_treat_type__77 {
+replace `var'="" if unique_id=="50401117020"
+}
 
 *** Generating new variables - Water collection burden 
 ** Split the R_E_collect_resp string into separate variables
@@ -2064,5 +2093,10 @@ esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveS
 	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
 	   }
 
-	
+	   
+
+
+
+
+
 
