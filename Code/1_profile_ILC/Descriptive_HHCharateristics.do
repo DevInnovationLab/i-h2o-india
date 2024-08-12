@@ -22,11 +22,22 @@
 *** Using Endline_Long_Indiv_analysis.dta to get the pregnancy status variable
 ********************************************************************************
 clear 
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //${DataFinal}Endline_CBW_level_merged_dataset_final.dta
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //does not include revisit data
 preserve 
 keep comb_preg_status R_E_key unique_id
 bys R_E_key: gen Num=_n
 reshape wide  comb_preg_status , i(R_E_key) j(Num)
+save "${DataTemp}Endline_Preg_status_wide.dta", replace
+restore 
+
+clear 
+use  "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear //includes revisit data
+gen R_E_key_final= R_E_key
+replace R_E_key_final= Revisit_R_E_key if R_E_key_final==""
+preserve 
+keep comb_preg_status R_E_key Revisit_R_E_key R_E_key_final unique_id
+bys unique_id: gen Num=_n
+reshape wide  comb_preg_status , i(unique_id) j(Num)
 save "${DataTemp}Endline_Preg_status_wide.dta", replace
 restore 
 
@@ -241,10 +252,10 @@ save "${DataTemp}Temp_HHLevel(for descriptive stats).dta", replace
 *** Creation of the table
 *Setting up global macros for calling variables
 global HH_characteristics total_hhmembers total_CBW total_pregnant total_U5children total_noncri_members ///
-R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 /*hh_head_attend_school_1*/ hh_head_edu_0 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
-hh_head_edu_5 hh_head_edu_6 hh_head_edu_7 hh_head_age respondent_gender_1 respondent_gender_2 /*resp_attend_school_1*/ ///
+R_Cen_a10_hhhead_gender_1 R_Cen_a10_hhhead_gender_2 /*hh_head_attend_school_1*/ hh_head_age hh_head_edu_0 hh_head_edu_2 hh_head_edu_3 hh_head_edu_4 /// 
+hh_head_edu_5 hh_head_edu_6 hh_head_edu_7  respondent_gender_1 respondent_gender_2 respondent_age /*resp_attend_school_1*/ ///
 respondent_edu_0 respondent_edu_1 respondent_edu_3 respondent_edu_4 respondent_edu_5 respondent_edu_6 respondent_edu_7 ///
-respondent_age asset_quintile_1 asset_quintile_2 asset_quintile_3 asset_quintile_4 asset_quintile_5 ///
+ asset_quintile_1 asset_quintile_2 asset_quintile_3 asset_quintile_4 asset_quintile_5 ///
 R_Cen_a37_caste_1 R_Cen_a37_caste_2 R_Cen_a37_caste_3 R_Cen_a37_caste_4
 
 *Setting up local macros (to be used for labelling the table)
@@ -446,12 +457,12 @@ label values water_supply_freq water_supply_freq
 
 
 
-* Recoding don't know observations as missing values 
-//Reason that jjm tap is not working
-foreach var in  R_E_tap_function_reason__77 R_E_tap_function_reason_1 R_E_tap_function_reason_2 ///
-R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 {
-	replace `var'=. if R_E_tap_function_reason=="999"
-}
+// * Recoding don't know observations as missing values 
+// //Reason that jjm tap is not working
+// foreach var in  R_E_tap_function_reason__77 R_E_tap_function_reason_1 R_E_tap_function_reason_2 ///
+// R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 {
+// 	replace `var'=. if R_E_tap_function_reason=="999"
+// }
 
  
 ********************************************************************************
@@ -483,7 +494,7 @@ label define supply_freq 0 "Do not drink JJM water" 1 "Supplied 24/7" 2 "Supplie
 label values supply_freq supply_freq
 
 
-gen disruption=. //missing: don't know= 15 obs
+gen disruption=. //missing
 replace disruption=0 if R_E_jjm_drinking==0 //do not drink jjm
 replace disruption=1 if R_E_tap_function==0 //no disruptions 
 replace disruption=2 if R_E_tap_function_reason_1==1 //disruptions beacuse of supply 
@@ -492,9 +503,11 @@ replace disruption=4 if R_E_tap_function_reason_3==1
 replace disruption=5 if R_E_tap_function_reason_4==1
 replace disruption=6 if R_E_tap_function_reason_5==1
 replace disruption=7 if R_E_tap_function_reason__77==1
+replace disruption=8 if R_E_tap_function_reason_999==1 //don't know
+
 
 label var disruption "Disruptions in tap functioning"
-label define disruption 0 "Do not drink JJM tap water" 1 "Tap service not disrupted" 2 "Water supply not turned on" 3 "Issues with water distribution system" 4 "Damaged water supply valve/pipe" 5 "Electricity issue" 6 "Issues with water pump" 7 "Other reasons"
+label define disruption 0 "Do not drink JJM tap water" 1 "Tap service not disrupted" 2 "Water supply not turned on" 3 "Issues with water distribution system" 4 "Damaged water supply valve/pipe" 5 "Electricity issue" 6 "Issues with water pump" 7 "Other reasons" 8 "Don't know"
 label values disruption disruption
 
 
@@ -584,14 +597,14 @@ save "${DataTemp}Temp_HHLevel(govttap_infra descriptive stats).dta", replace
 *Setting up global macros for calling variables
 global Govt_tap_infra supply_sched_1 supply_sched_2 supply_sched_3 supply_sched_4 ///
 supply_freq_1 supply_freq_2 supply_freq_3 supply_freq_4 disruption_1 disruption_2 ///
-disruption_3 disruption_4 disruption_5 disruption_6 disruption_7 issues_1 issues_2 ///
+disruption_3 disruption_4 disruption_5 disruption_6 disruption_7 disruption_8 issues_1 issues_2 ///
 issues_3 issues_4 issues_5 issues_6 issues_7 issues_8
 
 
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_infra "JJM tap infrastructure: Supply Patterns and Issues"
 local LabelGovt_tap_infra "MaintableGovttap1"
-local noteGovt_tap_infra "N: 880 - Number of respondents who consented to participate in the Endline Survey \newline \textbf{Notes:} (1)Data for Panels A and B collected only for households drinking JJM tap water (2)Data for Panel C collected only for households using JJM tap water (drinking or other purposes). (3) Missing observations in Panel B the respondents did not know the reasons for disruptions" 
+local noteGovt_tap_infra "N: 880 - Number of respondents who consented to participate in the Endline Survey \newline \textbf{Notes:} (1)Data for Panels A and B collected only for households drinking JJM tap water (2)Data for Panel C collected only for households using JJM tap water (drinking or other purposes)." 
 local ScaleGovt_tap_infra "1"
 
 * Descritive stats table: Treatment vs Control Groups 
@@ -674,6 +687,7 @@ esttab  model0 model1 model2 model3 model4 model5 using  "${Table}DescriptiveSta
 				   "Skin-related Issues" "\hspace{0.5cm} Skin-related issues" ///
 				   "Supply Issues" "\hspace{0.5cm} Water supply related issues" ///
 				   "Other Issues" "\hspace{0.5cm} Other issues" ///
+				   "Don't know" "\hspace{0.5cm} Don't know" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
 				   ) ///
@@ -693,13 +707,13 @@ use "${DataTemp}Temp_HHLevel(govttap_infra descriptive stats).dta", clear //usin
 *Setting up global macros for calling variables
 global Govt_tap_infra_TvsC supply_sched_1 supply_sched_2 supply_sched_3 supply_sched_4 ///
 supply_freq_1 supply_freq_2 supply_freq_3 supply_freq_4 disruption_1 disruption_2 ///
-disruption_3 disruption_4 disruption_5 disruption_6 disruption_7 issues_1 issues_2 ///
+disruption_3 disruption_4 disruption_5 disruption_6 disruption_7 disruption_8 issues_1 issues_2 ///
 issues_3 issues_4 issues_5 issues_6 issues_7 issues_8
 
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_infra_TvsC "JJM Tap Infrastructure across treatment arms: Supply patterns and issues"
 local LabelGovt_tap_infra_TvsC "MaintableGovttap2"
-local noteGovt_tap_infra_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline \textbf{Notes:} (1)Data for Panels A and B collected only for households drinking JJM tap water (2)Data for Panel C collected only for households using JJM tap water (drinking or other purposes). (3) Missing observations in Panel B the respondents did not know the reasons for disruptions" 
+local noteGovt_tap_infra_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline \textbf{Notes:} (1)Data for Panels A and B collected only for households drinking JJM tap water (2)Data for Panel C collected only for households using JJM tap water (drinking or other purposes)." 
 local ScaleGovt_tap_infra_TvsC "1"
 
 * Descritive stats table: Treatment vs Control Groups 
@@ -793,6 +807,7 @@ esttab  model0 model1 model2 model3 model4 model5 model6 model7 using "${Table}D
 				   "Skin-related Issues" "\hspace{0.5cm} Skin-related issues" ///
 				   "Supply Issues" "\hspace{0.5cm} Water supply related issues" ///
 				   "Other Issues" "\hspace{0.5cm} Other issues" ///
+				   "Don't know" "\hspace{0.5cm} Don't know" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
 				   ) ///
@@ -1103,18 +1118,18 @@ R_E_nodrink_water_treat_oth=="Apna khudka borwell he ishliye tape pani pinekeliy
 R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="Ise mahine me time pe pani nahi aya esliye wo pani nahi piye hein"
 
 
-* Recoding don't know observations as missing values 
-//Reason for not drinking jjm tap water: Baseline
-foreach var in  R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 ///
-R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 {
-	replace `var'=. if R_Cen_a18_reason_nodrink=="999"
-}
- 
-//Reason for not drinking jjm tap water: Endline
-foreach var in  R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 ///
-R_E_reason_nodrink_4 R_E_reason_nodrink_5 R_E_reason_nodrink_6 R_E_reason_nodrink__77 {
-	replace `var'=. if R_E_reason_nodrink=="999"
-}
+// * Recoding don't know observations as missing values 
+// //Reason for not drinking jjm tap water: Baseline
+// foreach var in  R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 ///
+// R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 {
+// 	replace `var'=. if R_Cen_a18_reason_nodrink=="999"
+// }
+// 
+// //Reason for not drinking jjm tap water: Endline
+// foreach var in  R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 ///
+// R_E_reason_nodrink_4 R_E_reason_nodrink_5 R_E_reason_nodrink_6 R_E_reason_nodrink__77 {
+// 	replace `var'=. if R_E_reason_nodrink=="999"
+// }
 
 
 /** Responses not catergorised yet:  R_E_nodrink_water_treat_oth 
@@ -1178,7 +1193,7 @@ renpfix R_Cen_
 ** Renaming baseline variables (to make the names shorter and consistent with endline dataset created in line )
 foreach var in a18_jjm_drinking a18_reason_nodrink_1 a18_reason_nodrink_2 ///
  a18_reason_nodrink_3 a18_reason_nodrink_4 a18_reason_nodrink_5 ///
- a18_reason_nodrink_6 a18_reason_nodrink__77 a18_reason_nodrink a18_reason_nodrink_999  {
+ a18_reason_nodrink_6 a18_reason_nodrink__77 a18_reason_nodrink_999 a18_reason_nodrink  {
     local newname : subinstr local var "a18_" ""  // Removing prefix "a18_"
     rename `var' `newname'                      // Renaming the variable
 }
@@ -1295,11 +1310,13 @@ replace tap_use_drink=5 if reason_nodrink_4==1
 replace tap_use_drink=6 if reason_nodrink_5==1
 replace tap_use_drink=7 if reason_nodrink_6==1
 replace tap_use_drink=8 if reason_nodrink__77==1
+replace tap_use_drink=9 if reason_nodrink_999==1
+
 
 label var tap_use_drink "Drinking jjm tap water"
 label define tap_use_drink 1 "Use JJM tap water for drinking" 2 "Tap is broken and doesn't supply water" ///
 3 "Water supply is inadequate" 4 "Water supply is intermittent" 5 "Water is muddy/silty" ///
-6 "Do not have a govenment tap connection" 7 "Use a private drinking water source" 8 "Other reasons"
+6 "Do not have a govenment tap connection" 7 "Use a private drinking water source" 8 "Other reasons" 9 "Don't know"
 label values tap_use_drink tap_use_drink
 
 
@@ -1339,12 +1356,12 @@ save "${DataTemp}temp_tapusage.dta", replace
 
 global Govt_tap_use tap_use_drink_1 tap_use_drink_2 tap_use_drink_3 ///
 tap_use_drink_4 tap_use_drink_5 tap_use_drink_6 tap_use_drink_7 tap_use_drink_8 ///
-tap_use_oth_1 tap_use_oth_2
+tap_use_drink_9 tap_use_oth_1 tap_use_oth_2
 
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_use "Comparing JJM Tap Water Usage across time"
 local LabelGovt_tap_use "MaintableGovttap3"
-local NoteGovt_tap_use "N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) Missing observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) Missing observations for Endline as the respondents do not know the reason for not using JJM tap water for drinking (3) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
+local NoteGovt_tap_use "N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) NA observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
 local ScaleGovt_tap_use "1"
 
 * Descritive stats table: Baseline and Endline
@@ -1422,7 +1439,7 @@ esttab  model0 model1 model2 model3 model4  model5 model6 model7  using  "${Tabl
 	   replace cell("mean (fmt(2) label(_))") /// 	
 	   mgroups("Baseline" "Endline" "Range", pattern(1 0 0 1 0 0 1 0) ///
 	   prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
-	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max" \\) ///
+	   mtitles("Obs" "Mean" "NA" "Obs" "Mean" "NA" "Min" "Max" \\) ///
 	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
 				   "Use JJM tap water for drinking" "\\ Use JJM tap water for drinking" ///
@@ -1434,6 +1451,7 @@ esttab  model0 model1 model2 model3 model4  model5 model6 model7  using  "${Tabl
 				   "Use a private drinking water source" "\hspace{0.5cm}Use a private drinking water source" ///
 				   "Other reasons" "\hspace{0.5cm}Other reasons" ///
 				   "For cooking" "\\ \hline \\ Use JJM tap water for other purposes \\ \hspace{0.5cm}For Cooking" ///
+				   "Don't know" "\hspace{0.5cm}Don't know" ///
 				   "For purposes besides cooking" "\hspace{0.5cm}For purposes besides cooking" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
@@ -1453,12 +1471,12 @@ use "${DataTemp}temp_tapusage.dta", clear
 *Setting up global macros for calling variables
 global Govt_tap_use_TvsC tap_use_drink_1 tap_use_drink_2 tap_use_drink_3 ///
 tap_use_drink_4 tap_use_drink_5 tap_use_drink_6 tap_use_drink_7 tap_use_drink_8 ///
-tap_use_oth_1 tap_use_oth_2
+tap_use_drink_9 tap_use_oth_1 tap_use_oth_2
 
 *Setting up local macros (to be used for labelling the table)
 local Govt_tap_use_TvsC "Comparing JJM Tap Water Usage: Treatment vs Control across time"
 local LabelGovt_tap_use_TvsC "MaintableGovttap4"
-local NoteGovt_tap_use_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) Missing observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) Missing observations for Endline as the respondents do not know the reason for not using JJM tap water for drinking (3) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
+local NoteGovt_tap_use_TvsC "*** p<.001 ** p<.01, * p<.05 \newline N: Baseline: 914; Endline: 880; Total: 1794 \newline \textbf{Notes:} (1) NA observations for Baseline as data were collected only for households using JJM tap water as primary or secondary source of water (2) In the baseline, 'usage of JJM tap water for drinking' included 'do not have a tap connection', which has been recoded as 'do not use JJM tap water for drinking' for consistency with the endline survey and included in 'reasons for not using tap water'" 
 local ScaleGovt_tap_use_TvsC "1"
 	   
 	   
@@ -1563,6 +1581,7 @@ esttab model0 model1 model2 model3 model4 model9 model5 model6 model7 model8 usi
 				   "Other reasons" "\hspace{0.5cm}Other reasons" ///
 				   "Use JJM tap water for other purposes" "\\ \hline \\ Use JJM tap water for other purposes" ///
 				   "For cooking" "\\ \hline \\ Use JJM tap water for other purposes \\ \hspace{0.5cm}For Cooking" ///
+				   "Don't know" "\hspace{0.5cm}Don't know" ///
 				   "For purposes besides cooking" "\hspace{0.5cm}For purposes besides cooking" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
@@ -1600,10 +1619,28 @@ drop R_E_comb_hhmember_gender*
 
 ********************************************************************************
 *** Cleaning and generating new variables
-********************************************************************************
+*******************************************************************************
+
 
 *** Changing the storage type of relevant variables
-destring R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* , replace
+destring R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers , replace
+
+
+*** Manual corrections
+*Replacing the values of vars to misssing
+//respondent does not treat water but enumertaor incorrectly selected that respondent treats water and later mentioned that they don't treat water in the "other" category for treat_water_type
+//replcing R_E_water_treat to 0: does not treat water
+replace R_E_water_treat=0 if unique_id=="50401117020"
+
+//replacing follow-up numeric vars to missing 
+foreach var in R_E_collect_treat_difficult R_E_treat_freq R_E_treat_time R_E_treat_primresp   {
+replace `var'=. if unique_id=="50401117020"
+}
+
+//replacing follow-up string vars to missing 
+foreach var in R_E_water_treat_type R_E_treat_resp  R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_4 R_E_water_treat_type_3 R_E_water_treat_type_999 R_E_water_treat_type__77 {
+replace `var'="" if unique_id=="50401117020"
+}
 
 *** Generating new variables - Water collection burden 
 ** Split the R_E_collect_resp string into separate variables
@@ -1660,7 +1697,7 @@ replace freq_collect=R_E_collect_prim_freq
 replace freq_collect=0 if R_E_collect_prim_freq==999 //don't know 
 
 ** Whether the hh treats water or not
-gen treats_water=0
+gen treats_water=0 
 replace treats_water=1 if R_E_water_stored==1 | R_E_water_treat==1
 
 ** Generate variables to store the Age and gender of the person actually responsible for treating water(Stored in "R_E_treat_primresp")
@@ -1705,14 +1742,14 @@ replace treat_gender=0 if treats_water==0 //hh does not treat water
 
 ** Creating new variable for age categories 
 //age of person who treats water
-gen treat_age_new=. //1 ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
+gen treat_age_new=. 
 replace treat_age_new=1 if treat_age>=1 & treat_age<15 //below 15
 replace treat_age_new=2 if treat_age>=15 & treat_age<25 //15-25
 replace treat_age_new=3 if treat_age>=25 & treat_age<35 //25-35
 replace treat_age_new=4 if treat_age>=35 & treat_age<45 //35-45
 replace treat_age_new=5 if treat_age>=45 & treat_age<55 //45-55
 replace treat_age_new=6 if treat_age>=55 //above 55
-replace treat_age_new=0 if treat_age==.
+replace treat_age_new=0 if treat_age==. //dont treat water + 1 addtl ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
 
 //age of person who collects water 
 gen collector_age_new=. 
@@ -1723,9 +1760,9 @@ replace collector_age_new=4 if collector_age>=35 & collector_age<45 //35-45
 replace collector_age_new=5 if collector_age>=45 & collector_age<55 //45-55
 replace collector_age_new=6 if collector_age>=55 //above 55
 
-** Time taken to treat water
-gen time_treat=. //3 obs missing as relevance condition changed mid-survey
-replace time_treat=1 if R_E_treat_time>=1 & R_E_treat_time<=10 //less than 10 minutes or less
+** Time taken to treat water //relevance condition changed mid-survey
+gen time_treat=. 
+replace time_treat=1 if R_E_treat_time>=1 & R_E_treat_time<=10 //less than 10 minutes 
 replace time_treat=2 if R_E_treat_time>10 & R_E_treat_time<=30 //less than 30 minutes
 replace time_treat=3 if R_E_treat_time>30 & R_E_treat_time<=60 //half an hour to one hour
 replace time_treat=4 if R_E_treat_time>=60  //more than one hour
@@ -1734,29 +1771,39 @@ replace time_treat=6 if R_E_treat_time==999 | R_E_treat_time==99 //don't know
 replace time_treat=0 if treats_water==0 //hh does not treat water  
  
 
-** Water treatment method: periodic or non-periodic/nature of water treatment
-gen treat_method=. //3 obs missing as relevance condition changed mid-survey
+** Water treatment method: periodic or non-periodic/nature of water treatment //relevance condition changed mid-survey
+gen treat_method=. 
 replace treat_method=0 if R_E_treat_freq==. | R_E_treat_freq==0 //do not treat water 
 replace treat_method=1 if R_E_treat_freq==888 //permanent treatment method in place (9 observations)
 replace treat_method=. if R_E_treat_freq==999 //don't know - being coded as a missing value
 replace treat_method=2 if R_E_treat_freq>0 & (R_E_treat_freq!=999 & R_E_treat_freq!= 888)
 
-** Frequency of periodic water treatment 
-gen freq_treat=. //3 obs missing: relevance condition changed mid-survey
+** Frequency of periodic water treatment //relevance condition changed mid-survey
+gen freq_treat=. 
 replace freq_treat=R_E_treat_freq
-replace freq_treat=0 if  R_E_treat_freq==. | R_E_treat_freq==0 | R_E_treat_freq==888 | R_E_treat_freq==999 //dont treat water at all or always do 
+replace freq_treat=0 if R_E_treat_freq==.| R_E_treat_freq==0 | R_E_treat_freq==888 | R_E_treat_freq==999 //dont treat water at all or always do 
 
-** Difficulty in collecteing 
-gen difficulty_treat=. //3 obs missing: relevance condition changed mid-way
+** Difficulty in collecteing //relevance condition changed mid-way
+gen difficulty_treat=. 
 replace difficulty_treat=R_E_collect_treat_difficult
 replace difficulty_treat=0 if treats_water==0
 replace difficulty_treat=6 if R_E_collect_treat_difficult==999
 
+ 
 ** Frequency of cleaning containers
- clean_freq_containers
+// replacing don't know responses as missing values
+replace R_E_clean_freq_containers=. if R_E_clean_freq_containers==999
+ 
 ** Time taken to clean containers
+gen time_clean_container=.
+replace time_clean_container=0 if R_E_clean_freq_containers==0 //does not clean containers
+replace time_clean_container=1 if R_E_clean_time_containers>=0 & R_E_clean_time_containers<=10 //less than 10 mins
+replace time_clean_container=2 if R_E_clean_time_containers>10 & R_E_clean_time_containers<=30 //less than 30 mins
+replace time_clean_container=3 if R_E_clean_time_containers>30 & R_E_clean_time_containers<=60 //half an hour to one hr
+replace time_clean_container=4 if R_E_clean_time_containers>=60 //more than one hr
+replace time_clean_container=5 if R_E_clean_time_containers==999 //dont know 
 
- clean_time_containers
+
 
 /* 3 extra missing values for treat_freq, treat_time and collect_treat_difficulty: 
 Earlier the relevance condition for these variables was treatment of water by the hhs (water collected from prim source only) - these households do not treat water collected; 
@@ -1771,6 +1818,7 @@ label var collector_age "Age of person person responsible for collecting water"
 label var treat_age "Age of person person responsible for treating water"
 label var freq_collect "Frequency of water collection"
 label var freq_treat "Frequency of periodic water treatment"
+label var R_E_clean_freq_containers "Frequency of cleaning water containers"
 
 label var collector_gender "Gender of person responsible for collecting water"
 label define collector_gender 1 "Male" 2 "Female"
@@ -1789,7 +1837,7 @@ label define treat_method 0 "No Treatment" 1 "Permanent Filtration System" 2 "Pe
 label values treat_method treat_method
 
 label var time_treat "Time taken to treat water"
-label define time_treat 0 "HH does not treat water" 1 "10 mins or less" 2 "More than 10 minutes but upto half hour" 3 "More than half hour but upto one hour" 4 "More than one hour" 5 "Has a permanent filteration system" 6 "Don't know"
+label define time_treat 0 "HH does not treat water" 1 "10 mins or less" 2 "More than 10 minutes but upto half hour" 3 "More than half hour but upto one hour" 4 "More than one hour" 5 "Has a permanent filteration system" 6 "Dont know"
 label values time_treat time_treat
 
 label var collector_age_new "Age of person who treats water"
@@ -1812,12 +1860,17 @@ label var difficulty_treat "Reported Difficulty level of treating water"
 label define difficulty_treat 0 "HH does not treat water" 1 "Very difficult" 2 "Somewhat difficult" 3 "Neither difficult nor easy" 4 "Somewhat easy" 5 "Very easy" 6 "Don't know"
 label values difficulty_treat difficulty_treat
 
+label var time_clean_container "Time taken to clean containers water"
+label define time_clean_container 0 "HH does not clean containers" 1 "10 mins or less" 2 "More than 10 minutes but upto half hour" 3 "More than half hour but upto one hour" 4 "More than one hour" 5 "Don't know"
+label values time_clean_container time_clean_container
+
 ********************************************************************************
 *** Creating dummy/indicator variables for tables 
 ********************************************************************************
 
 foreach v in collector_age_new collector_gender R_E_where_prim_locate time_collect ///
-treats_water treat_age_new treat_gender treat_method time_treat difficulty_treat  {
+treats_water treat_age_new treat_gender treat_method time_treat difficulty_treat ///
+time_clean_container  {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -1827,9 +1880,11 @@ treats_water treat_age_new treat_gender treat_method time_treat difficulty_treat
 	}
 	}
 
+	
+
 
 ********************************************************************************
-*** Generating the table - DESCRIPTIVE STATISTICS
+*** Generating the table - DESCRIPTIVE STATISTICS (Water collection burden)
 ********************************************************************************
 
 *** Removing the prefix from the variables
@@ -1843,25 +1898,22 @@ keep if consent=="1"
 save "${DataTemp}temp_washburden.dta", replace 
 
 *Setting up global macros for calling variables
-global Wash_burden where_prim_locate_1 where_prim_locate_2 where_prim_locate_3 ///
-freq_collect time_collect_1 time_collect_2 time_collect_3 time_collect_4 time_collect_5 ///
-collector_age_new_1  collector_age_new_2 collector_age_new_3 collector_age_new_4 ///
+global Collect_burden collector_age_new_1  collector_age_new_2 collector_age_new_3 collector_age_new_4 ///
 collector_age_new_5 collector_age_new_6 collector_gender_1 collector_gender_2 ///
-treats_water_1 treats_water_0 treat_method_1 treat_method_2  ///
-freq_treat  time_treat_1 time_treat_2 time_treat_3 time_treat_4 ///
-time_treat_5  treat_age_new_1 treat_age_new_2 ///
-treat_age_new_3 treat_age_new_4 treat_age_new_5 treat_age_new_6 treat_gender_1 ///
-treat_gender_2 difficulty_treat_1 difficulty_treat_2 difficulty_treat_3 ///
-difficulty_treat_4 difficulty_treat_5 difficulty_treat_6 
+where_prim_locate_1 where_prim_locate_2 where_prim_locate_3 ///
+freq_collect time_collect_1 time_collect_2 time_collect_3 time_collect_4 time_collect_5 ///
+clean_freq_containers time_clean_container_1 time_clean_container_2 ///
+time_clean_container_3 time_clean_container_4 time_clean_container_5
+
 
 *Setting up local macros (to be used for labelling the table)
-local Wash_burden "Insights into the burden of water collection and treatment"
-local LabelWash_burden "MaintableWashBurden"
-local NoteWash_burden "N: Endline: 880 \newline \textbf{Notes:} (1) " 
-local ScaleWash_burden "1"
+local Collect_burden "Insights into the burden of water collection"
+local LabelCollect_burden "MaintableCollectBurden"
+local NoteCollect_burden "N: Endline: 880 \newline \textbf{Notes:} (1)*: One observation missing as respondent indicated an individual is responsible for water collection but did not specify who. (2)**: 3 observations missing as respondents did not know the frequency of cleaning drinking water containers." 
+local ScaleCollect_burden "1"
 
 * Descritive stats table: Baseline and Endline
-foreach k in Wash_burden { //loop for all variables in the global marco 
+foreach k in Collect_burden { //loop for all variables in the global marco 
 	
 	* Count 
 	use "${DataTemp}temp_washburden.dta", clear //using the saved dataset 
@@ -1916,34 +1968,25 @@ esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveS
 	   mtitles("Obs" "Mean" "SD" "Min" "Max" "Missing" \\) ///
 	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
-				   "Below 15 years" "\\ \multicolumn{6}{c}{\textbf{Panel 1: Burden of Water Collection}} \\ Characteristics of Individual Responsible for Water collection \\ \hspace{0.5cm}Age \\ \hspace{0.75cm}Below 15 years" ///
-				   "15-25 years" "\hspace{0.75cm}15 to 25 years" ///
-				   "25 to 35 years" "\hspace{0.75cm}25 to 35 years" ///
-				   "35 to 45 years" "\hspace{0.75cm}35 to 45 years" ///
-				   "45 to 55 years" "\hspace{0.75cm}45 to 55 years" ///
-				   "Above 55 years" "\hspace{0.75cm}Above 55 years" ///
-				   "Male" "\hspace{0.5cm}Gender \\ \hspace{0.75cm}Male" ///
-				   "Female" "\hspace{0.75cm}Female" ///
-				   "In own dwelling" "Location of Water source \\ \hspace{0.5cm}In own dwelling" ///
+				   "Below 15 years" "\\ \multicolumn{7}{c}{\textbf{Panel 1: Characteristics of individual responsible for collecting water}}\\ Age  \\ \hspace{0.5cm}Below 15 years" ///
+				   "15-25 years" "\hspace{0.5cm}15 to 25 years" ///
+				   "25 to 35 years" "\hspace{0.5cm}25 to 35 years" ///
+				   "35 to 45 years" "\hspace{0.5cm}35 to 45 years" ///
+				   "45 to 55 years" "\hspace{0.5cm}45 to 55 years" ///
+				   "Above 55 years" "\hspace{0.5cm}Above 55 years" ///
+				   "Male" "Gender* \\ \hspace{0.5cm}Male" ///
+				   "Female" "\hspace{0.5cm}Female" ///
+				   "In own dwelling" "\\ \multicolumn{7}{c}{\textbf{Panel 2: Collection of water from the primary source }}\\ Location of primary water source \\ \hspace{0.5cm}In own dwelling" ///
 				   "In own yard/plot" "\hspace{0.5cm}In own yard/plot" ///
 				   "Elsewhere" "\hspace{0.5cm}Elsewhere" ///
-				   "Frequency of water collection" "\textbf{Frequency of and Time spent on Water collection} \\Frequency" ///
-				   "10 minutes or less" "Time spent on collecting water\\ \hspace{0.5cm}10 minutes or less" ///
+				   "Frequency of water collection" "Frequency of collecting water" ///
+				   "10 minutes or less" "Time spent in collecting water\\ \hspace{0.5cm}10 minutes or less" ///
 				   "More than 10 minutes but upto half hour" "\hspace{0.5cm}More than 10 minutes but upto half hour" ///
 				   "More than half hour but upto one hour" "\hspace{0.5cm}More than half hour but upto one hour" ///
 				   "More than one hour" "\hspace{0.5cm}More than one hour" ///
-				   "Don't know" "\hspace{0.5cm}Don't know" ///				   
-				   "Treats water" "\\ \multicolumn{6}{c}{\textbf{Panel 2: Burden of Water Treatment}} \\ Water treatment by the households \\ \hspace{0.5cm}Treat water" ///
-				   "Does not treat water" "\hspace{0.5cm}Do not treat the water" ///
-				   "Permanent Filtration System" "Nature of Water treatment method \\ \hspace{0.5cm}Permanent Filtration System" ///
-				   "Periodic Treatment" "\hspace{0.5cm}Periodic Treatment" ///
-				   "Below 15 yrs" "Characteristics of Individual Responsible for periodic water treatment \\ \hspace{0.5cm}Age \\ \hspace{0.75cm}Below 15 years" ///
- 				   "10 mins or less" "Time spent on periodic water treatment \\ \hspace{0.5cm}10 minutes or less" ///
-				   "Very difficult" "\hspace{0.5cm}Very difficult" ///
-				   "Somewhat difficult" "\hspace{0.5cm}Somewhat difficult" ///
-				   "Neither difficult nor easy" "\hspace{0.5cm}Neither difficult nor easy" ///
-				   "Somewhat easy" "\hspace{0.5cm}Somewhat easy" ///
-				   "Very easy" "\hspace{0.5cm}Very easy" ///
+				   "Don't know" "\hspace{0.5cm}Don't know" ///			
+				   "Frequency of cleaning water containers" "\\ \multicolumn{7}{c}{\textbf{Panel 3: Cleaning of drinking water storage containers}}\\ Frequency**" ///
+				   "10 mins or less" "Time spent\\ \hspace{0.5cm}10 minutes or less" ///
 				    "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				    "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
 				   ) ///
@@ -1951,3 +1994,109 @@ esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveS
 	   }
 
 	
+********************************************************************************
+*** Generating the table - DESCRIPTIVE STATISTICS (Water treatment burden)
+********************************************************************************
+
+*Setting up global macros for calling variables
+global Treat_burden treats_water_0 treats_water_1  treat_method_1 treat_method_2  ///
+freq_treat  time_treat_1 time_treat_2 time_treat_3 time_treat_4 ///
+time_treat_5  time_treat_6 treat_age_new_1 treat_age_new_2 ///
+treat_age_new_3 treat_age_new_4 treat_age_new_5 treat_age_new_6 treat_gender_1 ///
+treat_gender_2 difficulty_treat_1 difficulty_treat_2 difficulty_treat_3 ///
+difficulty_treat_4 difficulty_treat_5 difficulty_treat_6 
+
+*Setting up local macros (to be used for labelling the table)
+local Treat_burden "Insights into the burden of water treatment"
+local LabelTreat_burden "MaintableTreatBurden"
+local NoteTreat_burden "N: Endline: 880 \newline \textbf{Notes:} (1)*: One observation missing as the respondent doesn't know if water which method is being used to treat water (2)**: One observation missing as respondent indicated an individual is responsible for water treatment but did not specify who. (3)***: 4 observations missing as relevance condition was changed for the question"
+local ScaleTreat_burden "1"
+
+* Descritive stats table: Baseline and Endline
+foreach k in Treat_burden { //loop for all variables in the global marco 
+	
+	* Count 
+	use "${DataTemp}temp_washburden.dta", clear //using the saved dataset 
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model1: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+	
+	* Mean
+	use "${DataTemp}temp_washburden.dta", clear
+	eststo  model2: estpost summarize $`k' //Baseline
+
+	* Standard Deviation 
+    use "${DataTemp}temp_washburden.dta", clear
+    foreach i in $`k' {
+    egen sd_`i' = sd(`i') //calc. sd of each var 
+    replace `i' = sd_`i' //replacing values with their sd
+}
+    eststo model3: estpost summarize $`k' //Store summary statistics of the variables with standard deviation values
+
+	* Min
+	use "${DataTemp}temp_washburden.dta", clear
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model4: estpost summarize $`k' //storing summary stats of minimum value
+	
+	* Max
+	use "${DataTemp}temp_washburden.dta", clear
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model5: estpost summarize $`k' //storing summary stats of maximum value
+	
+	
+	* Missing 
+	use "${DataTemp}temp_washburden.dta", clear
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model6: estpost summarize $`k' //summary stats of count of missing values
+
+	
+*Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
+esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveStats_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") /// 	
+	   mtitles("Obs" "Mean" "SD" "Min" "Max" "Missing" \\) ///
+	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "Does not treat water" "\\ \multicolumn{7}{c}{\textbf{Panel 1: Water treatment by the households }} \\ Do not treat the water" ///
+				   "Treats water" "Treat the water" ///
+				   "Permanent Filtration System" "Nature of water treatment method* \\ \hspace{0.5cm}Permanent filtration system" ///
+				   "Periodic Treatment" "\hspace{0.5cm}Periodic treatment system" ///
+ 				   "10 mins or less" "Time spent on periodic water treatment \\ \hspace{0.5cm}10 minutes or less" ///
+				   "More than 10 minutes but upto half hour" "\hspace{0.5cm}More than 10 minutes but upto half hour" ///
+				   "More than half hour but upto one hour" "\hspace{0.5cm}More than half hour but upto one hour" ///
+				   "More than one hour" "\hspace{0.5cm}More than one hour" ///
+				   "Has a permanent filteration system" "\hspace{0.5cm}Has a permanent filteration system" ///
+				   "Dont know" "\hspace{0.5cm}Don't know" ///				   
+				   "Below 15 yrs" "\\ \multicolumn{7}{c}{\textbf{Panel 2: Characteristics of individual responsible for periodic water treatment}} \\ Age \\ \hspace{0.5cm}Below 15 years" ///
+				   "15-25 years" "\hspace{0.5cm}15 to 25 years" ///
+				   "25 to 35 years" "\hspace{0.5cm}25 to 35 years" ///
+				   "35 to 45 years" "\hspace{0.5cm}35 to 45 years" ///
+				   "45 to 55 years" "\hspace{0.5cm}45 to 55 years" ///
+				   "Above 55 years" "\hspace{0.5cm}Above 55 years" ///
+				   "Male" "Gender** \\ \hspace{0.5cm}Male" ///
+				   "Female" "\hspace{0.5cm}Female" ///
+				   "Very difficult" "\\ \multicolumn{7}{c}{\textbf{Panel 3: Reported difficulty level of treating water***}} \\ Very difficult" ///
+				    "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				    "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`Note`k''") 
+	   }
+
+	   
+
+
+
+
+
+
