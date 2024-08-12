@@ -83,9 +83,395 @@ save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
 
 use "${DataFinal}0_Master_HHLevel.dta", clear
 
-
 merge 1:1 unique_id using "${DataTemp}U5_Child_Endline_Census_for_merge.dta"
 
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Balti dho kar rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bartan Saf"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bartan saf"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bartan saph"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Basana sapha"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Botol saf"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Botoll saf"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Bottal ,Handi safa,or cover karte hai,"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bottal clean"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bottal safa karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bottal, Handi safa karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bottle saf karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Bottle saf karte hain"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean  tha container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean  untensil"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean containers"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Clean containers and cover the contai.."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Clean tha containe, cover the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean tha container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Clean tha container cover the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Wash the container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Wash container,pani ghorei rakhanti"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Wash container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Safkarke cover karke rakhaten hen"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Patra saf karte hen"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Patra saf karke rakhate hen"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Patra saf karke cover karke rakhete hen"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Patra saf karke cover karke rakhate hen"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Patra ko cover karke rakhaten hen"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Patra cover karke rakhaten hen"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Patra Saf karke rakhate hen"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Pani ko Dhankte hai"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Pani dhankte hai"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Pani Ko dhankte"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Pani Ko dhak kar rekte he."
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Pani Ko cover karke  rakte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi, bottal safa karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi safkarte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi safkarke rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi safa karte hai"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi safa karte cover karte hai"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi safa karte Pani Ko dhankte hai"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi safa cover karte hai"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi safa ,cover karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hein"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clean untensil"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleaning Utensils"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleaning utensils"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleansing the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clin contenor"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Clin the contenor"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cover  and clean the container,"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cover and clean the container"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Cover karke rakhaten hen"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Cover karke rakhaten hen Patra ko"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Cover the container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cover the container clean the container"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Covered the container"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Covered the pot"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Covered the water pot"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dabba dhote hai"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Dhak kar rakte he"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Dhak kar rakte he."
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Dhak kar raktehe."
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Dhak ke rakhte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hei"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hain"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi saf karte hai,dhak k rakhte hei"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hain"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi ku dhoiki rakhuchanti"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi ko saf karte hei"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi ko dhak ke rakhte hein"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi ko dhak ke rakhte hei"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi ko dhak kar rakhte hein"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Handi ko dhak k rakhte hei"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Handi ko dhak k rakhte hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi dhote he."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi dhote he or dhak ke rakte he."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi dhote he or dhak kar rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi dhokar rakte te."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi dhokar pani rakta he."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi dhokar dhak kar rakte he."
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Handi dhak k rakhte hei"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi clean karke rakh rhe hai"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi Dhote he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dhokar kar dhaka rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dhokar dhak kar rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dhakrak rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dhakkar rakte he."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Dhakkar rakte he"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Dhak ke rakhte hai, wash container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Dhak ke rakhte hai and wash container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleansing the vessel's before drinking"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi saf karte hei,dhak k rakhte hei"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Paniku ghorei rakhanti, wash container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Clean containers and cover the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleansing the vessel's before collecting water"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Cleansing the container before collecting water"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Clean tha container, cover the container"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Wash water container before storage water."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Wash and cover water container before storage water."
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cover the container, clean the container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Patra saf karke cover karke rakhaten hen"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hei, bottle saf karte hei"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi safa karte hai Pani Ko dhankte hai"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Handi ko saf karte hei,dhak k rakhte hei"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Wo pani main kuch nehin jaye is liye odh ke rakhte hain"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cover the container, clean tha container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Cleansing the vessel's before collecting water and cover the container"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Wash container,pani ki ghoreiki rakhuchhanti"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Wash container before storage water."
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Wash water container before storage water"
+replace R_E_water_treat_oth = "Clean container and cover the container" if R_E_water_treat_oth == "Patra saf karke cover karke rakheten hen"
+replace R_E_water_treat_oth = "Clean container" if R_E_water_treat_oth == "Handi saf karte hei, bottle saf karte hai"
+
+//there is a separate option for bleaching so doesn't make sense to put this in others 
+replace R_E_water_treat_type_4 = "1" if R_E_water_treat_oth == "Cover the container , bleaching"
+replace R_E_water_treat_oth = "cover the container" if R_E_water_treat_oth == "Cover the container , bleaching"
+
+//tank cleaning is not an applicable treatment method
+replace R_E_water_treat_type = "3" if R_E_water_treat_oth == "Tank cleaning" & R_E_water_treat_type == "3 -77"
+replace R_E_water_treat_oth = "" if R_E_water_treat_oth == "Tank cleaning" 
+
+//tank cleaning is not an applicable treatment method
+replace R_E_water_treat_type = "4" if R_E_water_treat_oth == "Tanki wash" & R_E_water_treat_type == "4 -77"
+replace R_E_water_treat_oth = "" if R_E_water_treat_oth == "Tanki wash" 
+
+
+
+//50401117020 - unique case for water treatment 
+
+/*Surveyor incorrectly wrote that household doesn't do treatment bu marked actual values in all other values like 
+R_E_water_treat R_E_water_treat_type R_E_water_treat_freq R_E_water_treat_freq_* R_E_not_treat_tim
+
+If the HH doesn't do treatment then these questions are not applicable so I did a couple of replacemenst to replacement it with missing
+
+*/
+
+replace R_E_water_treat = "0" if R_E_water_treat_oth == "Kuchbi nei karrehen"
+
+ds R_E_water_treat_type_*  R_E_water_treat_type R_E_water_treat_freq R_E_water_treat_freq_* R_E_not_treat_tim
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if R_E_water_treat_oth == "Kuchbi nei karrehen" & unique_id == "50401117020" 
+}
+
+replace R_E_water_treat_oth = "" if R_E_water_treat_oth == "Kuchbi nei karrehen" 
+
+
+br R_E_water_treat R_E_water_treat_type R_E_water_treat_oth  R_E_water_treat_type_* R_E_water_treat_freq R_E_water_treat_freq_* R_E_not_treat_tim if R_E_water_treat_oth == "Kuchbi nei karrehen" & unique_id == "50401117020" 
+
+
+//generating a variable that shows indirect water treatmet methods because in endline these treatment methods have been extensively reported 
+gen R_E_C_indirect_treatment = .
+//plz note that 1 here represents also those cases where indirect treatment might have been used with other treatment methods
+replace R_E_C_indirect_treatment = 1 if R_E_water_treat_type__77 == "1" & (R_E_water_treat_oth == "Clean container" | R_E_water_treat_oth == "Clean container and cover the container" | R_E_water_treat_oth == "cover the container" | R_E_water_treat_oth == "Cover the container, aqua")
+
+gen R_E_C_only_indirect_treatment = .
+replace R_E_C_only_indirect_treatment  = 1 if R_E_C_indirect_treatment  == 1 & R_E_water_treat_type_1 != "1" & R_E_water_treat_type_2 != "1" & R_E_water_treat_type_3 != "1" & R_E_water_treat_type_4 != "1" & R_E_water_treat_type_999 != "1"
+
+
+//finding the case of baseline for same variable 
+
+//The IDs are below all those cases where treatment actually wans't performed but surveyor still went ahead and said yes to the screening variable 
+
+//10101111021
+replace R_Cen_a16_water_treat = 0 if R_Cen_a16_water_treat_oth == "For 1month tank cleaning"
+
+ds  R_Cen_a16_water_treat_type_*  R_Cen_a16_water_treat_freq_*
+ 
+foreach var of varlist `r(varlist)'{
+replace `var' = . if R_Cen_a16_water_treat_oth == "For 1month tank cleaning" & unique_id == "10101111021" 
+}
+
+ds R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_type
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if R_Cen_a16_water_treat_oth == "For 1month tank cleaning" & unique_id == "10101111021" 
+}
+
+replace R_Cen_a16_water_treat_oth = "" if R_Cen_a16_water_treat_oth == "For 1month tank cleaning" & unique_id == "10101111021"  
+
+
+*******************************************************
+//20201113035
+replace R_Cen_a16_water_treat = 0 if R_Cen_a16_water_treat_oth == "Kichi karunahanti" 
+
+ds  R_Cen_a16_water_treat_type_*  R_Cen_a16_water_treat_freq_*
+ 
+foreach var of varlist `r(varlist)'{
+replace `var' = . if R_Cen_a16_water_treat_oth == "Kichi karunahanti" & unique_id == "20201113035" 
+}
+
+ds R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_type
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if R_Cen_a16_water_treat_oth == "Kichi karunahanti" & unique_id == "20201113035" 
+}
+
+replace R_Cen_a16_water_treat_oth = "" if R_Cen_a16_water_treat_oth == "Kichi karunahanti" & unique_id == "20201113035" 
+
+*******************************************************
+//40201113009
+replace R_Cen_a16_water_treat = 0 if R_Cen_a16_water_treat_oth == "Kichi karanti nahi" 
+
+ds  R_Cen_a16_water_treat_type_*  R_Cen_a16_water_treat_freq_*
+ 
+foreach var of varlist `r(varlist)'{
+replace `var' = . if R_Cen_a16_water_treat_oth == "Kichi karanti nahi" & unique_id == "40201113009" 
+}
+
+ds R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_type
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if R_Cen_a16_water_treat_oth == "Kichi karanti nahi" & unique_id == "40201113009" 
+}
+
+replace R_Cen_a16_water_treat_oth = "" if R_Cen_a16_water_treat_oth == "Kichi karanti nahi" & unique_id == "40201113009" 
+
+**********************************************************
+//50301105017
+replace R_Cen_a16_water_treat = 0 if R_Cen_a16_water_treat_oth == "Pani clear thauchhi" 
+
+ds  R_Cen_a16_water_treat_type_*  R_Cen_a16_water_treat_freq_*
+ 
+foreach var of varlist `r(varlist)'{
+replace `var' = . if R_Cen_a16_water_treat_oth == "Pani clear thauchhi" & unique_id == "50301105017" 
+}
+
+ds R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_type
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if R_Cen_a16_water_treat_oth == "Pani clear thauchhi" & unique_id == "50301105017" 
+}
+
+replace R_Cen_a16_water_treat_oth = "" if R_Cen_a16_water_treat_oth == "Pani clear thauchhi" & unique_id == "50301105017" 
+
+
+********************************************************8
+
+replace R_Cen_a16_water_treat_oth = "cover the container" if R_Cen_a16_water_treat_oth ==  "Ghodeiki rakhuchnti" 
+//generating a variable that shows indirect water treatmet methods because in endline these treatment methods have been extensively reported 
+gen R_Cen_C_indirect_treatment = .
+//plz note that 1 here represents also those cases where indirect treatment might have been used with other treatment methods
+replace R_Cen_C_indirect_treatment = 1 if R_Cen_a16_water_treat_oth == "cover the container" 
+
+gen R_Cen_C_only_indirect_treatment = .
+replace R_Cen_C_only_indirect_treatment  = 1 if R_Cen_C_indirect_treatment == 1 & R_Cen_a16_water_treat_type_1 != 1  & R_Cen_a16_water_treat_type_2 != 1  & R_Cen_a16_water_treat_type_3 != 1  & R_Cen_a16_water_treat_type_4 != 1  &  R_Cen_a16_water_treat_type_999 != 1  
+
+
+********************************************************\\\
+
+//case of UID - 50401117029
+
+//this is the case where they tie cloth to the pipe so there is already an option for this so doesn't make sens eto includ ein others so I remove dit from other and selected first option
+
+replace R_Cen_a16_water_treat_type_1 = 1 if R_Cen_a16_water_treat_oth == "Pile re kapada bandhi Rakhi chhanti" 
+
+replace R_Cen_a16_water_treat_type = "1" if R_Cen_a16_water_treat_oth == "Pile re kapada bandhi Rakhi chhanti" 
+
+replace R_Cen_a16_water_treat_type__77 = 0 if R_Cen_a16_water_treat_oth == "Pile re kapada bandhi Rakhi chhanti" 
+
+replace R_Cen_a16_water_treat_oth = "" if R_Cen_a16_water_treat_oth == "Pile re kapada bandhi Rakhi chhanti" 
+
+
+/**************************************************************
+CLEANING TREATMENT VARIABLLE FOR KIDS 
+***************************************************************/
+
+//ENDLINE
+
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Balti,handi safa karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash container"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bartan safa karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottal pe bharte he"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottal saf karte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottal safa karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottal,glass saf karke pani dete hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle dho kar dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle dhokar dete he"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle dhokar rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle dhote he pani bhar ke dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf kar ke dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf karke dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf karte hain"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf karte hei"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottol dhote he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottol pe saf karke pani rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottotle saf kar ke dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Clean tha container"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Clean tha container,cover the container"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Clean the container"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Clean untensil"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Cleaning Utensils"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Cleansing her water bottle"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Cleansing the water bottle"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Clin contenor"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Cover karke rakhete hen"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Cover the container"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Cover water odh ke rakhte hain pani ko"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Dhak ke rakhte hai"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Dhak ke rakhte hai, wash container"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Dhakkan laga ke rakhte hain"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Dhakkar rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glash saf kartehe."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass clean"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass dhote he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass dhote he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass saf arke pani dete hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass saf karke dete he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass saf karke pani dete hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass saf karte hei"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Glass, bottle saf karte hai"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Handi dhak k rakhte hei"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi dhokar rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi dhote he"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi dhote he."
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Handi ko dho kar dhak kar rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi saf kar ke rakte he."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi saf karte hei"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Handi saf karte hei, dhan k rakhte hei"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi safa"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Handi safa cover karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi safa karte hai"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Pani ghorauchhanti,wash container"
+replace R_E_water_treat_kids_oth = "cover the container" if R_E_water_treat_kids_oth == "Pani ko Dhankte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Patra saf karke rakhate hen"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Patra saf karte hen"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Wash container and Dhak ke rakhte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash the container"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash water bottle before storage water."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash water container before storage."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash water container before storage water."
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Wash and cover water container before storage water."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash water container before storage water"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Wash water container before storage water"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi saf karte hei , bottle saf karte hai"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Glass saf karke pani dete hai pani ko dhankte"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Cover the container, clean tha container"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Cleansing the vessel's before collecting water"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Cover the container, clean tha container"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Wash container, dhak ke pani ko rakhte hai"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Wash container, dhak ke pani ko rakhte hai"
+replace R_E_water_treat_kids_oth = "Clean container and cover the container" if R_E_water_treat_kids_oth == "Wash container before storage water."
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Bottle saf karte hain, glass saf karte hai"
+replace R_E_water_treat_kids_oth = "Clean container" if R_E_water_treat_kids_oth == "Handi saf karte hain"
+
+
+
+gen R_E_C_indirect_treatment_kids = .
+//plz note that 1 here represents also those cases where indirect treatment might have been used with other treatment methods
+replace R_E_C_indirect_treatment_kids = 1 if R_E_water_treat_kids_type__77 == "1" & (R_E_water_treat_kids_oth == "Clean container" | R_E_water_treat_kids_oth == "Clean container and cover the container" | R_E_water_treat_kids_oth == "cover the container" )
+
+gen R_E_C_only_indirect_treat_kids = .
+replace R_E_C_only_indirect_treat_kids = 1 if R_E_C_indirect_treatment_kids  == 1 & R_E_water_treat_kids_type_1 != "1" & R_E_water_treat_kids_type_2 != "1" & R_E_water_treat_kids_type_3 != "1" & R_E_water_treat_kids_type_4 != "1" & R_E_water_treat_kids_type_999 != "1"
+
+//BASELINE
+
+***********************************************************
+//Case of UID - 20201113077
+
+//they don't do treatment for kids so I replaced yes with no to U5 kids treatment
+
+replace R_Cen_a17_water_treat_kids = 0 if unique_id == "20201113077" & R_Cen_water_treat_kids_oth == "Kichi karunahanti"
+
+ds R_Cen_a17_water_treat_kids  R_Cen_water_treat_kids_type_*  R_Cen_a17_treat_kids_freq_*
+
+foreach var of varlist `r(varlist)'{
+replace `var' = . if unique_id == "20201113077" & R_Cen_water_treat_kids_oth == "Kichi karunahanti"
+}
+
+ds R_Cen_water_treat_kids_type R_Cen_a17_treat_kids_freq
+
+foreach var of varlist `r(varlist)'{
+replace `var' = "" if unique_id == "20201113077" & R_Cen_water_treat_kids_oth == "Kichi karunahanti"
+}
+
+replace R_Cen_water_treat_kids_oth = "" if unique_id == "20201113077" & R_Cen_water_treat_kids_oth == "Kichi karunahanti"
+
+//generating a variable that shows indirect water treatmet methods because in endline these treatment methods have been extensively reported 
+gen R_Cen_C_indirect_treatment_kids = 0
+
+gen R_Cen_C_only_indirect_treat_kids = 0
+
+
+
+
+
+*****************************************************
 
 //finding number of U5 kids for baseline vs endline 
 /* U5 Kids */
@@ -155,7 +541,8 @@ foreach i in R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_s
 }
 
 
-keep unique_id R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_source_kids R_E_water_source_kids R_Cen_water_prim_source_kids R_E_water_prim_source_kids R_E_water_source_preg R_E_water_prim_source_preg R_E_quant R_Cen_a13_water_sec_yn R_E_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 R_Cen_a13_water_source_sec__77 R_E_water_source_sec R_E_water_source_sec_1 R_E_water_source_sec_2 R_E_water_source_sec_3 R_E_water_source_sec_4 R_E_water_source_sec_5 R_E_water_source_sec_6 R_E_water_source_sec_7 R_E_water_source_sec_8 R_E_water_source_sec_9 R_E_water_source_sec_10 R_E_water_source_sec__77 R_Cen_a14_sec_source_reason R_Cen_a14_sec_source_reason_1 R_Cen_a14_sec_source_reason_2 R_Cen_a14_sec_source_reason_3 R_Cen_a14_sec_source_reason_4 R_Cen_a14_sec_source_reason_5 R_Cen_a14_sec_source_reason_6 R_Cen_a14_sec_source_reason_7 R_Cen_a14_sec_source_reason__77 R_Cen_a14_sec_source_reason_999 R_E_sec_source_reason R_E_sec_source_reason_1 R_E_sec_source_reason_2 R_E_sec_source_reason_3 R_E_sec_source_reason_4 R_E_sec_source_reason_5 R_E_sec_source_reason_6 R_E_sec_source_reason_7 R_E_sec_source_reason__77 R_E_sec_source_reason_999 R_E_sec_source_reason_oth R_E_water_source_main_sec R_Cen_a15_water_sec_freq R_E_water_sec_freq R_Cen_a16_water_treat R_E_water_treat R_Cen_a16_stored_treat R_E_water_stored R_Cen_a16_water_treat_type R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type_999 R_Cen_a16_water_treat_type__77 R_E_water_treat_type R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_3 R_E_water_treat_type_4 R_E_water_treat_type_999 R_E_water_treat_type__77 R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_freq_1 R_Cen_a16_water_treat_freq_2 R_Cen_a16_water_treat_freq_3 R_Cen_a16_water_treat_freq_4 R_Cen_a16_water_treat_freq_5 R_Cen_a16_water_treat_freq_6 R_Cen_a16_water_treat_freq__77 R_E_water_treat_freq R_E_water_treat_freq_1 R_E_water_treat_freq_2 R_E_water_treat_freq_3 R_E_water_treat_freq_4 R_E_water_treat_freq_5 R_E_water_treat_freq_6 R_E_water_treat_freq__77 R_E_not_treat_tim R_Cen_a16_stored_treat_freq R_Cen_a17_water_treat_kids R_E_water_treat_kids R_Cen_water_treat_kids_type R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type__77 R_E_water_treat_kids_type R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type_999 R_E_water_treat_kids_type__77 R_Cen_a17_treat_kids_freq R_Cen_a17_treat_kids_freq_1 R_Cen_a17_treat_kids_freq_2 R_Cen_a17_treat_kids_freq_3 R_Cen_a17_treat_kids_freq_4 R_Cen_a17_treat_kids_freq_5 R_Cen_a17_treat_kids_freq_6 R_Cen_a17_treat_kids_freq__77 R_E_treat_kids_freq R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_Cen_consent R_E_consent R_E_quant Treat_V village R_Cen_hamlet_name  R_E_key R_Cen_u5_kids_total R_E_u5_kids_total R_Cen_HH_level_U5 R_E_HH_level_U5
+keep unique_id R_Cen_a12_water_source_prim R_E_water_source_prim R_Cen_a17_water_source_kids R_E_water_source_kids R_Cen_water_prim_source_kids R_E_water_prim_source_kids R_E_water_source_preg R_E_water_prim_source_preg R_E_quant R_Cen_a13_water_sec_yn R_E_water_sec_yn R_Cen_a13_water_source_sec R_Cen_a13_water_source_sec_1 R_Cen_a13_water_source_sec_2 R_Cen_a13_water_source_sec_3 R_Cen_a13_water_source_sec_4 R_Cen_a13_water_source_sec_5 R_Cen_a13_water_source_sec_6 R_Cen_a13_water_source_sec_7 R_Cen_a13_water_source_sec_8 R_Cen_a13_water_source_sec__77 R_E_water_source_sec R_E_water_source_sec_1 R_E_water_source_sec_2 R_E_water_source_sec_3 R_E_water_source_sec_4 R_E_water_source_sec_5 R_E_water_source_sec_6 R_E_water_source_sec_7 R_E_water_source_sec_8 R_E_water_source_sec_9 R_E_water_source_sec_10 R_E_water_source_sec__77 R_Cen_a14_sec_source_reason R_Cen_a14_sec_source_reason_1 R_Cen_a14_sec_source_reason_2 R_Cen_a14_sec_source_reason_3 R_Cen_a14_sec_source_reason_4 R_Cen_a14_sec_source_reason_5 R_Cen_a14_sec_source_reason_6 R_Cen_a14_sec_source_reason_7 R_Cen_a14_sec_source_reason__77 R_Cen_a14_sec_source_reason_999 R_E_sec_source_reason R_E_sec_source_reason_1 R_E_sec_source_reason_2 R_E_sec_source_reason_3 R_E_sec_source_reason_4 R_E_sec_source_reason_5 R_E_sec_source_reason_6 R_E_sec_source_reason_7 R_E_sec_source_reason__77 R_E_sec_source_reason_999 R_E_sec_source_reason_oth R_E_water_source_main_sec R_Cen_a15_water_sec_freq R_E_water_sec_freq R_Cen_a16_water_treat R_E_water_treat R_Cen_a16_stored_treat R_E_water_stored R_Cen_a16_water_treat_type R_Cen_a16_water_treat_type_1 R_Cen_a16_water_treat_type_2 R_Cen_a16_water_treat_type_3 R_Cen_a16_water_treat_type_4 R_Cen_a16_water_treat_type_999 R_Cen_a16_water_treat_type__77 R_E_water_treat_type R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_3 R_E_water_treat_type_4 R_E_water_treat_type_999 R_E_water_treat_type__77 R_Cen_a16_water_treat_freq R_Cen_a16_water_treat_freq_1 R_Cen_a16_water_treat_freq_2 R_Cen_a16_water_treat_freq_3 R_Cen_a16_water_treat_freq_4 R_Cen_a16_water_treat_freq_5 R_Cen_a16_water_treat_freq_6 R_Cen_a16_water_treat_freq__77 R_E_water_treat_freq R_E_water_treat_freq_1 R_E_water_treat_freq_2 R_E_water_treat_freq_3 R_E_water_treat_freq_4 R_E_water_treat_freq_5 R_E_water_treat_freq_6 R_E_water_treat_freq__77 R_E_not_treat_tim R_Cen_a16_stored_treat_freq R_Cen_a17_water_treat_kids R_E_water_treat_kids R_Cen_water_treat_kids_type R_Cen_water_treat_kids_type_1 R_Cen_water_treat_kids_type_2 R_Cen_water_treat_kids_type_3 R_Cen_water_treat_kids_type_4 R_Cen_water_treat_kids_type_999 R_Cen_water_treat_kids_type__77 R_E_water_treat_kids_type R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type_999 R_E_water_treat_kids_type__77 R_Cen_a17_treat_kids_freq R_Cen_a17_treat_kids_freq_1 R_Cen_a17_treat_kids_freq_2 R_Cen_a17_treat_kids_freq_3 R_Cen_a17_treat_kids_freq_4 R_Cen_a17_treat_kids_freq_5 R_Cen_a17_treat_kids_freq_6 R_Cen_a17_treat_kids_freq__77 R_E_treat_kids_freq R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_Cen_consent R_E_consent R_E_quant Treat_V village R_Cen_hamlet_name  R_E_key R_Cen_u5_kids_total R_E_u5_kids_total R_Cen_HH_level_U5 R_E_HH_level_U5 R_E_C_indirect_treatment R_Cen_C_indirect_treatment R_E_C_only_indirect_treatment  R_Cen_C_only_indirect_treatment R_Cen_a16_water_treat_oth R_Cen_a18_water_treat_oth R_E_water_treat_oth R_Cen_water_treat_kids_oth R_E_water_treat_kids_oth R_E_C_indirect_treatment_kids  R_E_C_only_indirect_treat_kids R_Cen_C_indirect_treatment_kids R_Cen_C_only_indirect_treat_kids 
+
 
 /*************************************************************
 //VARIABLE NAMES THAT NEED TO BE CHNAGED 
@@ -215,7 +602,7 @@ rename R_Cen_a17_treat_kids_freq__77 R_Cen_treat_kids_freq__77
 rename R_Cen_a15_water_sec_freq R_Cen_water_sec_freq
 
 
-
+rename R_Cen_a16_water_treat_oth  R_Cen_water_treat_oth
 
 
 preserve
@@ -515,6 +902,111 @@ replace C_water_source_sec_4 = 1 if water_source_sec_4 == 1
 replace C_water_source_sec_4 = 0 if C_water_source_sec_4 == .
 
 
+//here we are tackling indirect water treatment variable because this shouldn't be counted twice like when presenting water treatment between baseline vs Endline this can make the compariosn noisy so we must remove cases of indirect treatment from both endline and baseline to show actual incrrse in this variable 
+replace C_indirect_treatment = 0 if C_indirect_treatment == .
+
+
+//PART A- removing indirect water treatment from main treatment variable for primary water source
+***********************************************************
+//water treatment
+gen C_water_treat = .
+//replace C_water_treat = 1 if  C_only_indirect_treatment != 1 &  water_treat == 1
+replace C_water_treat = 1 if water_treat == 1
+replace C_water_treat = 0 if water_treat == 0
+
+//type of treatmet
+
+gen C_water_treat_type__77 = .
+//we are already including this in the indirect treatment method
+replace C_water_treat_type__77 = 1 if water_treat_type__77 == 1 & (water_treat_oth != "Clean container" & water_treat_oth != "Clean container and cover the container" & water_treat_oth != "cover the container")
+replace C_water_treat_type__77 = 0 if water_treat_type__77 == 0
+
+//water treat fre
+gen C_water_treat_freq = ""
+replace C_water_treat_freq = water_treat_freq if C_only_indirect_treatment != 1  & water_treat_freq != ""
+
+
+ds water_treat_freq_*
+foreach var of varlist `r(varlist)'{
+gen C_`var' = .
+replace C_`var' = 1 if C_only_indirect_treatment != 1 & `var' == 1
+replace C_`var' = 0 if `var' == 0
+
+}
+
+foreach v in C_water_treat C_indirect_treatment {
+	levelsof `v' //get the unique values of each variable
+	foreach value in `r(levels)' { //Looping through each unique value of each variable
+		//generating indicator variables
+		gen     `v'_`value'=0 
+		replace `v'_`value'=1 if `v'==`value' 
+		replace `v'_`value'=. if `v'==.
+		//labelling indicator variable with original variable's label and unique value
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+
+	
+
+ds water_stored_1 C_water_treat_0 C_water_treat_1  C_indirect_treatment_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 C_water_treat_type__77 water_treat_type_999 C_water_treat_freq_1 C_water_treat_freq_2 C_water_treat_freq_3 C_water_treat_freq_4 C_water_treat_freq_5 C_water_treat_freq_6 C_water_treat_freq__77
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 0 if `var' == .
+}
+	
+//C_water_source_prim_1 C_water_source_prim_2 C_water_source_prim_3 C_water_source_prim_4  C_water_source_prim_77  water_sec_yn_0 water_sec_yn_1 C_water_source_sec_1 C_water_source_sec_2 C_water_source_sec_3 C_water_source_sec_4 C_water_source_sec__77 sec_source_reason_1 sec_source_reason_2 sec_source_reason_3 sec_source_reason_4 sec_source_reason_5 sec_source_reason_6 sec_source_reason_7 sec_source_reason__77 sec_source_reason_999 water_sec_freq_1 water_sec_freq_2 water_sec_freq_3 water_sec_freq_4 water_sec_freq_5 water_sec_freq_6 water_sec_freq_8 water_sec_freq_999	
+
+
+// PART B - removing indirect water treatment from main treatment variable for KIDS's primary source
+***********************************************************
+
+//type of treatmet
+
+gen C_water_treat_kids__77 = .
+//we are already including this in the indirect treatment method
+replace C_water_treat_kids__77 = 1 if water_treat_kids_type__77 == 1 & (water_treat_kids_oth != "Clean container" & water_treat_kids_oth != "Clean container and cover the container" & water_treat_kids_oth != "cover the container")
+replace C_water_treat_kids__77 = 0 if water_treat_kids_type__77 == 0
+
+//water treat fre
+gen C_treat_kids_freq = ""
+replace C_treat_kids_freq = treat_kids_freq if C_only_indirect_treat_kids != 1  & treat_kids_freq != ""
+
+
+ds treat_kids_freq_*
+foreach var of varlist `r(varlist)'{
+gen C_`var' = .
+replace C_`var' = 1 if C_only_indirect_treat_kids != 1 & `var' == 1
+replace C_`var' = 0 if `var' == 0
+
+}
+
+rename C_indirect_treatment_kids  C_indirect_treat_kids
+foreach v in C_indirect_treat_kids {
+	levelsof `v' //get the unique values of each variable
+	foreach value in `r(levels)' { //Looping through each unique value of each variable
+		//generating indicator variables
+		gen     `v'_`value'=0 
+		replace `v'_`value'=1 if `v'==`value' 
+		replace `v'_`value'=. if `v'==.
+		//labelling indicator variable with original variable's label and unique value
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+
+
+ds water_stored_1 C_water_treat_0 C_water_treat_1  C_indirect_treatment_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 C_water_treat_type__77 water_treat_type_999 C_water_treat_freq_1 C_water_treat_freq_2 C_water_treat_freq_3 C_water_treat_freq_4 C_water_treat_freq_5 C_water_treat_freq_6 C_water_treat_freq__77
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 0 if `var' == .
+}
+
+ds water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_1 C_indirect_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 C_water_treat_kids__77 water_treat_kids_type_999 C_treat_kids_freq_1 C_treat_kids_freq_2 C_treat_kids_freq_3 C_treat_kids_freq_4 C_treat_kids_freq_5 C_treat_kids_freq_6 C_treat_kids_freq__77 
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 0 if `var' == .
+}
+
+	
 
 *** Labelling the variables for use in descriptive stats table
 label var C_water_source_prim_1 "JJM taps"
@@ -554,17 +1046,19 @@ label var water_treat_type_1 "Filter the water through a cloth or sieve"
 label var  water_treat_type_2 "Let the water stand before drinking" 
 label var  water_treat_type_3 "Boil the water" 
 label var  water_treat_type_4 "Add chlorine/ bleaching powder" 
-label var water_treat_type__77 "Other" 
+label var C_water_treat_type__77 "Other" 
 label var water_treat_type_999 "Don't know" 
 
-
-label var water_treat_freq_1 "Always treat the water" 
-label var water_treat_freq_2 "Treat the water in the summers" 
-label var water_treat_freq_3 "Treat the water in the monsoons" 
-label var water_treat_freq_4 "Treat the water in the winters" 
-label var water_treat_freq_5 "Treat the water when kids/ old people fall sick" 
-label var water_treat_freq_6 "Treat the water when it looks or smells dirty" 
-label var water_treat_freq__77 "Other"
+label var C_water_treat_0 "Water treatment is not done" 
+label var C_water_treat_1 "Water treatment is done"
+label var C_water_treat_freq_1 "Always treat the water" 
+label var C_water_treat_freq_2 "Treat the water in the summers" 
+label var C_water_treat_freq_3 "Treat the water in the monsoons" 
+label var C_water_treat_freq_4 "Treat the water in the winters" 
+label var C_water_treat_freq_5 "Treat the water when kids/ old people fall sick" 
+label var C_water_treat_freq_6 "Treat the water when it looks or smells dirty" 
+label var C_water_treat_freq__77 "Other"
+label var C_indirect_treatment_1 "Indirect treatment methods"
 
 label var not_treat_tim_1 "In the past 2 weeks, water bot treated because of lack of time"
 
@@ -581,16 +1075,17 @@ label var water_treat_kids_type_1 "Filter the water through a cloth or sieve"
 label var  water_treat_kids_type_2  "Let the water stand before drinking"
 label var  water_treat_kids_type_3 "Boil the water"
 label var  water_treat_kids_type_4 "Add chlorine/ bleaching powder" 
-label var water_treat_kids_type__77 "Other" 
+label var C_water_treat_kids__77 "Other" 
 label var water_treat_kids_type_999 "Don't know" 
+label var C_indirect_treat_kids_1 "Indirect treatment methods"
 
-label var treat_kids_freq_1 "Always treat the water"  
-label var  treat_kids_freq_2 "Treat the water in the summers"
-label var treat_kids_freq_3 "Treat the water in the monsoons" 
-label var treat_kids_freq_4 "Treat the water in the winters"
-label var treat_kids_freq_5 "Treat the water when kids/ old people fall sick"
-label var  treat_kids_freq_6 "Treat the water when it looks or smells dirty"  
-label var treat_kids_freq__77 "Other"
+label var C_treat_kids_freq_1 "Always treat the water"  
+label var  C_treat_kids_freq_2 "Treat the water in the summers"
+label var C_treat_kids_freq_3 "Treat the water in the monsoons" 
+label var C_treat_kids_freq_4 "Treat the water in the winters"
+label var C_treat_kids_freq_5 "Treat the water when kids/ old people fall sick"
+label var  C_treat_kids_freq_6 "Treat the water when it looks or smells dirty"  
+label var C_treat_kids_freq__77 "Other"
 
 label var lastweekJJM  "In the past week, all of the primary drinking water came from JJM" 
 label var not_treat_tim_1 "In the past 2 weeks, water not treated due to lack of time" 
@@ -840,7 +1335,11 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 // Histogram for water quantity (assuming it's a numerical variable)
 
 
-global PanelA2 HH_level_U5 water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999 treat_kids_freq_1 treat_kids_freq_2 treat_kids_freq_3 treat_kids_freq_4 treat_kids_freq_5 treat_kids_freq_6 treat_kids_freq__77
+
+
+global PanelA2  water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_1 C_indirect_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 C_water_treat_kids__77 water_treat_kids_type_999 C_treat_kids_freq_1 C_treat_kids_freq_2 C_treat_kids_freq_3 C_treat_kids_freq_4 C_treat_kids_freq_5 C_treat_kids_freq_6 C_treat_kids_freq__77 
+
+//HH_level_U5
 
 *global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
@@ -1006,23 +1505,25 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 }
  
 
+use "${DataTemp}WASH_TvsC.dta", clear
  
-global PanelA3 water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 
+global PanelA3 C_water_treat_0 C_water_treat_1  C_indirect_treatment_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 C_water_treat_type__77 water_treat_type_999 C_water_treat_freq_1 C_water_treat_freq_2 C_water_treat_freq_3 C_water_treat_freq_4 C_water_treat_freq_5 C_water_treat_freq_6 C_water_treat_freq__77
 
 *global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
 *Setting up local macros (to be used for labelling the table)
-local PanelA3 "WASH Characteristics Baseline vs Endline for U5 kids"
+local PanelA3 "WASH Treatment of Primary water source Baseline vs Endline"
 local LabelPanelA3 "WASH"
 *local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
 local ScalePanelA3 "1"
 //local notePanelA "N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline N: 914 - Number of main respondents who consented to participate in the Baseline Survey \newline \textbf{Notes:} \newline(a)262 Count for Baseline: Only 262 HH use any secondary source of drinking water \newline(b)317 Count for Endline: Only 317 HH use any secondary source of drinking water  \newline(c)419 Count for Baseline: Information collected for 419 HHs out of 914 who do water treatment of either the primary drinking water or stored water  \newline(d)629 Count for Endline: Information collected for 629 HHs out of 874 who do water treatment of either the primary drinking water or stored water \newline(f)**: Respondents allowed to select multiple options \newline(g)***: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(h) There are no pregnant women from Endline that drink from a different primary source \newline \textbf{Clarifications:} \newline 1: Out of 0.04 U5 children that drink from a different primary source 0.17 drink from JJM \newline 2: The treatment for stored water was irrespective of the source of stored water and it was asked irrespective of the people saying Yes/No to primary water source treatment. The refernce period was current stored water \newline 3: Time refernce period is of last 1 month \newline 4: In Endline,516 HH say that in the last one week all of their drinking water came from JJM \newline 5: In the past 2 weeks, 87 out of 693 HH said they decided not to treat water because they didn't have time. Here 693 are those HH who either treat their primary or stored water" 
+local notePanelA3 "\newline(a)*: Respondents allowed to select multiple options \newline(b)**: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(c)1: Indirect water treatment methods are those methods that are not directly applied on water. In this case these mthods are cleaning the container or covering the container or both" 
 
  
  * By R_Enr_treatment 
 foreach k in PanelA3 { //loop for all variables in the global marco 
 
-use "${DataTemp}Temp.dta", clear //using the saved dataset 
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 ***********
 ** Table **
 ***********
@@ -1067,7 +1568,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 */
 
 	* Min
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	foreach i in $`k' {
 	egen min_`i'=min(`i')
 	replace `i'=min_`i'
@@ -1075,7 +1576,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	eststo  model3: estpost summarize $`k' //storing summary stats of minimum value
 		
 	* Max
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	foreach i in $`k' {
 	egen max_`i'=max(`i')
 	replace `i'=max_`i'
@@ -1084,7 +1585,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	
 	* Missing 
 	//general
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 0
 	foreach i in $`k' {
 	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
@@ -1095,7 +1596,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	
 	* Missing 
 	//for endline
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 1
 	foreach i in $`k' {
 	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
@@ -1107,7 +1608,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 
 		* SD 
 		//for baseline
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 0
 	foreach i in $`k' {
 	egen m_`i'=sd(`i')
@@ -1117,7 +1618,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	
 		* SD 
 		//for endline	
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 1
 	foreach i in $`k' {
 	egen m_`i'=sd(`i')
@@ -1129,7 +1630,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 	* Count 
 		//endline
 	//Calculating the summary stats 
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 0
     foreach i in $`k' {
     egen count_`i' = count(`i') //calc. freq of each var 
@@ -1141,7 +1642,7 @@ use "${DataTemp}Temp.dta", clear //using the saved dataset
 		* Count 
 		//endline
 	//Calculating the summary stats 
-	use "${DataTemp}Temp.dta", clear
+use "${DataTemp}WASH_TvsC.dta", clear //using the saved dataset 
 	keep if survey_type_num == 1
     foreach i in $`k' {
     egen count_`i' = count(`i') //calc. freq of each var 
@@ -1160,7 +1661,8 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
-				   "Always treat the water" "\textbf{Frequency of the treatment***} \\ Always treat the water" ///
+				   "Indirect treatment methods" "Indirect treatment methods\textsuperscript{1}" ///
+				   "Always treat the water" "\textbf{Frequency of the treatment**} \\ Always treat the water" ///
 				   "Water treatment for primary source"  "\hline \textbf{Water treatment usage\textsuperscript{5}} \\ Water treatment for primary source" ///
 				   "Once at the time of storing" "\textbf{Frequency of the stored water treatment} \\ Once at the time of storing" ///
 				   "U5 children primary source is JJM" "U5 children primary source is JJM\textsuperscript{1}" ///
@@ -1169,7 +1671,7 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 				   "Using govt. taps as primary drinking water" "Using govt. taps as primary drinking water\textsuperscript{4}" ///
 				   "Water treatment for youngest children in HH" "\textbf{Water Treatment for U5 kids} \\ Water treatment for youngest children in HH" ///
 				   "Filter water through a cloth or sieve for U5 kids" "\textbf{Types of Treatment for U5 kids**} \\ Filter water through a cloth or sieve for U5 kids" ///
-				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment**} \\ Filter the water through a cloth or sieve" ///
+				   "Filter the water through a cloth or sieve" "\textbf{Types of Treatment*} \\ Filter the water through a cloth or sieve" ///
 				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
 				   ".00" "" ///
 				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " "  ///

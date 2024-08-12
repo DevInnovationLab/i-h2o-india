@@ -306,6 +306,41 @@ knitr::opts_knit$set(root.dir = DI_path())
 
 
 
+Lab_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/5_lab data/idexx/cleaned/"
+  } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
+  } 
+  
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = Lab_path())
+
+
+
+
 #---------------chlorine decay plots village wise----------------------------#
 
 
@@ -1752,7 +1787,353 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_F3.png"),
 
 
 
+
 #wq_chlorine_storedfc #wq_chlorine_storedfc_again #wq_chlorine_storedtc #wq_chlorine_storedtc_again #wq_tap_fc #wq_tap_fc_again #wq_tap_tc #wq_tap_tc_again
 
 #T-TEST 
+
+
+
+# POOLING IN ALL IDEXX ROUND DATA 
+
+BL_idexx <- read_csv(paste0(Lab_path(), "BL_idexx_master_cleaned.csv"))
+View(BL_idexx)
+names(BL_idexx)
+#sample_ID #bag_ID #sample_type #bag_ID_stored #bag_ID_tap
+BL_idexx_v <- BL_idexx %>% select(unique_id, sample_ID, bag_ID, sample_type, bag_ID_stored, bag_ID_tap)
+View(BL_idexx_v)
+
+
+#doing basic cleaning 
+BH_Clean <- read_dta(paste0(user_path(),"2_deidentified/1_2_Followup_cleaned.dta" ))
+BH_Clean <- BH_Clean %>% filter(R_FU_consent == 1)
+
+#wq_chlorine_storedfc wq_chlorine_storedfc_again wq_chlorine_storedtc wq_chlorine_storedtc_again
+#wq_tap_fc wq_tap_fc_again wq_tap_tc wq_tap_tc_again
+#stored_bag_source #bag_stored_time #bag_stored_time_unit
+#CAVEAT: Here I had to drop those observations where stored time was not present and its respective chlorine values had to be droppe dout 
+
+
+names(BH_Clean)
+BH_Clean_view <- BH_Clean %>% select(unique_id_num, R_FU_r_cen_village_name_str, R_FU_stored_bag_source, R_FU_stored_bag_source_oth, R_FU_bag_stored_time, R_FU_bag_stored_time_unit,  R_FU_fc_stored,  R_FU_wq_chlorine_storedfc_again, R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again, R_FU_bag_ID_stored, R_FU_sample_ID_stored, R_FU_sample_ID_tap, R_FU_bag_ID_tap)
+View(BH_Clean_view )
+
+#Since there are a lot of NA values we need to use coalesce function to make sure original Non NA values are retained
+BH_Clean_view <- BH_Clean_view %>%
+  rowwise() %>%
+  mutate(
+    stored_water_fc = ifelse(is.na(R_FU_fc_stored) | is.na(R_FU_wq_chlorine_storedfc_again), 
+                             coalesce(R_FU_fc_stored, R_FU_wq_chlorine_storedfc_again), 
+                             (R_FU_fc_stored + R_FU_wq_chlorine_storedfc_again) / 2),
+    stored_water_tc = ifelse(is.na(R_FU_tc_stored) | is.na(R_FU_wq_chlorine_storedtc_again), 
+                             coalesce(R_FU_tc_stored, R_FU_wq_chlorine_storedtc_again), 
+                             (R_FU_tc_stored + R_FU_wq_chlorine_storedtc_again) / 2)
+  ) %>%
+  ungroup()
+
+
+
+#geenrating auniform time measurement variable 
+
+# removing prefix R_FU_
+BH_Clean_view_f <- BH_Clean_view %>%
+  rename_all(~ sub("^R_FU_", "", .))
+
+
+BH_Clean_view_f <- BH_Clean_view_f %>%
+  rename(
+    Village = r_cen_village_name_str
+  )
+
+
+
+View(BH_Clean_view_f)
+
+#"unique_id"     "sample_ID"     "bag_ID"        "sample_type"   "bag_ID_stored" "bag_ID_tap"  
+#unique_id  sample_ID_stored  sample_ID_tap  bag_ID_stored bag_ID_tap
+names(BH_Clean_view_f)
+
+names(BL_idexx_v)
+
+BH_fil <- BH_Clean_view_f %>% select(unique_id_num,  sample_ID_stored,  sample_ID_tap,  bag_ID_stored, bag_ID_tap)
+
+BH_Clean_view_long <- BH_fil %>%
+  pivot_longer(
+    cols = starts_with("sample_ID") | starts_with("bag_ID"),  # Specify the columns to reshape
+    names_to = c(".value", "sample_type"),  # `.value` keeps part of the column names as variables
+    names_pattern = "(sample_ID|bag_ID)_(stored|tap)"         # Use a regular expression to capture the `stored` and `tap` parts
+  )
+
+View(BH_Clean_view_long)
+
+
+BH_Clean_view_long <- BH_Clean_view_long %>%
+  rename(
+    unique_id = unique_id_num
+  )
+
+names(BH_Clean_view_long)
+
+BH_Clean_view_long$sample_type <- ifelse(BH_Clean_view_long$sample_type == "stored", "Stored", BH_Clean_view_long$sample_type)
+BH_Clean_view_long$sample_type <- ifelse(BH_Clean_view_long$sample_type == "tap", "Tap", BH_Clean_view_long$sample_type)
+
+
+BH_Clean_view_long <- BH_Clean_view_long %>%
+  filter(!(is.na(sample_ID) & is.na(bag_ID)))
+
+View(BH_Clean_view_long)
+merged_data <- full_join(BL_idexx_v, BH_Clean_view_long, 
+                         by = c("unique_id"),
+                         suffix = c("_BL", "_BH"))
+
+
+
+
+
+merged_data <- merged_data %>%
+  mutate(flag_mismatch = if_else(sample_ID_BL != sample_ID_BH & bag_ID_BL != bag_ID_BH & sample_type_BL == sample_type_BH, 1, 0))
+
+View(merged_data)
+
+#I found one mismatch
+
+
+BL_idexx <- read_csv(paste0(Lab_path(), "BL_idexx_master_cleaned.csv"))
+View(BL_idexx)
+
+names(BL_idexx)
+
+BL_idexx<- BL_idexx %>%
+  mutate(cf_95lo = quantify_95lo(y_large, y_small, "qt-2000"),
+         cf_mpn  = quantify_mpn(y_large, y_small, "qt-2000"),
+         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+BL_idexx <- BL_idexx %>%
+  mutate(ec_95lo = quantify_95lo(f_large, f_small, "qt-2000"),
+         ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
+         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))%>%
+  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+
+
+#Adding presence/absence data
+BL_idexx <- BL_idexx %>%
+  mutate(cf_pa = case_when(
+    is.na(cf_mpn) == TRUE ~ "Presence",
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+BL_idexx <- BL_idexx %>%
+  mutate(ec_pa = case_when(
+    is.na(ec_mpn) == TRUE ~ "Presence",
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
+BL_idexx <- BL_idexx %>%
+  mutate(cf_pa_binary = case_when(
+    cf_mpn > 0 ~ 1,
+    cf_mpn == 0 ~ 0))
+
+BL_idexx <- BL_idexx %>%
+  mutate(ec_pa_binary = case_when(
+    ec_mpn > 0 ~ 1,
+    ec_mpn == 0 ~ 0))
+
+
+#log transforming data
+BL_idexx <- BL_idexx %>%
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                              ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                              cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
+#Make - inf values be 0
+
+#Adding in WHO risk levels
+BL_idexx <- BL_idexx %>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                             (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                             ec_mpn > 100 ~ "High Risk"))
+
+
+View(BL_idexx)
+
+
+BL_idexx_vis <- BL_idexx %>% select(sample_type, village_name, ec_log, cf_log, ec_risk, ec_pa, cf_pa)
+View(BL_idexx_vis)
+
+FU1_idexx <- read_csv(paste0(Lab_path(), "R1_idexx_master_cleaned.csv"))
+
+View(FU1_idexx)
+
+FU1_idexx <- FU1_idexx %>%
+  mutate(cf_95lo = quantify_95lo(y_large, y_small, "qt-2000"),
+         cf_mpn  = quantify_mpn(y_large, y_small, "qt-2000"),
+         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+FU1_idexx <- FU1_idexx %>%
+  mutate(ec_95lo = quantify_95lo(f_large, f_small, "qt-2000"),
+         ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
+         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))%>%
+  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+
+
+#Adding presence/absence data
+FU1_idexx <- FU1_idexx %>%
+  mutate(cf_pa = case_when(
+    is.na(cf_mpn) == TRUE ~ "Presence",
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+FU1_idexx <- FU1_idexx %>%
+  mutate(ec_pa = case_when(
+    is.na(ec_mpn) == TRUE ~ "Presence",
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
+FU1_idexx <- FU1_idexx %>%
+  mutate(cf_pa_binary = case_when(
+    cf_mpn > 0 ~ 1,
+    cf_mpn == 0 ~ 0))
+
+FU1_idexx<- FU1_idexx %>%
+  mutate(ec_pa_binary = case_when(
+    ec_mpn > 0 ~ 1,
+    ec_mpn == 0 ~ 0))
+
+
+#log transforming data
+FU1_idexx <- FU1_idexx %>%
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                              ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                              cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
+#Make - inf values be 0
+
+#Adding in WHO risk levels
+FU1_idexx <- FU1_idexx %>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                             (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                             ec_mpn > 100 ~ "High Risk"))
+
+
+FU1_idexx_vis <- FU1_idexx %>% select(sample_type, village_name, ec_log, cf_log, ec_risk, ec_pa, cf_pa)
+View(FU1_idexx_vis)
+
+ggplot(data = FU1_idexx_vis, aes(x = sample_type, fill = factor(ec_pa))) +
+  geom_bar(position = "dodge") +
+  labs(title = "Presence and Absence of E. coli by Sample Type",
+       x = "Sample Type",
+       y = "Count",
+       fill = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+
+box_BL <- ggplot(data = FU1_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+print(box_BL)
+
+box_FU1 <- ggplot(data = BL_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+print(box_BL)
+
+
+# Load the required library
+library(ggplot2)
+
+# Combine the data
+combined_data <- bind_rows(
+  FU1_idexx_vis %>% mutate(period = "Baseline"),
+  BL_idexx_vis %>% mutate(period = "Follow-up")
+)
+
+# Create the combined boxplot
+combined_boxplot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  facet_wrap(~ period) +  # Facet by the time period
+  labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_boxplot)
+
+
+# Combine the data
+combined_data <- bind_rows(
+  FU1_idexx_vis %>% mutate(period = "Baseline"),
+  BL_idexx_vis %>% mutate(period = "Follow-up")
+)
+
+# Create the combined plot
+combined_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_plot)
+
+
+
+###########################
+
+
+library(ggplot2)
+library(dplyr)
+
+# Combine the data
+combined_data <- bind_rows(
+  FU1_idexx_vis %>% mutate(period = "Baseline"),
+  BL_idexx_vis %>% mutate(period = "Follow-up")
+)
+
+# Create the enhanced plot
+enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2, alpha = 0.8) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"))
+
+# Print the enhanced plot
+print(enhanced_plot)
+
 
