@@ -316,17 +316,23 @@ interaction_issues_oth=="Agar pipe line pe kuch problems hua to bhi batatehe"
 replace hh_issues=0 if hh_issues_type_other=="Pani Kam hauthiba katha janai thile." //problem mentioned in the othe rcategory is related to water supply, recoding this as "No problem reported"
 
 *replacing hh_issues_type__77 and other binary variables as . after recategorizing the responses in other category
-foreach var in varlist hh_issues_type__77 hh_issues_type_1 hh_issues_type_2 ///
+foreach var in hh_issues_type__77 hh_issues_type_1 hh_issues_type_2 ///
 hh_issues_type_3 hh_issues_type_4 hh_issues_type_5 hh_issues_response_1 ///
 hh_issues_response_2 hh_issues_response_3 hh_issues_response_4 hh_issues_response_5 ///
-hh_issues_response_6 hh_issues_response_7 hh_issues_response_8 hh_issues_response__77 {
+hh_issues_response_6 hh_issues_response_7 hh_issues_response_8 hh_issues_response__77 hh_issues_percent {
 replace `var'=. if hh_issues_type_other=="Pani Kam hauthiba katha janai thile."
 }
 
 *replacing hh_issues_response as  "" after recategorizing the responses in other category
 replace hh_issues_response="" if hh_issues_type_other=="Pani Kam hauthiba katha janai thile."
 
-***
+*** Redressal of complaints by the POs
+*recategorising other category responses to existing responses
+replace hh_issues_response_6=1 if hh_issues_response_oth=="Device ko adjust karnese samdhan hogeya" //adjusted the device
+
+*replacing hh_issues_response__77 as 0 after recategorizing the responses in other category
+replace hh_issues_response__77=0 if hh_issues_response_oth=="Store karke pani pine se etna smell nehi hoga esa he bole" //already selected "tried to convince/explian the villagers"
+replace hh_issues_response__77=0 if hh_issues_response_oth=="Device ko adjust karnese samdhan hogeya" //adjusted the device
 
 
 ********************************************************************************
@@ -543,18 +549,27 @@ label var reason_chlorination_4 "The water will become clearer or less muddy"
 label var reason_chlorination_5 "The chlorine will kill microbes (bacteria or viruses) in the water "
 label var reason_chlorination__77 "Other"
 label var reason_chlorination_999 "Don't know"
+label var hh_issues_response_1 "Tried to explain the villagers about the benefits of chlorination"
+label var hh_issues_response_2 "Reported the complaints to Gram Vikas"
+label var hh_issues_response_3 "Reported the complaints to JPAL"
+label var hh_issues_response_4 "Reported the complaints to a village leader (sarpanch, elder, ASHA, etc)"
+label var hh_issues_response_5 "Reported the complaints to RWSS or other government office"
+label var hh_issues_response_6 "Tried adjusting the chlorine dose"
+label var hh_issues_response_7 "Turned the device off"
+label var hh_issues_response_8 "Removed chlorine tablets from the device"
+label var hh_issues_response__77 "Other"
 
 ********************************************************************************
 *** Saving the cleaned dataset 
 ********************************************************************************
 
-save "{DataFinal}pump_operator_survey.dta", replace
+save "${DataFinal}pump_operator_survey.dta", replace
 
 ********************************************************************************
 *** Creating variables for use in summary stats tables -- MOVE TO NEW CODE FILE AFTERWARDS
 ********************************************************************************
 
-use "{DataFinal}pump_operator_survey.dta", clear 
+use "${DataFinal}pump_operator_survey.dta", clear 
 
 *** Creating new variables to ensure consistency of obs 
 //Payment
@@ -627,7 +642,6 @@ replace op_ilc_30=0 if operation_valves_nmbr==0 & (village_name=="Naira" | villa
 gen salary_new=salary
 replace salary_new=0 if salary==.
 
-
 //Tasks as part of Monitoring the ILC device
 gen monitor_task=. //missing values corres to control group
 replace monitor_task=0 if ilc_monitor==0 //karnapadu (do not monitor the device)
@@ -667,10 +681,10 @@ gen freq_notdaily_tasks=ilc_monitor_freq //missing values pertain to control gro
 replace freq_notdaily_tasks=0 if village_name=="Karnapadu" 
 
 //hh issues type
-gen_type_issues=. //control group
+gen type_issues=. //control group
 replace type_issues=0 if hh_issues==0 //no issues 
 replace type_issues=1 if hh_issues_type_1==1 //smell
-replace type_issues=2 if hh_issues_type_4==1 //taste
+replace type_issues=2 if hh_issues_type_4==1 //cooking 
 
 //percentage of hhs reporting issues
 gen pc_issues=. //control group
@@ -679,9 +693,17 @@ replace pc_issues=1 if hh_issues_percent==1 //all hhs (100%)
 replace pc_issues=2 if hh_issues_percent==4 //some hhs (25%)
 replace pc_issues=3 if hh_issues_percent==5 //few hhs (>25%)
 
-//
-
-
+//Complaint redressal by POs
+gen redressal_issues=. //control group
+replace redressal_issues=0 if hh_issues==0 //no issues
+replace redressal_issues=1 if hh_issues_response_1==1 //tried to convince the villagers
+replace redressal_issues=2 if hh_issues_response_2==1 //reported to GV
+replace redressal_issues=3 if hh_issues_response_3==1 //reported to JPAL
+replace redressal_issues=4 if hh_issues_response_4==1 //reported to village leader
+replace redressal_issues=5 if hh_issues_response_5==1 //reported to rwss
+replace redressal_issues=6 if hh_issues_response_6==1 //adjusted dosage
+replace redressal_issues=7 if hh_issues_response_7==1 //turned off the device
+replace redressal_issues=8 if hh_issues_response_8==1 //removed tablets from the device
 
 //changing refused to know as missing
 replace school_level=. if school_level==-98
@@ -693,7 +715,8 @@ foreach v in duration_job_new school_level appointment_new training otherwork_ta
  interaction_issues_4 interaction_issues__77 op_valve_new op_ilc_new op_valve_no ///
  op_ilc_30 refill monitor_notdaily monitor_daily ilc_monitor addtl_duties_yn ///
  addtl_duties_comp reason_chlorination_1 reason_chlorination_2 reason_chlorination_3 ///
- reason_chlorination_4 reason_chlorination_5 reason_chlorination_999 op_satisfaction ilc_satisfaction_po {
+ reason_chlorination_4 reason_chlorination_5 reason_chlorination_999 op_satisfaction ///
+ ilc_satisfaction_po ilc_satisfaction type_issues pc_issues redressal_issues {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -796,10 +819,30 @@ label var reason_chlorination_5_1 "To eliminate microbes"
 label var reason_chlorination_999_1 "Don't know"
 //level of satisfaction operating teh device (changing label for use uin table)
 label var op_satisfaction_1 "Very satisfy"
+//type of complaints
+label var type_issues_0 "No complaints"
+label var type_issues_1 "Odor-related complaints"
+label var type_issues_2 "Cooking-related complaints"
+//percentage of hhs reporting complaints 
+label var pc_issues_0 "No issues reported"
+label var pc_issues_1 "100 per cent"
+label var pc_issues_2 "25 per cent"
+label var pc_issues_3 "Less than 25 percent"
+//complaint redressal
+label var redressal_issues_0 "No issues reported"
+label var redressal_issues_1 "Tried to convince the villagers"
+label var redressal_issues_2 "Reported the complaints to GV"
+label var redressal_issues_4 "Reported the complaints to village leader"
+label var redressal_issues_6 "Adjusted the dosage"
+
 
 ********************************************************************************
 *** Generating the table - DESCRIPTIVE STATISTICS 
 ********************************************************************************	
+
+/* TO DROP OR NOT
+drop if unique_id=="30602103001" //dropping the observation of the main PO of Mukundpur who has outsourced his job to the PO of hatikhamba
+*/
 
 *** Saving the dataset 
 save "${DataTemp}PO_findings.dta", replace
@@ -1359,6 +1402,103 @@ esttab  model0 model1 model2 model3 model4 model5 using  "${Table}SummStats_`k'.
 				   ) ///
 	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
 	   }
+
+	   
+
+	   *%%%%%%%%%%%%%%%%%%%% Table 7 %%%%%%%%%%%%%%%%%%%%%%%%%%%*
+*Loading the dataset
+use "${DataTemp}PO_findings_treatment.dta", clear
+
+drop if unique_id=="30602103001" //dropping the observation of the main PO of Mukundpur who has outsourced his job to the PO of hatikhamba
+save "${DataTemp}PO_findings_treatment(10obs).dta", replace
+
+*Setting up global macros for calling variables
+global PO_7  ilc_satisfaction_1 ilc_satisfaction_2 ilc_satisfaction_4 ///
+ type_issues_0 type_issues_1 type_issues_2  pc_issues_1 pc_issues_2 pc_issues_3 ///
+ redressal_issues_1 redressal_issues_2  redressal_issues_4  
+
+*Setting up local macros (to be used for labelling the table)
+local PO_7 "POs' Perceptions on Household Feedback and Complaint Management"
+local LabelPO_7 "PO_Table7"
+local notePO_7 "N: 10 - Number of main respondents from 10 treatment villages \newline \textbf{Notes:} (1) One village had two pump operators - included only the responses of the actual operator (2) Included the responses of the pump operator of Karnapadu (where device was uninstalled)" 
+local ScalePO_7 "1"
+
+* Descritive stats table: Treatment vs Control Groups 
+foreach k in PO_7 { //loop for all variables in the global marco 
+
+use "${DataTemp}PO_findings_treatment(10obs).dta", clear //using the saved dataset 
+	
+	* Count 
+	//Calculating the summary stats 
+    foreach i in $`k' {
+    egen count_`i' = count(`i') //calc. freq of each var 
+    replace `i' = count_`i' //replacing values with their freq
+}
+    eststo model0: estpost summarize $`k' //Store summary statistics of the variables with their frequency
+	
+	* Mean
+	use "${DataTemp}PO_findings_treatment(10obs).dta", clear
+	eststo  model1: estpost summarize $`k' //Total (for all villages)
+
+	* Standard Deviation 
+    use "${DataTemp}PO_findings_treatment(10obs).dta", clear
+    foreach i in $`k' {
+    egen sd_`i' = sd(`i') //calc. sd of each var 
+    replace `i' = sd_`i' //replacing values with their sd
+}
+    eststo model2: estpost summarize $`k' //Store summary statistics of the variables with standard deviation values
+	
+	
+	* Min
+	use "${DataTemp}PO_findings_treatment(10obs).dta", clear
+	foreach i in $`k' {
+	egen min_`i'=min(`i')
+	replace `i'=min_`i'
+	}
+	eststo  model3: estpost summarize $`k' //storing summary stats of minimum value
+	
+	* Max
+	use "${DataTemp}PO_findings_treatment(10obs).dta", clear
+	foreach i in $`k' {
+	egen max_`i'=max(`i')
+	replace `i'=max_`i'
+	}
+	eststo  model4: estpost summarize $`k' //storing summary stats of maximum value
+	
+	* Missing 
+	use "${DataTemp}PO_findings_treatment(10obs).dta", clear
+	foreach i in $`k' {
+	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
+	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
+	replace `i'=max_`i' //replacing the value of variable with count of missing values 
+	}
+	eststo  model5: estpost summarize $`k' //summary stats of count of missing values
+
+*Tabulating stored sumamry stats of all the estimates (mean, estimated effects, significance levels, p values, min, max and missing values)
+esttab  model0 model1 model2 model3 model4 model5 using  "${Table}SummStats_`k'.tex", ///
+	   replace cell("mean (fmt(2) label(_))") /// 	  
+	   mtitles("\shortstack[c]{Obs}" "\shortstack[c]{Mean}" "\shortstack[c]{SD}" "Min" "Max" "Missing") ///
+	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
+	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
+				   "Very satisfied" "\\ \multicolumn{7}{c}{\textbf{Panel 1: Level of satisfaction of households}} \\ Reported satisfaction with ILC device\\ \hspace{0.5cm}Very Satisfied" ///
+				   "Somewhat satisfied" "\hspace{0.5cm}Somewhat satisfied" ///
+				   "Somewhat unsatisfied" "\hspace{0.5cm}Somewhat unsatisfied" ///
+				   "No complaints" "\\ \multicolumn{7}{c}{\textbf{Panel 2: Complaints and Redressal}} \\ Types of complaints reported by households \\ \hspace{0.5cm}No complaints" ///
+				   "Odor-related complaints" "\hspace{0.5cm}Odor-related complaints" ///
+				   "Cooking-related complaints" "\hspace{0.5cm}Cooking-related conplaints" ///
+				   "100 per cent" "Percentage of households reporting complaints \\ \hspace{0.5cm}100 per cent" ///
+				   "25 per cent" "\hspace{0.5cm}25 per cent" ///
+				   "Less than 25 percent" "\hspace{0.5cm}Less than 25 per cent" ///
+				   "Tried to convince the villagers" "Measures taken by PO for complaint redressal \\ \hspace{0.5cm}Tried to convince the villagers" ///
+				   "Reported the complaints to GV" "\hspace{0.5cm}Reported the complaints to GV" ///
+				   "Reported the complaints to village leader" "\hspace{0.5cm}Reported the complaints to village leader" ///
+				   "WTchoice: " "~~~" "TPchoice: " "~~~" "Distance: " "~~~" "WT: " "~~~"  ///
+				   "-0&" "0&" "99999" "***"  "99998" "**" "99997" "*" "99996" " " ///
+				   ) ///
+	   label title("``k''" \label{`Label`k''}) note("`note`k''") 
+	   }
+
+
 
 
 
