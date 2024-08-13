@@ -21,14 +21,14 @@
 ********************************************************************************
 *** Using Endline_Long_Indiv_analysis.dta to get the pregnancy status variable
 ********************************************************************************
-clear 
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //does not include revisit data
-preserve 
-keep comb_preg_status R_E_key unique_id
-bys R_E_key: gen Num=_n
-reshape wide  comb_preg_status , i(R_E_key) j(Num)
-save "${DataTemp}Endline_Preg_status_wide.dta", replace
-restore 
+// clear 
+// use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //does not include revisit data
+// preserve 
+// keep comb_preg_status R_E_key unique_id
+// bys R_E_key: gen Num=_n
+// reshape wide  comb_preg_status , i(R_E_key) j(Num)
+// save "${DataTemp}Endline_Preg_status_wide.dta", replace
+// restore 
 
 clear 
 use  "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear //includes revisit data
@@ -37,9 +37,11 @@ replace R_E_key_final= Revisit_R_E_key if R_E_key_final==""
 preserve 
 keep comb_preg_status R_E_key Revisit_R_E_key R_E_key_final unique_id
 bys unique_id: gen Num=_n
+drop R_E_key Revisit_R_E_key R_E_key_final
 reshape wide  comb_preg_status , i(unique_id) j(Num)
 save "${DataTemp}Endline_Preg_status_wide.dta", replace
 restore 
+
 
 ********************************************************************************
 *** Opening the Dataset 
@@ -47,18 +49,19 @@ restore
 clear
 use "${DataFinal}0_Master_HHLevel.dta", clear
 merge 1:1 unique_id using "${DataTemp}Endline_Preg_status_wide.dta", gen(merge_desc_stats)
-//875 obs matched (unmatched 40 obs are present in baseline only)
+//884 obs matched (30 out of 31 unmatched obs: resp not available; 1 extra obs is empty obs for UID 30501107052 which was dropped in Master data)
 
 ********************************************************************************
 *** Generating relevant variables
 ********************************************************************************
-// drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
-// //1 obs dropped
+drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
+//1 obs dropped
 
 
 * Combined variable for Number of HH members (both BL and EL including the new members)
 //changing the storage type of the no of HH members from baseline census
 destring R_Cen_hh_member_names_count, gen(R_Cen_hhmember_count_new) 
+destring R_E_n_hhmember_count, replace
 
 egen total_hhmembers=rowtotal(R_Cen_hhmember_count_new R_E_n_hhmember_count) 
 label var total_hhmembers "Total HH Members"

@@ -66,11 +66,16 @@ isid unique_id
 PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 ****************************************************************/
 ////////////////////////////////////////////////////////////////
-* 40 household were not followed in the endline
-* Endline_HH_level_merged_dataset_final
-merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", gen(Merge_Baseline_Endline)
-* keep if Merge_Baseline_Endline==3
-* drop Merge_Baseline_Endline
+// * 40 household were not followed in the endline
+// * Endline_HH_level_merged_dataset_final
+// merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", gen(Merge_Baseline_Endline)
+// * keep if Merge_Baseline_Endline==3
+// * drop Merge_Baseline_Endline
+
+// use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+// destring replace 
+merge 1:1 unique_id using  "${DataFinal}Endline_HH_level_merged_dataset_final.dta", gen(Merge_Baseline_Endline)
+
 
 *** Relabelling the variables
 //the following variables were not properly labelled through surveycto do file : all variables have the same labels and value labels; changing it below (lines 694 to 718: import_india_ilc_pilot_census.do)
@@ -112,18 +117,21 @@ merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", g
 *Relation with the HH member
 replace R_Cen_a5_hhmember_relation_1=1 if unique_id=="30301109034" //selected the relation with HH member as "Wife/Husband" although respondent herself was the HH member in question
 
-//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
-* 30501107052 //unique ID --> tocheck with Akito
-
 * Age of the HH member
 replace R_Cen_a6_hhmember_age_2=. if unique_id=="40201111025" //the age of the HH member is coded as 99 as the respondent didn't know the age; replacing it with missing value
 
-*** Saving the merged dataset
-save "${DataFinal}0_Master_HHLevel_NB.dta", replace //code for saving a copy of the file as I cannot replace the original one on Box
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
 
 
 drop R_E_r_cen_*
 * Village info is not complete. Deleting the redundant info
+destring village BlockCode Panchatvillage , replace
 replace village=R_Cen_village_name if village==.
 drop R_Cen_village_name R_Cen_block_name Treat_V
 merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
