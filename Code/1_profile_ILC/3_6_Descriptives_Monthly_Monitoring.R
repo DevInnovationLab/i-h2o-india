@@ -1897,6 +1897,12 @@ View(merged_data)
 
 #I found one mismatch
 
+##########################################################################
+
+#-------------- BASELINE HH SURVEY ----------------------------------
+##########################################################################
+
+
 
 BL_idexx <- read_csv(paste0(Lab_path(), "BL_idexx_master_cleaned.csv"))
 View(BL_idexx)
@@ -1962,8 +1968,26 @@ BL_idexx <- BL_idexx %>%
 View(BL_idexx)
 
 
-BL_idexx_vis <- BL_idexx %>% select(sample_type, village_name, ec_log, cf_log, ec_risk, ec_pa, cf_pa)
+names(BL_idexx)
+BL_idexx_vis <- BL_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, date, ec_mpn, cf_mpn, village_name, fc_tap_avg)
 View(BL_idexx_vis)
+
+BL_idexx_vis <- BL_idexx_vis %>%
+  rename(
+    village = village_name
+  )
+
+View(BL_idexx_vis)
+
+str(BL_idexx_vis$date)
+
+
+
+##########################################################################
+
+#-------------- FOLLOW UP R1 SURVEY ----------------------------------
+##########################################################################
+
 
 FU1_idexx <- read_csv(paste0(Lab_path(), "R1_idexx_master_cleaned.csv"))
 
@@ -2024,9 +2048,17 @@ FU1_idexx <- FU1_idexx %>%
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
 
+names(FU1_idexx)
 
-FU1_idexx_vis <- FU1_idexx %>% select(sample_type, village_name, ec_log, cf_log, ec_risk, ec_pa, cf_pa)
+FU1_idexx_vis <- FU1_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, date, ec_mpn, cf_mpn, village_name, fc_tap_avg)
 View(FU1_idexx_vis)
+
+FU1_idexx_vis <- FU1_idexx_vis %>%
+  rename(
+    village = village_name
+  )
+
+str(FU1_idexx_vis$date)
 
 ggplot(data = FU1_idexx_vis, aes(x = sample_type, fill = factor(ec_pa))) +
   geom_bar(position = "dodge") +
@@ -2102,11 +2134,6 @@ print(combined_plot)
 
 
 
-###########################
-
-
-library(ggplot2)
-library(dplyr)
 
 # Combine the data
 combined_data <- bind_rows(
@@ -2137,3 +2164,1029 @@ enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, f
 print(enhanced_plot)
 
 
+##########################################################################
+
+#-------------- FOLLOW UP R2 SURVEY ----------------------------------
+##########################################################################
+
+
+FU2_idexx <- read_csv(paste0(Lab_path(), "R2_idexx_master_cleaned.csv"))
+
+View(FU2_idexx)
+
+names(FU2_idexx)
+
+FU2_idexx <- FU2_idexx %>%
+  mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+FU2_idexx <- FU2_idexx %>%
+  mutate(ec_95lo = quantify_95lo(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_mpn  = quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))%>%
+  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+
+
+#Adding presence/absence data
+FU2_idexx <- FU2_idexx %>%
+  mutate(cf_pa = case_when(
+    is.na(cf_mpn) == TRUE ~ "Presence",
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+FU2_idexx <- FU2_idexx %>%
+  mutate(ec_pa = case_when(
+    is.na(ec_mpn) == TRUE ~ "Presence",
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
+FU2_idexx <- FU2_idexx %>%
+  mutate(cf_pa_binary = case_when(
+    cf_mpn > 0 ~ 1,
+    cf_mpn == 0 ~ 0))
+
+FU2_idexx<- FU2_idexx %>%
+  mutate(ec_pa_binary = case_when(
+    ec_mpn > 0 ~ 1,
+    ec_mpn == 0 ~ 0))
+
+
+#log transforming data
+FU2_idexx <- FU2_idexx %>%
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                              ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                              cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
+#Make - inf values be 0
+
+#Adding in WHO risk levels
+FU2_idexx <- FU2_idexx %>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                             (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                             ec_mpn > 100 ~ "High Risk"))
+
+View(FU2_idexx)
+
+# Convert SubmissionDate to POSIXct type- The date now is in thje fomr that can be used in ggpplot
+FU2_idexx$date <- as.POSIXct(FU2_idexx$SubmissionDate, format = "%m/%d/%Y")
+
+
+FU2_idexx_vis <- FU2_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, ec_mpn, cf_mpn, village_name, date_processed, date, fc_tap_avg)
+
+FU2_idexx_vis <- FU2_idexx_vis %>%
+  rename(
+    village = village_name
+  )
+
+
+View(FU2_idexx_vis)
+
+str(FU2_idexx_vis$date)
+
+##########################################################################
+
+#-------------- COMBINED GRAPHS ----------------------------------
+##########################################################################
+
+
+box_BL <- ggplot(data = FU1_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+print(box_BL)
+
+box_FU1 <- ggplot(data = BL_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+box_FU2 <- ggplot(data = FU2_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+
+# Combine the data
+combined_data <- bind_rows(
+  FU1_idexx_vis %>% mutate(period = "Baseline"),
+  BL_idexx_vis %>% mutate(period = "Follow-up R1"),
+  FU2_idexx_vis %>% mutate(period = "Follow-up R2")
+)
+
+# Create the combined boxplot
+combined_boxplot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  facet_wrap(~ period) +  # Facet by the time period
+  labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_boxplot)
+
+# VIOLIN PLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the enhanced plot
+enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2, alpha = 0.8) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"))
+
+# Print the enhanced plot
+print(enhanced_plot)
+
+
+# BOXPLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the combined plot
+combined_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_plot)
+
+
+
+##########################################################################
+
+#-------------- FOLLOW UP R3 SURVEY ----------------------------------
+##########################################################################
+
+
+FU3_idexx <- read_csv(paste0(Lab_path(), "R3_idexx_master_cleaned.csv"))
+
+View(FU3_idexx)
+
+names(FU3_idexx)
+
+FU3_idexx <- FU3_idexx %>%
+  mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
+         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+FU3_idexx <- FU3_idexx %>%
+  mutate(ec_95lo = quantify_95lo(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_mpn  = quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000"),
+         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))%>%
+  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
+
+
+#Adding presence/absence data
+FU3_idexx <- FU3_idexx %>%
+  mutate(cf_pa = case_when(
+    is.na(cf_mpn) == TRUE ~ "Presence",
+    cf_mpn > 0 ~ 'Presence',
+    cf_mpn == 0 ~ 'Absence'))
+
+FU3_idexx <- FU3_idexx %>%
+  mutate(ec_pa = case_when(
+    is.na(ec_mpn) == TRUE ~ "Presence",
+    ec_mpn > 0 ~ 'Presence',
+    ec_mpn == 0 ~ 'Absence'))
+
+FU3_idexx <- FU3_idexx %>%
+  mutate(cf_pa_binary = case_when(
+    cf_mpn > 0 ~ 1,
+    cf_mpn == 0 ~ 0))
+
+FU3_idexx<- FU3_idexx %>%
+  mutate(ec_pa_binary = case_when(
+    ec_mpn > 0 ~ 1,
+    ec_mpn == 0 ~ 0))
+
+
+#log transforming data
+FU3_idexx <- FU3_idexx %>%
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                              ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                              cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
+#Make - inf values be 0
+
+#Adding in WHO risk levels
+FU3_idexx <- FU3_idexx %>%
+  mutate(ec_risk = case_when(ec_mpn < 1 ~ "Very Low Risk - Nondetectable",
+                             (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
+                             (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
+                             ec_mpn > 100 ~ "High Risk"))
+
+
+names(FU3_idexx)
+
+FU3_idexx$date <- as.POSIXct(FU3_idexx$SubmissionDate, format = "%m/%d/%Y")
+
+FU3_idexx_vis <- FU3_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa,ec_mpn, cf_mpn, village,  date_processed, date, fc_tap_avg)
+
+View(FU3_idexx_vis)
+
+str(FU3_idexx_vis$date)
+##########################################################################
+
+#-------------- COMBINED GRAPHS ----------------------------------
+##########################################################################
+
+
+box_BL <- ggplot(data = FU1_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+print(box_BL)
+
+box_FU1 <- ggplot(data = BL_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+box_FU2 <- ggplot(data = FU2_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+box_FU3 <- ggplot(data = FU3_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+
+
+# Combine the data
+combined_data <- bind_rows(
+  FU1_idexx_vis %>% mutate(period = "Baseline"),
+  BL_idexx_vis %>% mutate(period = "Follow-up R1"),
+  FU2_idexx_vis %>% mutate(period = "Follow-up R2"),
+  FU3_idexx_vis %>% mutate(period = "Follow-up R3")
+)
+
+# Extract the month as a numeric value
+combined_data$month <- format(combined_data$date, "%m")
+
+# Assuming combined_data$date is of Date class
+combined_data$month_name <- month.name[as.numeric(combined_data$month)]  # Map month numbers to names
+
+View(combined_data)
+
+combined_data_f <- combined_data %>% filter(sample_type == "Tap")
+
+#show MPN 
+View(combined_data)
+# Create the combined boxplot
+combined_boxplot <- ggplot(data = combined_data_f, aes(x = month, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_boxplot)
+
+# VIOLIN PLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the enhanced plot
+enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2, alpha = 0.8) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"))
+
+# Print the enhanced plot
+print(enhanced_plot)
+
+
+# BOXPLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the combined plot
+combined_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_plot)
+
+
+##########################################################################
+
+#-------------- Monthly Monitoring R1 Survey ----------------------------------
+##########################################################################
+
+
+MM_idexx <- read_csv(paste0(Final_path(), "idexx_monthly_master_cleaned.csv"))
+
+
+MM_idexx$date <- as.POSIXct(MM_idexx$SubmissionDate.x, format = "%m/%d/%Y")
+
+names(MM_idexx)
+MM_idexx_vis <- MM_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, village_name, ec_mpn, cf_mpn, date_processed, date, tap_water_fc)
+
+MM_idexx_vis <- MM_idexx_vis %>% 
+  rename (fc_tap_avg = tap_water_fc)
+
+MM_idexx_vis <- MM_idexx_vis %>% 
+  rename (village = village_name)
+
+
+View(MM_idexx_vis)
+
+str(MM_idexx_vis$date)
+##########################################################################
+
+#-------------- COMBINED GRAPHS ----------------------------------
+##########################################################################
+
+
+box_BL <- ggplot(data = FU1_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+print(box_BL)
+
+box_FU1 <- ggplot(data = BL_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+box_FU2 <- ggplot(data = FU2_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+box_FU3 <- ggplot(data = FU3_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_mpn)") +
+  theme_minimal()
+
+box_MM <- ggplot(data = MM_idexx_vis, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  labs(title = "Distribution of E. coli Magnitude by Sample Type",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_)") +
+  theme_minimal()
+
+
+
+# Convert 'village' to character in each dataset
+BL_idexx_vis <- BL_idexx_vis %>% mutate(village = as.character(village))
+FU1_idexx_vis <- FU1_idexx_vis %>% mutate(village = as.character(village))
+FU2_idexx_vis <- FU2_idexx_vis %>% mutate(village = as.character(village))
+FU3_idexx_vis <- FU3_idexx_vis %>% mutate(village = as.character(village))
+MM_idexx_vis <- MM_idexx_vis %>% mutate(village = as.character(village))
+
+# Combine the data
+#combined_data <- bind_rows(
+  #BL_idexx_vis %>% mutate(period = "26th Sep-17th Nov"),
+  #FU1_idexx_vis %>% mutate(period = "5th Feb-24th Feb"),
+  #FU2_idexx_vis %>% mutate(period = "5th Mar-4th Apr"),
+  #FU3_idexx_vis %>% mutate(period = "6th Apr-30th Apr"),
+  #MM_idexx_vis %>% mutate(period = "20th July-9th Aug")
+#)
+
+combined_data <- bind_rows(
+  BL_idexx_vis %>% mutate(period = "Baseline HH"),
+  FU1_idexx_vis %>% mutate(period = "Follow up R1"),
+  FU2_idexx_vis %>% mutate(period = "Follow up R2"),
+  FU3_idexx_vis %>% mutate(period = "Follow up R3"),
+  MM_idexx_vis %>% mutate(period = "Monthly monitoring")
+)
+
+
+View(combined_data)
+
+str(combined_data$date)
+village_details <- read_csv(paste0(user_path(), "/3_final/village_details.csv"))
+View(village_details)
+
+village_details <- village_details %>% 
+  rename (village = village_name)
+
+# Merge datasets based on the 'village_name' variable
+merged_data <- merge(combined_data, village_details[, c("village", "assignment")], 
+                     by = "village", all.x = TRUE)
+
+
+# Assuming combined_data is your dataframe
+merged_data <- merged_data %>%
+  mutate(date = as.Date(date))
+
+# Convert dates to POSIXct and extract month and year
+
+
+merged_data <- merged_data %>%
+  mutate(
+    month = month(date),               # Extract month
+    year = year(date),                 # Extract year
+    year_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")  # Combine year and month
+  )
+
+View(merged_data)
+
+unique(merged_data$sample_type)
+
+# Replace specific values
+merged_data<- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "tap_sample_id", "Tap", sample_type))
+
+merged_data<- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "stored_sample_id", "Stored", sample_type))
+
+
+#merged_data_f <- merged_data %>% filter(sample_type == "Tap" & assignment == "C")
+
+merged_data_f <- merged_data %>% filter(sample_type == "Tap")
+
+View(merged_data_f)
+names(merged_data_f)
+
+
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = as.factor(year_month)) %>%
+  mutate(year_month = case_when(
+    year_month == "2023-10-01" ~ "Oct23",
+    year_month == "2023-11-01" ~ "Nov23",
+    year_month == "2024-02-01" ~ "Feb24",
+    year_month == "2024-03-01" ~ "Mar24",
+    year_month == "2024-04-01" ~ "Apr24",
+    year_month == "2024-05-01" ~ "May24",
+    year_month == "2024-07-01" ~ "July24",
+    year_month == "2024-08-01" ~ "August24",
+    TRUE ~ as.character(year_month)  # Keep the original value if no match
+  ))
+
+# Convert back to factor if needed
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = as.factor(year_month))
+
+
+# Manually specify the order of levels for year_month
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = factor(year_month, levels = c("Oct23", "Nov23", "Feb24", "Mar24", "Apr24", "May24", "July24", "August24")))
+
+# Plot the boxplot with the correctly ordered year_month
+unique(merged_data_f$sample_type)
+#basic plot
+ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  labs(x = "Year-Month", y = "ec_log", title = "Boxplot of ec_log by Year-Month for Control and tap") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+# Assuming merged_data_f is already ordered by year_month as before
+#plot with mean
+ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  labs(x = "Year-Month", y = "ec_log", title = "Boxplot of ec_log by Year-Month with Mean") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+merged_data_f <- merged_data_f %>%
+  mutate(assignment = ifelse(assignment == "T", "Treatment", assignment))
+
+merged_data_f <- merged_data_f %>%
+  mutate(assignment = ifelse(assignment == "C", "Control", assignment))
+
+threshold <- -0.3010 # Example threshold, log10(1) = 0
+
+ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  geom_hline(yintercept = threshold, linetype = "dashed", color = "blue") +
+  facet_wrap(~ assignment) +
+  labs(x = "Month of test", y = "Log10 E.Coli MPN", title = "Boxplot of ec_log by Year-Month with Mean and Threshold for treatment-tap") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue")
+
+
+#########################
+
+# Draw the threshold line separately
+threshold_line <- geom_hline(aes(yintercept = threshold), linetype = "dashed", color = "blue")
+
+# Combine the threshold line with your existing plot
+ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  facet_wrap(~ assignment) +
+  labs(x = "Month of test", y = "Log10 E.Coli MPN", title = "Boxplot of ec_log by Year-Month with Mean and Threshold for treatment-tap") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue") +
+  threshold_line
+
+
+#-----------------------------------------
+
+#FINAL 
+#-----------------------
+threshold_value <- threshold  # Store the threshold value if not already stored
+
+# Combine the threshold line with your existing plot
+ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  facet_wrap(~ assignment) +
+  labs(
+    x = "Month of test", 
+    y = "Log10 E.Coli MPN", 
+    title = "Temporal Analysis of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
+    caption = paste("Note: Threshold value for E.Coli presence is ", threshold_value, 
+                    ". Values above this threshold indicate a presence of E.Coli contamination.")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    plot.caption = element_text(size = 9, hjust = 0, face = "italic", color = "gray40")  # Style the caption
+  ) +
+  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue") +
+  threshold_line
+
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 8, dpi = 200)
+
+#--------without mean
+
+threshold_value <- threshold  # Store the threshold value if not already stored
+
+# Combine the threshold line with your existing plot
+ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  facet_wrap(~ assignment) +
+  labs(
+    x = "Month of test", 
+    y = "Log10 E.Coli MPN", 
+    title = "Temporal Analysis of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
+    caption = paste("Note: Threshold value for E.Coli presence is ", threshold_value, 
+                    ". Values above this threshold indicate a presence of E.Coli contamination.")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    plot.caption = element_text(size = 9, hjust = 0, face = "italic", color = "gray40")  # Style the caption
+  ) +
+  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue") +
+  threshold_line
+
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 6, dpi = 200)
+
+
+#inreasex text sizie
+
+ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  facet_wrap(~ assignment) +
+  labs(
+    x = "Month of test", 
+    y = "Log10 E.Coli MPN", 
+    title = "Temporal Presentation of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
+    caption = paste(      "A boxplot displays data distribution through the median (central line),",
+                          "the interquartile range (box edges from Q1 to Q3), and variability",
+                          "(whiskers extending to the smallest and largest non-outlier values).",
+                          "Outliers are shown as individual points beyond the whiskers, highlighting",
+                          "any deviations from the overall pattern. ")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),   # Increase x-axis text size
+    axis.text.y = element_text(size = 10),                         # Increase y-axis text size
+    axis.title.x = element_text(size = 12),                        # Increase x-axis title size
+    axis.title.y = element_text(size = 10),                        # Increase y-axis title size
+    strip.text = element_text(size = 10),                          # Increase facet label size
+    plot.title = element_text(size = 10),                          # Increase title size
+    plot.caption = element_text(size = 9.5, hjust = 0, face = "italic", color = "gray40")  # Style the caption
+  ) +
+  annotate("text", x = Inf, y = threshold, label = "Presence/Absence", vjust = -1, hjust = 1.1, color = "blue") +
+  threshold_line
+
+print(ecoli)
+# Save the plot
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 6, dpi = 200)
+
+
+
+
+
+
+#######
+
+ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  facet_wrap(~ assignment) +
+  labs(
+    x = "Month of test", 
+    y = "Log10 E.Coli MPN", 
+    title = "Temporal Presentation of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
+    caption = "A boxplot displays data distribution through the median (central line), the interquartile range (box edges from Q1 to Q3),  and variability (whiskers extending\n\
+to the smallest and largest non-outlier values). Outliers are shown as individual points beyond the whiskers, highlighting any deviations from the overall pattern\n\
+and the red dot indicates the Mean.\n\
+Samples measuring < 1 MPN/100 mL were imputed with a values of 0.5 (half the detection limit) to allow for log-transformation of the data."
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),   # Increase x-axis text size
+    axis.text.y = element_text(size = 10),                         # Increase y-axis text size
+    axis.title.x = element_text(size = 12),                        # Increase x-axis title size
+    axis.title.y = element_text(size = 10),                        # Increase y-axis title size
+    strip.text = element_text(size = 10),                          # Increase facet label size
+    plot.title = element_text(size = 10),                          # Increase title size
+    plot.caption = element_text(size = 9.5, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
+  ) +
+  annotate("text", x = Inf, y = threshold, label = "Presence/Absence", vjust = -1, hjust = 1.1, color = "blue") +
+  threshold_line
+
+print(ecoli)
+
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+#label to appear only once 
+# Create a base plot without the threshold line and label
+p <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  facet_wrap(~ assignment) +
+  labs(x = "Month of test", y = "Log10 E.Coli MPN", title = "Boxplot of ec_log by Year-Month with Mean and Threshold for treatment-tap") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Add the threshold line and label only to the first facet
+p + 
+  geom_hline(aes(yintercept = threshold), linetype = "dashed", color = "blue",
+             data = merged_data_f %>% filter(assignment == unique(merged_data_f$assignment)[1])) +
+  geom_text(aes(x = Inf, y = threshold, label = "threshold"), vjust = -1, hjust = 1.1, color = "blue",
+            data = merged_data_f %>% filter(assignment == unique(merged_data_f$assignment)[1]))
+
+#############################################
+#now descriptive stats 
+
+View(merged_data_f)
+
+# Ensure ec_log is numeric
+merged_data_f <- merged_data_f %>%
+  mutate(ec_log = as.numeric(ec_log))
+
+# Using base R to calculate the percentage of samples with ec_log > 1
+
+# First, ensure ec_log is numeric
+merged_data_f$ec_log <- as.numeric(merged_data_f$ec_log)
+
+# Calculate the percentage of samples with ec_log > 1, grouped by assignment and period
+percentage_above_threshold <- with(merged_data_f, {
+  aggregate(ec_log ~ assignment + period, data = merged_data_f, FUN = function(x) {
+    total_samples <- length(x)
+    above_threshold <- sum(x > 1, na.rm = TRUE)
+    percentage_above_threshold <- (above_threshold / total_samples) * 100
+    return(c(total_samples = total_samples, above_threshold = above_threshold, percentage_above_threshold = percentage_above_threshold))
+  })
+})
+
+
+# Convert to data frame if it's not already
+percentage_above_threshold <- as.data.frame(percentage_above_threshold)
+
+View(percentage_above_threshold)
+
+
+library(dplyr)
+
+View(merged_data_f)
+#ARCHI COME HERE 
+names(merged_data_f)
+percentage_above_threshold <- merged_data_f  %>%
+  group_by(period, assignment) %>%
+  summarise(
+    total_samples = n(),
+    above_threshold = sum(ec_log > 1 & fc_tap_avg < 0.2, na.rm = TRUE),
+    percentage_above_threshold = round((above_threshold / total_samples) * 100,2)
+  )
+
+percentage_above_threshold <- percentage_above_threshold %>%
+  rename(
+    Assignment = assignment,
+    Survey = period,
+    Total_Samples = total_samples,
+    Above_Threshold = above_threshold,
+    Percentage = percentage_above_threshold
+  )
+
+
+perc <- percentage_above_threshold %>% select(Assignment, Survey,Total_Samples, Percentage)
+
+View(perc)
+stargazer(perc, 
+          summary = FALSE, 
+          title = "E.Coli samples greater than Log10 E.Coli MPN > 1 and FC<0.2", 
+          float = FALSE, 
+          rownames = FALSE, 
+          out = paste0(overleaf(), "Table/percentage_above_threshold.tex"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Example wide format table
+percentage_above_threshold <- merged_data_f %>%
+  group_by(assignment, period) %>%
+  summarise(
+    Total_Samples = n(),
+    Above_Threshold = sum(ec_log > 1, na.rm = TRUE),
+    Percentage_Above_Threshold = (Above_Threshold / Total_Samples) * 100
+  )
+
+long_format_table <- percentage_above_threshold %>%
+  pivot_longer(cols = c(Total_Samples, Above_Threshold, Percentage_Above_Threshold),
+               names_to = "Metric",
+               values_to = "Value")
+# View the reshaped data
+print(long_format_table)
+
+View(long_format_table)
+
+
+
+
+
+
+
+
+
+#plot with mpn instead of log
+ggplot(merged_data_f, aes(x = year_month, y = ec_mpn)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
+  labs(x = "Year-Month", y = "ec_mpn", title = "Boxplot of ec_mpn by Year-Month with Mean") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#################################################################
+#########################################################################
+########################################################################
+###########################################################################
+
+# Create the combined boxplot
+combined_boxplot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  facet_wrap(~ period) +  # Facet by the time period
+  labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_boxplot)
+
+# VIOLIN PLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the enhanced plot
+enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2, alpha = 0.8) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = "bold"))
+
+# Print the enhanced plot
+print(enhanced_plot)
+
+
+# BOXPLOT WITH PRESENCE AND ABSENCE DATA 
+
+# Create the combined plot
+combined_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
+  facet_wrap(~ period) +
+  scale_color_manual(values = c("red", "blue"), labels = c("Absent", "Present")) +
+  labs(title = "Distribution of E. coli Magnitude and Presence/Absence by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)",
+       fill = "Sample Type",
+       color = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+# Print the combined plot
+print(combined_plot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_presencevsRounds.png"), combined_plot, bg = "white", width = 10, height = 10, dpi = 200)
+
+
+
+View(combined_data)
+
+
+combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  facet_wrap(~ period) +  # Facet by the time period
+  labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  facet_wrap(~ period + assignment) +  # Facet by both period and assignment
+  labs(title = "Distribution of E. coli Magnitude by Sample Type, Time Period, and Assignment",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# To display the plot
+print(combined_boxplot)
+
+View(merged_data)
+
+# Print the combined plot
+print(combined_boxplot)
+
+# Assuming the detection threshold is at a specific log value
+detection_threshold <- 1  # Replace this with the actual log value
+
+combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  geom_hline(yintercept = detection_threshold, linetype = "dashed", color = "red") +  # Add horizontal line
+  facet_wrap(~ period + assignment) +  # Facet by both period and assignment
+  labs(title = "Distribution of E. coli Magnitude by Sample Type, Time Period, and Assignment",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# To display the plot
+print(combined_boxplot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_TvsCvsRounds.png"), combined_boxplot, bg = "white", width = 10, height = 10, dpi = 200)
+
+
+##############################################
+
+combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+  geom_boxplot() +
+  geom_hline(yintercept = detection_threshold, linetype = "dashed", color = "red") +  # Add horizontal line
+  facet_wrap(~ period + village) +  # Facet by both period and assignment
+  labs(title = "Distribution of E. coli Magnitude by Sample Type, Time Period, and Assignment",
+       x = "Sample Type",
+       y = "E. coli Magnitude (ec_log)") +
+  theme_minimal()
+
+# To display the plot
+print(combined_boxplot)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_villagevsRounds.png"), combined_boxplot, bg = "white", width = 10, height = 10, dpi = 200)
+
+#####################################################
+#presnece and absence data 
+ggplot(data = merged_data, aes(x = sample_type, fill = factor(ec_pa))) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ period + assignment) +
+  labs(title = "Presence and Absence of E. coli by Sample Type",
+       x = "Sample Type",
+       y = "Count",
+       fill = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+ggplot(data = merged_data, aes(x = sample_type, fill = factor(ec_pa))) +
+  geom_bar(position = "fill", aes(y = ..count.. / sum(..count..) * 100)) +  # Calculate percentages
+  facet_wrap(~ period + assignment) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Show y-axis as percentage
+  labs(title = "Percentage of E. coli Presence and Absence by Sample Type",
+       x = "Sample Type",
+       y = "Percentage",
+       fill = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+ecoli_pa <- ggplot(data = merged_data, aes(x = sample_type, fill = factor(ec_pa))) +
+  geom_bar(position = "fill", aes(y = after_stat(count) / sum(after_stat(count)) * 100)) +  # Calculate percentages
+  facet_wrap(~ period + assignment) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Show y-axis as percentage
+  labs(title = "Percentage of E. coli Presence and Absence by Sample Type",
+       x = "Sample Type",
+       y = "Percentage",
+       fill = "E. coli Presence (1 = Present, 0 = Absent)") +
+  theme_minimal()
+
+print(ecoli_pa)
+
+ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_PATvsCvsRounds.png"), ecoli_pa, bg = "white", width = 10, height = 10, dpi = 200)
+
+
+# 

@@ -1118,11 +1118,3 @@ chlorine_stats_wide <- stargazer(chlorine_stats_wide, summary=FALSE,
                               out=paste0(overleaf(),"Table/chlorine_stats_wide .tex"))
 
 
-# Convert all columns except 'Statistic' to numeric
-chlorine_stats_wide <- chlorine_stats_wide %>%
-  mutate(across(-Variables, as.character))
-
-# Combine the data frames
-
-
-# Replace NA values in the 'Variables' column with the values from the first column
