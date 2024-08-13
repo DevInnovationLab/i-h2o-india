@@ -19,9 +19,16 @@
 	* This do file exports..... Cleaned data for Endline survey
 	
   
+  
+//making changes to the storage type of the variables in the endline dataset
+use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+destring unique_id_num Treat_V, replace
+save "${DataFinal}Endline_HH_level_merged_dataset_final.dta", replace 
+
  /*--------------------------------------------
     Section A: HH level data
  --------------------------------------------*/  
+ 
  //baseline data
 cap program drop start_from_clean_BL_final
 program define   start_from_clean_BL_final
@@ -72,8 +79,7 @@ PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
 // * keep if Merge_Baseline_Endline==3
 // * drop Merge_Baseline_Endline
 
-// use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
-// destring replace 
+ 
 merge 1:1 unique_id using  "${DataFinal}Endline_HH_level_merged_dataset_final.dta", gen(Merge_Baseline_Endline)
 
 
@@ -127,7 +133,6 @@ drop if unique_id=="30501107052"
 
 //dropping the obs as it was submitted before the start date of the survey 
 drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
-
 
 drop R_E_r_cen_*
 * Village info is not complete. Deleting the redundant info
