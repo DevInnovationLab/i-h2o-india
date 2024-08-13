@@ -1,19 +1,19 @@
 #install packages
-install.packages("RSQLite")
-install.packages("haven")
-install.packages("expss")
-install.packages("stargazer")
-install.packages("Hmisc")
-install.packages("labelled")
-install.packages("data.table")
-install.packages("haven")
-install.packages("remotes")
+#install.packages("RSQLite")
+#install.packages("haven")
+#install.packages("expss")
+#install.packages("stargazer")
+#install.packages("Hmisc")
+#install.packages("labelled")
+#install.packages("data.table")
+#install.packages("haven")
+#install.packages("remotes")
 # Attempt using devtools package
-install.packages("devtools")
+#install.packages("devtools")
 
 #please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
-install.packages("remotes")
-remotes::install_github("ChandlerLutz/starpolishr")
+#install.packages("remotes")
+#remotes::install_github("ChandlerLutz/starpolishr")
 
 # load the libraries
 library(haven)

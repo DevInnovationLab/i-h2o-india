@@ -398,6 +398,8 @@ tab dup_HHID
 save "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", replace 
  
  
+ STOP 
+ ////////////////////////
  
  //common IDs
 import excel "${DataTemp}JPAL HH level tracker for Endline Census.xlsx", sheet("Main_Updated_endline_revisit_co") firstrow clear
@@ -427,6 +429,7 @@ save "${DataTemp}Temp_R1.dta", replace
  
 use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear
  
+  
 gen newvar1 = substr(unique_id, 1, 5)
 gen newvar2 = substr(unique_id, 6, 3)
 gen newvar3 = substr(unique_id, 9, 3)
@@ -440,65 +443,55 @@ destring R_E_yr_num, replace
 drop End_date 
 gen End_date = mdy(R_E_month_num, R_E_day, R_E_yr_num)
 
+format %td End_date
 
+//merging with common IDs to get how many IDs were given for revisit for common IDs
 merge 1:1 UniqueID using "${DataTemp}Temp_R0.dta", keepusing(UniqueID Do_child_section Do_woman_section Do_main_resp_section match_CBW_U5_child WASH_applicable match_CBW_main)
 
 rename _merge common_IDs
 
-//105 common IDs were revisited 
 
+//merging with HH lock IDs 
 merge 1:1 UniqueID using "${DataTemp}Temp_R1.dta", keepusing( UniqueID)
+
+isid  unique_id
 
 drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
 
 
-rename _merge HH_lock
+//rename _merge HH_lock
 
 gen HH_revisit_for_lock = .
-replace HH_revisit_for_lock = 1 if HH_lock == 3
-replace HH_revisit_for_lock = 0 if HH_lock == 1
+replace HH_revisit_for_lock = 1 if _merge == 3
+replace HH_revisit_for_lock = 0 if _merge == 1
 
 
-clonevar recoded_instr_avail = R_E_instruction
+//recoding instruction variable 
+clonevar R_E_C_instruction = R_E_instruction
 
 //this was a non consnet case so I recoded it as a refused case 
-replace recoded_instr_avail = "-98" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
+replace R_E_C_instruction = "-98" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
 
 
 cap drop _merge
 
-merge 1:1 unique_id using "C:\Users\Archi Gupta\Box\Data\99_temp\Temp_R3.dta", keepusing(instruction resp_available comb_resp_avail_cbw_1 comb_resp_avail_cbw_2 comb_resp_avail_cbw_3 comb_resp_avail_cbw_4 comb_child_caregiver_present_1 comb_child_caregiver_present_2)
 
+*.........................................................
+//IMP VARIABLES FOR TABULATION
+*...........................................................
 
-//RV represents here the revisit HH 
-rename  instruction RV_instruction
-rename resp_available RV_resp_available
-rename comb_resp_avail_cbw_1 RV_comb_resp_avail_cbw_1
-rename comb_resp_avail_cbw_2 RV_comb_resp_avail_cbw_2
-rename comb_resp_avail_cbw_3 RV_comb_resp_avail_cbw_3
-rename comb_resp_avail_cbw_4 RV_comb_resp_avail_cbw_4
-rename comb_child_caregiver_present_1 RV_comb_child_caregiver_pre_1
-rename comb_child_caregiver_present_2 RV_comb_child_caregiver_pre_2
+//Archi to Akito: To find out the consented main respondents plz tab this 
+tab R_E_C_instruction
 
-//status of HH lock Ids 
-preserve
-keep if HH_lock == 3
+//to find the available HH plz tab this 
 tab R_E_resp_available
 
-/*R_E_resp_av 
-ailable       Freq.	Percent	Cum.
-		
-1          66	75.86	75.86
-5           9	10.34	86.21
-6          12	13.79	100.00
-		
-Total          87	100.00*/
 
+//TReatment and control wise consented main respondents 
+gen R_E_C_instruction_TvsC = .
+bysort Treat_V: replace R_E_C_instruction_TvsC = 1 if R_E_C_instruction == "1"
+tab Treat_V R_E_C_instruction_TvsC
 
-restore
-
-
-save "${DataFinal}Endline_HH_level_merged_dataset_final.dta", replace
 
 
 //status of main resp 
