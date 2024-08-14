@@ -17,7 +17,7 @@
 *------------------------------------------------------------------- Baseline -------------------------------------------------------------------*
 
 
-set seed 76854637
+set seed 2345678
 
 cap program drop Adding_Ram
 program define   Adding_Ram
@@ -44,7 +44,8 @@ end
 *****************************************
 * Step 1: Cleaning and sample selection *
 *****************************************
-use "${DataPre}1_1_Census_cleaned_consented.dta", clear
+
+use "${DataPre}1_1_Census_cleaned_consented - 14th Aug.dta", clear
 //1. Put the village code of the village for randomization. Use villages one by one
 
 levelsof R_Cen_village_name
@@ -94,7 +95,7 @@ keep if ineligible==0
 	label values S_BLS S_BLSl
 
 
-	save "${DataPre}Selected_`value'_IDEXX_5 July 2024.dta", replace
+	save "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_`value'_IDEXX_14 Aug 2024.dta", replace
 
 
 
@@ -104,15 +105,15 @@ keep if ineligible==0
 * Step 3: Carefully integrate back to the master list *
 *******************************************************
 * Only the village where we complete the randomization should be included in the merge list
-use "${DataPre}Selected_`value'_IDEXX_5 July 2024.dta", clear
+use "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_`value'_IDEXX_14 Aug 2024.dta", clear
 *append using "${DataPre}Selected_30501_20 Oct 2023.dta"
 *append using "${DataPre}Selected_30202_20 Oct 2023.dta"
-save "${DataPre}Selected_HHs_IDEXX_chlorine_testing.dta", replace
+save "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_HHs_IDEXX_chlorine_testing_R2.dta", replace
 
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use   "${DataPre}1_1_Census_cleaned_consented - 14th Aug.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
-merge 1:1 unique_id using "${DataPre}Selected_HHs_IDEXX_chlorine_testing.dta", keep(master matched) gen(Merge_WS)
+merge 1:1 unique_id using "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_HHs_IDEXX_chlorine_testing_R2.dta", keep(master matched) gen(Merge_WS)
 
 label define S_BLWQl 1 "Water sample : Yes" 2 "Water sample : Yes" 3 "Water sample : Yes" 4 "Water sample : Yes" 5 "Water sample : Yes" 6 "Water sample backup: 1" 7 "Water sample backup: 2" 8 "Water sample backup: 3" 9 "Water sample backup: 4" 10 "Water sample backup: 5" 20 "Replacement HH" 0 "No visit" , modify
 label values S_BLWQ S_BLWQl
@@ -159,10 +160,10 @@ replace R_Cen_village_name_str= R_Cen_village_str if R_Cen_village_name_str==""
 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_IDEXX_Tracker_`vill'_5 July 2024.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}IDEXX_Chlorine_Monitoring_Monthly_Tracker/Supervisor_IDEXX_Tracker_`vill'_14 Aug 2024.xlsx" if S_BLS==1, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 sort R_Cen_village_name_str S_BLWQ
-export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}Supervisor_IDEXX_Tracker_`vill'_5 July 2024_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
+export excel ID R_Cen_block_name R_Cen_village_name_str R_Cen_hamlet_name R_Cen_saahi_name R_Cen_landmark R_Cen_time_availability Enumerator_Assigned S_BLWQ  using "${pilot}IDEXX_Chlorine_Monitoring_Monthly_Tracker/Supervisor_IDEXX_Tracker_`vill'_14 Aug 2024_Replacement list.xlsx" if S_BLS==2, sheet("Sheet1", replace) firstrow(varlabels) cell(A1) 
 
 restore
 
@@ -176,19 +177,19 @@ restore
 local mylist  10201 20101 20201 30202 30301 30501  30602 30701 ///
  40101 40201 40202 40301 40401 50101 50201 50301 50401 50402 50501 
  
-use "${DataPre}Selected_10101_IDEXX_5 July 2024.dta", clear
+use "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_10101_IDEXX_14 Aug 2024.dta", clear
 
 foreach i of local mylist {
 	
-append using "${DataPre}Selected_`i'_IDEXX_5 July 2024.dta"
+append using "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_`i'_IDEXX_14 Aug 2024.dta"
 }
 
-save "${DataTemp}Appended-IDEXX_village_HH.dta", replace
+save "${DataTemp}Appended-IDEXX_village_HH_R2.dta", replace
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
-merge 1:1 unique_id using "${DataTemp}Appended-IDEXX_village_HH.dta"
+use   "${DataPre}1_1_Census_cleaned_consented - 14th Aug.dta", clear
+merge 1:1 unique_id using "${DataTemp}Appended-IDEXX_village_HH_R2.dta"
 
-keep if _merge = 3
+keep if _merge == 3
 
 
 
@@ -224,6 +225,6 @@ forvalue i = 1/17 {
 	
 
 sort  S_BLS S_BLWQ
-export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 R_Cen_enum_name_label R_Cen_enum_code using "${DataPre}IDEXX_preload_5 July 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
+export excel unique_id R_Cen_a10_hhhead R_Cen_a1_resp_name R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_name_2 R_Cen_a39_phone_num_2 R_Cen_village_str R_Cen_address R_Cen_landmark R_Cen_hamlet_name R_Cen_saahi_name R_Cen_a11_oldmale_name R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 Cen_fam_gender1 Cen_fam_age1 Cen_fam_gender2 Cen_fam_age2 Cen_fam_gender3 Cen_fam_age3 Cen_fam_gender4 Cen_fam_age4 Cen_fam_gender5 Cen_fam_age5 Cen_fam_gender6 Cen_fam_age6 Cen_fam_gender7 Cen_fam_age7 Cen_fam_gender8 Cen_fam_age8 Cen_fam_gender9 Cen_fam_age9 Cen_fam_gender10 Cen_fam_age10 Cen_fam_gender11 Cen_fam_age11 Cen_fam_gender12 Cen_fam_age12 Cen_fam_gender13 Cen_fam_age13 Cen_fam_gender14 Cen_fam_age14 Cen_fam_gender15 Cen_fam_age15 Cen_fam_gender16 Cen_fam_age16 Cen_fam_gender17 Cen_fam_age17 R_Cen_enum_name_label R_Cen_enum_code using "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\IDEXX_preload_14 Aug 2024.xlsx", sheet("Sheet1", replace) firstrow(var) cell(A1)
 
 
