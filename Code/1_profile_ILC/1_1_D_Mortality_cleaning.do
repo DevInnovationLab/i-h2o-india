@@ -390,8 +390,62 @@ drop if _merge==1
 	gen month_day= day_of_month + " " + month + " " + "2023"
 */
 
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------------
+ Village name correction                                                      
+-------------------------------------------------------------------------------------------------------------------------------------*/
+replace R_mor_village = "BK Padar" if R_mor_village == "30202" 
+replace R_mor_village = "Kuljing" if R_mor_village == "50402" 
+
+/*-----------------------------------------------------------------------------------------------------------------------------------
+ Manual cleaning                                                       
+-------------------------------------------------------------------------------------------------------------------------------------*/
+
+*Enumerator made a data entry error 
+replace R_mor_child_stillborn_1_f = 0 if R_mor_child_stillborn_1_f == 1 & R_mor_village == "Nathma" & unique_id_num == 50501503007 & R_mor_key == "uuid:efe798d4-5679-4b19-9154-1f773c775c2a"
+replace R_mor_child_stillborn_num_1_f = . if R_mor_child_stillborn_num_1_f == 1 & R_mor_village == "Nathma" & unique_id_num == 50501503007 & R_mor_key == "uuid:efe798d4-5679-4b19-9154-1f773c775c2a"
+
+*Miscarriage cases
+//This question wasn't added before that's why this needs to be hard-coded
+replace R_mor_miscarriage_2_f = 1 if  R_mor_last_5_years_pregnant_2_f == 1 &  unique_id_num == 30202519019 & R_mor_key == "uuid:697cf30f-3cac-43b7-9132-9032dc308232"
+replace R_mor_miscarriage_1_f = 1 if  R_mor_last_5_years_pregnant_1_f == 1 &  unique_id_num == 50501505011 & R_mor_key == "uuid:5920710d-48b8-45f0-8926-3f0d2589814a"
+replace R_mor_miscarriage_1_f = 1 if  R_mor_last_5_years_pregnant_1_f == 1 &  unique_id_num == 50501503007 & R_mor_key == "uuid:efe798d4-5679-4b19-9154-1f773c775c2a"
+replace R_mor_miscarriage_2_f = 1 if  R_mor_last_5_years_pregnant_2_f == 1 &  unique_id_num == 50501521005 & R_mor_key == "uuid:553d8275-7dc8-4bef-8297-85adb99d1775"
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------------
+ Combining var name                                                      
+-------------------------------------------------------------------------------------------------------------------------------------*/
+*generating a combined var name for resp
+clonevar R_mor_resp_name = R_mor_a1_resp_name
+replace R_mor_resp_name = R_mor_r_cen_a1_resp_name if R_mor_resp_name  == ""
+replace R_mor_resp_name = lower(R_mor_resp_name)
+
+
+
+
+	
+/*-----------------------------------------------------------------------------------------------------------------------------------
+Dulpicates check                                                    
+-------------------------------------------------------------------------------------------------------------------------------------*/
+
+**Duplicate Unique IDs*** 
+
+//Enumerator by mistake submitted this twice so deleting the data which was marked as unavailable and submitted on 4th jan
+*Astha to include this in her cleaning code ( submission_date == date("04/01/2024", "DMY")
+drop if unique_id_num == 50402117028 & R_mor_key == "uuid:3bd8aa78-f7cc-4cdc-80ff-ed106cb1b57d" 
+
+bysort unique_id_num: gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+list unique_id_num if dup_HHID > 0
+cap export excel unique_id_num R_mor_enum_name_f R_mor_village R_mor_resp_name R_mor_a2_hhmember_count  if dup_HHID > 0  using "$PathTables/Mortality_tables.xlsx", firstrow(varlabels) sheet(duplicates) sheetreplace
+
+
+
 save "${DataFinal}1_1_Mortality_cleaned.dta", replace
-savesome using "${DataPre}1_1_Mortality_cleaned_consented.dta" if R_mor_consent==1, replace
+savesome using "${DataFinal}1_1_Mortality_cleaned_consented.dta" if R_mor_consent==1, replace
 
 ** Drop ID information  - to do : deidentify data
 /*

@@ -41,6 +41,9 @@ user_path <- function() {
   else if (user=="akitokamei"){
     path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
   } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/"
+  } 
   else if (user == ""){
     path = ""
   } 
@@ -65,6 +68,9 @@ github_path <- function() {
   else if (user=="akitokamei"){
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
+  else if (user == "Archi Gupta") {
+    github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
   else if (user == "") {
     github = ""
   } 
@@ -86,6 +92,9 @@ overleaf <- function() {
   else if (user=="akitokamei"){
     overleaf = "/Users/akitokamei/Library/CloudStorage/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
+  else if (user == "Archi Gupta") {
+    overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
   else if (user == "") {
     overleaf = ""
   } 
@@ -97,6 +106,38 @@ overleaf <- function() {
   stopifnot(file.exists(overleaf))
   return(overleaf)
 }
+
+
+
+
+Final_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = Final_path())
+
 
 #------------------------ Load the data ----------------------------------------#
 
@@ -173,6 +214,9 @@ stargazer(df.progress, summary=F, title= "Overall Progress: Baseline HH Survey",
 
 #create a date variable
 df.temp$date <- format(as.Date(df.temp$R_FU_starttime, "%b %d, %Y"), "%Y-%m-%d")
+
+output_path <- file.path(Final_path(), "Endline_HH_level_merged_dataset_final.dta")
+write_dta(final_df, output_path)
 
 
 #------------------------ Distribution of surveys by dates & villages ----------------------------------------#

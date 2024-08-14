@@ -1000,11 +1000,13 @@ foreach var of varlist `r(varlist)'{
 replace `var' = 0 if `var' == .
 }
 
-ds water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_1 C_indirect_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 C_water_treat_kids__77 water_treat_kids_type_999 C_treat_kids_freq_1 C_treat_kids_freq_2 C_treat_kids_freq_3 C_treat_kids_freq_4 C_treat_kids_freq_5 C_treat_kids_freq_6 C_treat_kids_freq__77 
+ds water_source_kids_1 water_source_kids_3 water_source_kids_4 water_source_kids_999 water_source_kids_98 water_prim_source_kids_1 water_prim_source_kids_4 water_prim_source_kids_8 water_prim_source_kids_77 water_treat_kids_0 water_treat_kids_98 water_treat_kids_999 water_treat_kids_1 C_indirect_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 C_water_treat_kids__77 water_treat_kids_type_999 C_treat_kids_freq_1 C_treat_kids_freq_2 C_treat_kids_freq_3 C_treat_kids_freq_4 C_treat_kids_freq_5 C_treat_kids_freq_6 C_treat_kids_freq__77 sec_source_reason_1 sec_source_reason_2 sec_source_reason_3 sec_source_reason_4 sec_source_reason_5 sec_source_reason_6 sec_source_reason_7 sec_source_reason__77 sec_source_reason_999 water_sec_freq_1 water_sec_freq_2 water_sec_freq_3 water_sec_freq_4 water_sec_freq_5 water_sec_freq_6 water_sec_freq_8 water_sec_freq_999
 
 foreach var of varlist `r(varlist)'{
 replace `var' = 0 if `var' == .
 }
+
+
 
 	
 
@@ -1131,11 +1133,11 @@ global PanelA C_water_source_prim_1 C_water_source_prim_2 C_water_source_prim_3 
 *global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
 *Setting up local macros (to be used for labelling the table)
-local PanelA "WASH Characteristics Baseline vs Endline"
-local LabelPanelA "WASH"
+local PanelA "WASH Sources Distribution across time"
+local LabelPanelA "WASHsources"
 *local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
 local ScalePanelA "1"
-local notePanelA "N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline N: 914 - Number of main respondents who consented to participate in the Baseline Survey \newline \textbf{Notes:} \newline(a)262 Count for Baseline: Only 262 HH use any secondary source of drinking water \newline(b)317 Count for Endline: Only 317 HH use any secondary source of drinking water  \newline(c)419 Count for Baseline: Information collected for 419 HHs out of 914 who do water treatment of either the primary drinking water or stored water  \newline(d)629 Count for Endline: Information collected for 629 HHs out of 874 who do water treatment of either the primary drinking water or stored water \newline(f)**: Respondents allowed to select multiple options \newline(g)***: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(h) There are no pregnant women from Endline that drink from a different primary source \newline \textbf{Clarifications:} \newline 1: Out of 0.04 U5 children that drink from a different primary source 0.17 drink from JJM \newline 2: The treatment for stored water was irrespective of the source of stored water and it was asked irrespective of the people saying Yes/No to primary water source treatment. The refernce period was current stored water \newline 3: Time refernce period is of last 1 month \newline 4: In Endline,516 HH say that in the last one week all of their drinking water came from JJM \newline 5: In the past 2 weeks, 87 out of 693 HH said they decided not to treat water because they didn't have time. Here 693 are those HH who either treat their primary or stored water" 
+local notePanelA "\newline(a)*: Respondents allowed to select multiple options \newline(b)1: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(c)Time refernce period for primary and secondary source is of last 1 month" 
 
 
 save "${DataTemp}WASH_TvsC.dta", replace 
@@ -1280,23 +1282,20 @@ esttab  model11 model1 model7 model12 model2 model8 model3 model4 using "${Table
 	   prefix(\multicolumn{@span}{c}{)suffix(})span erepeat(\cmidrule(lr){@span})) ///
 	   mtitles("Obs" "Mean" "Missing" "Obs" "Mean" "Missing" "Min" "Max") ///
 	   substitute( ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
-				   "JJM taps" "\multicolumn{9}{c}{\textbf{Panel A: Primary Water Source Distribution}} \\ JJM taps" ///
-				   "Panel A: Water sources HH vs U5 kids" "\vspace{0.5cm} Panel A: Water sources HH vs U5 kids" ///
-				   "Daily" "\textbf{Frequency of water collection from other sources:} \\Daily" ///
-				   "Not using any secondary drinking water source" "\multicolumn{9}{c}{\textbf{Panel B: Secondary Water Source Distribution}} \\ Not using any secondary drinking water source" ///
-				   "Households that have U5 kids" "\multicolumn{9}{c}{\textbf{Panel C: Water sources distribution of U5 kids}} \\ Households that have U5 kids" ///
-				   "U5 drinking from the same primary source" "\textbf{Source of Drinking Water for U5 kids:} \\U5 drinking from the same primary source" ///
+				   "JJM taps" "\multicolumn{9}{c}{\textbf{Panel 1: Primary Water Source Distribution}} \\ JJM taps" ///
+				   "Daily" "\textbf{Frequency of collection from other sources:*} \\Daily" ///
+				   "Not using any secondary drinking water source" "\hline \\ \multicolumn{9}{c}{\textbf{Panel 2: Secondary Water Source Distribution}} \\ Not using any secondary drinking water source" ///
 				   "Refused to answer" "Refused to answer \\ \textbf{U5 kids drinking from a different source:}" ///
-				   "Using any secondary drinking water source:" "\textbf{Using any secondary drinking water source:}" ///
-				   "Primary source is not working" "\textbf{Circumstances in which other sources are used:} \\Primary source is not working" ///
+				   "Using any secondary drinking water source:" "\textbf{Using any secondary drinking water source:*}" ///
+				   "Primary source is not working" "\textbf{Circumstances when other sources are used:*} \\Primary source is not working" ///
 				   "Using govt. taps as primary drinking water" "\textbf{JJM usage as a drinking water source} \\ Using govt. taps as primary drinking water" ///
 				   "Water treatment for primary source" "\multicolumn{9}{c}{\textbf{Panel B: Water Treatment HH vs U5 kids}} \\ Water treatment for primary source" ///
 				   "U5 children primary source is JJM" "\vspace{0.5cm} U5 children primary source is JJM" ///
-				   "Always treat the water" "\textbf{Frequency of the treatment***} \\ Always treat the water" ///
+				   "Daily" "Daily\textsuperscript{1}" ///
+                   "Always treat the water" "\textbf{Frequency of the treatment***} \\ Always treat the water" ///
 				   "Water treatment for primary source"  "\hline \textbf{Water treatment usage\textsuperscript{5}} \\ Water treatment for primary source" ///
 				   "Once at the time of storing" "\textbf{Frequency of the stored water treatment} \\ Once at the time of storing" ///
 				   "U5 children primary source is JJM" "U5 children primary source is JJM\textsuperscript{1}" ///
-				   "Stored water treatment" "Stored water treatment\textsuperscript{2}" ///
 				   "Water treatment for primary source" "Water treatment for primary source\textsuperscript{3}" ///
 				   "Using govt. taps as primary drinking water" "Using govt. taps as primary drinking water\textsuperscript{4}" ///
 				   "Water treatment for youngest children in HH" "\textbf{Water Treatment for U5 kids} \\ Water treatment for youngest children in HH" ///
@@ -1512,8 +1511,8 @@ global PanelA3 C_water_treat_0 C_water_treat_1  C_indirect_treatment_1 water_tre
 *global PanelA water_source_prim_1 water_sec_yn_1 water_source_sec_1 water_source_kids_0 water_prim_source_kids_1  water_treat_1 water_stored_1 water_treat_type_1 water_treat_type_2 water_treat_type_3 water_treat_type_4 water_treat_type__77 water_treat_type_999 water_treat_freq_1 water_treat_freq_2 water_treat_freq_3 water_treat_freq_4 water_treat_freq_5 water_treat_freq_6 water_treat_freq__77 water_treat_kids_1 water_treat_kids_type_1 water_treat_kids_type_2 water_treat_kids_type_3 water_treat_kids_type_4 water_treat_kids_type__77 water_treat_kids_type_999
 
 *Setting up local macros (to be used for labelling the table)
-local PanelA3 "WASH Treatment of Primary water source Baseline vs Endline"
-local LabelPanelA3 "WASH"
+local PanelA3 "WASH Treatment of Primary water source across time"
+local LabelPanelA3 "WASHtreat"
 *local notePanelA "Notes: The reference point of each sickness is 2 weeks prior to the date of the interview. The ICC of the diarrhea within household is `ICC'. Standard errors are clustered at the household level."
 local ScalePanelA3 "1"
 //local notePanelA "N: 880 - Number of main respondents who consented to participate in the Endline Survey \newline N: 914 - Number of main respondents who consented to participate in the Baseline Survey \newline \textbf{Notes:} \newline(a)262 Count for Baseline: Only 262 HH use any secondary source of drinking water \newline(b)317 Count for Endline: Only 317 HH use any secondary source of drinking water  \newline(c)419 Count for Baseline: Information collected for 419 HHs out of 914 who do water treatment of either the primary drinking water or stored water  \newline(d)629 Count for Endline: Information collected for 629 HHs out of 874 who do water treatment of either the primary drinking water or stored water \newline(f)**: Respondents allowed to select multiple options \newline(g)***: For the frequency of water treatment, respondents cannot select always treat the water with any other method \newline(h) There are no pregnant women from Endline that drink from a different primary source \newline \textbf{Clarifications:} \newline 1: Out of 0.04 U5 children that drink from a different primary source 0.17 drink from JJM \newline 2: The treatment for stored water was irrespective of the source of stored water and it was asked irrespective of the people saying Yes/No to primary water source treatment. The refernce period was current stored water \newline 3: Time refernce period is of last 1 month \newline 4: In Endline,516 HH say that in the last one week all of their drinking water came from JJM \newline 5: In the past 2 weeks, 87 out of 693 HH said they decided not to treat water because they didn't have time. Here 693 are those HH who either treat their primary or stored water" 
