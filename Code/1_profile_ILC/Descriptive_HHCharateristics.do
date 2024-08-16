@@ -1741,18 +1741,18 @@ replace treat_age = R_E_n_fam_age3 if selected_index_treat==23
 replace treat_gender = comb_hhmember_gender1 if selected_index_treat==21 
 replace treat_gender = comb_hhmember_gender2 if selected_index_treat==22 
 replace treat_gender = comb_hhmember_gender3 if selected_index_treat==23 
-replace treat_gender=0 if treats_water==0 //hh does not treat water 
+// replace treat_gender=0 if treats_water==0 //hh does not treat water 
 
 ** Creating new variable for age categories 
 //age of person who treats water
-gen treat_age_new=. 
+gen treat_age_new=. //1 ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
 replace treat_age_new=1 if treat_age>=1 & treat_age<15 //below 15
 replace treat_age_new=2 if treat_age>=15 & treat_age<25 //15-25
 replace treat_age_new=3 if treat_age>=25 & treat_age<35 //25-35
 replace treat_age_new=4 if treat_age>=35 & treat_age<45 //35-45
 replace treat_age_new=5 if treat_age>=45 & treat_age<55 //45-55
 replace treat_age_new=6 if treat_age>=55 //above 55
-replace treat_age_new=0 if treat_age==. //dont treat water + 1 addtl ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
+// replace treat_age_new=0 if treat_age==. //dont treat water + 1 addtl ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
 
 //age of person who collects water 
 gen collector_age_new=. 
@@ -1764,22 +1764,24 @@ replace collector_age_new=5 if collector_age>=45 & collector_age<55 //45-55
 replace collector_age_new=6 if collector_age>=55 //above 55
 
 ** Time taken to treat water //relevance condition changed mid-survey
-gen time_treat=. 
+gen time_treat=. // see line 1812 of code for 4 missing values 
 replace time_treat=1 if R_E_treat_time>=1 & R_E_treat_time<=10 //less than 10 minutes 
 replace time_treat=2 if R_E_treat_time>10 & R_E_treat_time<=30 //less than 30 minutes
 replace time_treat=3 if R_E_treat_time>30 & R_E_treat_time<=60 //half an hour to one hour
-replace time_treat=4 if R_E_treat_time>=60  //more than one hour
+replace time_treat=4 if R_E_treat_time>60  //more than one hour
 replace time_treat=5 if R_E_treat_time==888 //permanent system
-replace time_treat=6 if R_E_treat_time==999 | R_E_treat_time==99 //don't know
-replace time_treat=0 if treats_water==0 //hh does not treat water  
+replace time_treat=6 if R_E_treat_time==999 //don't know
+// replace time_treat=0 if treats_water==0 //hh does not treat water  
+replace time_treat=. if R_E_treat_time==.
  
 
 ** Water treatment method: periodic or non-periodic/nature of water treatment //relevance condition changed mid-survey
-gen treat_method=. 
-replace treat_method=0 if R_E_treat_freq==. | R_E_treat_freq==0 //do not treat water 
+gen treat_method=. //do not treat water 
+// replace treat_method=. if R_E_treat_freq==. | R_E_treat_freq==0 //do not treat water 
+replace treat_method=2 if R_E_treat_freq!=0 & R_E_treat_freq!=.
 replace treat_method=1 if R_E_treat_freq==888 //permanent treatment method in place (9 observations)
 replace treat_method=. if R_E_treat_freq==999 //don't know - being coded as a missing value
-replace treat_method=2 if R_E_treat_freq>0 & (R_E_treat_freq!=999 & R_E_treat_freq!= 888)
+replace treat_method=0 if R_E_treat_freq==0 //treat it infrequently
 
 ** Frequency of periodic water treatment //relevance condition changed mid-survey
 gen freq_treat=. 
@@ -1789,7 +1791,7 @@ replace freq_treat=0 if R_E_treat_freq==.| R_E_treat_freq==0 | R_E_treat_freq==8
 ** Difficulty in collecteing //relevance condition changed mid-way
 gen difficulty_treat=. 
 replace difficulty_treat=R_E_collect_treat_difficult
-replace difficulty_treat=0 if treats_water==0
+// replace difficulty_treat=0 if treats_water==0
 replace difficulty_treat=6 if R_E_collect_treat_difficult==999
 
  
@@ -1836,7 +1838,7 @@ label define R_E_where_prim_locate 1 "In own dwelling" 2 "In own yard/plot" 3 "E
 label values R_E_where_prim_locate R_E_where_prim_locate
 
 label var treat_method "Household Water Treatment Method"
-label define treat_method 0 "No Treatment" 1 "Permanent Filtration System" 2 "Periodic Treatment"
+label define treat_method 0 "Infrequent treatment" 1 "Permanent Filtration System" 2 "Periodic Treatment"
 label values treat_method treat_method
 
 label var time_treat "Time taken to treat water"
@@ -1891,6 +1893,9 @@ time_clean_container  {
 ********************************************************************************
 
 *** Removing the prefix from the variables
+//dropping duplicate of submision date (baseline)
+drop submissiondate starttime endtime
+
 // to ensure that they are not too long 
 renpfix R_E_ 
 
@@ -2001,8 +2006,14 @@ esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveS
 *** Generating the table - DESCRIPTIVE STATISTICS (Water treatment burden)
 ********************************************************************************
 
+*Keeping only the obs of hhs who treat water
+keep if treats_water==1
+
+* Saving the dataset
+save "${DataTemp}temp_washburden_treat.dta", replace 
+
 *Setting up global macros for calling variables
-global Treat_burden treats_water_0 treats_water_1  treat_method_1 treat_method_2  ///
+global Treat_burden  treat_method_1 treat_method_2 treat_method_0  ///
 freq_treat  time_treat_1 time_treat_2 time_treat_3 time_treat_4 ///
 time_treat_5  time_treat_6 treat_age_new_1 treat_age_new_2 ///
 treat_age_new_3 treat_age_new_4 treat_age_new_5 treat_age_new_6 treat_gender_1 ///
@@ -2012,14 +2023,14 @@ difficulty_treat_4 difficulty_treat_5 difficulty_treat_6
 *Setting up local macros (to be used for labelling the table)
 local Treat_burden "Insights into the burden of water treatment"
 local LabelTreat_burden "MaintableTreatBurden"
-local NoteTreat_burden "N: Endline: 880 \newline \textbf{Notes:} (1)*: One observation missing as the respondent doesn't know if water which method is being used to treat water (2)**: One observation missing as respondent indicated an individual is responsible for water treatment but did not specify who. (3)***: 4 observations missing as relevance condition was changed for the question"
+local NoteTreat_burden "N: Endline: 880; Table presents the observations of households that treat their water.  \newline \textbf{Notes:} (1)*: Five missing observations as for 4 respondents relevance coondition was changed mid-survey and one respondent didn't know which method is being used to treat water (2)**: One observation missing as respondent indicated an individual is responsible for water treatment but did not specify who. (3)***: 4 observations missing as relevance condition was changed for the question mid-survey and respondents were not asked the question"
 local ScaleTreat_burden "1"
 
 * Descritive stats table: Baseline and Endline
 foreach k in Treat_burden { //loop for all variables in the global marco 
 	
 	* Count 
-	use "${DataTemp}temp_washburden.dta", clear //using the saved dataset 
+	use "${DataTemp}temp_washburden_treat.dta", clear //using the saved dataset 
     foreach i in $`k' {
     egen count_`i' = count(`i') //calc. freq of each var 
     replace `i' = count_`i' //replacing values with their freq
@@ -2027,11 +2038,11 @@ foreach k in Treat_burden { //loop for all variables in the global marco
     eststo model1: estpost summarize $`k' //Store summary statistics of the variables with their frequency
 	
 	* Mean
-	use "${DataTemp}temp_washburden.dta", clear
+	use "${DataTemp}temp_washburden_treat.dta", clear
 	eststo  model2: estpost summarize $`k' //Baseline
 
 	* Standard Deviation 
-    use "${DataTemp}temp_washburden.dta", clear
+    use "${DataTemp}temp_washburden_treat.dta", clear
     foreach i in $`k' {
     egen sd_`i' = sd(`i') //calc. sd of each var 
     replace `i' = sd_`i' //replacing values with their sd
@@ -2039,7 +2050,7 @@ foreach k in Treat_burden { //loop for all variables in the global marco
     eststo model3: estpost summarize $`k' //Store summary statistics of the variables with standard deviation values
 
 	* Min
-	use "${DataTemp}temp_washburden.dta", clear
+	use "${DataTemp}temp_washburden_treat.dta", clear
 	foreach i in $`k' {
 	egen min_`i'=min(`i')
 	replace `i'=min_`i'
@@ -2047,7 +2058,7 @@ foreach k in Treat_burden { //loop for all variables in the global marco
 	eststo  model4: estpost summarize $`k' //storing summary stats of minimum value
 	
 	* Max
-	use "${DataTemp}temp_washburden.dta", clear
+	use "${DataTemp}temp_washburden_treat.dta", clear
 	foreach i in $`k' {
 	egen max_`i'=max(`i')
 	replace `i'=max_`i'
@@ -2056,7 +2067,7 @@ foreach k in Treat_burden { //loop for all variables in the global marco
 	
 	
 	* Missing 
-	use "${DataTemp}temp_washburden.dta", clear
+	use "${DataTemp}temp_washburden_treat.dta", clear
 	foreach i in $`k' {
 	egen `i'_Miss=rowmiss(`i') //generating binary variable to record if value of variable is missing
 	egen max_`i'=sum(`i'_Miss) //counting the total number of missing values of the variable
@@ -2071,11 +2082,10 @@ esttab  model1 model2 model3 model4  model5 model6  using  "${Table}DescriptiveS
 	   mtitles("Obs" "Mean" "SD" "Min" "Max" "Missing" \\) ///
 	   substitute( "&           _" "" ".00" "" "{l}{\footnotesize" "{p{`Scale`k''\linewidth}}{\footnotesize" ///
 	               "&           _&           _&           _&           _&           _&           _&           _&           _\\" "" ///
-				   "Does not treat water" "\\ \multicolumn{7}{c}{\textbf{Panel 1: Water treatment by the households }} \\ Do not treat the water" ///
-				   "Treats water" "Treat the water" ///
-				   "Permanent Filtration System" "Nature of water treatment method* \\ \hspace{0.5cm}Permanent filtration system" ///
+				   "Permanent Filtration System" "\\ \multicolumn{7}{c}{\textbf{Panel 1: Water treatment by the households }} \\ Nature of water treatment method* \\ \hspace{0.5cm}Permanent filtration system" ///
 				   "Periodic Treatment" "\hspace{0.5cm}Periodic treatment system" ///
- 				   "10 mins or less" "Time spent on periodic water treatment \\ \hspace{0.5cm}10 minutes or less" ///
+				   "Infrequent treatment" "\hspace{0.5cm}Infrequent treatment" ///
+ 				   "10 mins or less" "Time spent on periodic water treatment*** \\ \hspace{0.5cm}10 minutes or less" ///
 				   "More than 10 minutes but upto half hour" "\hspace{0.5cm}More than 10 minutes but upto half hour" ///
 				   "More than half hour but upto one hour" "\hspace{0.5cm}More than half hour but upto one hour" ///
 				   "More than one hour" "\hspace{0.5cm}More than one hour" ///
