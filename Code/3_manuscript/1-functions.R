@@ -23,18 +23,14 @@ labelmaker <- function(x){
 }
 
 #factormaker
-#Converts all selected variables to factors. Used for Poisson regression
+#Converts all selected variables to factors/numbers. Used for Poisson regression
 #x: Data
 #vars: List of variables
 
 factormaker <- function(x, vars){
-  x <- x%>%
-    select(all_of(vars))
-  
-  for(i in vars){
-    x[[i]] <- factor(x[[i]])
-    x[[i]] <- as.numeric(x[[i]])
-  }
+  x <- x %>%
+    mutate(across(all_of(vars), ~ as.numeric(factor(.)))) #First converts variables to factors so they are numbers,
+  #Then converts them to numeric types. This mutates "across" all variables listed.
   return(x)
 }
 
@@ -279,7 +275,49 @@ ilc_lm <- function(data, var){
   return(tidy_results)
 }
 
-
+#ilc_model_table_only
+#Converts model outputs to a basic data frame
+#models: regression models to pull information from
+ilc_model_table_only <- function(models = all_models){
+  #Gathering model name information
+  model_names <- names(models)
+  
+  #Initializing empty model table
+  model_table <- data.frame(model_name = NULL, covariate = NULL, estimate = NULL,
+                            std_error = NULL, p_value = NULL, signif = NULL, N = NULL)
+  
+  #Placing model into model_table
+  for(i in (1:length(model_names))){
+    one_model <- models[[i]]%>%
+      data.frame()
+    
+    
+    one_model <- one_model%>%
+      dplyr::filter(covariate == "assignmentTreatment")%>%
+      dplyr::select(!(z_statistic))%>% #Removing z statistic
+      mutate(model_name = model_names[i])%>%
+      dplyr::select(model_name, everything())%>% #moves model_name to front
+      mutate(signif = case_when(p_value > 0.10 ~ " ",
+                                p_value <= 0.10 & p_value > 0.05 ~ "*",
+                                p_value <= 0.05 & p_value > 0.01 ~ "**",
+                                p_value <= 0.01 ~ "***"))%>%
+      mutate(Lower_CI = estimate - qt(0.975, N) * std_error)%>%
+      mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
+                                  Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
+      mutate(Upper_CI = estimate + qt(0.975, N) * std_error)
+    
+    #Rounding numbers to 3 digits
+    one_model[3:4] <- round(one_model[3:4], digits = 3)
+    
+    
+    #Appending to model_table
+    model_table <- rbind(model_table, one_model)
+    
+    
+  }
+  return(model_table)
+    
+  }
 
 
 
@@ -321,7 +359,7 @@ ilc_model_table <- function(models = all_models){
   #Formatting Kable to print latex table
   model_table_kbl <- 
     kbl(model_table)%>%
-    kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+    kable_styling(bootstrap_options = "striped", full_width = TRUE, font_size = 10) %>%
     add_header_above(c("Regression Results " = 7)) %>%
     row_spec(0, bold = TRUE, color = "black", background = "white") %>%
     column_spec(1, bold = TRUE) %>%

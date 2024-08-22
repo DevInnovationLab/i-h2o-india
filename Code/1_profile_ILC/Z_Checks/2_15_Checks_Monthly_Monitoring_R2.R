@@ -1036,30 +1036,39 @@ idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,
                               covariate.labels=NULL,
                               font.size = "tiny",
                               column.sep.width = "1pt",
-                              out=paste0(overleaf(),"Table/Desc_stats_idexx.tex"))
+                              out=paste0(overleaf(),"Table/Desc_stats_monthly_idexx_r2.tex"))
 
 
 
+#-------------------Chlorine Desc Stats ---------------------------------------
 
-
-filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, assignment )
+#Selecting key chlorine variables
+filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc, assignment )
 View(filtered)
-filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, assignment)
+filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc, assignment)
 
 # Convert to long format, ensuring assignment is retained
 long_dataset <- filtered %>%
   pivot_longer(
-    cols = c(stored_water_fc, tap_water_fc),
-    names_to = "sample_type",
-    values_to = "chlorine_fc"
-  ) %>%
+    cols = c(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc),
+    names_to = "sample",
+    values_to = "chlorine_conc"
+  )%>%
   mutate(
     sample_type = case_when(
-      sample_type == "stored_water_fc" ~ "stored",
-      sample_type == "tap_water_fc" ~ "tap"
-    )
-  ) %>%
-  select(assignment, sample_type, chlorine_fc)
+      sample == "stored_water_fc" ~ "Stored",
+      sample == "tap_water_fc" ~ "Tap",
+      sample == "stored_water_tc" ~ "Stored",
+      sample == "tap_water_tc" ~ "Tap")
+  )%>%
+  mutate(
+    chlorine_test = case_when(
+      sample == "stored_water_fc" ~ "FC",
+      sample == "tap_water_fc" ~ "FC",
+      sample == "stored_water_tc" ~ "TC",
+      sample == "tap_water_tc" ~ "TC")
+  )%>%
+  select(assignment, sample, sample_type, chlorine_test, chlorine_conc)
 
 
 
@@ -1067,11 +1076,13 @@ long_dataset <- filtered %>%
 
 # Calculate the percentage of chlorine samples above 0.1 and average chlorine concentration by assignment variable
 chlorine_stats <- long_dataset %>%
-  group_by(assignment, sample_type) %>%
+  group_by(assignment, sample_type, chlorine_test)%>%
   summarise(
-    "% free chlorine samples > 0.1" = round((sum(chlorine_fc > 0.1, na.rm = TRUE) / n()) * 100, 1),
-    "% free chlorine samples > 0.6" = round((sum(chlorine_fc > 0.6, na.rm = TRUE) / n()) * 100, 1),
-    "Average free chlorine" = round(mean(chlorine_fc, na.rm = TRUE), 3),
+    #"N" = n(),
+    "% chlorine samples > 0.1 mg/L" = round((sum(chlorine_conc > 0.1, na.rm = TRUE) / n()) * 100, 1),
+    "% chlorine samples > 0.6 mg/L" = round((sum(chlorine_conc > 0.6, na.rm = TRUE) / n()) * 100, 1),
+    "Average chlorine concentration (mg/L)" = round(mean(chlorine_conc, na.rm = TRUE), 3),
+    "Median chlorine concentration (mg/L)" = round(median(chlorine_conc, na.rm = TRUE) , 3)
   )
 
 # Print the result
@@ -1080,7 +1091,11 @@ View(chlorine_stats)
 # Transform the data to long format for pivoting
 chlorine_stats_long <- chlorine_stats %>%
   pivot_longer(
-    cols = c(`% free chlorine samples > 0.1`, `% free chlorine samples > 0.6`, `Average free chlorine`),
+    cols = c(`% chlorine samples > 0.1 mg/L`,
+             `% chlorine samples > 0.6 mg/L`,
+             `Average chlorine concentration (mg/L)`,
+             `Median chlorine concentration (mg/L)`
+    ),
     names_to = "Statistic",
     values_to = "Value"
   )
@@ -1096,17 +1111,20 @@ chlorine_stats_wide <- chlorine_stats_long %>%
     values_from = Value
   )
 
-View(chlorine_stats_wide)
+#View(chlorine_stats_wide)
 # Adjust column names to match desired format
 colnames(chlorine_stats_wide) <- c(
-  "Variables",
-  "Control - Stored Water", "Control - Tap Water",
-  "Treatment - Stored Water", "Treatment - Tap Water"
+  "Chlorine Test",
+  " ",
+  "Control - Stored",
+  "Control -  Tap",
+  "Treatment - Stored", 
+  "Treatment - Tap"
 )
 
 # Print the result
 print(chlorine_stats_wide)
-View(chlorine_stats_wide)
+#View(chlorine_stats_wide)
 
 chlorine_stats_wide <- stargazer(chlorine_stats_wide, summary=FALSE,
                                  title= "Monthly Survey - Chlorine Results",
@@ -1114,7 +1132,8 @@ chlorine_stats_wide <- stargazer(chlorine_stats_wide, summary=FALSE,
                                  rownames = TRUE,
                                  covariate.labels=NULL,
                                  font.size = "tiny",
-                                 column.sep.width = "1pt",
-                                 out=paste0(overleaf(),"Table/chlorine_stats_wide .tex"))
+                                 column.sep.width = "0.2pt",
+                                 #tabular.environment = "tabular",
+                                 out=paste0(overleaf(),"Table/chlorine_stats_monthly_r2.tex"))
 
 

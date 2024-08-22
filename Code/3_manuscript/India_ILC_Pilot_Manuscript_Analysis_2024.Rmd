@@ -214,19 +214,19 @@ desc_stats <- cen%>%
 
 
 outcome_vars <- c("hhmember_count",
-                  #"hhhead_gender",
-                  #"read_write_1",
-                  #"prim_source",
+                  "hhhead_gender",
+                  "read_write_1",
+                  "prim_source",
                   "sec_source",
                   "water_treat_binary")
 
 cen_model <- factormaker(cen, outcome_vars)
 
 #Running all models
-#Logistic regression
+#Poisson regression
 all_models <- lapply(outcome_vars,
                    function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = cen, var)
+                    ilc_glm(data = cen_model, var)
                  }
                   )
 # #linear regression
@@ -257,7 +257,7 @@ ilc_model_table(all_models)
   
 cl_p1 <- ggplot(data = mon_summary_weekly) + 
     geom_errorbar(aes(x = test_week, ymin = lower_ci, ymax = upper_ci,  color = chlorine_test),
-                  width = 2) +
+                  width = 2) + #Does not include robust standard errors for village clustering
     geom_point(aes(x = test_week, y = avg_concentration,
                    color = chlorine_test))+
     geom_line(aes(x = test_week, y = avg_concentration,
@@ -286,7 +286,13 @@ cl_p1
 \newpage
 # Follow-up Surveys WASH Variables
 
-```{r}
+```{r Follow up surveys WASH variables}
+
+#Removing baseline round data
+fu_rounds <- all_rounds%>%
+  filter(data_round != "BL")
+
+
 
 #WASH Variables ---- 
 #Summarizing data and running regression models ----
@@ -302,7 +308,7 @@ outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_
 #Summarizing desc stats for each variable
 #reset_gtsummary_theme()
 
-desc_stats <- all_rounds%>%
+desc_stats <- fu_rounds%>%
   dplyr::select("assignment","data_round","prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary","tap_trust_binary", "tap_taste_binary", "tap_future_binary","fc_tap_binary", "fc_stored_binary")%>%
   tbl_strata(
     strata = data_round,
@@ -338,6 +344,41 @@ desc_stats <- all_rounds%>%
 # desc_stats <- as_gt(desc_stats)%>%
 #   tab_options(table.font.size = 11)
 
+
+# Poisson Regression - Treatment Effect -------------------------------------------------
+
+
+
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary",
+                 "tap_trust_binary", "tap_taste_binary", "tap_future_binary",
+                 "fc_tap_binary", "fc_stored_binary")
+
+fu_model <- factormaker(fu_rounds, outcome_vars)
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = fu_model, var)
+                 }
+                  )
+# #linear regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = el_tab, var)
+#                      }
+#                        )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
+
+
+
+
+
 ```
 
 
@@ -348,6 +389,265 @@ desc_stats <- all_rounds%>%
 
 ```{r Followup Surveys - Chlorine and Microbiological Contamination}
 
+
+# Microbiological contamination ------------------------------------------------
+
+#Separating stored vs tap water tests ------
+idexx_ids <- idexx_tab%>%
+  dplyr::select(assignment, village, block, panchayat_village, data_round, sample_ID, bag_ID_tap, bag_ID_stored)
+
+idexx_tab_tap <- idexx_tab%>%
+  filter(sample_type == "Tap")%>%
+  #filter(pooled_round == "FU")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_tap = "cf_pa_binary")%>%
+  rename(ec_pa_tap = "ec_pa_binary")%>%
+  rename(cf_log_tap = "cf_log")%>%
+  rename(ec_log_tap = "ec_log")
+
+idexx_tab_stored <- idexx_tab%>%
+  filter(sample_type == "Stored")%>%
+  #filter(pooled_round == "FU")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_stored = "cf_pa_binary")%>%
+  rename(ec_pa_stored = "ec_pa_binary")%>%
+  rename(cf_log_stored = "cf_log")%>%
+  rename(ec_log_stored = "ec_log")
+
+
+
+#Summarizing desc stats --------------------------------------
+
+#Tap water
+
+desc_stats <- idexx_tab_tap%>%
+  dplyr::select(assignment, data_round, cf_pa_tap, ec_pa_tap, cf_log_tap, ec_log_tap
+                )%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_tap", "ec_pa_tap", "cf_log_tap",
+                             "ec_log_tap") ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_tap ~ "Tap - Presence/Absence of Total Coliform",
+                                 ec_pa_tap ~ "Tap - Presence/Absence of E. coli",
+                                 cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
+                                 ec_log_tap ~ "Tap - Mean Log10 of E. coli"
+                                )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
+    .header = "**{strata}**"
+  )%>%
+  modify_footnote(update =  ~ "Mean (SD); BL - Baseline, FU - Followup")
+
+# desc_stats_tap <- as_gt(desc_stats)%>%
+#   tab_options(table.font.size = 11)
+
+#desc_stats_tap
+
+
+
+#Stored water
+desc_stats <- idexx_tab_stored%>%
+  dplyr::select(assignment, data_round, cf_pa_stored, ec_pa_stored, cf_log_stored, ec_log_stored
+                )%>%
+  tbl_strata(
+    strata = data_round,
+    .tbl_fun =
+      ~ .x %>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_stored", "ec_pa_stored", "cf_log_stored",
+                             "ec_log_stored") ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_stored ~ "Stored - Presence/Absence of Total Coliform",
+                                 ec_pa_stored ~ "Stored - Presence/Absence of E. coli",
+                                 cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
+                                 ec_log_stored ~ "Stored - Mean Log10 of E. coli"
+                                )
+                    )%>%
+     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
+    .header = "**{strata}**"
+  )%>%
+  modify_footnote(update =  ~ "Mean (SD); BL - Baseline, FU - Followup")
+
+#desc_stats_stored <- as_gt(desc_stats)%>%
+  #tab_options(table.font.size = 11)
+
+#desc_stats_stored
+
+
+
+# Poisson Regression - Treatment Effect -------------------------------------------------
+
+#Removing BL data
+idexx_fu <- idexx_tab%>%
+  filter(data_round != "BL")
+  
+
+
+outcome_vars <- c( "cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_fu, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+# #linear regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = el_tab, var)
+#                      }
+#                        )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
+
+
+#-----------------------------------------------------------------------------
+
+
+#-----------------------------------------------------------------------------
+
+
+# Chlorine Concentration -----------------------------------------------------
+
+#Desc stats -------------------
+
+#Pooled Results
+fu_rounds <- all_rounds%>%
+  filter(data_round != "BL")#%>%
+  #filter(available_jjm == "Both stored and running water are from JJM") #Removing chlorine data that are not from JJM source
+
+
+#Making desc stat table for summarizing chlorine results from followup
+
+# #Summarizing desc stats for positive results only
+# desc_stats_tap <- fu_rounds%>%
+#   filter(fc_tap_binary == 1 | tc_tap_binary == 1)%>%
+#   group_by(assignment)%>%
+#   summarise(
+#     "Number of Samples" = n(),
+#     "Tap - Average Free Chlorine Concentration (mg/L)" = mean(fc_tap_avg, na.rm = TRUE),
+#     "Tap - Average Total Chlorine Concentration (mg/L)" = mean(tc_tap_avg, na.rm = TRUE),
+#     "Tap - Free Chlorine - SD" = sd(fc_tap_avg, na.rm = TRUE),
+#     "Tap - Total Chlorine - SD" = sd(tc_tap_avg, na.rm = TRUE)
+#     )
+# 
+# 
+# kbl(desc_stats_tap)%>%
+#   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+#   add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+#   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+#   column_spec(1, bold = TRUE) %>%
+#   column_spec(2, width = "75px")
+# 
+# 
+# desc_stats_stored <- fu_rounds%>%
+#   filter(fc_stored_binary == 1 | tc_stored_binary == 1)%>%
+#   group_by(assignment)%>%
+#   summarise(
+#     "Number of Samples" = n(),
+#     "Stored - Average Free Chlorine Concentration (mg/L)" = mean(fc_stored_avg, na.rm = TRUE),
+#     "Stored - Average Total Chlorine Concentration (mg/L)" = mean(tc_stored_avg, na.rm = TRUE),
+#     "Stored - Free Chlorine - SD" = sd(fc_stored_avg, na.rm = TRUE),
+#     "Stored - Total Chlorine - SD" = sd(tc_stored_avg, na.rm = TRUE)
+#     )
+# 
+# kbl(desc_stats_stored)%>%
+#   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+#   add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+#   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+#   column_spec(1, bold = TRUE) %>%
+#   column_spec(2, width = "75px")
+
+
+#Making desc stat table for summarizing chlorine results from followup
+#Summarizing presence absence results after removing non-JJM samples
+desc_stats_tap <- fu_rounds%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Tap - Free Chlorine Presence" = mean(fc_tap_binary, na.rm = TRUE),
+    "Tap - Total Chlorine Presence" = mean(tc_tap_binary, na.rm = TRUE),
+    "Tap - Free Chlorine - SD" = sd(fc_tap_binary, na.rm = TRUE),
+    "Tap - Total Chlorine - SD" = sd(tc_tap_binary, na.rm = TRUE)
+    )
+
+
+kbl(desc_stats_tap)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+desc_stats_stored <- fu_rounds%>%
+  group_by(assignment)%>%
+  summarise(
+    "Number of Samples" = n(),
+    "Stored - Free Chlorine Presence" = mean(fc_stored_binary, na.rm = TRUE),
+    "Stored - Total Chlorine Presence" = mean(tc_stored_binary, na.rm = TRUE),
+    "Stored - Free Chlorine - SD" = sd(fc_stored_binary, na.rm = TRUE),
+    "Stored - Total Chlorine - SD" = sd(tc_stored_binary, na.rm = TRUE)
+    )
+
+kbl(desc_stats_stored)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
+
+
+
+#Running regression models -----------------------------------------------
+
+#Variables
+outcome_vars <- c("fc_tap_binary", "fc_stored_binary")
+
+fu_model <- factormaker(fu_rounds, outcome_vars)
+
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_glm(data = fu_model, var)
+                     }
+                       )
+
+#linear regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = fu_rounds, var)
+#                      }
+#                        )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Making regression table output
+ilc_model_table(all_models)
 
 
 
@@ -360,7 +660,7 @@ desc_stats <- all_rounds%>%
 ```{r Endline Census Comparison}
 
 
-#Summarizing EL data and running regression models ----
+#Desc Stats --------------------------------------------------
 
 #Selecting variables
 outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
@@ -368,7 +668,7 @@ outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_
 
 #GT method
 #Summarizing desc stats for each variable
-desc_stats <- el_tab%>%
+desc_stats <- el%>%
   dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
   tbl_summary(
   by = assignment,
@@ -379,24 +679,31 @@ desc_stats <- el_tab%>%
 
 
 
-#Running all models
-#Logistic regression
-#all_models <- lapply(outcome_vars, 
- #                    function(var){ #This functions "subsets" the ilc_glm function
-  #                     ilc_glm(data = el_tab, var)
-   #                  }
-    #                   )
+# Poisson Regression -- Treatment Effect -------------------------------------
+
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+
+el_model <- factormaker(el, outcome_vars) #Making variables numeric
+
+
+#Poisson Regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = el_model, var)
+                 }
+                  )
 #linear regression
-all_models <- lapply(outcome_vars, 
-                     function(var){ #This functions "subsets" the ilc_glm function
-                       ilc_lm(data = el_tab, var)
-                     }
-                       )
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = el_model, var)
+#                      }
+#                        )
 
 #Assigning names to models
 names(all_models) <- outcome_vars
 
 #Formatting table output
+el_models <- ilc_model_table_only(all_models)
 ilc_model_table(all_models)
 
 
@@ -404,7 +711,7 @@ ilc_model_table(all_models)
 
 
 
-# Combined Desc Stats -------------------------------------------------------
+# Combined Desc Stats - baseline and endline --------------------------------------------
 
 #Selecting jjm variables
 el_jjm <- el%>%
@@ -421,39 +728,95 @@ total_jjm <- rbind(cen_jjm, el_jjm)
 
 
 
-#Summarizing combined results in a table
-tab <- total_jjm%>%
-  tbl_strata(
-    strata = data_round,
-    .tbl_fun =
-      ~ .x %>%
-        tbl_summary(by = assignment, 
-                    missing = "no", 
-                    #type = c() ~ "continuous",
-                    statistic = list(
-                      all_continuous() ~ "{mean} ({sd})",
-                      all_categorical() ~ "{p}% ({n})"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
-                    label = list(prim_source ~ "Primary Drinking Water Source",
-                                 jjm_drinking ~ "Use Government-provided Tap for Drinking",
-                                 water_sec_yn ~ "Used a Secondary Drinking Water Source in Last Month",
-                                 tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
-                                 tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue"
-                                 )
-                    )%>%
-     modify_footnote(all_stat_cols() ~ "% (N); BL - Oct 2023, EL - May 2024"),#%>%
- # as_gt()%>%
-  #tab_options(table.font.size = pct(50),
-              #table_body.hlines.width = 
-   #             table.width = pct(50)),
-    .header = "**{strata}**"
-  )
-
-# Convert to gt object
-gt_tab <- as_gt(tab)
-
+# #Summarizing combined results in a table
+# tab <- total_jjm%>%
+#   tbl_strata(
+#     strata = data_round,
+#     .tbl_fun =
+#       ~ .x %>%
+#         tbl_summary(by = assignment, 
+#                     missing = "no", 
+#                     #type = c() ~ "continuous",
+#                     statistic = list(
+#                       all_continuous() ~ "{mean} ({sd})",
+#                       all_categorical() ~ "{p}% ({n})"),
+#                     digits = list(all_continuous() ~ 2, 
+#                                   all_categorical() ~ 0),
+#                     label = list(prim_source ~ "Primary Drinking Water Source",
+#                                  jjm_drinking ~ "Use Government-provided Tap for Drinking",
+#                                  water_sec_yn ~ "Used a Secondary Drinking Water Source in Last Month",
+#                                  tap_issues ~ "Issues with Government-provided Tap (2 weeks)",
+#                                  tap_issues_type_1 ~ "Reported Taste/Odor/Cooking Issue"
+#                                  )
+#                     )%>%
+#      modify_footnote(all_stat_cols() ~ "% (N); BL - Oct 2023, EL - May 2024"),#%>%
+#  # as_gt()%>%
+#   #tab_options(table.font.size = pct(50),
+#               #table_body.hlines.width = 
+#    #             table.width = pct(50)),
+#     .header = "**{strata}**"
+#   )
+# 
+# # Convert to gt object
+# gt_tab <- as_gt(tab)
+# 
 
 ```
 
+
+```{r Endline census comparison forest plot}
+
+
+# create forest plot on log scale (middle section of figure)
+p_mid <- el_models%>%
+  ggplot(aes(y = model_name)) +
+  theme_classic() +
+  geom_point(aes(x=estimate), shape=15, size=3) +
+  geom_linerange(aes(xmin=Lower_CI, xmax=Upper_CI))+
+  labs(x="Prevalence Ratio") +
+  coord_cartesian(ylim=c(1,length(el_models$model_name)+1), xlim=c(0, 2))+
+  geom_vline(xintercept = 1, linetype="dashed") +
+  annotate("text", x = 0.3, y = length(el_models$model_name)+1, label = "Treatment protective") +
+  annotate("text", x = 1.7, y = length(el_models$model_name)+1, label = "Treatment harmful") +
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y= element_blank(),
+        axis.text.y= element_blank(),
+        axis.title.y= element_blank())
+  
+# wrangle results into pre-plotting table form
+res_plot <- el_models%>%
+  mutate(across(c(estimate, Lower_CI, Upper_CI), ~str_pad(round(.x, 2), width=3, pad=" ", side="right")),
+         estimate = paste0(estimate, " (", Lower_CI, ",", Upper_CI,")"),
+         color = rep(c("gray","white"), length(el_models$model_name)/2))%>%
+  mutate(p_value = case_when(p_value < .01 ~ "<0.01", TRUE ~ str_pad(as.character(round(p_value, 2)),width=4,pad="0",side="right")))%>%
+  bind_rows(data.frame(model_name = "Covariate", estimate = "Prevalence Ratio (95% CI)", Lower_CI = "", Upper_CI="",p_value="p-value"))%>%
+  mutate(model_name = fct_rev(fct_relevel(model_name, "Covariate")))
+
+# left side of plot - prevalence ratios
+p_left <-
+  res_plot%>%
+  ggplot(aes(y = model_name)) + 
+  geom_text(aes(x=0, label=model_name), hjust=0, fontface = "bold") +
+  geom_text(aes(x=2.2, label=estimate), hjust=0, fontface = ifelse(res_plot$estimate == "Prevalence Ratio (95% CI)", "bold", "plain")) +
+  theme_void() +
+  coord_cartesian(xlim=c(0,4))
+# right side of plot - pvalues
+p_right <-
+  res_plot%>%
+  ggplot() +
+  geom_text(aes(x=0, y=model_name, label=p_value), hjust=0, fontface = ifelse(res_plot$p_value == "p-value", "bold", "plain")) +
+  theme_void() 
+# layout design (top, left, bottom, right)
+layout <- c(
+  area(t = 0, l = 0, b = 30, r = 4),
+  area(t = 1, l = 5, b = 30, r = 10),
+  area(t = 0, l = 10, b = 30, r = 12)
+)
+# final plot arrangement
+p_left + p_mid + p_right + plot_layout(design = layout)
+
+
+
+
+```
 
