@@ -1788,11 +1788,11 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/scatter_village_supply_freq_F3.png"),
 
 
 
-#wq_chlorine_storedfc #wq_chlorine_storedfc_again #wq_chlorine_storedtc #wq_chlorine_storedtc_again #wq_tap_fc #wq_tap_fc_again #wq_tap_tc #wq_tap_tc_again
+#---------------------------------------------------------------------------------
 
-#T-TEST 
+# IDEXXX COMPARISON
 
-
+#---------------------------------------------------------------------------------------
 
 # POOLING IN ALL IDEXX ROUND DATA 
 
@@ -2700,6 +2700,8 @@ merged_data_f <- merged_data_f %>%
 
 # Plot the boxplot with the correctly ordered year_month
 unique(merged_data_f$sample_type)
+
+
 #basic plot
 ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
   geom_boxplot() +
@@ -2708,7 +2710,6 @@ ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
 
 
 
-# Assuming merged_data_f is already ordered by year_month as before
 #plot with mean
 ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
   geom_boxplot() +
@@ -2722,7 +2723,7 @@ merged_data_f <- merged_data_f %>%
 merged_data_f <- merged_data_f %>%
   mutate(assignment = ifelse(assignment == "C", "Control", assignment))
 
-threshold <- -0.3010 # Example threshold, log10(1) = 0
+threshold <- -0.3010 #this threshold has been taken from idexx data by checking for the samples that lie above or below this
 
 ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
   geom_boxplot() +
@@ -2750,98 +2751,14 @@ ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
   threshold_line
 
 
-#-----------------------------------------
-
-#FINAL 
-#-----------------------
-threshold_value <- threshold  # Store the threshold value if not already stored
-
-# Combine the threshold line with your existing plot
-ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
-  geom_boxplot() +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
-  facet_wrap(~ assignment) +
-  labs(
-    x = "Month of test", 
-    y = "Log10 E.Coli MPN", 
-    title = "Temporal Analysis of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
-    caption = paste("Note: Threshold value for E.Coli presence is ", threshold_value, 
-                    ". Values above this threshold indicate a presence of E.Coli contamination.")
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),
-    plot.caption = element_text(size = 9, hjust = 0, face = "italic", color = "gray40")  # Style the caption
-  ) +
-  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue") +
-  threshold_line
+threshold_value <- threshold  
 
 
-ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 8, dpi = 200)
+##############################################################################
 
-#--------without mean
+#FINAL PLOT  that has been shared with MK
 
-threshold_value <- threshold  # Store the threshold value if not already stored
-
-# Combine the threshold line with your existing plot
-ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
-  geom_boxplot() +
-  facet_wrap(~ assignment) +
-  labs(
-    x = "Month of test", 
-    y = "Log10 E.Coli MPN", 
-    title = "Temporal Analysis of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
-    caption = paste("Note: Threshold value for E.Coli presence is ", threshold_value, 
-                    ". Values above this threshold indicate a presence of E.Coli contamination.")
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),
-    plot.caption = element_text(size = 9, hjust = 0, face = "italic", color = "gray40")  # Style the caption
-  ) +
-  annotate("text", x = Inf, y = threshold, label = "threshold", vjust = -1, hjust = 1.1, color = "blue") +
-  threshold_line
-
-
-ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 6, dpi = 200)
-
-
-#inreasex text sizie
-
-ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
-  geom_boxplot() +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
-  facet_wrap(~ assignment) +
-  labs(
-    x = "Month of test", 
-    y = "Log10 E.Coli MPN", 
-    title = "Temporal Presentation of E.Coli Contamination: Log10 MPN Distribution by Month and Treatment Assignment",
-    caption = paste(      "A boxplot displays data distribution through the median (central line),",
-                          "the interquartile range (box edges from Q1 to Q3), and variability",
-                          "(whiskers extending to the smallest and largest non-outlier values).",
-                          "Outliers are shown as individual points beyond the whiskers, highlighting",
-                          "any deviations from the overall pattern. ")
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),   # Increase x-axis text size
-    axis.text.y = element_text(size = 10),                         # Increase y-axis text size
-    axis.title.x = element_text(size = 12),                        # Increase x-axis title size
-    axis.title.y = element_text(size = 10),                        # Increase y-axis title size
-    strip.text = element_text(size = 10),                          # Increase facet label size
-    plot.title = element_text(size = 10),                          # Increase title size
-    plot.caption = element_text(size = 9.5, hjust = 0, face = "italic", color = "gray40")  # Style the caption
-  ) +
-  annotate("text", x = Inf, y = threshold, label = "Presence/Absence", vjust = -1, hjust = 1.1, color = "blue") +
-  threshold_line
-
-print(ecoli)
-# Save the plot
-ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 8, height = 6, dpi = 200)
-
-
-
-
-
-
-#######
+##############################################################################
 
 ecoli <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
   geom_boxplot() +
@@ -2874,57 +2791,19 @@ print(ecoli)
 ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 10, height = 6, dpi = 200)
 
 
-#label to appear only once 
-# Create a base plot without the threshold line and label
-p <- ggplot(merged_data_f, aes(x = year_month, y = ec_log)) +
-  geom_boxplot() +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
-  facet_wrap(~ assignment) +
-  labs(x = "Month of test", y = "Log10 E.Coli MPN", title = "Boxplot of ec_log by Year-Month with Mean and Threshold for treatment-tap") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-# Add the threshold line and label only to the first facet
-p + 
-  geom_hline(aes(yintercept = threshold), linetype = "dashed", color = "blue",
-             data = merged_data_f %>% filter(assignment == unique(merged_data_f$assignment)[1])) +
-  geom_text(aes(x = Inf, y = threshold, label = "threshold"), vjust = -1, hjust = 1.1, color = "blue",
-            data = merged_data_f %>% filter(assignment == unique(merged_data_f$assignment)[1]))
-
-#############################################
+##############################################################################
 #now descriptive stats 
+################################################################################
 
-View(merged_data_f)
 
 # Ensure ec_log is numeric
 merged_data_f <- merged_data_f %>%
   mutate(ec_log = as.numeric(ec_log))
 
-# Using base R to calculate the percentage of samples with ec_log > 1
 
 # First, ensure ec_log is numeric
 merged_data_f$ec_log <- as.numeric(merged_data_f$ec_log)
 
-# Calculate the percentage of samples with ec_log > 1, grouped by assignment and period
-percentage_above_threshold <- with(merged_data_f, {
-  aggregate(ec_log ~ assignment + period, data = merged_data_f, FUN = function(x) {
-    total_samples <- length(x)
-    above_threshold <- sum(x > 1, na.rm = TRUE)
-    percentage_above_threshold <- (above_threshold / total_samples) * 100
-    return(c(total_samples = total_samples, above_threshold = above_threshold, percentage_above_threshold = percentage_above_threshold))
-  })
-})
-
-
-# Convert to data frame if it's not already
-percentage_above_threshold <- as.data.frame(percentage_above_threshold)
-
-View(percentage_above_threshold)
-
-
-library(dplyr)
-
-View(merged_data_f)
-#ARCHI COME HERE 
 names(merged_data_f)
 percentage_above_threshold <- merged_data_f  %>%
   group_by(period, assignment) %>%
@@ -2956,85 +2835,47 @@ stargazer(perc,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Example wide format table
-percentage_above_threshold <- merged_data_f %>%
-  group_by(assignment, period) %>%
-  summarise(
-    Total_Samples = n(),
-    Above_Threshold = sum(ec_log > 1, na.rm = TRUE),
-    Percentage_Above_Threshold = (Above_Threshold / Total_Samples) * 100
-  )
-
-long_format_table <- percentage_above_threshold %>%
-  pivot_longer(cols = c(Total_Samples, Above_Threshold, Percentage_Above_Threshold),
-               names_to = "Metric",
-               values_to = "Value")
-# View the reshaped data
-print(long_format_table)
-
-View(long_format_table)
-
-
-
-
-
-
-
-
-
-#plot with mpn instead of log
-ggplot(merged_data_f, aes(x = year_month, y = ec_mpn)) +
-  geom_boxplot() +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red", color = "black") +
-  labs(x = "Year-Month", y = "ec_mpn", title = "Boxplot of ec_mpn by Year-Month with Mean") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #################################################################
-#########################################################################
-########################################################################
+#
 ###########################################################################
 
+
+merged_data <- merge(combined_data, village_details[, c("village", "assignment")], 
+                     by = "village", all.x = TRUE)
+
+
+# Assuming combined_data is your dataframe
+merged_data <- merged_data %>%
+  mutate(date = as.Date(date))
+
+# Convert dates to POSIXct and extract month and year
+
+
+merged_data <- merged_data %>%
+  mutate(
+    month = month(date),               # Extract month
+    year = year(date),                 # Extract year
+    year_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")  # Combine year and month
+  )
+
+#View(merged_data)
+
+unique(merged_data$sample_type)
+
+# Replace specific values
+merged_data <- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "tap_sample_id", "Tap", sample_type))
+
+merged_data <- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "stored_sample_id", "Stored", sample_type))
+
+
+#merged_data_f <- merged_data %>% filter(sample_type == "Tap" & assignment == "C")
+
+#merged_data_f <- merged_data %>% filter(sample_type == "Tap")
+
 # Create the combined boxplot
-combined_boxplot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
   geom_boxplot() +
   facet_wrap(~ period) +  # Facet by the time period
   labs(title = "Distribution of E. coli Magnitude by Sample Type and Time Period",
@@ -3048,7 +2889,7 @@ print(combined_boxplot)
 # VIOLIN PLOT WITH PRESENCE AND ABSENCE DATA 
 
 # Create the enhanced plot
-enhanced_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+enhanced_plot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
   geom_violin(alpha = 0.5) +
   geom_boxplot(width = 0.2, alpha = 0.8) +
   geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
@@ -3073,7 +2914,7 @@ print(enhanced_plot)
 # BOXPLOT WITH PRESENCE AND ABSENCE DATA 
 
 # Create the combined plot
-combined_plot <- ggplot(data = combined_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
+combined_plot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
   geom_boxplot(alpha = 0.5) +
   geom_jitter(aes(color = factor(ec_pa)), size = 2, shape = 16, position = position_jitter(width = 0.2)) +
   facet_wrap(~ period) +
@@ -3092,7 +2933,6 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_presencevsRounds.png"), combin
 
 
 
-View(combined_data)
 
 
 combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
@@ -3114,7 +2954,7 @@ combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, 
 # To display the plot
 print(combined_boxplot)
 
-View(merged_data)
+#View(merged_data)
 
 # Print the combined plot
 print(combined_boxplot)
@@ -3136,24 +2976,6 @@ print(combined_boxplot)
 
 ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_TvsCvsRounds.png"), combined_boxplot, bg = "white", width = 10, height = 10, dpi = 200)
 
-
-##############################################
-
-combined_boxplot <- ggplot(data = merged_data, aes(x = sample_type, y = ec_log, fill = sample_type)) +
-  geom_boxplot() +
-  geom_hline(yintercept = detection_threshold, linetype = "dashed", color = "red") +  # Add horizontal line
-  facet_wrap(~ period + village) +  # Facet by both period and assignment
-  labs(title = "Distribution of E. coli Magnitude by Sample Type, Time Period, and Assignment",
-       x = "Sample Type",
-       y = "E. coli Magnitude (ec_log)") +
-  theme_minimal()
-
-# To display the plot
-print(combined_boxplot)
-
-ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_villagevsRounds.png"), combined_boxplot, bg = "white", width = 10, height = 10, dpi = 200)
-
-#####################################################
 #presnece and absence data 
 ggplot(data = merged_data, aes(x = sample_type, fill = factor(ec_pa))) +
   geom_bar(position = "dodge") +
@@ -3189,4 +3011,11 @@ print(ecoli_pa)
 ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_PATvsCvsRounds.png"), ecoli_pa, bg = "white", width = 10, height = 10, dpi = 200)
 
 
-# 
+###############################################################################
+###############################################################################
+
+
+
+
+
+
