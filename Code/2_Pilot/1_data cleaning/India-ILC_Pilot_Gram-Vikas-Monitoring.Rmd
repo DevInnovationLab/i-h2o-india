@@ -49,6 +49,8 @@ gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas
 
 village_details <- read_xlsx("C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/India_ILC_Pilot_Rayagada_Village_Tracking.xlsx")
 
+#Need to change config ---------------------------
+
 
 ```
 
@@ -209,20 +211,20 @@ kbl(gv_refill, "latex")%>%
 
 
 
-#Calculating Cost/Liters treated for tablet refills
-
-#Selecting "ideal" villages -- BNPur and Badabangi
-gv_refill_bnpur <- gv%>%
-  filter(Village == "Birnarayanpur")%>%
-  filter(refill == "Yes")
-
-gv_refill_badabangi <- gv%>%
-  filter(Village == "Badabangi")%>%
-  filter(refill == "Yes")
-
-gv_refill_asada <- gv%>%
-  filter(Village == "Asada")%>%
-  filter(refill == "Yes")
+# #Calculating Cost/Liters treated for tablet refills
+# 
+# #Selecting "ideal" villages -- BNPur and Badabangi
+# gv_refill_bnpur <- gv%>%
+#   filter(Village == "Birnarayanpur")%>%
+#   filter(refill == "Yes")
+# 
+# gv_refill_badabangi <- gv%>%
+#   filter(Village == "Badabangi")%>%
+#   filter(refill == "Yes")
+# 
+# gv_refill_asada <- gv%>%
+#   filter(Village == "Asada")%>%
+#   filter(refill == "Yes")
 
 
 
@@ -370,7 +372,6 @@ gv_cl$chlorine_test <- fct_recode(gv_cl$chlorine_test,
 
 
 ```
-
 
 
 
