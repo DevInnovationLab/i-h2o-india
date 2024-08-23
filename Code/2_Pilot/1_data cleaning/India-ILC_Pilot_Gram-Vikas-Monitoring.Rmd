@@ -213,18 +213,18 @@ kbl(gv_refill, "latex")%>%
 
 # #Calculating Cost/Liters treated for tablet refills
 # 
-# #Selecting "ideal" villages -- BNPur and Badabangi
-# gv_refill_bnpur <- gv%>%
-#   filter(Village == "Birnarayanpur")%>%
-#   filter(refill == "Yes")
-# 
-# gv_refill_badabangi <- gv%>%
-#   filter(Village == "Badabangi")%>%
-#   filter(refill == "Yes")
-# 
-# gv_refill_asada <- gv%>%
-#   filter(Village == "Asada")%>%
-#   filter(refill == "Yes")
+#Selecting "ideal" villages -- BNPur and Badabangi
+gv_refill_bnpur <- gv%>%
+  filter(Village == "Birnarayanpur")%>%
+  filter(refill == "Yes")
+
+gv_refill_badabangi <- gv%>%
+  filter(Village == "Badabangi")%>%
+  filter(refill == "Yes")
+
+gv_refill_asada <- gv%>%
+  filter(Village == "Asada")%>%
+  filter(refill == "Yes")
 
 
 
