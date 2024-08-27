@@ -89,8 +89,8 @@ forvalues i = 1/6 {
 -------------------------------------------------------------------------------------------------------------------------------------*/
  
 *install the following packages*
-*ssc install labutil
-*ssc install fre
+//ssc install labutil
+//ssc install fre
 fre submission_date
 gen T = string(submission_date, "%td") 
 labmask submission_date, values(T) 
@@ -401,8 +401,9 @@ restore
 //Percentage of Don't knows in each variable where its applicable
 ***************************************************************
 
-ssc install findname
+//ssc install findname
 preserve
+drop starttime endtime
 renpfix R_mor_  //Removing R_mor_ otherwise variable name length is exceeding 
 ds marital_*  a7_pregnant_* last_5_years_pregnant_* last_5_years_preg_oth_* child_living_*  child_notliving_*   child_stillborn_*  child_alive_died_* miscarriage_*
 foreach var of varlist `r(varlist)' {
@@ -438,6 +439,7 @@ restore
 ***************************************************************
 
 preserve
+drop starttime endtime
 renpfix R_mor_  //Removing R_mor_ otherwise variable name length is exceeding 
 ds marital_*  a7_pregnant_* last_5_years_pregnant_* last_5_years_preg_oth_* child_living_*  child_notliving_*   child_stillborn_*  child_alive_died_* a4_hhmember_gender_*
 foreach var of varlist `r(varlist)' {
@@ -474,6 +476,7 @@ restore
 ***************************************************************
 
 preserve
+drop starttime endtime
 renpfix R_mor_  //Removing R_mor_ otherwise variable name length is exceeding 
 ds block_name gp_name village a12_water_source_prim a5_hhmember_relation_* , has (type numeric)
 foreach var of varlist `r(varlist)' {
@@ -521,6 +524,7 @@ export excel _R_mor_reason_yes_jjm__77 R_mor_reason_yes_jjm__77 R_mor_oth_reason
 collapse (sum) _*
 export excel using "$PathTables/responses.xlsx", sheet("Multiple_choice_others") sheetreplace firstrow(varlabels)
 restore
+
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------
@@ -720,8 +724,10 @@ br village unique_id_num R_mor_last_5_years_pregnant_* R_mor_last_5_years_preg_o
 br village R_mor_submissiondate unique_id_num R_mor_enum_name_f R_mor_child_stillborn_num_* total_stillborn  R_mor_child_died_num_* total_childdiedless24 total_childdiedmore24 if total_stillborn != 0 | total_childdiedless24 !=0 | total_childdiedmore24 != 0
 
 collapse (sum) R_mor_women_child_bear_count_f total_last5preg_women total_notlast5preg_women total_currently_preg total_stillborn total_childlivingnum total_notlivingchild total_childdiedless24 total_childdiedmore24 total_miscarriages visitors  perm_5years total_minor_preg, by (village)
+
 egen total_live_births = rowtotal(total_childlivingnum total_notlivingchild total_childdiedless24 total_childdiedmore24)
-egen total_deaths = rowtotal(total_stillborn total_childdiedless24 total_childdiedmore24)
+
+egen total_deaths = rowtotal(total_childdiedless24 total_childdiedmore24)
 label variable total_live_births "Total Births in the village"
 label variable total_deaths "Total deaths in the village"
 label variable R_mor_women_child_bear_count_f "Total child bearing women"
@@ -1249,6 +1255,9 @@ restore
 
 
 
+//PAUSE
+
+
 /*--------------------------------------------------------------------------------------------------------------------------------------
                                                        SECTION 6 - WASH SECTION
 -----------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1595,3 +1604,358 @@ br village R_mor_submissiondate unique_id_num R_mor_enum_name_f R_mor_child_stil
 collapse (sum) R_mor_women_child_bear_count_f total_last5preg_women total_notlast5preg_women total_currently_preg total_stillborn total_childlivingnum total_notlivingchild total_childdiedless24 total_childdiedmore24 total_miscarriages visitors  perm_5years, by (TC)
 
 restore
+
+
+
+
+
+
+
+
+//total households (use baseline census data)
+//number of screened households (existing data)
+//HH available for intervew (esiating data)
+//Total child-bearing age women(15-49)
+//No. of interviews compl. eligible women
+// Total respondents Preg. (currently)
+// Total respondents Pregnant (5 yrs)
+// Total Miscarriages
+// Total U5 live Births
+// Total U5 Deaths
+// U5 child deaths per 1000 live births
+
+
+/*************************************************************
+// IMPORTING ENDLINE CENSUS DATA 
+**************************************************************/
+
+//use  "${DataPre}1_1_Census_cleaned.dta", clear
+
+//Archi - I need to import endline census data 
+use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+gen total_households = 1
+
+gen total_avail_households = .
+replace total_avail_households = 1 if R_E_resp_available == "1"
+replace total_avail_households = 0 if total_avail_households == . 
+
+drop village
+rename R_E_village_name_str village
+keep village total_households total_avail_households
+
+export excel village total_households total_avail_households using "${DataTemp}Mortality_quality.xlsx", sheet("BL_HH_stats") sheetreplace firstrow(varlabels)
+
+
+//to find screened IDs
+use  "${DataPre}1_1_Census_cleaned.dta", clear
+
+ drop if R_Cen_consent != 1
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+rename R_Cen_village_str village
+
+keep C_Screened village
+
+collapse(sum) C_Screened, by (village)
+
+save "${DataTemp}Mortality_qualityscreened_dta.dta", replace
+
+
+/////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
+import excel "${DataTemp}Mortality_quality.xlsx", sheet("BL_HH_stats") firstrow clear
+
+
+collapse (sum) total_households total_avail_households, by (village)
+
+merge 1:1 village using "${DataTemp}Mortality_qualityscreened_dta.dta"
+
+drop if village == "Badaalubadi" | village == "Hatikhamba" 
+
+drop _merge
+
+save "${DataTemp}Mortality_quality_dta.dta", replace
+
+
+
+//importaing file from mortality quality sheet created using mortality data
+
+
+//ds comb_child_living_num comb_child_notliving_num comb_child_stillborn_num comb_child_alive_died_less24_num comb_child_alive_died_more24_num comb_num_living_null comb_num_notliving_null comb_num_stillborn_null comb_num_less24_null comb_num_more24_null comb_child_died_lessmore_24_num comb_child_died_u5_count
+
+
+import excel "${Personal}Mortality_quality.xlsx", sheet("last_5_preg") firstrow clear
+
+rename Totalchildbearingwomen Total_CBW
+
+keep Total_CBW EnumeratortofillupVillageN Totalwomenpregnantinthelast Totalnoofchildrenwhoareli Totalnoofchildrenwhoareal TotalBirthsinthevillage Totalnoofstillbornchildren Totalnoofchildrendiedwithi Totalnoofchildrendiedafter Totaldeathsinthevillage Totalnoofmiscarriages 
+
+rename EnumeratortofillupVillageN village
+rename Totalnoofchildrenwhoareli child_living_num
+rename Totalnoofchildrenwhoareal child_notliving_num
+rename  TotalBirthsinthevillage total_live_births
+rename  Totalnoofstillbornchildren child_stillborn_num
+rename Totalnoofchildrendiedwithi child_alive_died_less24_num
+rename Totalnoofchildrendiedafter child_alive_died_more24_num
+rename Totaldeathsinthevillage total_deaths
+
+save "${DataTemp}Mortality_quality_last_5_preg.dta", replace
+
+
+//importing in HH availability infor for mortality survey 
+import excel "${Personal}Mortality_quality.xlsx", sheet("HH_availability_status") firstrow clear
+
+keep EnumeratortofillupVillageN Totalhouseholdspresent Totalnoofavailablehousehold
+
+rename Totalhouseholdspresent total_households
+rename Totalnoofavailablehousehold total_avail_households
+rename EnumeratortofillupVillageN village
+
+keep village total_households total_avail_households
+save "${DataTemp}Mortality_quality_HH_avail.dta", replace
+
+merge 1:1 village using "${DataTemp}Mortality_quality_last_5_preg.dta"
+
+drop _merge
+
+save "${DataTemp}Mortality_CBW_HH_avail.dta", replace
+
+//endline dataset (without revisit data)
+
+//this is present in the HFC data creation do file
+use "${DataTemp}CBW_merge_Endline_census.dta", clear
+
+
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+ 
+
+/*Link to the github issue- 
+https://github.com/DevInnovationLab/i-h2o-india/issues/120#issue-2267688873
+
+For the unique ID- 50401-117-009
+We must manually add these details for the child that died in the mortality section.
+FATHER NAME --MUNA HIMIRIKA
+DEATH --GENDER (MALE)
+BIRNARAYANPUR
+
+*/
+
+
+ds comb_child_living_num comb_child_notliving_num comb_child_stillborn_num comb_child_alive_died_less24_num comb_child_alive_died_more24_num comb_num_living_null comb_num_notliving_null comb_num_stillborn_null comb_num_less24_null comb_num_more24_null comb_child_died_lessmore_24_num comb_child_died_u5_count
+
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+}
+
+
+
+drop if R_E_village_name_str == "BK Padar" | R_E_village_name_str == "Nathma" | R_E_village_name_str ==   "Gopi Kankubadi" | R_E_village_name_str == "Kuljing"
+
+gen total_avail_CBW = .
+replace total_avail_CBW = 1 if comb_resp_avail_comb == 1
+replace total_avail_CBW = 0 if total_avail_CBW != 1 & comb_resp_avail_comb  != .
+
+
+
+//Village wise
+
+
+collapse (sum)  comb_child_living_num comb_child_notliving_num comb_child_stillborn_num comb_child_alive_died_less24_num comb_child_alive_died_more24_num comb_num_living_null comb_num_notliving_null comb_num_stillborn_null comb_num_less24_null comb_num_more24_null comb_child_died_lessmore_24_num comb_child_died_u5_count  total_avail_CBW, by(R_E_village_name_str)
+
+
+egen total_live_births = rowtotal(comb_child_living_num comb_child_notliving_num comb_child_alive_died_less24_num comb_child_alive_died_more24_num)
+
+egen total_deaths = rowtotal(comb_child_alive_died_less24_num comb_child_alive_died_more24_num)
+
+//gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
+
+
+
+label variable total_live_births "Total Births in the village"
+label variable total_deaths "Total deaths in the village"
+//label variable U5_crude_mortality_rate "U5 child deaths per 1000 live births"
+
+renpfix comb_
+
+rename R_E_village_name_str  village
+
+
+merge 1:1 village using "${DataTemp}Mortality_quality_dta.dta"
+
+drop if _merge == 2
+
+rename _merge BL_EL 
+
+
+append using "${DataTemp}Mortality_CBW_HH_avail.dta"
+
+
+//drop comb_num_living_null comb_num_notliving_null comb_num_stillborn_null comb_num_less24_null comb_num_more24_null comb_child_died_lessmore_24_num total_unavail_households perc_unavail_HH v_total_unavail_households
+
+
+
+collapse (sum)  child_living_num child_notliving_num child_stillborn_num child_alive_died_less24_num child_alive_died_more24_num child_died_u5_count  total_avail_CBW
+
+
+egen total_live_births = rowtotal(comb_child_living_num comb_child_notliving_num comb_child_alive_died_less24_num comb_child_alive_died_more24_num)
+
+egen total_deaths = rowtotal(comb_child_alive_died_less24_num comb_child_alive_died_more24_num)
+
+
+label variable total_live_births "Total Births in the village"
+label variable total_deaths "Total deaths in the village"
+//label variable U5_crude_mortality_rate "U5 child deaths per 1000 live births"
+
+
+rename R_E_village_name_str  Village
+
+
+merge 1:1 Village using "${DataTemp}Mortality_quality_dta.dta"
+
+drop if _merge == 2
+
+drop _merge
+
+drop comb_num_living_null comb_num_notliving_null comb_num_stillborn_null comb_num_less24_null comb_num_more24_null comb_child_died_lessmore_24_num total_unavail_households perc_unavail_HH v_total_unavail_households
+
+
+collapse (sum) total_live_births total_deaths total_households total_screened_HH  
+
+gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
+
+
+
+
+restore
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+
+
+ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+M_key_creation 
+
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+drop if  comb_name_comb_woman_earlier == ""
+	 
+rename key R_E_key	 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
+
+cap drop dup_HHID
+bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+//here we find that on UID - 30202109013  there are two women with the same name that is "Pinky Khandagiri" but they are different people so we have to rename one women so in this case I am renaming unmarried Pinky Khandagrii by adding a suffix underscore in her name 
+
+replace comb_name_comb_woman_earlier = "Pinky Kandagari_" if  unique_id == "30202109013" & comb_preg_hus == "444" & comb_name_comb_woman_earlier == "Pinky Kandagari" 
+
+gen Var_type = "C"
+	 
+save "${DataTemp}temp1.dta", replace
+
+
+ //using new women data from main endline census 
+ 
+ * ID 22
+//new women
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+M_key_creation
+//drop if n_resp_avail_cbw==.
+//Archi - I commente dthis out because we want all the values
+// List all variables starting with "n_"
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw* {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+	 
+drop if  comb_name_comb_woman_earlier == ""
+	 
+rename key R_E_key	 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
+	 
+gen Var_type = "N"
+ 
+ 
+save "${DataTemp}temp2.dta", replace
+
+use "${DataTemp}temp1.dta", clear
+append using "${DataTemp}temp2.dta"
+unique R_E_key key3
+unique unique_id comb_name_comb_woman_earlier
+
+cap drop dup_HHID
+bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+save "${DataTemp}temp3.dta", replace
+
+export excel Village total_households total_unavail_households v_total_unavail_households perc_unavail_HH total_screened_HH using "${DataTemp}Mortality_quality.xlsx", sheet("BL_CBW_stats") sheetreplace firstrow(varlabels)
+*/

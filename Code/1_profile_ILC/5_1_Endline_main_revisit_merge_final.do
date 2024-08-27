@@ -269,7 +269,7 @@ foreach var of varlist *_cbw* {
 drop if  comb_name_comb_woman_earlier == ""
 	 
 rename key R_E_key	 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id) keep(3) nogen
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
 
 cap drop dup_HHID
 bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
@@ -279,6 +279,8 @@ tab dup_HHID
 //here we find that on UID - 30202109013  there are two women with the same name that is "Pinky Khandagiri" but they are different people so we have to rename one women so in this case I am renaming unmarried Pinky Khandagrii by adding a suffix underscore in her name 
 
 replace comb_name_comb_woman_earlier = "Pinky Kandagari_" if  unique_id == "30202109013" & comb_preg_hus == "444" & comb_name_comb_woman_earlier == "Pinky Kandagari" 
+
+gen Var_type = "C"
 	 
 save "${DataTemp}temp1.dta", replace
 
@@ -305,9 +307,12 @@ foreach var of varlist *_cbw* {
 drop if  comb_name_comb_woman_earlier == ""
 	 
 rename key R_E_key	 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id) keep(3) nogen
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
 	 
- save "${DataTemp}temp2.dta", replace
+gen Var_type = "N"
+ 
+ 
+save "${DataTemp}temp2.dta", replace
 
 use "${DataTemp}temp1.dta", clear
 append using "${DataTemp}temp2.dta"
@@ -320,7 +325,7 @@ count if dup_HHID > 0
 tab dup_HHID
 
 save "${DataTemp}temp3.dta", replace
-
+save "${DataTemp}CBW_merge_Endline_census.dta", replace
  
  //women data from endline revisit survey 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_CBW_followup.dta", clear
@@ -335,6 +340,9 @@ drop if comb_name_comb_woman_earlier == ""
  gen comb_type = 1
  
  rename key R_E_key
+ 
+gen Var_type = "R"
+ 
  merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
  
  unique unique_id comb_name_comb_woman_earlier
