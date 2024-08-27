@@ -2835,6 +2835,76 @@ stargazer(perc,
 
 
 
+#--------------------------------------------------------------------------------------------------------------
+# To do: In Monsoon Round 1 x% Treatment samples and x% of Control samples tested positive for E.coli 
+#For comparison, the pooled average from dry seasons was x% Treatment and x% Control
+#------------------------------------------------------------------------------------
+
+# Merge datasets based on the 'village_name' variable
+merged_data <- merge(combined_data, village_details[, c("village", "assignment")], 
+                     by = "village", all.x = TRUE)
+
+
+# Assuming combined_data is your dataframe
+merged_data <- merged_data %>%
+  mutate(date = as.Date(date))
+
+# Convert dates to POSIXct and extract month and year
+
+
+merged_data <- merged_data %>%
+  mutate(
+    month = month(date),               # Extract month
+    year = year(date),                 # Extract year
+    year_month = as.Date(paste(year, month, "01", sep = "-"), format = "%Y-%m-%d")  # Combine year and month
+  )
+
+View(merged_data)
+
+unique(merged_data$sample_type)
+
+# Replace specific values
+merged_data<- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "tap_sample_id", "Tap", sample_type))
+
+merged_data<- merged_data %>%
+  mutate(sample_type = ifelse(sample_type == "stored_sample_id", "Stored", sample_type))
+
+
+#merged_data_f <- merged_data %>% filter(sample_type == "Tap" & assignment == "C")
+
+merged_data_f <- merged_data %>% filter(sample_type == "Tap")
+
+View(merged_data_f)
+names(merged_data_f)
+
+
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = as.factor(year_month)) %>%
+  mutate(year_month = case_when(
+    year_month == "2023-10-01" ~ "Oct23",
+    year_month == "2023-11-01" ~ "Nov23",
+    year_month == "2024-02-01" ~ "Feb24",
+    year_month == "2024-03-01" ~ "Mar24",
+    year_month == "2024-04-01" ~ "Apr24",
+    year_month == "2024-05-01" ~ "May24",
+    year_month == "2024-07-01" ~ "July24",
+    year_month == "2024-08-01" ~ "August24",
+    TRUE ~ as.character(year_month)  # Keep the original value if no match
+  ))
+
+# Convert back to factor if needed
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = as.factor(year_month))
+
+
+# Manually specify the order of levels for year_month
+merged_data_f <- merged_data_f %>%
+  mutate(year_month = factor(year_month, levels = c("Oct23", "Nov23", "Feb24", "Mar24", "Apr24", "May24", "July24", "August24")))
+
+
+
+
 #################################################################
 #
 ###########################################################################

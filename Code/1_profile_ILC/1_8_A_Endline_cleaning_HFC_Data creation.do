@@ -164,6 +164,47 @@ gen Cen_Type=2
 append using "${DataTemp}temp.dta"
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
+
+
+/* ---------------------------------------------------------------------------
+* ID 19B and 20B: Child death and birth info
+ ---------------------------------------------------------------------------*/
+ * ID 19B
+
+
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+
+key_creation 
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=3
+save "${DataTemp}temp.dta", replace
+
+* ID 20B
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+key_creation 
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=2
+append using "${DataTemp}temp.dta"
+save "${DataFinal}1_1_Endline_Mortality_19B_20B_part2.dta", replace
+
+
+
 /* ---------------------------------------------------------------------------
 * Long indivual data from the roster
  ---------------------------------------------------------------------------*/

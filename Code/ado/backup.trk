@@ -1,4 +1,4 @@
-* 000000213
+* 000000223
 *! version 1.0.0
 * Do not erase or edit this file
 * It is used by Stata to track the ado and help
@@ -1452,4 +1452,20 @@ d Support: email jseiden@@g.harvard.edu
 d 
 f c\clustersampsim.ado
 f c\clustersampsim.sthlp
+e
+S http://www.stata-journal.com/software/sj15-2
+N st0286_2.pkg
+D 25 Jul 2024
+U 22
+d SJ15-2 st0286_2. Update: Sample size, power,...
+d Update: Sample size, power, and detectable
+d   difference determination for cluster
+d   randomized controlled trials
+d by Karla Hemming, University of Birmingham
+d    Jen Marsh, University of Birmingham
+d Support:  k.hemming@@bham.ac.uk
+d After installation, type help ^clustersampsi^
+f c\clustersampsi.ado
+f c\clustersampsi.hlp
+f c\clustersampsi.dlg
 e
