@@ -1704,7 +1704,6 @@ restore
 
 
 
-Mortality tables start
 
 
 /*-------------------------------------------------------------------------------------------------------------------------
@@ -2070,7 +2069,6 @@ drop _merge
 //appending with the data of other 4 villages
 append using "${DataTemp}Mortality_CBW_HH_avail.dta"
 
-
 //finding village wise mortality rate
 
 *******************************************************
@@ -2136,7 +2134,7 @@ gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
 
 drop child_stillborn_num
 
-order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num total_live_births child_alive_died_less24_num child_alive_died_more24_num total_deaths U5_crude_mortality_rate 
+order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num total_live_births total_deaths U5_crude_mortality_rate 
 
 
 
@@ -2190,8 +2188,8 @@ replace numbers = round(numbers, 0.01)
 	
 global Variables categories numbers
 texsave $Variables using "${Table}Mortality_Numbers_all_villages.tex", ///
-        hlines (3 6 9  12) autonumber ///
-        title("Aggregate Mortality numbers") footnote ("Notes: This table presents U5 child mortality rate for each village. \newline The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline Clarifications: \newline * : The data for Nathma, Kuljing, Gopi Kankubadi and BK Padar is included in these numbers. These are the villages that were surveyed in Dec/Jan. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023) \newline 2:Total Live births is calculated by = U5 kids living with respondent + U5 kids alive but not living with the respondent + U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 3: Total deaths is calculated by = U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000")replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Categories}")
+        hlines (3 6 10  12) autonumber ///
+        title("Aggregate Mortality numbers") footnote ("Notes: This table presents U5 child mortality rate for each village. \newline The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline Clarifications: \newline * : The data for Nathma, Kuljing, Gopi Kankubadi and BK Padar is included in these numbers. These are the villages that were surveyed in Dec/Jan. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023) \newline 2:Total Live births is calculated by = U5 kids living with respondent + U5 kids alive but not living with the respondent + U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 3: Total deaths is calculated by = U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Categories}")
 
 
 
