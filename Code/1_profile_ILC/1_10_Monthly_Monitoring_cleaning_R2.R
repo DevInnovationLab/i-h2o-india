@@ -613,17 +613,25 @@ idexx$assignment <- fct_recode(idexx$assignment,
 
 #Calculating MPN for each IDEXX test
 #Calculating MPN for each IDEXX test
-idexx <- idexx%>%
+idexx <- idexx %>%
   mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
-         cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
-         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
-  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+         cf_mpn  = ifelse(is.na(quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000")), 2419,
+                          quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000")),
+         cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))
+
+
+#idexx <- idexx%>%
+#mutate(cf_95lo = quantify_95lo(large_c_yellow, small_c_yellow, "qt-2000"),
+#cf_mpn  = quantify_mpn(large_c_yellow, small_c_yellow, "qt-2000"),
+#cf_95hi = quantify_95hi(large_c_yellow, small_c_yellow, "qt-2000"))%>%
+#mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+
 
 idexx <- idexx%>%
   mutate(ec_95lo = quantify_95lo(large_c_flurosce, small_c_flurosce, "qt-2000"),
-         ec_mpn  = quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000"),
-         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))%>%
-  mutate_at(vars(ec_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
+         ec_mpn  = ifelse(is.na(quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000")), 2419,
+                          quantify_mpn(large_c_flurosce, small_c_flurosce, "qt-2000")),
+         ec_95hi = quantify_95hi(large_c_flurosce, small_c_flurosce, "qt-2000"))
 
 
 

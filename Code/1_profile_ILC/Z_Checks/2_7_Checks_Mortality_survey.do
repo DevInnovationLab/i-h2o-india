@@ -1969,7 +1969,10 @@ OBJECTIVE: In endline census module we have an opion to mark those women from ba
 ****************************************************************/
 
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
-use "${DataTemp}CBW_merge_Endline_census.dta", clear
+
+//We are using final merged dataset between main endline census and revisit dataset
+use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
+
 
 gen exclude_CBW_BL = 0
 replace exclude_CBW_BL = 1 if comb_resp_avail_comb == 8
@@ -2003,10 +2006,12 @@ save "${DataTemp}adjusted_total_CBW_BL_EL.dta", replace
 /**************************************************
 IMPORTING ENDLINE LONG DATASET FOR CHILD BEARING WOMEN 
 **************************************************/
-//endline dataset (without revisit data)
+//endline dataset (with revisit data)
 
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
-use "${DataTemp}CBW_merge_Endline_census.dta", clear
+
+//We are using final merged dataset between main endline census and revisit dataset
+use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
 
 
 *** Manual corrections
@@ -2079,8 +2084,8 @@ preserve
 keep village total_last5preg_CBW total_live_births total_deaths
 gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
 
-label variable total_live_births "Total Live Births in the village\textsuperscript{2}"
-label variable total_deaths "Total deaths in the village\textsuperscript{3}"
+label variable total_live_births "Total live births in the village\textsuperscript{2}"
+label variable total_deaths "Total U5 deaths in the village\textsuperscript{3}"
 label variable U5_crude_mortality_rate "U5 child deaths per 1000 live births\textsuperscript{4}"
 label variable total_last5preg_CBW "Total eligible women pregnant in the last 5 years\textsuperscript{1}"
 label variable village "Village"
@@ -2112,7 +2117,7 @@ label variable total_deaths"total_live_births\textsuperscript{2}"*/
 
 texsave $Variables using "${Table}Mortality_Numbers_village_wise.tex", ///
         title("Mortality Numbers village wise") autonumber ///
-		footnote("Notes: This table presents U5 child mortality rate for each village. \newline The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline Clarifications: \newline * : The numbers for these 4 villages have been used for  mortality survey conducted in Dec/Jan. This survey was administered all the households in the village as compared to endline census which was only administered to screend households. Screened households are those where pregnant women or U5 children are present. This screening criteria was dervied from baseline census numbers \newline 1: Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 2:Total Live births is calculated by = U5 kids living with respondent + U5 kids alive but not living with the respondent + U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 3: Total deaths is calculated by = U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000") replace varlabels frag location(htbp) 
+		footnote(\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline * : The mortality survey for these four villages in Dec/Jan covered all households, unlike the endline census, which only included screened households (those with pregnant women or children under 5). The screening was done again for these villages. \newline 1: Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000") replace varlabels frag location(htbp) 
 		
 		
 
@@ -2166,8 +2171,8 @@ rename v1 numbers
 
 order categories numbers
 
-replace categories = "Total Live Births in the village(2)" if categories == "total_live_births"
-replace categories = "Total deaths in the village(3)" if categories == "total_deaths"
+replace categories = "Total live births in the village(2)" if categories == "total_live_births"
+replace categories = "Total U5 deaths in the village(3)" if categories == "total_deaths"
 replace categories = "U5 child deaths per 1000 live births(4)" if categories == "U5_crude_mortality_rate"
 replace categories = "No. of U5 kids living with the respondent currently" if categories == "child_living_num"
 replace categories = "No. of alive U5 kids not living with the respondent currently" if categories == "child_notliving_num"
@@ -2175,12 +2180,12 @@ replace categories = "No. of alive U5 kids not living with the respondent curren
 replace categories = "No. of kids that died in less than 24 hours" if categories == "child_alive_died_less24_num"
 replace categories = "No. of kids that died after 24 hours" if categories == "child_alive_died_more24_num"
 replace categories = "Total eligible women avaialble to give survey" if categories == "total_avail_CBW"
-replace categories = "Total eligible** women present" if categories == "Total_CBW"
+replace categories = "Total eligible women present**" if categories == "Total_CBW"
 replace categories = "Total eligible women pregnant in the last 5 years" if categories == "total_last5preg_CBW"
 
 replace categories = "Total screened households(1)" if categories == "C_Screened"
 
-replace categories = "Total housheholds present*" if categories == "total_households"
+replace categories = "Total housheholds present" if categories == "total_households"
 replace categories = "Total housheholds available for survey" if categories == "total_avail_households"
 
 
@@ -2191,7 +2196,8 @@ replace numbers = round(numbers, 0.01)
 global Variables categories numbers
 texsave $Variables using "${Table}Mortality_Numbers_all_villages.tex", ///
         hlines (3 6 10  12) autonumber ///
-        title("Aggregate Mortality numbers") footnote ("Notes: This table presents U5 child mortality rate for each village. \newline The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline Clarifications: \newline * : The data for Nathma, Kuljing, Gopi Kankubadi and BK Padar is included in these numbers. These are the villages that were surveyed in Dec/Jan. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023) \newline 2:Total Live births is calculated by = U5 kids living with respondent + U5 kids alive but not living with the respondent + U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 3: Total deaths is calculated by = U5 kids died in less than 24 hours + U5 kids died between 24 hours and at the age 5 years \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp) headerlines("&\multicolumn{8}{c}{Categories}")
+        title("Aggregate Mortality numbers") footnote (\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years). \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023). \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp)  headerlines("&\multicolumn{8}{c}{Categories}") 
+
 
 
 

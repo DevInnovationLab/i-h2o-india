@@ -469,19 +469,7 @@ df.rep<- rbind(df.rep, Total)
 stargazer(df.rep, summary=F, title= "Distribution of Replacements by Village",float=F,rownames = F,
           covariate.labels=NULL, out=paste0(overleaf(),"Table/replacements_idexx_R2.tex"))
 
-
-
-star.out <- stargazer(df.rep, 
-                      summary = FALSE, 
-                      title = "Distribution of Replacements by Village", 
-                      float = FALSE,
-                      rownames = FALSE,
-                      covariate.labels = NULL,
-                      type = "latex")
-
-
-
-
+View(df.rep)
 
 
 
@@ -508,10 +496,10 @@ replace_percentage <- ms_consent %>%
   mutate(percentage = (count / sum(count)) * 100)
 
 
-#View(replace_percentage)
+View(replace_percentage)
 
 stargazer(replace_percentage, summary=F, title= "Reasons of Replacement breakdown",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/replacement_reason_idexx.tex"))
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/replacement_reason_idexx_R2.tex"))
 
 
 
@@ -647,7 +635,7 @@ summary_counts <- ms_consent %>%
 print(summary_counts)
 
 stargazer(summary_counts, summary=F, title= "Cases where FC is lower than TC",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/TC_lower_than_FC_idexx.tex"))
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/TC_lower_than_FC_idexx_R2.tex"))
 
 
 #------------------------------------------------------------------------
@@ -684,7 +672,7 @@ tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
 print(tests)
 
 # Save the plot
-ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
+ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_test_types_R2.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
 
 #cases of HR testing village wise and dates for it 
 #_______________________________________________________________
@@ -740,7 +728,7 @@ for (var in variables_H) {
 
 # Save the plots as PNG files
 for (var in names(plots)) {
-  ggsave(paste0(overleaf(),"Figure/scatter_plot_", var, ".png"), plot = plots[[var]], bg = "white", width = 10, height = 6)
+  ggsave(paste0(overleaf(),"Figure/scatter_plot_R2", var, ".png"), plot = plots[[var]], bg = "white", width = 10, height = 6)
 }
 
 
@@ -762,7 +750,7 @@ tests <- ggplot(ms_melt, aes(x = variable, y = value)) +
   facet_wrap(~ R_Cen_village_name_str) # Facet wrap by village
 print(tests)
 
-ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_village_test_types.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
+ggplot2::ggsave(paste0(overleaf(), "Figure/boxplot_village_test_types_R2.png"), tests, bg = "white", width = 5, height = 5, dpi = 200)
 
 
 #water_source_prim
@@ -797,7 +785,7 @@ print(water_source_percentage)
 #View(water_source_percentage)
 
 stargazer(water_source_percentage, summary=F, title= "Primary water source breakdown",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/Prim_source_idexx.tex"))
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/Prim_source_idexx_R2.tex"))
 
 
 #-------------------------------------------------------------------------------------------------------------------
@@ -820,7 +808,7 @@ response_percentages <- response_counts %>%
 print(response_percentages)
 
 stargazer(response_percentages, summary=F, title= "",float=F,rownames = F,
-          covariate.labels=NULL, out=paste0(overleaf(),"Table/sec_source_idexx.tex"))
+          covariate.labels=NULL, out=paste0(overleaf(),"Table/sec_source_idexx_R2.tex"))
 
 var_label(ms_consent$water_source_sec_1) <- "JJM"
 var_label(ms_consent$water_source_sec_2) <- "Govt provided community standpipe"
@@ -880,7 +868,7 @@ stargazer(sums_long,
           title = "Secondary water source breakdown", 
           float = FALSE, 
           rownames = FALSE, 
-          out = paste0(overleaf(), "Table/Sec_source_break_idexx.tex"))
+          out = paste0(overleaf(), "Table/Sec_source_break_idexx_R2.tex"))
 
 
 
@@ -952,7 +940,7 @@ stargazer(combined_table,
           title = "Breakdown of Secondary Water Source Usage", 
           float = FALSE, 
           rownames = FALSE, 
-          out = paste0(overleaf(), "Table/Sec_source_combined_breakdown.tex"))
+          out = paste0(overleaf(), "Table/Sec_source_combined_breakdown_R2.tex"))
 
 # Print the combined table
 print(combined_table)
@@ -966,7 +954,7 @@ star.out <- stargazer(combined_table, summary=F, title= "Breakdown of Secondary 
 #star.out <- sub("Yes to secondary source","\hline", star.out) 
 
 # Example: Insert \hline after the header row
-starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source_combined_breakdown.tex"))
+starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source_combined_breakdown_R2.tex"))
 
 
 
@@ -978,7 +966,7 @@ jjm_drinking_sum <- ms_consent %>%
   mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
 print(jjm_drinking_sum)
 
-write_csv(ms_consent, paste0(user_path(), "/3_final/2_11_monthly_follow_up_cleaned_consented.csv"))
+write_csv(ms_consent, paste0(user_path(), "/3_final/2_11_monthly_follow_up_cleaned_consented_R2.csv"))
 
 #-----------------------------------IDEXX Data Check-----------------------------------
 
@@ -1137,3 +1125,4 @@ chlorine_stats_wide <- stargazer(chlorine_stats_wide, summary=FALSE,
                                  out=paste0(overleaf(),"Table/chlorine_stats_monthly_r2.tex"))
 
 
+View(chlorine_stats_wide)
