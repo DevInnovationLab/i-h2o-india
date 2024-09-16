@@ -516,6 +516,15 @@ if (correct_replacement) {
   cat("The replacement is incorrect. Some values do not match 510406.\n")
 }
 
+#--------------------Cleaning monthly survey data/transforming variables----------------------------
+
+#Assigning more meaningful variable names
+ms <- ms%>%
+  rename(fc_tap_avg = "tap_water_fc")%>%
+  rename(fc_stored_avg = "stored_water_fc")%>%
+  rename(tc_tap_avg = "tap_water_tc")%>%
+  rename(tc_stored_avg = "stored_water_tc")
+
 
 
 #---------------------IDEXX Data Cleaning------------------------------------
@@ -597,6 +606,11 @@ idexx$sample_type <- idexx$sample_type%>%
   factor()%>%
   fct_recode("Stored" = "sample_ID_stored",
              "Tap" = "sample_ID_tap")
+
+#Renaming bag ID variables
+idexx <- idexx%>%
+  rename("bag_ID_tap" = tap_bag_id)%>%
+  rename("bag_ID_stored" = stored_bag_id)
 
 #need to relabel idexx variables
 

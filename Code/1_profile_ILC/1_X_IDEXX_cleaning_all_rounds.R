@@ -136,6 +136,12 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_
 
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_data_R3.csv"))
 
+idexx_r4 <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned.csv"))
+
+
+idexx_r5 <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned_R2.csv"))
+
+
 #Need to load in the R4-R6 data in the monsoon and clean in this form. Do not want to use the other script for this cleaning
 #Need to copy/paste other sections and then combine new datasets so it can be easily run in the manuscript code
 
@@ -1193,6 +1199,19 @@ write_csv(idexx_r3,paste0(user_path(),"/3_final/R3_idexx_master_cleaned.csv"))
 
 
 
+###-------------------------Round 4 data cleaning------------------------#####
+
+
+#Renaming panchayat variable
+idexx_r4 <- idexx_r3%>%
+  mutate(panchayat_village = `Panchat village`)
+
+###-------------------------Round 5 data cleaning------------------------#####
+
+#Renaming panchayat variable
+idexx_r5 <- idexx_r5%>%
+  mutate(panchayat_village = `Panchat village`)
+
 
 
 #COMBINING DATASETS --------------------------------------------------------
@@ -1231,8 +1250,24 @@ idexx_r3_comb <- idexx_r3%>%
   mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
+idexx_r4_comb <- idexx_r4%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "R4")%>%
+  mutate(pooled_round = "FU")
+
+idexx_r5_comb <- idexx_r5%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "R5")%>%
+  mutate(pooled_round = "FU")
+
 #combining
-idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb)
+idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb, idexx_r4_comb, idexx_r5_comb)
 
 #Writing/updating final file
 write_csv(idexx_comb,paste0(user_path(),"/5_lab data/idexx/cleaned/POOLED_idexx_master_cleaned.csv"))
