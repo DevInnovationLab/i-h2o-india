@@ -480,7 +480,7 @@ cl_p4 <- ggplot(data = mon_summary_percent_2) +
                      expand = c(0,0))+
   labs(x = "Sample Location", 
        y = "% Positive for Free Chlorine (> 0.1 mg/L)",
-       title = "Positive chlorine samples during weekly monitoring - April-June 2024"
+       title = "Positive chlorine samples during weekly monitoring - February-September 2024"
        )+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))

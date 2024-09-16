@@ -264,14 +264,16 @@ cl_p1 <- ggplot(data = mon_summary_weekly) +
                   color = chlorine_test))+
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
-  
     scale_y_continuous(
                      limits = c(0, 2.0),
                      expand = c(0,0))+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
     labs(x = "Date", 
-       y = "Chlorine Concentration (mg/L)",
+       y = "Free Chlorine Concentration (mg/L)",
        color = "Sample Type",
-       title = (paste0("Chlorine Monitoring - February-August 2024")),
+       title = (paste0("Chlorine Monitoring - February-September 2024")),
        caption = "Concentrations were averaged on a weekly-basis across the 10 treatment villages.")+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))

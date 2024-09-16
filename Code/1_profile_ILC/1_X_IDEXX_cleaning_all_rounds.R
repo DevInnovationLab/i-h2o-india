@@ -136,6 +136,11 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_
 
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_data_R3.csv"))
 
+#Need to load in the R4-R6 data in the monsoon and clean in this form. Do not want to use the other script for this cleaning
+#Need to copy/paste other sections and then combine new datasets so it can be easily run in the manuscript code
+
+
+
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
 

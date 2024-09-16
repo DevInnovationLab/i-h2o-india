@@ -1445,9 +1445,9 @@ gv_refill <- gv_refill%>%
 
 #Selecting for chlorine data
 mon <- mon%>%
-  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc)%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
-               cols = c(nearest_tap_fc, farthest_tap_fc))
+               cols = c(nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc))
 
 
 
@@ -1469,14 +1469,18 @@ mon <- mon%>%
 mon$chlorine_test <- factor(mon$chlorine_test)
 mon$chlorine_test <- fct_recode(mon$chlorine_test,
                                 "Nearest Tap" = "nearest_tap_fc",
-                                "Farthest Tap" = "farthest_tap_fc")
+                                "Nearest Stored" = "nearest_stored_fc",
+                                "Farthest Tap" = "farthest_tap_fc",
+                                "Farthest Stored" = "farthest_stored_fc")
 
 
 #Recoding chlorine concentration sample types
 mon_summary$chlorine_test <- factor(mon_summary$chlorine_test)
 mon_summary$chlorine_test <- fct_recode(mon_summary$chlorine_test,
                                         "Nearest Tap" = "nearest_tap_fc",
-                                        "Farthest Tap" = "farthest_tap_fc")
+                                        "Nearest Stored" = "nearest_stored_fc",
+                                        "Farthest Tap" = "farthest_tap_fc",
+                                        "Farthest Stored" = "farthest_stored_fc")
 
 #Selecting data after February 13, the last date of modification
 mon_summary <- mon_summary%>%
@@ -1490,9 +1494,10 @@ mon_summary <- mon_summary%>%
                            chlorine_concentration < 0.1 ~ 0
   ))
 
-#Summarizing data on a weekly basis
+#Summarizing data on a weekly basis for taps only
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
+  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>%
   mutate(test_week = floor_date(test_date, unit = "week"))
 
 # Group by week and calculate the average concentration
@@ -1503,17 +1508,21 @@ mon_summary_weekly <- mon_summary_weekly%>%
             lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
             upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration)
 
+# Correcting negative lower CI values to be 0 instead
+mon_summary_weekly <- mon_summary_weekly%>%
+  mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
+
 #Summarizing percentage of samples that are positive for chlorine
 #by village
-# mon_summary_percent_1 <- mon_summary%>%
-#   group_by(village, chlorine_test) %>%
-#   summarise(
-#     "Number of Samples" = n(),
-#     "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
-# #aggregate
-# mon_summary_percent_2 <- mon_summary%>%
-#   group_by(chlorine_test) %>%
-#   summarise(
-#     "Number of Samples" = n(),
-#     "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+mon_summary_percent_1 <- mon_summary%>%
+  group_by(village, chlorine_test) %>%
+  summarise(
+    "Number of Samples" = n(),
+    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
+#aggregate
+mon_summary_percent_2 <- mon_summary%>%
+  group_by(chlorine_test) %>%
+  summarise(
+    "Number of Samples" = n(),
+    "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
 
