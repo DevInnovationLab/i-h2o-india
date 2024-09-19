@@ -526,6 +526,7 @@ export excel using "$PathTables/responses.xlsx", sheet("Multiple_choice_others")
 restore
 
 
+
 /*--------------------------------------------------------------------------------------------------------------------------------------
                                               SECTION 4 - WOMEN AND CHILD RELATED ESTIMATES
 -----------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1826,6 +1827,240 @@ save "${DataTemp}Mortality_BL_EL_HH_stats.dta", replace
 
 
 
+
+/****************************************************
+AGE DISTRIBUTION OF THE CHILDREN WHO ARE ALIVE
+
+Ojective: We need to get the number of kids present in every age group who are under 5 
+
+**********************************************************/
+
+//this gets created in the file - "GitHub\i-h2o-india\Code\1_profile_ILC\Z_preload\Endline_census_Preload.do"
+
+import excel "${DataPre}Endline_census_u5child_preload.xlsx", sheet("Sheet1") firstrow clear
+
+
+//dropping it as it is empty
+drop R_Cen_u5_child_pre_1
+
+
+//creating a long dataset 
+reshape long R_Cen_u5_child_pre_ R_Cen_a6_hhmember_age_ , i(unique_id) j(reshaped)
+
+drop if R_Cen_u5_child_pre_ == "" //this step makes sure that we are only keeping names of the U5 child
+
+
+//OBJECTIVE of the step below: we need to exclude those children from baseline census who no longer fall in the criteria. This is denoted by variable comb_child_caregiver_present. This variable has an option 8 which asks enum to mark those entries where the kid no longer falls in the U5 criteria. So, we are creating the dataset containing these entries to merge with the preload dataset above to drop such entries from getting counted
+ 
+preserve
+//this dataset gets created in the file- "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning_HFC_Data creation.do"
+use "${DataTemp}U5_Child_23_24_part1.dta", clear
+drop if comb_child_comb_name_label == ""
+br comb_child_breastfeeding comb_child_breastfed_num comb_child_age unique_id comb_child_comb_name_label  if comb_child_age > 5 & comb_child_age != .
+*TROUBLESHOOTING
+//Archi to do - after browsing I found this one case where child name "Krish Gouda" is marked as 6 years of age but in the variable comb_child_breastfed_num  (A45.1) Up to which months was ${N_child_u5_name_label} exclusively breastfed?) enum has marked the option - 888 (Child is still being breastfed) so this has to be corrected. 
+
+keep if comb_child_caregiver_present == 8
+rename comb_child_comb_name_label  R_Cen_u5_child_pre_ 
+save "${DataTemp}U5_cases_to_be_excluded.dta", replace
+restore 
+
+//I am doing m:m merge with 2 variables as key unique_id R_Cen_u5_child_pre_ since this is a long dataset so we need to make sure that only eligible names are dropped and unecessary values aren't dropped
+merge m:m unique_id R_Cen_u5_child_pre_  using"${DataTemp}U5_cases_to_be_excluded.dta", gen (match) keepusing(unique_id comb_child_caregiver_present R_Cen_u5_child_pre_ )
+
+//we have to drop these matched entries because these are the cases where U5 child is now no longer in the criteria
+drop if match == 3
+
+drop match
+
+//importing new member roster to get ages of new child 
+preserve
+use "${DataFinal}Endline_New_member_roster_dataset_final.dta", clear
+keep if comb_hhmember_age < 5
+keep unique_id comb_hhmember_name comb_hhmember_age 
+rename comb_hhmember_name R_Cen_u5_child_pre_
+rename comb_hhmember_age R_Cen_a6_hhmember_age_ 
+save "${DataTemp}New_U5_cases_for_append.dta", replace
+restore
+
+//we need to append new child data into this to get list of all kids
+append using "${DataTemp}New_U5_cases_for_append.dta"
+
+
+//mergingto get village names 
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", gen(vill_m) keepusing(R_E_village_name_str)
+
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+keep if R_Cen_u5_child_pre_ != ""
+
+keep if vill_m == 3
+
+drop vill_m
+
+
+*Generating indicator variables for each unique value of variables specified in the loop
+foreach v in R_Cen_a6_hhmember_age_ {
+	levelsof `v' //get the unique values of each variable
+	foreach value in `r(levels)' { //Looping through each unique value of each variable
+		//generating indicator variables
+		gen     `v'_`value'=0 
+		replace `v'_`value'=1 if `v'==`value' 
+		replace `v'_`value'=. if `v'==.
+		//labelling indicator variable with original variable's label and unique value
+		label var `v'_`value' "`: label (`v') `value''"
+	}
+	}
+
+collapse (sum) R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4, by( R_E_village_name_str)
+
+rename R_E_village_name_str village
+
+
+preserve
+//creating a separate dataset for 4 villages that were surveyed in dec/jan
+keep if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
+save "${DataTemp}total_U5_BL_EL_ages_breakdown_only4vill.dta", replace
+restore
+
+drop if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
+
+
+save "${DataTemp}total_U5_BL_EL_ages_breakdown.dta", replace
+
+
+
+
+
+/****************************************************
+NUMBER OF U5 ALIVE U5 CHILDREN 
+
+Ojective: Since those housheolds in endline census where HH was unavailable that entry variable for U5 child would be empty from basleine census (R_E_cen_num_childbelow5 ) as it would be marked as missing irrespective of the caregiver of U5 child presnet here that's why we need to get the correct estimate of U5 presnet that is why we need to import the preload and match it on UID to get exact number of U5 for each UID 
+
+
+**********************************************************/
+
+//this gets created in the file - "GitHub\i-h2o-india\Code\1_profile_ILC\Z_preload\Endline_census_Preload.do"
+
+
+import excel "${DataPre}Endline_census_u5child_preload.xlsx", sheet("Sheet1") firstrow clear
+
+
+//dropping it as it is empty
+drop R_Cen_u5_child_pre_1
+
+
+
+merge 1:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", gen(match) keepusing(R_E_village_name_str R_E_cen_num_childbelow5 R_E_child_u5_list_preload R_E_n_children_below5 R_E_n_num_childbelow5 R_E_resp_available R_E_instruction)
+
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+
+/*Archi these are the variables notifying to us the absoulte numbers of U5:  
+
+R_E_cen_num_childbelow5 - shows number of U5 child from baseline census 
+R_E_n_num_childbelow5 - shows number of new U5 added in endline census new roster 
+
+The dataset "${DataFinal}1_8_Endline_Census_cleaned.dta" is created in "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do"
+
+*/
+
+
+/*OBJECTIVE : 
+
+We are creating a combined variable showing number of U5 that are presnet at every ID. Variables with these prefix R_Cen_u5_child_pre_* have exact names of the U5 at every ID but for calculations we need to work with numeric variables si that is why we are creating numeric variable with n_ prefix which assigns 1 wherever a string entry is presnet this way we are tracking at every ID how ,many U5 are presnet. We have to do this as this is a wide dataset  
+*/
+
+egen temp_group = group(unique_id)
+
+ds R_Cen_u5_child_pre_*
+foreach var of varlist `r(varlist)'{
+gen n_`var' = 0
+replace n_`var' = 1 if `var' != ""
+}
+egen total_U5_BL = rowtotal(n_R_Cen_u5_child_pre_*)
+drop temp_group
+
+//currently this variable total_U5_BL  only has information about baseline census U5 but we also need to add new U5 that we found in endline census to have consistent numbers 
+
+destring R_E_n_num_childbelow5, replace
+replace R_E_n_num_childbelow5 = 0 if R_E_n_num_childbelow5 == .
+
+egen total_U5_BL_EL = rowtotal(total_U5_BL R_E_n_num_childbelow5)
+
+
+keep unique_id R_E_cen_num_childbelow5 R_E_n_num_childbelow5 total_U5_BL_EL R_E_resp_available R_E_instruction R_E_village_name_str
+
+collapse (sum) total_U5_BL_EL, by (R_E_village_name_str)
+
+rename R_E_village_name_str village
+
+save "${DataTemp}total_U5_BL_EL.dta", replace
+
+
+
+/*************************************************************
+//merging this dataset with long endline dataset that has U5 infor 
+
+OBJECTIVE: In endline census module we have an opion to mark those U5 child from baseline census as "U5 child no longer falls in the criteria (less than 5 years)" if their age was incorrectly recorded in baseline census so in that case we didn't survey those U5 child so we must remove them from our final numbers. To identidy such women we need to look at the variable comb_child_caregiver_present. If this is equal to 8 then that means these U5 kids are outside of eligibility criteria  
+****************************************************************/
+
+//this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
+
+//We are using final merged dataset between main endline census and revisit dataset
+use "${DataFinal}Endline_Child_level_merged_dataset_final.dta", clear
+
+
+gen exclude_U5_BL = 0
+replace exclude_U5_BL = 1 if comb_child_caregiver_present == 8
+
+rename Village village
+
+replace village = "Bhujbal"  if village == "Bhujabala" 
+
+collapse (sum) exclude_U5_BL, by (village)
+
+//merging this with dataet created earlier that shows total number of U5 child everywere 
+
+
+merge 1:1 village using "${DataTemp}total_U5_BL_EL.dta"
+
+gen final_U5_BL_EL = total_U5_BL_EL
+
+replace final_U5_BL_EL  = total_U5_BL_EL - exclude_U5_BL if  exclude_U5_BL != 0
+
+drop _merge
+
+
+preserve
+//creating a separate dataset for 4 villages that were surveyed in dec/jan
+keep if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
+keep village final_U5_BL_EL
+rename final_U5_BL_EL Total_U5
+save "${DataTemp}adjusted_total_U5_BL_EL_only4vill.dta", replace
+restore
+
+drop if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
+
+keep village final_U5_BL_EL
+
+rename final_U5_BL_EL Total_U5
+
+save "${DataTemp}adjusted_total_U5_BL_EL.dta", replace
+
+
+
+
+
+
 /********************************************************************************************************
 // IMPORTING MORTALITY SURVEY DATA 
 
@@ -1894,6 +2129,15 @@ drop _merge
 
 merge 1:1 village using "${DataTemp}Mortality_4_vill_CBW_avail.dta"
 
+drop _merge
+
+merge 1:1 village using "${DataTemp}adjusted_total_U5_BL_EL_only4vill.dta" 
+
+drop _merge
+
+merge 1:1 village using "${DataTemp}total_U5_BL_EL_ages_breakdown_only4vill.dta"
+
+drop _merge
 //this is the file that contains all the variables needed for it to be appended with endline census dataset villages
 save "${DataTemp}Mortality_CBW_HH_avail.dta", replace
 
@@ -2001,212 +2245,6 @@ rename final_CBW_BL_EL Total_CBW
 save "${DataTemp}adjusted_total_CBW_BL_EL.dta", replace
 
 
-/****************************************************
-AGE DISTRIBUTION OF THE CHILDREN WHO ARE ALIVE
-
-Ojective: We need to get the number of kids present in every age group who are under 5 
-
-**********************************************************/
-
-//this gets created in the file - "GitHub\i-h2o-india\Code\1_profile_ILC\Z_preload\Endline_census_Preload.do"
-
-import excel "${DataPre}Endline_census_u5child_preload.xlsx", sheet("Sheet1") firstrow clear
-
-
-//dropping it as it is empty
-drop R_Cen_u5_child_pre_1
-
-
-//creating a long dataset 
-reshape long R_Cen_u5_child_pre_ R_Cen_a6_hhmember_age_ , i(unique_id) j(reshaped)
-
-drop if R_Cen_u5_child_pre_ == "" //this step makes sure that we are only keeping names of the U5 child
-
-//OBJECTIVE of the step below: we need to exclude those children from baseline census who no longer fall in the criteria. This is denoted by variable comb_child_caregiver_present. This variable has an option 8 which asks enum to mark those entries where the kid no longer falls in the U5 criteria. So, we are creating the dataset containing these entries to merge with the preload dataset above to drop such entries from getting counted
- 
-preserve
-//this dataset gets created in the file- "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning_HFC_Data creation.do"
-use "${DataTemp}U5_Child_23_24_part1.dta", clear
-drop if comb_child_comb_name_label == ""
-br comb_child_breastfeeding comb_child_breastfed_num comb_child_age unique_id comb_child_comb_name_label  if comb_child_age > 5 & comb_child_age != .
-//keep if comb_child_caregiver_present == 8
-save "${DataTemp}U5_cases_to_be_excluded.dta", replace
-restore 
-
-merge m:m unique_id  using"${DataTemp}U5_cases_to_be_excluded.dta", gen (match) keepusing(unique_id)
-
-//we have to drop these matched entries because these are the cases where U5 child is now no longer in the criteria
-drop if match == 3
-
-drop match
-
-//importing new member roster to get ages of new child 
-preserve
-use "${DataFinal}Endline_New_member_roster_dataset_final.dta", clear
-keep if comb_hhmember_age < 5
-keep unique_id comb_hhmember_name comb_hhmember_age 
-rename comb_hhmember_name R_Cen_u5_child_pre_
-rename comb_hhmember_age R_Cen_a6_hhmember_age_ 
-save "${DataTemp}New_U5_cases_for_append.dta", replace
-restore
-
-append using "${DataTemp}New_U5_cases_for_append.dta"
-
-
-
-//mergingto get village names 
-merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", gen(vill_m) keepusing(R_E_village_name_str)
-
-
-drop if unique_id=="30501107052"
-
-//dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to 
-
-keep if R_Cen_u5_child_pre_ != ""
-
-keep if vill_m == 3
-
-drop vill_m
-
-
-*Generating indicator variables for each unique value of variables specified in the loop
-foreach v in R_Cen_a6_hhmember_age_ {
-	levelsof `v' //get the unique values of each variable
-	foreach value in `r(levels)' { //Looping through each unique value of each variable
-		//generating indicator variables
-		gen     `v'_`value'=0 
-		replace `v'_`value'=1 if `v'==`value' 
-		replace `v'_`value'=. if `v'==.
-		//labelling indicator variable with original variable's label and unique value
-		label var `v'_`value' "`: label (`v') `value''"
-	}
-	}
-
-collapse (sum) R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4, by( R_E_village_name_str)
-
-rename R_E_village_name_str village
-
-save "${DataTemp}total_U5_BL_EL_ages_breakdown.dta", replace
-
-
-
-
-
-/****************************************************
-NUMBER OF U5 ALIVE U5 CHILDREN 
-
-Ojective: Since those housheolds in endline census where HH was unavailable that entry variable for U5 child would be empty from basleine census (R_E_cen_num_childbelow5 ) as it would be marked as missing irrespective of the caregiver of U5 child presnet here that's why we need to get the correct estimate of U5 presnet that is why we need to import the preload and match it on UID to get exact number of U5 for each UID 
-
-
-**********************************************************/
-
-//this gets created in the file - "GitHub\i-h2o-india\Code\1_profile_ILC\Z_preload\Endline_census_Preload.do"
-
-
-import excel "${DataPre}Endline_census_u5child_preload.xlsx", sheet("Sheet1") firstrow clear
-
-
-//dropping it as it is empty
-drop R_Cen_u5_child_pre_1
-
-
-
-merge 1:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", gen(match) keepusing(R_E_village_name_str R_E_cen_num_childbelow5 R_E_child_u5_list_preload R_E_n_children_below5 R_E_n_num_childbelow5 R_E_resp_available R_E_instruction)
-
-
-drop if unique_id=="30501107052"
-
-//dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to 
-
-
-/*Archi these are the variables notifying to us the absoulte numbers of U5:  
-
-R_E_cen_num_childbelow5 - shows number of U5 child from baseline census 
-R_E_n_num_childbelow5 - shows number of new U5 added in endline census new roster 
-
-The dataset "${DataFinal}1_8_Endline_Census_cleaned.dta" is created in "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do"
-
-*/
-
-
-/*OBJECTIVE : 
-
-We are creating a combined variable showing number of U5 that are presnet at every ID. Variables with these prefix R_Cen_u5_child_pre_* have exact names of the U5 at every ID but for calculations we need to work with numeric variables si that is why we are creating numeric variable with n_ prefix which assigns 1 wherever a string entry is presnet this way we are tracking at every ID how ,many U5 are presnet. We have to do this as this is a wide dataset  
-*/
-
-egen temp_group = group(unique_id)
-
-ds R_Cen_u5_child_pre_*
-foreach var of varlist `r(varlist)'{
-gen n_`var' = 0
-replace n_`var' = 1 if `var' != ""
-}
-egen total_U5_BL = rowtotal(n_R_Cen_u5_child_pre_*)
-drop temp_group
-
-//currently this variable total_U5_BL  only has information about baseline census U5 but we also need to add new U5 that we found in endline census to have consistent numbers 
-
-destring R_E_n_num_childbelow5, replace
-replace R_E_n_num_childbelow5 = 0 if R_E_n_num_childbelow5 == .
-
-egen total_U5_BL_EL = rowtotal(total_U5_BL R_E_n_num_childbelow5)
-
-
-keep unique_id R_E_cen_num_childbelow5 R_E_n_num_childbelow5 total_U5_BL_EL R_E_resp_available R_E_instruction R_E_village_name_str
-
-collapse (sum) total_U5_BL_EL, by (R_E_village_name_str)
-
-rename R_E_village_name_str village
-
-save "${DataTemp}total_U5_BL_EL.dta", replace
-
-
-
-/*************************************************************
-//merging this dataset with long endline dataset that has U5 infor 
-
-OBJECTIVE: In endline census module we have an opion to mark those U5 child from baseline census as "U5 child no longer falls in the criteria (less than 5 years)" if their age was incorrectly recorded in baseline census so in that case we didn't survey those U5 child so we must remove them from our final numbers. To identidy such women we need to look at the variable comb_child_caregiver_present. If this is equal to 8 then that means these U5 kids are outside of eligibility criteria  
-****************************************************************/
-
-//this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
-
-//We are using final merged dataset between main endline census and revisit dataset
-use "${DataFinal}Endline_Child_level_merged_dataset_final.dta", clear
-
-
-gen exclude_U5_BL = 0
-replace exclude_U5_BL = 1 if comb_child_caregiver_present == 8
-
-rename Village village
-
-collapse (sum) exclude_U5_BL, by (village)
-
-//merging this with dataet created earlier that shows total number of U5 child everywere 
-
-
-merge 1:1 village using "${DataTemp}total_U5_BL_EL.dta"
-
-gen final_U5_BL_EL = total_U5_BL_EL
-
-replace final_U5_BL_EL  = total_U5_BL_EL - exclude_U5_BL if  exclude_U5_BL != 0
-
-drop _merge
-
-drop if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
-
-keep village final_U5_BL_EL
-
-rename final_U5_BL_EL Total_U5
-
-save "${DataTemp}adjusted_total_U5_BL_EL.dta", replace
-
-
-
-
-
-
 /**************************************************
 IMPORTING ENDLINE LONG DATASET FOR CHILD BEARING WOMEN 
 **************************************************/
@@ -2246,6 +2284,9 @@ gen  total_last5preg_CBW = 0
 replace total_last5preg_CBW = 1 if comb_last_5_years_pregnant == 1
 
 
+
+//breakdown of deaths in terms of months of child death 
+
 //Village wise
 
 
@@ -2277,8 +2318,21 @@ merge 1:1 village using "${DataTemp}adjusted_total_CBW_BL_EL.dta"
 
 drop _merge
 
+//merging with child level variables to get age breakdown 
+merge 1:1 village using "${DataTemp}total_U5_BL_EL_ages_breakdown.dta"
+
+drop if _merge == 2
+drop _merge
+
+//merging with child level data to get no. of U5 child 
+merge 1:1 village using "${DataTemp}adjusted_total_U5_BL_EL.dta"
+
+drop _merge BL_EL
+
 //appending with the data of other 4 villages
 append using "${DataTemp}Mortality_CBW_HH_avail.dta"
+
+
 
 //finding village wise mortality rate
 
@@ -2334,7 +2388,7 @@ restore
 //generating aggregate numbers 
 preserve
 
-collapse (sum) total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW   child_living_num child_notliving_num child_stillborn_num child_alive_died_less24_num child_alive_died_more24_num    
+collapse (sum) total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW   child_living_num child_notliving_num child_stillborn_num child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4   
 
 
 egen total_live_births = rowtotal(child_living_num child_notliving_num child_alive_died_less24_num child_alive_died_more24_num)
@@ -2345,7 +2399,7 @@ gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
 
 drop child_stillborn_num
 
-order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num total_live_births total_deaths U5_crude_mortality_rate 
+order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 total_live_births total_deaths U5_crude_mortality_rate 
 
 
 
@@ -2391,6 +2445,11 @@ replace categories = "Total screened households(1)" if categories == "C_Screened
 
 replace categories = "Total housheholds present" if categories == "total_households"
 replace categories = "Total housheholds available for survey" if categories == "total_avail_households"
+replace categories = "Number of children of less than 1 year of age" if categories == "R_Cen_a6_hhmember_age__0"
+replace categories = "Number of children of 1 year of age" if categories == "R_Cen_a6_hhmember_age__1"
+replace categories = "Number of children of 2 years of age" if categories == "R_Cen_a6_hhmember_age__2"
+replace categories = "Number of children of 3 years of age" if categories == "R_Cen_a6_hhmember_age__3"
+replace categories = "Number of children of 4 years of age" if categories == "R_Cen_a6_hhmember_age__4"
 
 
 replace numbers = round(numbers, 0.01)
@@ -2412,6 +2471,58 @@ export excel using "${Personal}Mortality_quality.xlsx", sheet("aggregate_numbers
 restore
 
 
+//
+
+//child died repeat loop
+
+use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
+
+rename key R_E_key
+
+
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+
+keep if _merge == 3
+
+drop _merge
+
+bysort unique_id: gen identifier_1 = _n
+
+/*. tab identifier_1
+
+identifier_ 
+1	Freq.	Percent	Cum.
+			
+1	48	92.31	92.31
+2	2	3.85	96.15
+3	1	1.92	98.08
+4	1	1.92	100.00
+			
+Total	52	100.00
+
+*/
+
+drop _merge
+
+
+merge m:m unique_id using "${DataTemp}test.dta", keepusing(comb_child_stillborn_num identifier)
+
+
+merge m:m unique_id using "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", keepusing(comb_child_stillborn_num )
+
+keep if _merge == 3
+
+
+bysort unique_id: gen identifier_2 = _n
+bysort unique_id: gen flag = 1 if identifier_1 != identifier_2
+
+ 
 
 
 
@@ -2421,3 +2532,62 @@ restore
 
 
 
+drop if comb_child_stillborn_num >= 1
+
+br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years comb_dob_date_comb  comb_dob_month_comb comb_dob_year_comb comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dob_concat_comb comb_dod_autoage comb_year_comb comb_curr_year_comb comb_curr_mon_comb  comb_age_years_comb comb_age_mon_comb comb_age_years_f_comb comb_age_months_f_comb comb_age_decimal_comb 
+
+br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years
+
+
+drop if comb_cause_death_3 == 1
+
+gen deaths_under_one_month = .
+replace deaths_under_one_month = 1 if comb_age_child == 1 & comb_unit_child_days <= 30
+replace deaths_under_one_month = 1 if comb_age_child == 2 & comb_unit_child_months <= 1
+
+
+gen deaths_from_1st_2nd_month = .
+replace deaths_from_1st_2nd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 30 & comb_unit_child_days <= 60
+replace deaths_from_1st_2nd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 1 & comb_unit_child_months <= 2
+
+
+gen deaths_from_2nd_3rd_month = .
+replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 60 & comb_unit_child_days <= 90
+replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 2 & comb_unit_child_months <= 3
+
+
+
+gen deaths_from_3rd_4th_month = .
+replace deaths_from_3rd_4th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 90 & comb_unit_child_days <= 120
+replace  deaths_from_3rd_4th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 3 & comb_unit_child_months <= 4
+
+
+
+gen deaths_from_4th_5th_month = .
+replace deaths_from_4th_5th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 120 & comb_unit_child_days <= 150
+replace  deaths_from_4th_5th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 4 & comb_unit_child_months <= 5
+
+
+gen deaths_from_5th_6th_month = .
+replace deaths_from_5th_6th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 150 & comb_unit_child_days <= 180
+replace  deaths_from_5th_6th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 5 & comb_unit_child_months <= 6
+
+
+gen deaths_from_6th_7th_month = .
+replace deaths_from_6th_7th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 180 & comb_unit_child_days <= 210
+replace  deaths_from_6th_7th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 6 & comb_unit_child_months <= 7
+
+
+gen deaths_from_7th_8th_month = .
+replace deaths_from_7th_8th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 210 & comb_unit_child_days <= 240
+replace  deaths_from_7th_8th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 7 & comb_unit_child_months <= 8
+
+
+gen deaths_from_1_2_year = . 
+replace deaths_from_1_2_year = 1 if comb_unit_child_years >=1 & comb_unit_child_years <= 2
+
+collapse (sum) deaths_under_one_month deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_1_2_year, by( R_E_village_name_str)
+egen temp_group = group( R_E_village_name_str )
+egen total_deaths = rowtotal( deaths_* )
+
+br R_E_village_name_str total_deaths

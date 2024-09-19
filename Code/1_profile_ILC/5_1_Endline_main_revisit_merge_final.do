@@ -225,6 +225,7 @@ use "${DataTemp}temp0.dta", clear
 //importing temp3 which endline revisit census roster dataset here to create a combined census level dataset
 preserve
 cap drop _merge
+//FLAG- check again - m:m should not be used (Archi)
 merge m:m unique_id using "${DataTemp}temp3_merged.dta", keepusing(unique_id V_R_E_instruction   ) 
 //ther merge above tells us that there are no common UIDs between the two which is okay because temp0 dataset has all the available UIDS data and temp3_merged has the data for unavailable UIDs that were re-visited later 
 restore
