@@ -542,6 +542,19 @@ drop R_mor_women_child_bear_count_f
 rename total_CBW R_mor_women_child_bear_count_f
 
 
+/***********************************************************
+AGE WISE DISTRIBUTION OF U5 DIED CHILDREN
+*************************************************************/
+br R_mor_check_scenario R_mor_unique_id R_mor_age_child_*
+
+egen temp_group = group(unique_id_num)
+egen total_CBW = rowtotal(R_mor_women_child_bear_count_f R_mor_how_many_oth)
+drop temp_group
+
+
+
+
+
 
 ********************************************************************************************************************************************
 //VILLAGE LEVEL STATS
@@ -1704,7 +1717,6 @@ restore
 
 
 
-
 //Mortality tables start
 
 
@@ -1721,6 +1733,212 @@ Mortality survey in Jan/Dec was only conducted in 4 villages that are as follows
 so we have to use mortality survey numbers for these 4 villages and append it to the one created using endline dataset mortality module 
 
 ---------------------------------------------------------------------------------------------------------------------------*/ 
+
+
+
+
+//
+
+//child died repeat loop
+
+use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
+
+rename key R_E_key
+
+
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+
+keep if _merge == 3
+
+drop _merge
+
+//EXPLANNATION AS TO WHY THIS NEEDS TO BE DROPPED 
+
+//Archi to investigate this case further Issue is that woman said that no child died but the question still asked for information of the dead child whhc shouldn't be the case. This was a miscarriage case that is why we need to drop it
+
+//Explanation to why this might have happened: 
+//miscarriage question was added later due to which two enums thpught miscarriage and stillborn is the same thing which is not that is why this question was added so they went back in the form and changed the stillborn answer to 0 but the loop for child death had started alreaday that is  despite of the constraint this loop still started because they while editing the form they skipped to this section
+
+//that is why you will see that in the women dataset use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear child dead for these 2 IDs is 0 but still these questions for asked
+
+
+drop if unique_id== "40301113022" & R_E_key == "uuid:29e4bbf5-a3f2-48a2-93e6-e32c751d834e" 
+
+drop if unique_id== "40301110002" & R_E_key == "uuuid:b9836516-0c12-4043-92e9-36d3d1215961" 
+
+
+
+
+//we want to find the number of kids that are stillborn and they need to be removed from this data so I am attching this variable with wide endline dataset 
+
+preserve
+
+//We are using final merged dataset between main endline census and revisit dataset
+use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
+
+
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+ 
+gen  merged_key  =  parent_key
+replace merged_key  = Revisit_parent_key if merged_key == ""
+
+keep unique_id R_E_village_name_str comb_name_comb_woman_earlier comb_resp_avail_comb comb_child_stillborn_num
+
+bys unique_id: gen Num=_n
+
+//reshaping 
+reshape wide  comb_name_comb_woman_earlier comb_resp_avail_comb comb_child_stillborn_num, i(unique_id) j(Num)
+
+save "${DataTemp}Reshaped_wide_CBW_data.dta", replace
+
+
+//merging these two wide datasets 
+use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+
+
+merge 1:1 unique_id using "${DataTemp}Reshaped_wide_CBW_data.dta"
+
+keep if _merge == 3
+
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+egen temp_group = group(unique_id)
+egen total_stillborn_UID_wise = rowtotal(comb_child_stillborn_num*)
+
+keep unique_id R_E_village_name_str total_stillborn_UID_wise R_E_key comb_name_comb_woman_earlier*
+
+save "${DataTemp}HH_level_stillborn.dta", replace
+
+restore
+
+
+merge m:1 unique_id using "${DataTemp}HH_level_stillborn.dta"
+
+keep if  _merge == 3
+
+drop _merge
+
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+
+//br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years comb_dob_date_comb  comb_dob_month_comb comb_dob_year_comb comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dob_concat_comb comb_dod_autoage comb_year_comb comb_curr_year_comb comb_curr_mon_comb  comb_age_years_comb comb_age_mon_comb comb_age_years_f_comb comb_age_months_f_comb comb_age_decimal_comb 
+
+//br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years
+
+
+//drop if comb_cause_death_3 == 1
+
+gen deaths_under_one_month = .
+replace deaths_under_one_month = 1 if comb_age_child == 1 & comb_unit_child_days <= 30
+replace deaths_under_one_month = 1 if comb_age_child == 2 & comb_unit_child_months <= 1
+
+
+gen deaths_from_1st_2nd_month = .
+replace deaths_from_1st_2nd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 30 & comb_unit_child_days <= 60
+replace deaths_from_1st_2nd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 1 & comb_unit_child_months <= 2
+
+
+gen deaths_from_2nd_3rd_month = .
+replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 60 & comb_unit_child_days <= 90
+replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 2 & comb_unit_child_months <= 3
+
+
+
+gen deaths_from_3rd_4th_month = .
+replace deaths_from_3rd_4th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 90 & comb_unit_child_days <= 120
+replace  deaths_from_3rd_4th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 3 & comb_unit_child_months <= 4
+
+
+
+gen deaths_from_4th_5th_month = .
+replace deaths_from_4th_5th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 120 & comb_unit_child_days <= 150
+replace  deaths_from_4th_5th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 4 & comb_unit_child_months <= 5
+
+
+gen deaths_from_5th_6th_month = .
+replace deaths_from_5th_6th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 150 & comb_unit_child_days <= 180
+replace  deaths_from_5th_6th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 5 & comb_unit_child_months <= 6
+
+
+gen deaths_from_6th_7th_month = .
+replace deaths_from_6th_7th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 180 & comb_unit_child_days <= 210
+replace  deaths_from_6th_7th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 6 & comb_unit_child_months <= 7
+
+
+gen deaths_from_7th_8th_month = .
+replace deaths_from_7th_8th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 210 & comb_unit_child_days <= 240
+replace  deaths_from_7th_8th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 7 & comb_unit_child_months <= 8
+
+
+gen deaths_from_1_2_year = . 
+replace deaths_from_1_2_year = 1 if comb_unit_child_years >=1 & comb_unit_child_years <= 2
+
+
+gen deaths_from_2_3_year = . 
+replace deaths_from_2_3_year = 1 if comb_unit_child_years > 2 & comb_unit_child_years <= 3
+
+gen deaths_from_3_4_year = . 
+replace deaths_from_3_4_year = 1 if comb_unit_child_years > 3 & comb_unit_child_years <= 4
+
+
+gen deaths_from_4_5_year = . 
+replace deaths_from_4_5_year = 1 if comb_unit_child_years > 4 & comb_unit_child_years < 5
+
+//stop
+
+sort unique_id
+duplicates tag unique_id, gen(dup_tag)
+bysort unique_id (dup_tag): replace total_stillborn_UID_wise = . if _n > 1
+
+
+//putting some checks for DOB and DOD
+
+
+collapse (sum) deaths_under_one_month deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_1_2_year deaths_from_2_3_year deaths_from_3_4_year deaths_from_4_5_year total_stillborn_UID_wise, by( R_E_village_name_str)
+egen temp_group = group( R_E_village_name_str )
+egen total_deaths = rowtotal( deaths_* )
+drop temp_group
+br R_E_village_name_str total_deaths
+
+gen new_deaths_under_one_month  = deaths_under_one_month 
+replace new_deaths_under_one_month = deaths_under_one_month - total_stillborn_UID_wise
+
+drop deaths_under_one_month   total_deaths
+egen temp_group = group( R_E_village_name_str )
+egen new_total_deaths = rowtotal( deaths_* new_deaths_under_one_month )
+drop temp_group
+
+//remove stillborn from this
+
+//bada bhujbal
+
+rename R_E_village_name_str village
+
+drop if village == "BK Padar" | village == "Nathma" | village ==   "Gopi Kankubadi" | village == "Kuljing"
+
+save "${DataTemp}age_at_death_endline_census.dta", replace
+
 
 
 
@@ -2139,6 +2357,10 @@ merge 1:1 village using "${DataTemp}total_U5_BL_EL_ages_breakdown_only4vill.dta"
 
 drop _merge
 //this is the file that contains all the variables needed for it to be appended with endline census dataset villages
+
+merge 1:1 village using"${DataTemp}age_at_death_mortality_Dec_jan.dta"
+
+
 save "${DataTemp}Mortality_CBW_HH_avail.dta", replace
 
 
@@ -2244,7 +2466,6 @@ rename final_CBW_BL_EL Total_CBW
 
 save "${DataTemp}adjusted_total_CBW_BL_EL.dta", replace
 
-
 /**************************************************
 IMPORTING ENDLINE LONG DATASET FOR CHILD BEARING WOMEN 
 **************************************************/
@@ -2329,10 +2550,22 @@ merge 1:1 village using "${DataTemp}adjusted_total_U5_BL_EL.dta"
 
 drop _merge BL_EL
 
+
+//merging to get breakdown of child died in different age intervals
+merge 1:1 village using  "${DataTemp}age_at_death_endline_census.dta"
+
+drop _merge
+
 //appending with the data of other 4 villages
 append using "${DataTemp}Mortality_CBW_HH_avail.dta"
 
+ds deaths_from_* 
 
+foreach var of varlist `r(varlist)'{
+replace `var' = 0 if `var' == .
+}
+
+//stop
 
 //finding village wise mortality rate
 
@@ -2388,7 +2621,9 @@ restore
 //generating aggregate numbers 
 preserve
 
-collapse (sum) total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW   child_living_num child_notliving_num child_stillborn_num child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4   
+//gen distribution_of_births = ""
+
+collapse (sum) total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW   child_living_num child_notliving_num child_stillborn_num child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 new_deaths_under_one_month deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_1_2_year deaths_from_2_3_year deaths_from_3_4_year deaths_from_4_5_year 
 
 
 egen total_live_births = rowtotal(child_living_num child_notliving_num child_alive_died_less24_num child_alive_died_more24_num)
@@ -2399,7 +2634,13 @@ gen U5_crude_mortality_rate = (total_deaths/total_live_births)*1000
 
 drop child_stillborn_num
 
-order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 total_live_births total_deaths U5_crude_mortality_rate 
+//combining categories
+
+gen deaths_from_1st_4th_month =  deaths_from_1st_2nd_month + deaths_from_2nd_3rd_month + deaths_from_3rd_4th_month
+
+order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 new_deaths_under_one_month deaths_from_1st_4th_month  deaths_from_1_2_year  total_live_births total_deaths U5_crude_mortality_rate 
+
+drop deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_2_3_year deaths_from_3_4_year deaths_from_4_5_year deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month
 
 
 
@@ -2430,13 +2671,13 @@ rename v1 numbers
 order categories numbers
 
 replace categories = "Total live births in the village(2)" if categories == "total_live_births"
-replace categories = "Total U5 deaths in the village(3)" if categories == "total_deaths"
-replace categories = "U5 child deaths per 1000 live births(4)" if categories == "U5_crude_mortality_rate"
-replace categories = "No. of U5 kids living with the respondent currently" if categories == "child_living_num"
-replace categories = "No. of alive U5 kids not living with the respondent currently" if categories == "child_notliving_num"
+replace categories = "Total U5 children deaths in the village(3)" if categories == "total_deaths"
+replace categories = "U5 children deaths per 1000 live births(4)" if categories == "U5_crude_mortality_rate"
+replace categories = "No. of U5 children living with the respondent currently" if categories == "child_living_num"
+replace categories = "No. of alive U5 children not living with the respondent currently" if categories == "child_notliving_num"
 //replace categories = "No. of stillborn U5 kids" if categories == "child_stillborn_num"
-replace categories = "No. of kids that died in less than 24 hours" if categories == "child_alive_died_less24_num"
-replace categories = "No. of kids that died after 24 hours" if categories == "child_alive_died_more24_num"
+replace categories = "No. of children that died in less than 24 hours" if categories == "child_alive_died_less24_num"
+replace categories = "No. of children that died after 24 hours" if categories == "child_alive_died_more24_num"
 replace categories = "Total eligible women avaialble to give survey" if categories == "total_avail_CBW"
 replace categories = "Total eligible women present**" if categories == "Total_CBW"
 replace categories = "Total eligible women pregnant in the last 5 years" if categories == "total_last5preg_CBW"
@@ -2445,12 +2686,29 @@ replace categories = "Total screened households(1)" if categories == "C_Screened
 
 replace categories = "Total housheholds present" if categories == "total_households"
 replace categories = "Total housheholds available for survey" if categories == "total_avail_households"
-replace categories = "Number of children of less than 1 year of age" if categories == "R_Cen_a6_hhmember_age__0"
-replace categories = "Number of children of 1 year of age" if categories == "R_Cen_a6_hhmember_age__1"
-replace categories = "Number of children of 2 years of age" if categories == "R_Cen_a6_hhmember_age__2"
-replace categories = "Number of children of 3 years of age" if categories == "R_Cen_a6_hhmember_age__3"
-replace categories = "Number of children of 4 years of age" if categories == "R_Cen_a6_hhmember_age__4"
+replace categories = "No. of alive children of less than 1 year of age" if categories == "R_Cen_a6_hhmember_age__0"
+replace categories = "No. of alive children of 1 year of age" if categories == "R_Cen_a6_hhmember_age__1"
+replace categories = "No. of alive children of 2 years of age" if categories == "R_Cen_a6_hhmember_age__2"
+replace categories = "No. of alive children of 3 years of age" if categories == "R_Cen_a6_hhmember_age__3"
+replace categories = "No. of alive children of 4 years of age" if categories == "R_Cen_a6_hhmember_age__4"
 
+replace categories = "No. of children died between 1 year and 2 years of age" if categories == "deaths_from_1_2_year"
+//replace categories = "Child died between 1 month and 2 months of age" if categories == "deaths_from_1st_2nd_month"
+/*replace categories = "Child died between 2 years and 3 years of age" if categories == "deaths_from_2_3_year"
+replace categories = "Child died between 3 years and 4 years of age" if categories == "deaths_from_3_4_year"
+replace categories = "Child died between 4 years and 5 years of age" if categories == "deaths_from_4_5_year"*/
+
+//replace categories = "Child died between 2 months and 3 months of age" if categories == "deaths_from_2nd_3rd_month"
+//replace categories = "Child died between 3 months and 4 months of age" if categories == "deaths_from_3rd_4th_month"
+/*replace categories = "Child died between 4 months and 5 months of age" if categories == "deaths_from_4th_5th_month"
+replace categories = "Child died between 5 months and 6 months of age" if categories == "deaths_from_5th_6th_month"
+replace categories = "Child died between 6 months and 7 months of age" if categories == "deaths_from_6th_7th_month"
+replace categories = "Child died between 7 months and 8 months of age" if categories == "deaths_from_7th_8th_month"*/
+replace categories = "No. of children died within 1 month of age" if categories == "new_deaths_under_one_month"
+
+replace categories = "No. of children died between after 1 month and within 4 months of age" if categories == "deaths_from_1st_4th_month" 
+
+replace categories = "Total U5 children present" if categories == "Total_U5"
 
 replace numbers = round(numbers, 0.01)
 
@@ -2458,8 +2716,8 @@ replace numbers = round(numbers, 0.01)
 	
 global Variables categories numbers
 texsave $Variables using "${Table}Mortality_Numbers_all_villages.tex", ///
-        hlines (3 6 10  12) autonumber ///
-        title("Aggregate Mortality numbers") footnote (\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years). \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023). \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp)  headerlines("&\multicolumn{8}{c}{Categories}") 
+        hlines (3 6 10  16 19) autonumber ///
+        title("Aggregate Mortality numbers")  footnote (\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years). \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023). \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp)  headerlines("&\multicolumn{8}{c}{Categories}") 
 
 
 
@@ -2470,124 +2728,4 @@ export excel using "${Personal}Mortality_quality.xlsx", sheet("aggregate_numbers
 
 restore
 
-
-//
-
-//child died repeat loop
-
-use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
-
-rename key R_E_key
-
-
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
-
-drop if unique_id=="30501107052"
-
-//dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to 
-
-
-keep if _merge == 3
-
-drop _merge
-
-bysort unique_id: gen identifier_1 = _n
-
-/*. tab identifier_1
-
-identifier_ 
-1	Freq.	Percent	Cum.
-			
-1	48	92.31	92.31
-2	2	3.85	96.15
-3	1	1.92	98.08
-4	1	1.92	100.00
-			
-Total	52	100.00
-
-*/
-
-drop _merge
-
-
-merge m:m unique_id using "${DataTemp}test.dta", keepusing(comb_child_stillborn_num identifier)
-
-
-merge m:m unique_id using "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", keepusing(comb_child_stillborn_num )
-
-keep if _merge == 3
-
-
-bysort unique_id: gen identifier_2 = _n
-bysort unique_id: gen flag = 1 if identifier_1 != identifier_2
-
- 
-
-
-
-
-
-
-
-
-
-drop if comb_child_stillborn_num >= 1
-
-br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years comb_dob_date_comb  comb_dob_month_comb comb_dob_year_comb comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dob_concat_comb comb_dod_autoage comb_year_comb comb_curr_year_comb comb_curr_mon_comb  comb_age_years_comb comb_age_mon_comb comb_age_years_f_comb comb_age_months_f_comb comb_age_decimal_comb 
-
-br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years
-
-
-drop if comb_cause_death_3 == 1
-
-gen deaths_under_one_month = .
-replace deaths_under_one_month = 1 if comb_age_child == 1 & comb_unit_child_days <= 30
-replace deaths_under_one_month = 1 if comb_age_child == 2 & comb_unit_child_months <= 1
-
-
-gen deaths_from_1st_2nd_month = .
-replace deaths_from_1st_2nd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 30 & comb_unit_child_days <= 60
-replace deaths_from_1st_2nd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 1 & comb_unit_child_months <= 2
-
-
-gen deaths_from_2nd_3rd_month = .
-replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 1 & comb_unit_child_days > 60 & comb_unit_child_days <= 90
-replace deaths_from_2nd_3rd_month = 1 if comb_age_child == 2 & comb_unit_child_months > 2 & comb_unit_child_months <= 3
-
-
-
-gen deaths_from_3rd_4th_month = .
-replace deaths_from_3rd_4th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 90 & comb_unit_child_days <= 120
-replace  deaths_from_3rd_4th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 3 & comb_unit_child_months <= 4
-
-
-
-gen deaths_from_4th_5th_month = .
-replace deaths_from_4th_5th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 120 & comb_unit_child_days <= 150
-replace  deaths_from_4th_5th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 4 & comb_unit_child_months <= 5
-
-
-gen deaths_from_5th_6th_month = .
-replace deaths_from_5th_6th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 150 & comb_unit_child_days <= 180
-replace  deaths_from_5th_6th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 5 & comb_unit_child_months <= 6
-
-
-gen deaths_from_6th_7th_month = .
-replace deaths_from_6th_7th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 180 & comb_unit_child_days <= 210
-replace  deaths_from_6th_7th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 6 & comb_unit_child_months <= 7
-
-
-gen deaths_from_7th_8th_month = .
-replace deaths_from_7th_8th_month = 1 if comb_age_child == 1 & comb_unit_child_days > 210 & comb_unit_child_days <= 240
-replace  deaths_from_7th_8th_month  = 1 if comb_age_child == 2 & comb_unit_child_months > 7 & comb_unit_child_months <= 8
-
-
-gen deaths_from_1_2_year = . 
-replace deaths_from_1_2_year = 1 if comb_unit_child_years >=1 & comb_unit_child_years <= 2
-
-collapse (sum) deaths_under_one_month deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_1_2_year, by( R_E_village_name_str)
-egen temp_group = group( R_E_village_name_str )
-egen total_deaths = rowtotal( deaths_* )
-
-br R_E_village_name_str total_deaths
+//correct Rashmita's case of 40301108016

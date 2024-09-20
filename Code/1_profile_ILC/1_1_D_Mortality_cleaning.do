@@ -57,16 +57,75 @@ rename (child_died_u5_count_sc_null_1 child_died_u5_count_sc_null_2 child_died_u
 rename no_consent_pc_comment_oth_2 no_cons_pc_comm_oth_2
   
 * Create a local of  screened scenarios, where questions are asked based on scenario == 4 
- local screened  women_child_bearing_sc_count enum_name_sc enum_name_label_sc enum_code_sc  child_bearing_index_sc_1 name_pc_sc_1 name_pc_earlier_sc_1 resp_avail_pc_sc_1 consent_pc_sc_1 no_consent_reason_pc_sc_1 no_consent_reason_pc_sc_1_1 no_consent_reason_pc_sc_2_1 no_consent_reason_pc_sc__77_1 no_consent_pc_oth_sc_1 no_consent_pc_comment_sc_1 residence_yesno_pc_sc_1 vill_pc_sc_1 vill_pc_oth_sc_1 a7_pregnant_leave_sc_1 a7_pregnant_leave_days_sc_1 a7_pregnant_leave_months_sc_1 village_name_res_sc_1 vill_residence_sc_1 last_5_years_pregnant_sc_1 child_living_sc_1 child_living_num_sc_1 child_notliving_sc_1 child_notliving_num_sc_1 child_stillborn_sc_1 child_stillborn_num_sc_1 child_alive_died_24_sc_1 child_died_num_sc_1 child_alive_died_sc_1 child_died_num_more24_sc_1  child_died_u5_count_sc_1 child_died_repeat_sc_count_1 confirm_sc_1 correct_sc_1 translator_sc_1  child_bearing_index_sc_2 name_pc_sc_2 name_pc_earlier_sc_2 resp_avail_pc_sc_2 consent_pc_sc_2 no_consent_reason_pc_sc_2 no_consent_reason_pc_sc_1_2 no_consent_reason_pc_sc_2_2 no_consent_reason_pc_sc__77_2 no_consent_pc_oth_sc_2 no_consent_pc_comment_sc_2 residence_yesno_pc_sc_2 vill_pc_sc_2 vill_pc_oth_sc_2 a7_pregnant_leave_sc_2 a7_pregnant_leave_days_sc_2 a7_pregnant_leave_months_sc_2 village_name_res_sc_2 vill_residence_sc_2 last_5_years_pregnant_sc_2 child_living_sc_2 child_living_num_sc_2 child_notliving_sc_2 child_notliving_num_sc_2 child_stillborn_sc_2 child_stillborn_num_sc_2 child_alive_died_24_sc_2 child_died_num_sc_2 child_alive_died_sc_2 child_died_num_more24_sc_2  child_died_u5_count_sc_2 child_died_repeat_sc_count_2 confirm_sc_2 correct_sc_2 translator_sc_2 child_bearing_index_sc_3 name_pc_sc_3 name_pc_earlier_sc_3 resp_avail_pc_sc_3 consent_pc_sc_3 no_consent_reason_pc_sc_3 no_consent_reason_pc_sc_1_3 no_consent_reason_pc_sc_2_3 no_consent_reason_pc_sc__77_3 no_consent_pc_oth_sc_3 no_consent_pc_comment_sc_3 residence_yesno_pc_sc_3 vill_pc_sc_3 vill_pc_oth_sc_3 a7_pregnant_leave_sc_3 a7_pregnant_leave_days_sc_3 a7_pregnant_leave_months_sc_3 village_name_res_sc_3 vill_residence_sc_3 last_5_years_pregnant_sc_3 child_living_sc_3 child_living_num_sc_3 child_notliving_sc_3 child_notliving_num_sc_3 child_stillborn_sc_3 child_stillborn_num_sc_3 child_alive_died_24_sc_3 child_died_num_sc_3 child_alive_died_sc_3 child_died_num_more24_sc_3 child_died_u5_count_sc_3 child_died_repeat_sc_count_3 confirm_sc_3 correct_sc_3 translator_sc_3 child_bearing_index_sc_4 name_pc_sc_4 name_pc_earlier_sc_4 resp_avail_pc_sc_4 consent_pc_sc_4 no_consent_reason_pc_sc_4 no_consent_reason_pc_sc_1_4 no_consent_reason_pc_sc_2_4 no_consent_reason_pc_sc__77_4 no_consent_pc_oth_sc_4 no_consent_pc_comment_sc_4 residence_yesno_pc_sc_4 vill_pc_sc_4 vill_pc_oth_sc_4 a7_pregnant_leave_sc_4 a7_pregnant_leave_days_sc_4 a7_pregnant_leave_months_sc_4 village_name_res_sc_4 vill_residence_sc_4 last_5_years_pregnant_sc_4 child_living_sc_4 child_living_num_sc_4 child_notliving_sc_4 child_notliving_num_sc_4 child_stillborn_sc_4 child_stillborn_num_sc_4 child_alive_died_24_sc_4 child_died_num_sc_4 child_alive_died_sc_4 child_died_num_more24_sc_4  child_died_u5_count_sc_4 child_died_repeat_sc_count_4 confirm_sc_4 correct_sc_4 translator_sc_4 child_bearing_index_sc_5 name_pc_sc_5 name_pc_earlier_sc_5 resp_avail_pc_sc_5 consent_pc_sc_5 no_consent_reason_pc_sc_5 no_consent_reason_pc_sc_1_5 no_consent_reason_pc_sc_2_5 no_consent_reason_pc_sc__77_5 no_consent_pc_oth_sc_5 no_consent_pc_comment_sc_5 residence_yesno_pc_sc_5 vill_pc_sc_5 vill_pc_oth_sc_5 a7_pregnant_leave_sc_5 a7_pregnant_leave_days_sc_5 a7_pregnant_leave_months_sc_5 village_name_res_sc_5 vill_residence_sc_5 last_5_years_pregnant_sc_5 child_living_sc_5 child_living_num_sc_5 child_notliving_sc_5 child_notliving_num_sc_5 child_stillborn_sc_5 child_stillborn_num_sc_5 child_alive_died_24_sc_5 child_died_num_sc_5 child_alive_died_sc_5 child_died_num_more24_sc_5  child_died_u5_count_sc_5 child_died_repeat_sc_count_5 confirm_sc_5 correct_sc_5 translator_sc_5 child_bearing_index_sc_6 name_pc_sc_6 name_pc_earlier_sc_6 resp_avail_pc_sc_6 consent_pc_sc_6 no_consent_reason_pc_sc_6 no_consent_reason_pc_sc_1_6 no_consent_reason_pc_sc_2_6 no_consent_reason_pc_sc__77_6 no_consent_pc_oth_sc_6 no_consent_pc_comment_sc_6 residence_yesno_pc_sc_6 vill_pc_sc_6 vill_pc_oth_sc_6 a7_pregnant_leave_sc_6 a7_pregnant_leave_days_sc_6 a7_pregnant_leave_months_sc_6 village_name_res_sc_6 vill_residence_sc_6 last_5_years_pregnant_sc_6 child_living_sc_6 child_living_num_sc_6 child_notliving_sc_6 child_notliving_num_sc_6 child_stillborn_sc_6 child_stillborn_num_sc_6 child_alive_died_24_sc_6 child_died_num_sc_6 child_alive_died_sc_6 child_died_num_more24_sc_6   child_died_u5_count_sc_6 child_died_repeat_sc_count_6 confirm_sc_6 correct_sc_6 translator_sc_6 name_child_sc_* name_child_earlier_sc_* age_child_sc_* unit_child_sc_* cause_death_sc_* cause_death_oth_sc_* cause_death_diagnosed_sc_* cause_death_str_sc_* miscarriage_sc_*
+//scenario 4 are those cases where household was screened in the baseline and we have roster data for them so we only collected mortality module information for such cases. Except this scenario, all other scenarios were asked questions from the begiining like roster etc  
+ local screened  women_child_bearing_sc_count enum_name_sc enum_name_label_sc enum_code_sc  child_bearing_index_sc_1 name_pc_sc_1 name_pc_earlier_sc_1 resp_avail_pc_sc_1 consent_pc_sc_1 no_consent_reason_pc_sc_1 no_consent_reason_pc_sc_1_1 no_consent_reason_pc_sc_2_1 no_consent_reason_pc_sc__77_1 no_consent_pc_oth_sc_1 no_consent_pc_comment_sc_1 residence_yesno_pc_sc_1 vill_pc_sc_1 vill_pc_oth_sc_1 a7_pregnant_leave_sc_1 a7_pregnant_leave_days_sc_1 a7_pregnant_leave_months_sc_1 village_name_res_sc_1 vill_residence_sc_1 last_5_years_pregnant_sc_1 child_living_sc_1 child_living_num_sc_1 child_notliving_sc_1 child_notliving_num_sc_1 child_stillborn_sc_1 child_stillborn_num_sc_1 child_alive_died_24_sc_1 child_died_num_sc_1 child_alive_died_sc_1 child_died_num_more24_sc_1  child_died_u5_count_sc_1 child_died_repeat_sc_count_1 confirm_sc_1 correct_sc_1 translator_sc_1  child_bearing_index_sc_2 name_pc_sc_2 name_pc_earlier_sc_2 resp_avail_pc_sc_2 consent_pc_sc_2 no_consent_reason_pc_sc_2 no_consent_reason_pc_sc_1_2 no_consent_reason_pc_sc_2_2 no_consent_reason_pc_sc__77_2 no_consent_pc_oth_sc_2 no_consent_pc_comment_sc_2 residence_yesno_pc_sc_2 vill_pc_sc_2 vill_pc_oth_sc_2 a7_pregnant_leave_sc_2 a7_pregnant_leave_days_sc_2 a7_pregnant_leave_months_sc_2 village_name_res_sc_2 vill_residence_sc_2 last_5_years_pregnant_sc_2 child_living_sc_2 child_living_num_sc_2 child_notliving_sc_2 child_notliving_num_sc_2 child_stillborn_sc_2 child_stillborn_num_sc_2 child_alive_died_24_sc_2 child_died_num_sc_2 child_alive_died_sc_2 child_died_num_more24_sc_2  child_died_u5_count_sc_2 child_died_repeat_sc_count_2 confirm_sc_2 correct_sc_2 translator_sc_2 child_bearing_index_sc_3 name_pc_sc_3 name_pc_earlier_sc_3 resp_avail_pc_sc_3 consent_pc_sc_3 no_consent_reason_pc_sc_3 no_consent_reason_pc_sc_1_3 no_consent_reason_pc_sc_2_3 no_consent_reason_pc_sc__77_3 no_consent_pc_oth_sc_3 no_consent_pc_comment_sc_3 residence_yesno_pc_sc_3 vill_pc_sc_3 vill_pc_oth_sc_3 a7_pregnant_leave_sc_3 a7_pregnant_leave_days_sc_3 a7_pregnant_leave_months_sc_3 village_name_res_sc_3 vill_residence_sc_3 last_5_years_pregnant_sc_3 child_living_sc_3 child_living_num_sc_3 child_notliving_sc_3 child_notliving_num_sc_3 child_stillborn_sc_3 child_stillborn_num_sc_3 child_alive_died_24_sc_3 child_died_num_sc_3 child_alive_died_sc_3 child_died_num_more24_sc_3 child_died_u5_count_sc_3 child_died_repeat_sc_count_3 confirm_sc_3 correct_sc_3 translator_sc_3 child_bearing_index_sc_4 name_pc_sc_4 name_pc_earlier_sc_4 resp_avail_pc_sc_4 consent_pc_sc_4 no_consent_reason_pc_sc_4 no_consent_reason_pc_sc_1_4 no_consent_reason_pc_sc_2_4 no_consent_reason_pc_sc__77_4 no_consent_pc_oth_sc_4 no_consent_pc_comment_sc_4 residence_yesno_pc_sc_4 vill_pc_sc_4 vill_pc_oth_sc_4 a7_pregnant_leave_sc_4 a7_pregnant_leave_days_sc_4 a7_pregnant_leave_months_sc_4 village_name_res_sc_4 vill_residence_sc_4 last_5_years_pregnant_sc_4 child_living_sc_4 child_living_num_sc_4 child_notliving_sc_4 child_notliving_num_sc_4 child_stillborn_sc_4 child_stillborn_num_sc_4 child_alive_died_24_sc_4 child_died_num_sc_4 child_alive_died_sc_4 child_died_num_more24_sc_4  child_died_u5_count_sc_4 child_died_repeat_sc_count_4 confirm_sc_4 correct_sc_4 translator_sc_4 child_bearing_index_sc_5 name_pc_sc_5 name_pc_earlier_sc_5 resp_avail_pc_sc_5 consent_pc_sc_5 no_consent_reason_pc_sc_5 no_consent_reason_pc_sc_1_5 no_consent_reason_pc_sc_2_5 no_consent_reason_pc_sc__77_5 no_consent_pc_oth_sc_5 no_consent_pc_comment_sc_5 residence_yesno_pc_sc_5 vill_pc_sc_5 vill_pc_oth_sc_5 a7_pregnant_leave_sc_5 a7_pregnant_leave_days_sc_5 a7_pregnant_leave_months_sc_5 village_name_res_sc_5 vill_residence_sc_5 last_5_years_pregnant_sc_5 child_living_sc_5 child_living_num_sc_5 child_notliving_sc_5 child_notliving_num_sc_5 child_stillborn_sc_5 child_stillborn_num_sc_5 child_alive_died_24_sc_5 child_died_num_sc_5 child_alive_died_sc_5 child_died_num_more24_sc_5  child_died_u5_count_sc_5 child_died_repeat_sc_count_5 confirm_sc_5 correct_sc_5 translator_sc_5 child_bearing_index_sc_6 name_pc_sc_6 name_pc_earlier_sc_6 resp_avail_pc_sc_6 consent_pc_sc_6 no_consent_reason_pc_sc_6 no_consent_reason_pc_sc_1_6 no_consent_reason_pc_sc_2_6 no_consent_reason_pc_sc__77_6 no_consent_pc_oth_sc_6 no_consent_pc_comment_sc_6 residence_yesno_pc_sc_6 vill_pc_sc_6 vill_pc_oth_sc_6 a7_pregnant_leave_sc_6 a7_pregnant_leave_days_sc_6 a7_pregnant_leave_months_sc_6 village_name_res_sc_6 vill_residence_sc_6 last_5_years_pregnant_sc_6 child_living_sc_6 child_living_num_sc_6 child_notliving_sc_6 child_notliving_num_sc_6 child_stillborn_sc_6 child_stillborn_num_sc_6 child_alive_died_24_sc_6 child_died_num_sc_6 child_alive_died_sc_6 child_died_num_more24_sc_6   child_died_u5_count_sc_6 child_died_repeat_sc_count_6 confirm_sc_6 correct_sc_6 translator_sc_6 name_child_sc_* name_child_earlier_sc_*  unit_child_sc_* cause_death_sc_* cause_death_oth_sc_* age_child_sc_* cause_death_diagnosed_sc_* cause_death_str_sc_* miscarriage_sc_*
  
+
  *this is an irrelevant variable
 drop sectionb_dur_end child_died_u5_count_sc_null_oth_ child_died_repeat_oth_count_* survey_member_names_count_* consented1roster_sc_1_2_31a10_hh consented1roster_sc_1_2_31a11_ol num_stillborn_null* num_living_null_* num_notliving_null_* num_less24_null_nsc_* num_more24_null_nsc_*
  
- * Combine women in child bearing age count  - women_child_bearing_count 
+ * Combine women in child bearing age count  - women_child_bearing_count
+ 
+/*Objective:
+
+Archi commented this out- 
+
+
+This command performs a loop over a list of variables stored in the local macro screened. Here's what each part of the code does:
+
+foreach x of varlist \screened'`:
+
+This loops through each variable in the screened list. The variable name is temporarily stored in the local macro x.
+local y_\x' = regexr("x'", "_sc", ""):
+
+This uses the regexr() function to create a new local macro y_\x', where the _sc` part of the variable name is removed.
+The function regexr("x'", "_sc", "")searches for_scin the variable name stored inx and replaces it with an empty string (""`).
+For example, if x is village_name_sc, it will create y_village_name with the value village_name (i.e., without _sc).
+rename \x' `y_`x''_sc`:
+
+This renames the variable x (which still has _sc) to the modified version y_\x'but appends_sc` again.
+Essentially, the command is removing _sc and then adding it back to the variable name.
+Overall, what does this loop do?
+This loop appears redundant since it removes the _sc part from the variable name and then adds it back. It may have been written with the intention of performing a different operation but ended up renaming variables to their original names.
+
+IMP- This loop may seem redundent at first but what it is trying to do it chnage the position of suffix _sc in way so that you could call such variables easily like _sc as ulttimatley we want to create final variables that dont have this distinction
+*/ 
+
+ 
 foreach x of varlist `screened' {
-	local y_`x' = regexr("`x'", "_sc","")
+	local y_`x' = regexr("`x'", "_sc","") // Removing "_sc" from the variable name
 	rename `x' `y_`x''_sc
 }
+
+
+//Archi - for refernce variables starting from women_child_bearing_count - translator_4 are all those cases where housheold was surveyed again from beginning because they were screened out in baseline since in mortality our screening criteria was chnaged from presence of pregnant women or U5 child to  child bearing women so such housheolds were surveyed again so these dont have suffix sc that means they were non screeened from baseline which were surveyed again
+
+/*OBJECTIVE OF THE COMMAND BELOW- 
+
+This command performs a loop over a range of variables (women_child_bearing_count to translator_4) and creates new variables based on the logic defined in the loop. Here's a breakdown of what each part does:
+
+foreach x of varlist women_child_bearing_count - translator_4:
+
+This loops over all variables in the dataset starting from women_child_bearing_count to translator_4. For each variable, it stores the name of the variable in the local macro x.
+gen \x'_f = `x'`:
+
+This generates a new variable x_f, which is a copy of the original variable x. For example, if x is women_child_bearing_count, it will create a new variable women_child_bearing_count_f with the same values as women_child_bearing_count.
+replace \x'_f = `x'_sc if missing(`x') & !missing(`x'_sc)`:
+
+This command replaces the newly created variable x_f with values from the variable x_sc (another variable that seems to contain a "screened" version of x).
+It only performs the replacement if:
+The value in the original variable x is missing (i.e., missing(x)).
+The value in the "screened" version x_sc is not missing (i.e., !missing(x_sc)).
+So, if x has missing values but x_sc has valid (non-missing) values, those will be used to fill in x_f.
+drop \x' `x'_sc`:
+
+After the operation is complete, the original variables x and x_sc are dropped from the dataset. This means the final dataset will only contain the new variable x_f.
+Overall, what does this loop do?
+The loop creates new variables (x_f) that combine data from two sources: the original variable (x) and the "screened" version (x_sc). It uses values from x_sc to fill in missing values in x_f only if they exist in x_sc. After that, it drops the original variables x and x_sc, leaving only the new variable x_f in the dataset.
+
+In summary, it combines data from the original and screened versions into a single variable (x_f), replacing missing values from the original with values from the screened version.
+
+*/ 
 
 
 foreach x of varlist women_child_bearing_count - translator_4 {
@@ -83,12 +142,67 @@ foreach x of varlist women_child_bearing_count - translator_4 {
 *	drop `x'
 *}
 
+****************************************************
+//Archi to everyone: Layman explnantion of the code below for reference
+****************************************************** 
+
+/* What does this do? 
+
+This block of code operates on a set of variables and performs some renaming and new variable generation. Here's a step-by-step explanation of what it does:
+
+//Breakdown of each part:
+
+1. `local var_left_sc *_5_sc *_6_sc`:
+   - A local macro named `var_left_sc` is created. This macro holds the list of variables that match the pattern `*_5_sc` and `*_6_sc`.
+   - These patterns likely represent variables that end with `_5_sc` and `_6_sc`. For example, it might refer to variables like `var_5_sc`, `var_6_sc`, etc.
+
+2. `foreach x of varlist \`var_left_sc'`:
+   - This loop iterates over the variables stored in the local macro `var_left_sc` (i.e., variables matching the patterns `*_5_sc` and `*_6_sc`).
+   - For each iteration, the current variable name is assigned to the local macro `x`.
+
+3. `local y_\`x' = regexr("\`x'", "_sc","")`:
+   - A new local macro `y_\`x'` is created. Its value is obtained by applying the `regexr()` function to the variable name `x`.
+   - `regexr("\`x'", "_sc", "")` uses regular expression to remove the suffix `_sc` from the variable name `x`. So, if `x` was `var_5_sc`, this command will remove `_sc` and store the result (e.g., `var_5`) in the local macro `y_\`x'`.
+
+4. `gen \`y_\`x''_f = \`x'`:
+   - This generates a new variable named `y_\`x'_f` (where `y_\`x'` is the variable name without `_sc`).
+   - The new variable is created as a copy of the original variable `x`.
+   - For example, if `x` is `var_5_sc` and `y_\`x'` is `var_5`, this command will generate a new variable called `var_5_f`, which will be a copy of `var_5_sc`.
+
+5. `drop \`x'`:
+   - This command drops the original variable `x` from the dataset. After the loop finishes, only the newly created `_f` variables will remain, and the original variables ending in `_sc` will be removed.
+
+// Overall, what does this code do?
+
+1. The code identifies variables ending in `_5_sc` and `_6_sc`.
+2. It creates new variables by removing the `_sc` suffix and appending `_f` to the new variable name.
+3. It copies the values from the original `_sc` variables into the new `_f` variables.
+4. Finally, it drops the original `_sc` variables.
+
+// Example:
+
+- If you have variables `age_5_sc` and `income_6_sc`, this code will:
+  - Create new variables `age_5_f` and `income_6_f`.
+  - Copy the values from `age_5_sc` into `age_5_f`, and from `income_6_sc` into `income_6_f`.
+  - Drop the original variables `age_5_sc` and `income_6_sc`.
+
+In summary, it creates cleaner versions of variables by removing the `_sc` suffix and stores the new variables with an `_f` suffix, while dropping the old ones.
+
+
+*/ 
+
 local var_left_sc *_5_sc *_6_sc 
 foreach x of varlist `var_left_sc' {
     local y_`x' = regexr("`x'", "_sc","")
 	gen `y_`x''_f = `x'
 	drop `x'
 }
+
+
+/*Explanation of Suffixes:
+_sc: This suffix likely stands for "screened" and refers to variables associated with scenarios in which the household was screened for mortality data.
+_f: The suffix _f represents "final" or "merged" variables that combine data from both screened and non-screened households.
+*/
 
 decode village_name, gen(village_name_str)
 local preload_notsc village_name_str hamlet_name - saahi_name landmark address  fam_name1 - child_bearing_list
@@ -145,6 +259,8 @@ replace R_mor_village =  R_mor_r_cen_village_name_str if R_mor_village == "."
 *creating combined enum name
 clonevar R_mor_enum_name_f = R_mor_enum_name_label
 replace R_mor_enum_name_f = R_mor_enum_name_label_sc if R_mor_enum_name_f == ""
+
+
 
 
 * Household Head's name 
