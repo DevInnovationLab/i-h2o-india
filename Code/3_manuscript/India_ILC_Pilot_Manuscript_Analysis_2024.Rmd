@@ -490,6 +490,244 @@ desc_stats <- idexx_tab_stored%>%
 #desc_stats_stored
 
 
+#Creating desc stat figures ------------------------------------------------
+
+
+#Calculating key desc stats -- pooled rounds and baseline
+tc_stats_pooled <- pooled_stats(idexx_tab)
+
+tc_stats_bl <- pooled_stats(idexx)
+
+tc_stats_round <- round_stats(idexx_tab)
+
+
+
+#Creating figure of baseline IDEXX results
+
+#Plotting treatment/control stats on a bar plot
+p_ec_bl <- ggplot(data = tc_stats_bl) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_bl <- ggplot(data = tc_stats_bl) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_bl <- 
+  p_cf_bl + p_ec_bl +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 160)")),
+  caption = "Stored and tap water samples were collected during the baseline survey round in October 2023."
+)
+
+p_bl
+
+
+
+
+
+#Creating figure of pooled IDEXX results
+
+#Plotting treatment/control stats on a bar plot
+p_ec_pooled <- ggplot(data = tc_stats_pooled) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_pooled <- ggplot(data = tc_stats_pooled) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_pooled <- 
+  p_cf_pooled + p_ec_pooled +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 481)")),
+  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, and April 2024."
+)
+
+p_pooled
+
+
+#Creating figure of IDEXX results stratified by round
+
+#Plotting treatment/control stats on a bar plot
+p_ec_by_round <- ggplot(data = tc_stats_round) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_by_round <- ggplot(data = tc_stats_round) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_by_round <- 
+  p_cf_by_round + p_ec_by_round +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 905)")),
+  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, and April, July, and August/September 2024."
+)
+
+p_by_round
+
+
+
+#Displaying desc stats table for IDEXX
+
+tc_stats_round%>%
+  select(-c(`Lower CI - TC`, `Upper CI - TC`, `Lower CI - EC`, `Upper CI - EC`))%>%
+kbl(caption = paste(
+"IDEXX results stratified by data round")
+)%>%
+  kable_styling(
+    full_width = FALSE,
+  font_size = 7,                  # Adjust font size
+  position = "center",             # Center the table
+  latex_options = c("striped", "hold_position"), # Add stripes and prevent floating
+  stripe_color = "gray!10",        # Set stripe color for readability
+)%>%
+  column_spec(1, bold = TRUE)
+
+
+tc_stats_round%>%
+  select(c(assignment, data_round, `Number of Samples`, `Tap - Average Free Chlorine Concentration (mg/L)`, `Stored - Average Free Chlorine Concentration (mg/L)`))%>%
+kbl(caption = paste(
+"IDEXX results stratified by data round")
+)%>%
+  kable_styling(
+    full_width = FALSE,
+  font_size = 7,                  # Adjust font size
+  position = "center",             # Center the table
+  latex_options = c("striped", "hold_position"), # Add stripes and prevent floating
+  stripe_color = "gray!10",        # Set stripe color for readability
+)%>%
+  column_spec(1, bold = TRUE)
+
+
+
+
+# (not including the stratification variable)
+# library(tableone)
+# my.vars <- c("Number of Samples", "% Positive for Total Coliform", "% Positive for E. coli"     , "Tap - Average Free Chlorine Concentration (mg/L)", "Stored - Average Free Chlorine Concentration (mg/L)")
+# # create a list of which ones are categorical (factor)
+# my.fvars <- c()
+# 
+# table.1 <- CreateTableOne(
+# vars = my.vars,
+# strata = c("data_round", "assignment", "sample_type"),
+# data = tc_stats_round,
+# includeNA = TRUE,
+# test = FALSE,
+# addOverall = TRUE) # No p-values in Table 1!
+#  
+# print(table.1) # Standard output
+# 
+# kable(
+#   print(table.1,
+#         showAllLevels = TRUE,
+#         printToggle = FALSE,
+#         noSpaces = TRUE,
+#         catDigits = 1,
+#         contDigits = 1),
+#   caption = paste(
+# "IDEXX Results Stratified by Round."),
+# )%>%
+#   kable_styling(
+#     full_width = FALSE,
+#   font_size = 7,                  # Adjust font size
+#   position = "center",             # Center the table
+#   latex_options = c("striped", "hold_position"), # Add stripes and prevent floating
+#   stripe_color = "gray!10",        # Set stripe color for readability
+# )%>%
+#   column_spec(1, bold = TRUE)
+
+
 
 # Poisson Regression - Treatment Effect -------------------------------------------------
 
@@ -650,6 +888,108 @@ names(all_models) <- outcome_vars
 
 #Making regression table output
 ilc_model_table(all_models)
+
+
+
+#Comparing Chlorine Concentrations to E. coli contamination
+
+  
+#Comparing IDEXX results to average chlorine concentration
+idexx_tab <- idexx_tab%>%
+  mutate(fc_tap_pa_2 = case_when(fc_tap_avg >= 0.2 ~ ">= 0.2 mg/L",
+                                  fc_tap_avg < 0.2 ~ "< 0.2 mg/L"))%>%
+  mutate(fc_stored_pa_2 = case_when(fc_stored_avg >= 0.2 ~ ">= 0.2 mg/L",
+                                  fc_stored_avg < 0.2 ~ "< 0.2 mg/L"))%>%
+  mutate(fc_tap_pa_1 = case_when(fc_tap_avg >= 0.1 ~ ">= 0.1 mg/L",
+                                  fc_tap_avg < 0.1 ~ "< 0.1 mg/L"))%>%
+  mutate(fc_stored_pa_1 = case_when(fc_stored_avg >= 0.1 ~ ">= 0.1 mg/L",
+                                  fc_stored_avg < 0.1 ~ "< 0.1 mg/L"))%>%
+  mutate(fc_ec_tap = case_when(fc_tap_avg >= 0.2 & ec_pa_binary == 0 ~ ">= 0.2 mg/L and absence of E. coli",
+                                  fc_tap_avg >= 0.2 & ec_pa_binary == 1 ~ ">= 0.2 mg/L and presence of E. coli",
+                               fc_tap_avg < 0.2 & ec_pa_binary == 0 ~ "< 0.2 mg/L and absence of E. coli",
+                               fc_tap_avg < 0.2 & ec_pa_binary == 1 ~ "< 0.2 mg/L and presence of E. coli"
+  ))
+                          
+                               
+#Starting with tap results
+tap_stats_pooled <- idexx_tab%>%
+  filter(sample_type == "Tap")%>%
+    group_by(fc_tap_pa_2) %>%
+    summarise(
+      "Number of Samples" = n(),
+      "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+      "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+      "% Tap Samples with Free Chlorine > 0.2 mg/L" = 
+        round((sum(fc_tap_pa_2 == "Presence") / n()) * 100, 1),
+      "% Stored Samples with Free Chlorine > 0.2 mg/L" = 
+        round((sum(fc_stored_pa_2 == "Presence") / n()) * 100, 1)
+      )
+
+#Making plot to display chlorine results vs IDEXX results
+
+p_tap_pooled <- ggplot(data = tap_stats_pooled) + 
+  geom_col(aes(x = fc_tap_pa_2, y = `% Positive for E. coli`), position = "dodge") +
+   geom_text(aes(x = fc_tap_pa_2, y = `% Positive for E. coli`,
+                label = paste0(round(`% Positive for E. coli`, 1), "%")),
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Free Chlorine Concentration (mg/L)", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       title = "Tap Water",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw()
+
+
+
+stored_stats_pooled <- idexx_tab%>%
+  filter(sample_type == "Stored")%>%
+    group_by(fc_stored_pa_2) %>%
+    summarise(
+      "Number of Samples" = n(),
+      "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+      "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+      "% Tap Samples with Free Chlorine > 0.2 mg/L" = 
+        round((sum(fc_tap_pa_2 == "Presence") / n()) * 100, 1),
+      "% Stored Samples with Free Chlorine > 0.2 mg/L" = 
+        round((sum(fc_stored_pa_2 == "Presence") / n()) * 100, 1)
+      )
+
+
+
+
+
+#Making plot to display chlorine results vs IDEXX results
+
+p_stored_pooled <- ggplot(data = stored_stats_pooled) + 
+  geom_col(aes(x = fc_stored_pa_2, y = `% Positive for E. coli`), position = "dodge") +
+  geom_text(aes(x = fc_stored_pa_2, y = `% Positive for E. coli`,
+                label = paste0(round(`% Positive for E. coli`, 1), "%")),
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Free Chlorine Concentration (mg/L)", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       title = "Stored Water",
+       caption = ""
+       )+
+  theme_bw()
+
+
+#Patchwork package addition
+p_pooled <- 
+  p_tap_pooled + p_stored_pooled +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water vs Chlorine Concentration (N = 481)")),
+  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, April, July, and August 2024."
+)
+
+p_pooled
+
 
 
 

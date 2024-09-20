@@ -604,8 +604,8 @@ idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
 #creating new variable to tell the sample type
 idexx$sample_type <- idexx$sample_type%>%
   factor()%>%
-  fct_recode("Stored" = "sample_ID_stored",
-             "Tap" = "sample_ID_tap")
+  fct_recode("Stored" = "stored_sample_id",
+             "Tap" = "tap_sample_id")
 
 #Renaming bag ID variables
 idexx <- idexx%>%
