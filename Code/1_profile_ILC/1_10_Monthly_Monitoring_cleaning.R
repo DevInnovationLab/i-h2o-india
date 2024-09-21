@@ -519,7 +519,12 @@ ms_flagged <- ms %>%
 View(ms_flagged)
 
 
-
+#Assigning more meaningful variable names
+ms <- ms%>%
+  rename(fc_tap_avg = "tap_water_fc")%>%
+  rename(fc_stored_avg = "stored_water_fc")%>%
+  rename(tc_tap_avg = "tap_water_tc")%>%
+  rename(tc_stored_avg = "stored_water_tc")
 
 
 #---------------------IDEXX Data Cleaning------------------------------------
@@ -580,11 +585,18 @@ idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
 
 
 
+
+
 #creating new variable to tell the sample type
 idexx$sample_type <- idexx$sample_type%>%
   factor()%>%
   fct_recode("Stored" = "stored_sample_id",
              "Tap" = "tap_sample_id")
+
+#Renaming bag ID variables
+idexx <- idexx%>%
+  rename("bag_ID_tap" = tap_bag_id)%>%
+  rename("bag_ID_stored" = stored_bag_id)
 
 #need to relabel idexx variables
 

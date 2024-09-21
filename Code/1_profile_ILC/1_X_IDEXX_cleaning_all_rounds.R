@@ -366,8 +366,16 @@ idexx$assignment <- fct_recode(idexx$assignment,
                                "Control" = "C", 
                                "Treatment" = "T")
 
+abr$assignment <- factor(abr$assignment)
+abr$assignment <- fct_recode(abr$assignment,
+                               "Control" = "C", 
+                               "Treatment" = "T")
+
 #Renaming Panchayat village variable
 idexx <- idexx%>%
+  mutate(panchayat_village = `Panchat village`)
+
+abr <- abr%>%
   mutate(panchayat_village = `Panchat village`)
 
 #Calculating MPN for each IDEXX test
@@ -388,12 +396,14 @@ idexx <- idexx%>%
 abr <- abr%>%
   mutate(cf_95lo = quantify_95lo(y_large, y_small, "qt-2000"),
          cf_mpn  = quantify_mpn(y_large, y_small, "qt-2000"),
-         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))
+         cf_95hi = quantify_95hi(y_large, y_small, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
 
 abr <- abr%>%
   mutate(ec_95lo = quantify_95lo(f_large, f_small, "qt-2000"),
          ec_mpn  = quantify_mpn(f_large, f_small, "qt-2000"),
-         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))
+         ec_95hi = quantify_95hi(f_large, f_small, "qt-2000"))%>%
+  mutate_at(vars(cf_mpn), ~ifelse(is.na(.) == TRUE, 2419, .))
 
 #Checking cases of NA for total coliform and e coli
 #xx <- idexx%>%
@@ -472,6 +482,7 @@ abr <- abr%>%
 #Writing files to lab_data and final folders
 write_csv(idexx,paste0(user_path(),"/5_lab data/idexx/cleaned/BL_idexx_master_cleaned.csv"))
 write_csv(idexx,paste0(user_path(),"/3_final/BL_idexx_master_cleaned.csv"))
+write_csv(abr, paste0(user_path(),"/3_final/BL_idexx_ABR_master_cleaned.csv"))
 
 
 
@@ -1187,6 +1198,9 @@ idexx_r3 <- idexx_r3%>%
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
 
+#Selecting out ABR data
+abr_r3 <- idexx_r3%>%
+  filter(abr == 1)
 
 #Dropping ABR samples
 idexx_r3 <- idexx_r3%>%
@@ -1203,7 +1217,7 @@ write_csv(idexx_r3,paste0(user_path(),"/3_final/R3_idexx_master_cleaned.csv"))
 
 
 #Renaming panchayat variable
-idexx_r4 <- idexx_r3%>%
+idexx_r4 <- idexx_r4%>%
   mutate(panchayat_village = `Panchat village`)
 
 ###-------------------------Round 5 data cleaning------------------------#####
@@ -1222,7 +1236,7 @@ idexx_comb <- idexx%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "BL")%>%
   mutate(pooled_round = "BL")
 
@@ -1230,7 +1244,7 @@ idexx_r1_comb <- idexx_r1%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%  
   mutate(data_round = "R1")%>%
   mutate(pooled_round = "FU")
 
@@ -1238,7 +1252,7 @@ idexx_r2_comb <- idexx_r2%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "R2")%>%
   mutate(pooled_round = "FU")
 
@@ -1246,7 +1260,7 @@ idexx_r3_comb <- idexx_r3%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%
   mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
@@ -1254,7 +1268,7 @@ idexx_r4_comb <- idexx_r4%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%  
   mutate(data_round = "R4")%>%
   mutate(pooled_round = "FU")
 
@@ -1262,16 +1276,38 @@ idexx_r5_comb <- idexx_r5%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
                 sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
                 cf_95hi, cf_95lo, ec_95hi, ec_95lo,
-                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%  
   mutate(data_round = "R5")%>%
+  mutate(pooled_round = "FU")
+
+#Combining ABR datasets
+abr_comb <- abr%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "BL")%>%
+  mutate(pooled_round = "FU")
+
+abr_r3_comb <- abr_r3%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
 #combining
 idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb, idexx_r4_comb, idexx_r5_comb)
 
+abr_comb <- rbind(abr_comb, abr_r3_comb)
+
+
 #Writing/updating final file
 write_csv(idexx_comb,paste0(user_path(),"/5_lab data/idexx/cleaned/POOLED_idexx_master_cleaned.csv"))
 write_csv(idexx_comb,paste0(user_path(),"/3_final/POOLED_idexx_master_cleaned.csv"))
+
+write_csv(abr_comb,paste0(user_path(),"/3_final/POOLED_idexx_ABR_master_cleaned.csv"))
 
 
 

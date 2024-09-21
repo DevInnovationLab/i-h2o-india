@@ -127,6 +127,9 @@ idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_mast
 #Pooled IDEXX Rounds
 idexx_tab <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/POOLED_idexx_master_cleaned.csv"))
 
+#Pooled IDEXX Rounds
+idexx_abr <- read_csv(paste0(user_path(),"/3_final/POOLED_idexx_ABR_master_cleaned.csv"))
+
 #Checking Michelle's cleaned IDEXX data
 idexx_mc <- read_stata(paste0(user_path(),"/2_deidentified/Ecoli results followup_cleaned_WIDE.dta"))
 
@@ -147,10 +150,10 @@ cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta"
 el <- read_stata(paste0(user_path(),"3_final/1_8_Endline_Census_cleaned.dta" ))
 
 #map data - shapefile
-shp_file_0 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_0.shp"))
-shp_file_1 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_1.shp"))
-shp_file_2 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_2.shp"))
-shp_file_3 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_3.shp"))
+shp_file_0 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_0.shp"), quiet = TRUE)
+shp_file_1 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_1.shp"), quiet = TRUE)
+shp_file_2 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_2.shp"), quiet = TRUE)
+shp_file_3 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_3.shp"), quiet = TRUE)
 
 
 
@@ -209,7 +212,7 @@ desc_stats <- cen%>%
                                  water_treat_binary ~ "Water treatment used")
                     )%>%
                       modify_footnote(update =  ~ 
-                      "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
+                      "Mean (SD)")
 
 
 
@@ -574,7 +577,7 @@ p_ec_pooled <- ggplot(data = tc_stats_pooled) +
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme(axis.text.x = element_text(vjust=1, hjust=1))
 
 p_cf_pooled <- ggplot(data = tc_stats_pooled) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
@@ -592,14 +595,14 @@ p_cf_pooled <- ggplot(data = tc_stats_pooled) +
        caption = ""
        )+
   theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme(axis.text.x = element_text( vjust=1, hjust=1))
 
 #Patchwork package addition
 p_pooled <- 
   p_cf_pooled + p_ec_pooled +
   plot_annotation(
-  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 481)")),
-  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, and April 2024."
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 905)")),
+  caption = "Stored and tap water samples were pooled across 5 household surveys rounds across 20 villages in February, March, April, July, and August 2024."
 )
 
 p_pooled
@@ -651,11 +654,134 @@ p_by_round <-
   p_cf_by_round + p_ec_by_round +
   plot_annotation(
   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 905)")),
-  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, and April, July, and August/September 2024."
+  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
 )
 
 p_by_round
 
+
+#Creating box plot of log MPN counts across rounds
+
+#Plotting treatment/control stats on a bar plot
+p_ec_by_round <- ggplot(data = idexx_tab) + 
+  geom_boxplot(aes(x = sample_type, y = ec_log, fill = assignment)) +
+  scale_y_continuous(
+                     limits = c(-0.5, 4),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("Log10 MPN",italic("E. coli"), " per 100 mL")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_by_round <- ggplot(data = idexx_tab) + 
+  geom_boxplot(aes(x = sample_type, y = cf_log, fill = assignment), position = "dodge") +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(-0.5, 4),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("Log10 MPN Total Coliform per 100 mL")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_by_round <- 
+  p_cf_by_round + p_ec_by_round +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 905)")),
+  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
+)
+
+p_by_round
+
+
+#Creating plot of pooled results from the monsoon rounds
+tc_stats_monsoon <- tc_stats_round%>%
+  filter(data_round == "R4" | data_round == "R5")
+
+#Plotting treatment/control stats on a bar plot
+p_ec_monsoon <- ggplot(data = tc_stats_monsoon) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_monsoon <- ggplot(data = tc_stats_monsoon) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for total coliform")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_monsoon <- 
+  p_cf_monsoon + p_ec_monsoon +
+  plot_annotation(
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 264 so far)")),
+  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
+)
+
+p_monsoon
+
+
+
+#Presenting WHO risk levels in a figure
+
+#Plotting treatment/control stats on a bar plot
+p_ec_risk <- ggplot(data = tc_stats_round) + 
+  geom_col(aes(x = sample_type, y = `WHO 'High' Risk Contamination (> 100 MPN E. coli per 100 mL)`, fill = assignment), position = "dodge") +
+  scale_y_continuous(
+                     limits = c(0, 50),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% of samples")),
+       fill = "Assignment",
+       title = expression(paste("Proportion of Samples Considered 'High' Risk (> 100 MPN ", italic("E. coli"), " per 100 mL sample) Stratified by Round (N = 905 so far)")),
+       caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+
+p_ec_risk
 
 
 #Displaying desc stats table for IDEXX
@@ -923,6 +1049,7 @@ tap_stats_pooled <- idexx_tab%>%
         round((sum(fc_tap_pa_2 == "Presence") / n()) * 100, 1),
       "% Stored Samples with Free Chlorine > 0.2 mg/L" = 
         round((sum(fc_stored_pa_2 == "Presence") / n()) * 100, 1)
+      
       )
 
 #Making plot to display chlorine results vs IDEXX results
@@ -984,11 +1111,76 @@ p_stored_pooled <- ggplot(data = stored_stats_pooled) +
 p_pooled <- 
   p_tap_pooled + p_stored_pooled +
   plot_annotation(
-  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water vs Chlorine Concentration (N = 481)")),
-  caption = "Stored and tap water samples were pooled across 3 monthly household surveys rounds across 20 villages in February, March, April, July, and August 2024."
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water vs Chlorine Concentration (N = 905)")),
+  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, April, July, and August 2024."
 )
 
 p_pooled
+
+
+
+
+```
+\newpage
+# Antibiotic Resistance Analyses
+
+```{r abr analyses}
+
+#
+
+#Creating plot of ABR results stratified by round
+tc_stats_abr <- abr_stats(idexx_abr)
+
+#Plotting treatment/control stats on a bar plot
+p_ec_abr <- ggplot(data = tc_stats_abr) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ABR ",italic("E. coli"))),
+       fill = "Assignment",
+       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 388 so far)")),
+       caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cf_abr <- ggplot(data = tc_stats_abr) + 
+  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+                      fill = assignment), position = position_dodge(width = 0.9),
+                 width = 0.25) +
+  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ABR total coliform")),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       )+
+  facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+#Patchwork package addition
+p_abr <- 
+  p_cf_abr + p_ec_abr +
+  plot_annotation(
+  title = expression(paste("Presence of Antibiotic Resistant Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 388 so far)")),
+  caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
+)
+
+p_abr
+
+
 
 
 
@@ -1118,8 +1310,8 @@ p_mid <- el_models%>%
   labs(x="Prevalence Ratio") +
   coord_cartesian(ylim=c(1,length(el_models$model_name)+1), xlim=c(0, 2))+
   geom_vline(xintercept = 1, linetype="dashed") +
-  annotate("text", x = 0.3, y = length(el_models$model_name)+1, label = "Treatment protective") +
-  annotate("text", x = 1.7, y = length(el_models$model_name)+1, label = "Treatment harmful") +
+  annotate("text", x = 0.3, y = length(el_models$model_name)+1, label = " ") +
+  annotate("text", x = 1.7, y = length(el_models$model_name)+1, label = " ") +
   theme(axis.line.y = element_blank(),
         axis.ticks.y= element_blank(),
         axis.text.y= element_blank(),
@@ -1155,9 +1347,62 @@ layout <- c(
   area(t = 0, l = 10, b = 30, r = 12)
 )
 # final plot arrangement
-p_left + p_mid + p_right + plot_layout(design = layout)
+p_endline_results = p_left + p_mid + p_right + plot_layout(design = layout)
+
+p_endline_results
 
 
+
+#Another forestplot method
+library(forestplot)
+
+
+#Adjusting model values to specifically fit forestplot function
+el_models_forestplot <- el_models%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 1))%>%
+  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+#Changing model names
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Taps as Primary Source" = "prim_source_jjm",
+             "Use a Secondary Source" = "sec_source",
+             "Drink Tap Water" = "jjm_drinking",
+             "Treat Water" = "water_treat_binary")
+
+el_forestplot <- el_models_forestplot%>%
+  forestplot(labeltext = c(model_name, estimate, p_value),
+             title = "Intervention Effect on WASH Outcomes",
+             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+             clip = c(0.1, 3.1), 
+             xlog = FALSE,
+             txt_gp = fpTxtGp(
+               label = gpar(fontsize = 10),       # Adjust label text size
+               ticks = gpar(fontsize = 15),       # Adjust tick text size
+               xlab = gpar(fontsize = 15)),
+             boxsize = 0.2
+             )%>%
+  fp_add_lines(h_3 = gpar(lty = 1), 
+               h_7 = gpar(lwd = 1, columns = 1:4, col = "black"))%>% 
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black",
+               align = "lrrr",
+               hrz_lines = "black")%>% 
+  fp_add_header(model_name = c("", "Outcome"),
+                estimate = c("Prevalence Ratio", "(95% CI)")%>%
+                  fp_align_center(),
+                p_value = c("", "P-value")%>% 
+                  fp_align_center()
+                )
+
+print(el_forestplot)
 
 
 ```
