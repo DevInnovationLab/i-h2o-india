@@ -124,6 +124,7 @@ long_test <- read_csv(paste0(user_path(), "1_raw/1_11_Longitudinal Testing/Longi
 # View the dataset
 View(long_test)
 
+#-----------------------------Reshaping and cleaning--------------------------
 # Reshape data
 df_long <- long_test %>%
   # First pivot to long format for time variables
@@ -139,9 +140,9 @@ df_long <- long_test %>%
     values_to = "tw_fc"               # Name for the column that stores the values
   ) %>%
   # Filter rows to align time and chlorine concentration values
-  filter(str_replace(tw_time_variable, "tw_time_", "tw_fc_") == tw_fc_variable) %>%
-  # Remove unnecessary columns
-  select(-tw_time_variable, -tw_fc_variable)
+  filter(str_replace(tw_time_variable, "tw_time_", "tw_fc_") == tw_fc_variable)
+# Remove unnecessary columns
+#select(-tw_time_variable, -tw_fc_variable)
 
 # View the reshaped data
 View(df_long)
@@ -160,28 +161,28 @@ View(df_long)
 # adding variable labels
 #location of tap:
 df_long$village_name <- factor(df_long$village_name, 
-                        levels = c(10101, 20101, 30301, 30602, 30701, 40201, 40401, 50401, 50501),
-                        labels = c("Asada", "Badabangi", "Tandipur", "Mukundpur", "Gopi Kankubadi", "Bichikote", "Naira", "Birnarayanpur", "Nathma"))
+                               levels = c(10101, 20101, 30301, 30602, 30701, 40201, 40401, 50401, 50501),
+                               labels = c("Asada", "Badabangi", "Tandipur", "Mukundpur", "Gopi Kankubadi", "Bichikote", "Naira", "Birnarayanpur", "Nathma"))
 
 df_long$location <- factor(df_long$location, 
-                               levels = c(1, 2),
-                               labels = c("Nearest Tap", "Farthest Tap"))
-                               
+                           levels = c(1, 2),
+                           labels = c("Nearest Tap", "Farthest Tap"))
+
 # Remove rows with missing values in 'tw_time' or 'tw_fc'
 df_long <- df_long %>%
   filter(complete.cases(tw_time, tw_fc))
 
 # Maunal corrections
 df_clean <- df_long %>%
-mutate(tw_time_char = as.character(tw_time)) %>%  # Ensuring that tw_time is in character format
-mutate(tw_time_corrected = case_when(
-  tw_time_char == "18:42:59" ~ "06:42:59",
-  tw_time_char == "18:47:21" ~ "06:47:21",
-  tw_time_char == "18:52:14" ~ "06:52:14",
-  tw_time_char == "18:57:31" ~ "06:57:31",
-  tw_time_char == "19:03:47" ~ "07:03:47",
-  TRUE ~ tw_time_char
-)) %>%
+  mutate(tw_time_char = as.character(tw_time)) %>%  # Ensuring that tw_time is in character format
+  mutate(tw_time_corrected = case_when(
+    tw_time_char == "18:42:59" ~ "06:42:59",
+    tw_time_char == "18:47:21" ~ "06:47:21",
+    tw_time_char == "18:52:14" ~ "06:52:14",
+    tw_time_char == "18:57:31" ~ "06:57:31",
+    tw_time_char == "19:03:47" ~ "07:03:47",
+    TRUE ~ tw_time_char
+  )) %>%
   mutate (tw_time = tw_time_corrected)
 #  df_clean$tw_time <- format(tw_time, "%H:%M:%S")
 #  mutate(tw_time = as.POSIXct(paste("2024-01-01", tw_time_corrected), format = "%Y-%m-%d %H:%M:%S")) %>%  # Convert corrected times to POSIXct with a temp date
@@ -198,11 +199,34 @@ df_clean$time <- sprintf("%02d:%02d", df_clean$hours, df_clean$minutes)
 
 View(df_clean)
 
-# Convert tw_time to IST
-#df_clean$tw_time <- with_tz(df_clean$tw_time, tzone = "Asia/Kolkata")
+#------------------------------Creating variables for minutes since supply and round--------
 
-#df_clean <- df_clean %>%
-#mutate(tw_time = as.POSIXct(paste("2024-01-01", tw_time), format = "%Y-%m-%d %H:%M:%S"))
+#converting the start time of supply to hh:mm format form hh:mm:ss format
+
+# Checking if supply_start_time is in hms format
+class(df_clean$supply_start_time)
+# Extract hours and minutes from the supply_start_time variable and store in a new var 'time_supply_new'
+df_clean$hours_supply <- hour(df_clean$supply_start_time)
+df_clean$minutes_supply <- minute(df_clean$supply_start_time)
+# Combine hours and minutes into a single column
+df_clean$time_supply_new <- sprintf("%02d:%02d", df_clean$hours_supply, df_clean$minutes_supply)
+
+#converting the time var and the time of supply to POSIX format
+df_clean <- df_clean %>%
+  mutate(
+    time = as.POSIXct(time, format = "%H:%M"),   # Adjust format if necessary
+    time_supply_new = as.POSIXct(time_supply_new, format = "%H:%M")
+  )
+
+#generating a new variable for time since start of supply 
+df_clean <- df_clean %>%
+  mutate(time_since_supply = as.numeric(difftime(time, time_supply_new, units = "mins")))
+
+#generating a new variable mentioning the round of the survey (R1 or R2); started R2 on Sep 4
+df_clean <- df_clean %>%
+  mutate(round = ifelse(date_only < "2024-09-04", "Round 1", "Round 2")) 
+
+#------------------------------Creating new dfs for each round-----------------
 
 # Define the cutoff date for different rounds of Longitudinal Testing
 cutoff_date <- as.Date("2024-09-04")
@@ -219,41 +243,57 @@ filtered_data_r2 <- df_clean %>%
 
 View(filtered_data_r2)
 
-#CREATING THE GGPLOTS
+#-----------------------------------Creating GGplots - round-wise---------------
 #Round 1 of Longitudinal Testing
 # Defining the IST limits and breaks
 #start_time <- as.POSIXct("2024-01-01 06:00:00", tz = "Asia/Kolkata")
 #end_time <- as.POSIXct("2024-01-01 09:00:00", tz = "Asia/Kolkata")
 
+# Add a new column for custom text annotation for each village
+filtered_data_r1 <- filtered_data_r1 %>%
+  mutate(annotation_text = case_when(
+    village_name == "Asada" ~ "Days since Refill: 5, Valve: 75 degrees",
+    village_name == "Badabangi" ~ "Days since Refill: 17, Valve: 75 degrees",
+    village_name == "Mukundpur" ~ "Days since Refill: 5, Valve: 75 degrees",
+    village_name == "Gopi Kankubadi" ~ "Days since Refill: 5, Valve: 75 degrees",
+    village_name == "Naira" ~ "Days since Refill: 5, Valve: 75 degrees",
+    village_name == "Birnarayanpur" ~ "Days since Refill: 17, Valve: 65 degrees"
+  ))
+
 plot1 <- ggplot(data = filtered_data_r1) +
-  geom_point(aes(x = time, y = tw_fc, color = factor(location))) +
-  geom_line(aes(x = time, y = tw_fc, color = factor(location), group = location)) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
   facet_wrap(~ village_name, scales = "free_x") +
-  geom_hline(yintercept = 0.40, linetype = "dashed", color = "red") +
-  geom_hline(yintercept = 0.60, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0.40, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 0.60, linetype = "dashed", color = "grey") +
+  # Adjusted annotations
+  annotate("text", x = max(filtered_data_r1$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
+  annotate("text", x = max(filtered_data_r1$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
   labs(
-    title = "Chlorine Readings Across Time by Village and Tap - Round 1",
-    x = "Time of sample collection",
-    y = "Chlorine Concentration (mg/L)",
+    title = "Temporal Presentation of Chlorine Readings by Village and Tap - Round 1",
+    x = "Minutes since start of supply time",
+    y = "Free Chlorine Concentration (mg/L)",
     color = "Tap"
   ) +
   theme_bw() +
   theme(
-    axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1),
+    axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust = 1),
     legend.position = "bottom",
-    strip.text = element_text(size = 12)
+    strip.text = element_text(size = 12),
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
   ) +
   scale_y_continuous(
     limits = c(0, 2),
     breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(filtered_data_r1$time_since_supply)),
+    breaks = seq(0, max(filtered_data_r1$time_since_supply), by = 10),
   ) 
-#  scale_x_datetime(
-#    limits = c(start_time, end_time),
-#    breaks = seq(from = start_time, to = end_time, by = "10 mins"),
-#    labels = date_format("%H:%M")
-#  ) 
+
 
 print(plot1)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R1.png"), plot1, bg = "white", width = 10, height = 6, dpi = 200)
 
 
 #Round 2 of Longitudinal Testing 
@@ -262,8 +302,43 @@ print(plot1)
 #end_time <- as.POSIXct("2024-01-01 09:00:00", tz = "Asia/Kolkata")
 
 plot2 <- ggplot(data = filtered_data_r2) +
-  geom_point(aes(x = time, y = tw_fc, color = factor(location))) +
-  geom_line(aes(x = time, y = tw_fc, color = factor(location), group = location)) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
+  facet_wrap(~ village_name, scales = "free_x") +
+  geom_hline(yintercept = 0.40, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 0.60, linetype = "dashed", color = "grey") +
+  # Adjusted annotations
+  annotate("text", x = max(filtered_data_r2$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
+  annotate("text", x = max(filtered_data_r2$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
+  labs(
+    title = "Temporal Presentation of Chlorine Readings by Village and Tap - Round 2",
+    x = "Minutes since start of supply time",
+    y = "Free Chlorine Concentration (mg/L)",
+    color = "Tap"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12),
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
+  ) +
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(filtered_data_r2$time_since_supply)),
+    breaks = seq(0, max(filtered_data_r2$time_since_supply), by = 10),
+  ) 
+
+
+print(plot2)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R2.png"), plot2, bg = "white", width = 10, height = 6, dpi = 200)
+
+plot2 <- ggplot(data = filtered_data_r2) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
   facet_wrap(~ village_name, scales = "free_x") +
   geom_hline(yintercept = 0.40, linetype = "dashed", color = "red") +
   geom_hline(yintercept = 0.60, linetype = "dashed", color = "red") +
@@ -291,8 +366,73 @@ plot2 <- ggplot(data = filtered_data_r2) +
 
 print(plot2)
 
+#------------------------Creating new dfs for each village----------------------
 
-#Saving the cleaned dataset
+#dropping temporary variables 
+#library(dplyr)
+#df_clean <- df_clean %>%
+#  select(-hours_supply, -minutes_supply)
+
+#creating a separate dataset for each village for creation of separate ggplots
+#Asada
+asada_data <- df_clean %>% 
+  filter(village_name == "Asada")
+View(asada_data)
+
+bangi_data <- df_clean %>% 
+  filter(village_name == "Badabangi")
+
+gopi_data <- df_clean %>% 
+  filter(village_name == "Gopi Kankubadi")
+
+
+#--------------------------Creating GGplots for each village--------------------
+#creating a ggplot for Asada 
+
+plot_asada <- ggplot(data = asada_data) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
+  facet_wrap(~ round, nrow = 1, scales = "free_x") +
+  geom_hline(yintercept = 0.40, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 0.60, linetype = "dashed", color = "grey") +
+  # Adjusted annotations
+  annotate("text", x = max(asada_data$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
+  annotate("text", x = max(asada_data$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
+  labs(
+    title = "Temporal Presentation of Free Chlorine Readings across Supply Time in Asada",
+    x = "Minutes since start of water supply",
+    y = "Free Chlorine Concentration (mg/L)",
+    color = "Tap",
+    caption = "The graph displays results from two rounds of longitudinal testing at the nearest and farthest taps in Asada village during water supply time. The left\n\
+    image shows results from the first round of testing, conducted 6 days after the refill with the dosing control valve set to 75 degrees. The right image\n\
+    shows results from the second round of testing, conducted 11 days after the refill with the valve at 60 degrees, indicating lower dosing."
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 0, vjust = 1, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12),
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
+  ) +
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(asada_data$time_since_supply)),
+    breaks = seq(0, max(asada_data$time_since_supply), by = 10),
+  ) 
+
+print(plot_asada)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_asada.png"), plot_asada, bg = "white", width = 10, height = 6, dpi = 200)
+
+-----------------------------------
+  #creating a ggplot for Bangi
+  
+  
+  
+  #-----------------------------Saving the dataset------------------------
+#saving the cleaned dataset
 write_csv(df_clean,paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
 
 
