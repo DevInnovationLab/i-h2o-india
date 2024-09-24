@@ -111,8 +111,14 @@ tc_stats <- function(idexx_data){
     #Adjusting so the CI cannot be more or less than 0 or 100
     mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
                                        `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+    mutate(`Lower CI - TC` = case_when(`Lower CI - TC` < 0 ~ 0,
+                                       `Lower CI - TC` >= 0 ~ `Lower CI - TC`))%>%
     mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
-                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))%>%
+    mutate(`Upper CI - EC` = case_when(`Upper CI - EC` > 100 ~ 100,
+                                       `Upper CI - EC` <= 100 ~ `Upper CI - EC`))
+    
+    
   return(tc)
 }
 
@@ -175,8 +181,12 @@ pooled_stats <- function(idexx_data){
     #Adjusting so the CI cannot be more or less than 0 or 100
     mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
                                        `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+    mutate(`Lower CI - TC` = case_when(`Lower CI - TC` < 0 ~ 0,
+                                       `Lower CI - TC` >= 0 ~ `Lower CI - TC`))%>%
     mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
-                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))%>%
+    mutate(`Upper CI - EC` = case_when(`Upper CI - EC` > 100 ~ 100,
+                                       `Upper CI - EC` <= 100 ~ `Upper CI - EC`))
   return(tc)
 }
 
@@ -238,8 +248,12 @@ round_stats <- function(idexx_data){
     #Adjusting so the CI cannot be more or less than 0 or 100
     mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
                                        `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+    mutate(`Lower CI - TC` = case_when(`Lower CI - TC` < 0 ~ 0,
+                                       `Lower CI - TC` >= 0 ~ `Lower CI - TC`))%>%
     mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
-                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))%>%
+    mutate(`Upper CI - EC` = case_when(`Upper CI - EC` > 100 ~ 100,
+                                       `Upper CI - EC` <= 100 ~ `Upper CI - EC`))
   return(tc)
 }
 
@@ -299,8 +313,12 @@ abr_stats <- function(idexx_data){
     #Adjusting so the CI cannot be more or less than 0 or 100
     mutate(`Lower CI - EC` = case_when(`Lower CI - EC` < 0 ~ 0,
                                        `Lower CI - EC` >= 0 ~ `Lower CI - EC`))%>%
+    mutate(`Lower CI - TC` = case_when(`Lower CI - TC` < 0 ~ 0,
+                                       `Lower CI - TC` >= 0 ~ `Lower CI - TC`))%>%
     mutate(`Upper CI - TC` = case_when(`Upper CI - TC` > 100 ~ 100,
-                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))
+                                       `Upper CI - TC` <= 100 ~ `Upper CI - TC`))%>%
+    mutate(`Upper CI - EC` = case_when(`Upper CI - EC` > 100 ~ 100,
+                                       `Upper CI - EC` <= 100 ~ `Upper CI - EC`))
   return(tc)
 }
 

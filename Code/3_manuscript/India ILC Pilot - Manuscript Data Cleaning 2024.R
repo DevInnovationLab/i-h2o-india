@@ -1360,6 +1360,12 @@ el <- el%>%
     jjm_drinking == "Yes" ~ 1,
     jjm_drinking == "No" ~ 0))
 
+#Creating variable for complaints about taste and smell
+el <- el%>%
+  mutate(tap_issues_taste = ifelse(tap_issues_type_1 == 1, 2, 1))%>%
+  replace_na(tap_issues_taste, value = 1)
+
+
 
 
 

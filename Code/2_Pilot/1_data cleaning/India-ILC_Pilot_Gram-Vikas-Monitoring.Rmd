@@ -129,19 +129,22 @@ visit_date <- Sys.Date()
 current_date <- visit_date
 
 # Calculate the start date of the current week (Monday)
-start_of_week <- visit_date - (wday(visit_date) - 2) %% 4
+start_of_week <- visit_date - (wday(visit_date) - 2) %% 7
 
 # Create a sequence of dates for the current week
-visit_date <- seq.Date(start_of_week, length.out = 4, by = "day")
+visit_date <- seq.Date(start_of_week, length.out = 7, by = "day")
 
 #Creating date table for villages to be visited
 
 weekly_plan <- tibble(Date = date(visit_date),
-       Day = c( "Thursday", "Friday",
+       Day = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
                "Saturday", "Sunday"),
-       Plan = c("Mukundpur, Naira, Bichikote, Tandipur, BNPur",
-                "Asada, Bangi, Naira",
-                "Nathma, Gopi Kankubadi, Naira",
+       Plan = c("Asada", #Needs to be manually updated
+                "Asada and Gopi Kankubadi",
+                "Asada, Mukundpur and Gopi Kankubadi",
+                "Asada and Mukundpur",
+                "Gopi Kankubadi, Mukundpur and Tandipur",
+                "Tandipur and Gopi Kankubadi",
                 "Flexible Day")
        )
 
