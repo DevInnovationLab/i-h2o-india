@@ -358,10 +358,21 @@ ilc_glm <- function(data, var){
   tidy_results <- tidy_results%>%
     mutate(N = N)
   
+  
   #exponentiate the estimates/std errors to get Prevalence Ratio
   
   tidy_results$estimate <- exp(tidy_results$estimate)
   tidy_results$std_error <- exp(tidy_results$std_error)
+  
+  #Calculating Confidence Intervals
+  #Need to calculate on original beta scale before transforming!
+  tidy_results <- tidy_results%>%
+    mutate(ln_estimate = log(estimate))%>%
+    mutate(ln_std_error = log(std_error))%>%
+    mutate(Lower_CI = exp(ln_estimate - qt(0.975, N) * ln_std_error))%>%
+    mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
+                                Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
+    mutate(Upper_CI = exp(ln_estimate + qt(0.975, N) * ln_std_error))
   
   
   return(tidy_results)
@@ -398,6 +409,16 @@ ilc_lm <- function(data, var){
   tidy_results <- tidy_results%>%
     mutate(N = N)
   
+  #Calculating Confidence Intervals
+  #Need to calculate on original beta scale before transforming!
+  tidy_results <- tidy_results%>%
+    mutate(ln_estimate = log(estimate))%>%
+    mutate(ln_std_error = log(std_error))%>%
+    mutate(Lower_CI = exp(ln_estimate - qt(0.975, N) * ln_std_error))%>%
+    mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
+                                Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
+    mutate(Upper_CI = exp(ln_estimate + qt(0.975, N) * ln_std_error))
+  
   return(tidy_results)
 }
 
@@ -420,17 +441,17 @@ ilc_model_table_only <- function(models = all_models){
     
     one_model <- one_model%>%
       dplyr::filter(covariate == "assignmentTreatment")%>%
-      dplyr::select(!(z_statistic))%>% #Removing z statistic
+      dplyr::select(!(c(z_statistic, ln_estimate, ln_std_error)))%>% #Removing z statistic and natural log estimates/std errors
       mutate(model_name = model_names[i])%>%
       dplyr::select(model_name, everything())%>% #moves model_name to front
       mutate(signif = case_when(p_value > 0.10 ~ " ",
                                 p_value <= 0.10 & p_value > 0.05 ~ "*",
                                 p_value <= 0.05 & p_value > 0.01 ~ "**",
-                                p_value <= 0.01 ~ "***"))%>%
-      mutate(Lower_CI = estimate - qt(0.975, N) * std_error)%>%
-      mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
-                                  Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
-      mutate(Upper_CI = estimate + qt(0.975, N) * std_error)
+                                p_value <= 0.01 ~ "***"))#%>%
+      # mutate(Lower_CI = estimate - qt(0.975, N) * std_error)%>%
+      # mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
+      #                             Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
+      # mutate(Upper_CI = estimate + qt(0.975, N) * std_error)
     
     #Rounding numbers to 3 digits
     one_model[3:4] <- round(one_model[3:4], digits = 3)
@@ -466,7 +487,7 @@ ilc_model_table <- function(models = all_models){
     
     one_model <- one_model%>%
       dplyr::filter(covariate == "assignmentTreatment")%>%
-      dplyr::select(!(z_statistic))%>% #Removing z statistic
+      dplyr::select(!(c(z_statistic, ln_estimate, ln_std_error, Lower_CI, Upper_CI)))%>% #Removing z statistic and natural log estimates/std errors
       mutate(model_name = model_names[i])%>%
       dplyr::select(model_name, everything())%>% #moves model_name to front
       mutate(signif = case_when(p_value > 0.10 ~ " ",

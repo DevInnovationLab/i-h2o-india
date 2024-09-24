@@ -103,6 +103,10 @@ r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
 #Chlorine Monitoring Survey
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
+#Longitudinal Chlorine Monitoring
+mon_long <- read_csv(paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
+
+
 #Longitudinal chlorine monitoring form
 #mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
@@ -283,6 +287,40 @@ cl_p1 <- ggplot(data = mon_summary_weekly) +
   
   
 cl_p1
+
+
+```
+\newpage
+# Longitudinal Chlorine Monitoring
+
+```{r Longitudinal Chlorine Monitoring}
+
+
+p_mon_long <- ggplot(data = mon_long) +
+  geom_point(aes(x = time, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time, y = tw_fc, color = factor(location), group = location)) +
+  facet_wrap(~ village_code, scales = "free_x") +
+  geom_hline(yintercept = 0.20, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0.60, linetype = "dashed", color = "red") +
+  labs(
+    title = "Longitudinal Chlorine Monitoring Over Water Supply Time",
+    x = "Time of Sample Collection",
+    y = "Free Chlorine Concentration (mg/L)",
+    color = "Sampling Location"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) 
+
+
+p_mon_long
 
 
 ```
@@ -1143,7 +1181,7 @@ p_ec_abr <- ggplot(data = tc_stats_abr) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ABR ",italic("E. coli"))),
        fill = "Assignment",
-       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 388 so far)")),
+       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 243)")),
        caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
@@ -1301,59 +1339,60 @@ total_jjm <- rbind(cen_jjm, el_jjm)
 ```{r Endline census comparison forest plot}
 
 
-# create forest plot on log scale (middle section of figure)
-p_mid <- el_models%>%
-  ggplot(aes(y = model_name)) +
-  theme_classic() +
-  geom_point(aes(x=estimate), shape=15, size=3) +
-  geom_linerange(aes(xmin=Lower_CI, xmax=Upper_CI))+
-  labs(x="Prevalence Ratio") +
-  coord_cartesian(ylim=c(1,length(el_models$model_name)+1), xlim=c(0, 2))+
-  geom_vline(xintercept = 1, linetype="dashed") +
-  annotate("text", x = 0.3, y = length(el_models$model_name)+1, label = " ") +
-  annotate("text", x = 1.7, y = length(el_models$model_name)+1, label = " ") +
-  theme(axis.line.y = element_blank(),
-        axis.ticks.y= element_blank(),
-        axis.text.y= element_blank(),
-        axis.title.y= element_blank())
-  
-# wrangle results into pre-plotting table form
-res_plot <- el_models%>%
-  mutate(across(c(estimate, Lower_CI, Upper_CI), ~str_pad(round(.x, 2), width=3, pad=" ", side="right")),
-         estimate = paste0(estimate, " (", Lower_CI, ",", Upper_CI,")"),
-         color = rep(c("gray","white"), length(el_models$model_name)/2))%>%
-  mutate(p_value = case_when(p_value < .01 ~ "<0.01", TRUE ~ str_pad(as.character(round(p_value, 2)),width=4,pad="0",side="right")))%>%
-  bind_rows(data.frame(model_name = "Covariate", estimate = "Prevalence Ratio (95% CI)", Lower_CI = "", Upper_CI="",p_value="p-value"))%>%
-  mutate(model_name = fct_rev(fct_relevel(model_name, "Covariate")))
-
-# left side of plot - prevalence ratios
-p_left <-
-  res_plot%>%
-  ggplot(aes(y = model_name)) + 
-  geom_text(aes(x=0, label=model_name), hjust=0, fontface = "bold") +
-  geom_text(aes(x=2.2, label=estimate), hjust=0, fontface = ifelse(res_plot$estimate == "Prevalence Ratio (95% CI)", "bold", "plain")) +
-  theme_void() +
-  coord_cartesian(xlim=c(0,4))
-# right side of plot - pvalues
-p_right <-
-  res_plot%>%
-  ggplot() +
-  geom_text(aes(x=0, y=model_name, label=p_value), hjust=0, fontface = ifelse(res_plot$p_value == "p-value", "bold", "plain")) +
-  theme_void() 
-# layout design (top, left, bottom, right)
-layout <- c(
-  area(t = 0, l = 0, b = 30, r = 4),
-  area(t = 1, l = 5, b = 30, r = 10),
-  area(t = 0, l = 10, b = 30, r = 12)
-)
-# final plot arrangement
-p_endline_results = p_left + p_mid + p_right + plot_layout(design = layout)
-
-p_endline_results
-
-
+# # create forest plot on log scale (middle section of figure)
+# p_mid <- el_models%>%
+#   ggplot(aes(y = model_name)) +
+#   theme_classic() +
+#   geom_point(aes(x=estimate), shape=15, size=3) +
+#   geom_linerange(aes(xmin=Lower_CI, xmax=Upper_CI))+
+#   labs(x="Prevalence Ratio") +
+#   coord_cartesian(ylim=c(1,length(el_models$model_name)+1), xlim=c(0, 2))+
+#   geom_vline(xintercept = 1, linetype="dashed") +
+#   annotate("text", x = 0.3, y = length(el_models$model_name)+1, label = " ") +
+#   annotate("text", x = 1.7, y = length(el_models$model_name)+1, label = " ") +
+#   theme(axis.line.y = element_blank(),
+#         axis.ticks.y= element_blank(),
+#         axis.text.y= element_blank(),
+#         axis.title.y= element_blank())
+#   
+# # wrangle results into pre-plotting table form
+# res_plot <- el_models%>%
+#   mutate(across(c(estimate, Lower_CI, Upper_CI), ~str_pad(round(.x, 2), width=3, pad=" ", side="right")),
+#          estimate = paste0(estimate, " (", Lower_CI, ",", Upper_CI,")"),
+#          color = rep(c("gray","white"), length(el_models$model_name)/2))%>%
+#   mutate(p_value = case_when(p_value < .01 ~ "<0.01", TRUE ~ str_pad(as.character(round(p_value, 2)),width=4,pad="0",side="right")))%>%
+#   bind_rows(data.frame(model_name = "Covariate", estimate = "Prevalence Ratio (95% CI)", Lower_CI = "", Upper_CI="",p_value="p-value"))%>%
+#   mutate(model_name = fct_rev(fct_relevel(model_name, "Covariate")))
+# 
+# # left side of plot - prevalence ratios
+# p_left <-
+#   res_plot%>%
+#   ggplot(aes(y = model_name)) + 
+#   geom_text(aes(x=0, label=model_name), hjust=0, fontface = "bold") +
+#   geom_text(aes(x=2.2, label=estimate), hjust=0, fontface = ifelse(res_plot$estimate == "Prevalence Ratio (95% CI)", "bold", "plain")) +
+#   theme_void() +
+#   coord_cartesian(xlim=c(0,4))
+# # right side of plot - pvalues
+# p_right <-
+#   res_plot%>%
+#   ggplot() +
+#   geom_text(aes(x=0, y=model_name, label=p_value), hjust=0, fontface = ifelse(res_plot$p_value == "p-value", "bold", "plain")) +
+#   theme_void() 
+# # layout design (top, left, bottom, right)
+# layout <- c(
+#   area(t = 0, l = 0, b = 30, r = 4),
+#   area(t = 1, l = 5, b = 30, r = 10),
+#   area(t = 0, l = 10, b = 30, r = 12)
+# )
+# # final plot arrangement
+# p_endline_results = p_left + p_mid + p_right + plot_layout(design = layout)
+# 
+# p_endline_results
+# 
+# 
 
 #Another forestplot method
+#Unfortunately this package has depreciated
 library(forestplot)
 
 
@@ -1378,9 +1417,12 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
 
 el_forestplot <- el_models_forestplot%>%
   forestplot(labeltext = c(model_name, estimate, p_value),
-             title = "Intervention Effect on WASH Outcomes",
+             title = "Intervention Effect on WASH Outcomes (N = 875)",
              caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
-             clip = c(0.1, 3.1), 
+             clip = c(0, 2),
+             xticks = c(0, 0.5, 1, 1.5, 2),
+             fn.ci_norm = fpDrawCircleCI,
+             vertices = TRUE,
              xlog = FALSE,
              txt_gp = fpTxtGp(
                label = gpar(fontsize = 10),       # Adjust label text size
@@ -1400,10 +1442,55 @@ el_forestplot <- el_models_forestplot%>%
                   fp_align_center(),
                 p_value = c("", "P-value")%>% 
                   fp_align_center()
-                )
+                )%>%
+  fp_decorate_graph(grid = structure(c(1), 
+                              gp = gpar(lty = 2, col = "grey")))
 
 print(el_forestplot)
 
 
 ```
+
+
+
+```{r endline -- trying to understand robust SE issues}
+
+
+
+formula <- as.formula(paste("jjm_drinking", "~ assignment + block + panchayat_village"))
+  #Running model
+  model <- glm(formula, data = el_model, family = poisson)
+  
+  #Storing N
+  N <- length(model$y)
+  
+  #Storing Standard Errors
+  #std_errors <- sqrt(diag(vcov(model)))
+  
+  #Calculating conf intervals
+  #conf_intervals <- exp(confint.default(model)) #This shows how my original estimation method was off!
+  
+  # Adjust for clustering at the village level
+  cluster_vcov <- vcovCL(model, cluster = el_model$village, type = "HC1")
+  # Get the coefficients with clustered standard errors
+  clustered_results <- coeftest(model, vcov. = cluster_vcov)
+  
+  #Tidying models -- need to understand how to use clustered results option
+  tidy_results <- tidy(clustered_results)
+  # Rename the columns for better readability
+  colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
+  
+  #Adding N
+  tidy_results <- tidy_results%>%
+    mutate(N = N)
+  
+  #exponentiate the estimates/std errors to get Prevalence Ratio
+  
+  tidy_results$estimate <- exp(tidy_results$estimate)
+  tidy_results$std_error <- exp(tidy_results$std_error)
+  
+  tidy_results
+
+```
+
 

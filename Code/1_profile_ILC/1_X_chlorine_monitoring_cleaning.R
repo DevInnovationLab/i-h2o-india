@@ -132,6 +132,7 @@ mon_full <- read_csv(paste0(user_path(),"/1_raw/india_ilc_pilot_monitoring_WIDE.
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
+mon_long <- read_csv(paste0(user_path(), "1_raw/1_11_Longitudinal Testing/Longitudinal Testing Survey_WIDE.csv"))
 
 #-------------------------Village information cleaning-----------------------#
 
@@ -149,9 +150,26 @@ village_details <- village_details%>%
 village_details <- village_details%>%
   rename(block = "Block")
 
+#Creating village codes for anonymity 
+village_details <- village_details%>%
+  mutate(village_code = case_when(Village == "Asada" ~ "AS",
+                                  Village == "Mukundpur" ~ "MU",
+                                  Village == "Gopi Kankubadi" ~ "GO",
+                                  Village == "Bichikote" ~ "BI",
+                                  Village == "Badabangi" ~ "BA",
+                                  Village == "Nathma" ~ "NAT",
+                                  Village == "Tandipur" ~ "TA",
+                                  Village == "Birnarayanpur" ~ "BN",
+                                  Village == "Naira" ~ "NAI",
+                                  Village == "Karnapadu" ~ "KA"
+                                  
+  ))
+
 #Renaming village variable
 village_details <- village_details%>%
   rename(village_name = "Village")
+
+
 
 
 
@@ -244,6 +262,122 @@ names(mon_wide) <- new_names
 #Writing final chlorine monitoring file
 write_dta(mon_wide,paste0(user_path(), "/3_final/1_X_chlorine_monitoring.dta"))
 #write_csv(mon_wide,paste0(user_path(), "/3_final/1_X_chlorine_monitoring.csv"))
+
+
+
+
+
+
+###---------------Longitudinal chlorine monitoring cleaning-------------####
+
+#Assigning more meaningful variable names
+mon_long <- mon_long%>%
+  rename(village_ID = "village_name")
+
+
+#Pairing village information
+mon_long$village_ID <- as.character(mon_long$village_ID)
+mon_long <- left_join(mon_long, village_details, by = "village_ID")
+
+
+
+
+# Reshape data
+mon_long <- mon_long%>%
+  # First pivot to long format for time variables
+  pivot_longer(
+    cols = starts_with("tw_time_"),  # Specify columns starting with "tw_time_"
+    names_to = "tw_time_variable",    # Name for the column that stores original column names
+    values_to = "tw_time"             # Name for the column that stores the values
+  ) %>%
+  # Then pivot to long format for chlorine concentration variables
+  pivot_longer(
+    cols = starts_with("tw_fc_"),    # Specify columns starting with "tw_fc_"
+    names_to = "tw_fc_variable",      # Name for the column that stores original column names
+    values_to = "tw_fc"               # Name for the column that stores the values
+  ) %>%
+  # Filter rows to align time and chlorine concentration values
+  filter(str_replace(tw_time_variable, "tw_time_", "tw_fc_") == tw_fc_variable) %>%
+  # Remove unnecessary columns
+  select(-tw_time_variable, -tw_fc_variable)
+
+
+
+#Creating new var for submission date with only the date component 
+mon_long$SubmissionDate <- mdy_hms(mon_long$SubmissionDate, tz="Asia/Kolkata")
+
+# Extract date only
+mon_long$date_only <- date(mon_long$SubmissionDate)
+
+
+# adding variable labels
+#location of tap:
+mon_long$location <- factor(mon_long$location, 
+                           levels = c(1, 2),
+                           labels = c("Nearest Tap", "Farthest Tap"))
+
+# Remove rows with missing values in 'tw_time' or 'tw_fc'
+mon_long <- mon_long %>%
+  filter(is.na(tw_time) == FALSE)%>%
+  filter(is.na(tw_fc) == FALSE)
+
+# Maunal corrections
+mon_long <- mon_long %>%
+  mutate(tw_time_char = as.character(tw_time)) %>%  # Ensuring that tw_time is in character format
+  mutate(tw_time_corrected = case_when(
+    tw_time_char == "18:42:59" ~ "06:42:59",
+    tw_time_char == "18:47:21" ~ "06:47:21",
+    tw_time_char == "18:52:14" ~ "06:52:14",
+    tw_time_char == "18:57:31" ~ "06:57:31",
+    tw_time_char == "19:03:47" ~ "07:03:47",
+    TRUE ~ tw_time_char
+  )) %>%
+  mutate (tw_time = tw_time_corrected)
+#  mon_long$tw_time <- format(tw_time, "%H:%M:%S")
+#  mutate(tw_time = as.POSIXct(paste("2024-01-01", tw_time_corrected), format = "%Y-%m-%d %H:%M:%S")) %>%  # Convert corrected times to POSIXct with a temp date
+#  select(-tw_time_char, -tw_time_corrected)  # removing temporary columns
+
+# Converting the tw_time variable to hms object
+
+#today's date
+mon_long$todays_date <- today()
+#combining with tw_time
+mon_long$time_hms <- paste(mon_long$todays_date, mon_long$tw_time)
+
+#Making date time object
+mon_long$time_hms <- ymd_hms(mon_long$time_hms)
+
+# Combine hours and minutes into a single column
+mon_long$time <- sprintf("%02d:%02d", hour(mon_long$time_hms), minute(mon_long$time_hms))
+#select(-hours, -minutes, -time_hms)  # removing temporary columns()
+
+
+
+#Removing Mukundpur data that had no chlorine detected on the first test date
+mon_long <- mon_long%>%
+  filter(!(village_code == "MU" & deviceid != "a5c18f73beda3586"))
+
+#Removing duplicate Asada data
+mon_long <- mon_long%>%
+  filter(!(village_code == "AS" & date_only < "2024-09-01"))
+
+#Removing duplicate Gopi Kankubadi data
+mon_long <- mon_long%>%
+  filter(!(village_code == "GO" & date_only > "2024-09-02"))
+
+#Removing duplicate Badabangi data
+mon_long <- mon_long%>%
+  filter(!(village_code == "BA" & date_only > "2024-09-01"))
+
+#Removing duplicate Naira data
+mon_long <- mon_long%>%
+  filter(!(village_code == "NAI" & date_only < "2024-09-03"))
+
+#Writing clean dataset
+write_csv(mon_long,paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
+
+
+
 
 
 
