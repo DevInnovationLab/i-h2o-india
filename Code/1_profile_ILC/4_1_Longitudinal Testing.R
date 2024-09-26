@@ -322,6 +322,13 @@ filtered_data_r2 <- df_clean %>%
 
 View(filtered_data_r2)
 
+#Filtering dtaa for Round 2 (Data collectiuon done in Mukundpur twice, removing teh first instance's obs)
+filtered_data_r2_new <- df_clean %>%
+  filter(date_only >= cutoff_date & !(village_name == "Mukundpur" & date_only == "2024-09-06"))
+
+View(filtered_data_r2_new)
+
+
 #-----------------------------------Creating GGplots - round-wise---------------
 #Round 1 of Longitudinal Testing
 # Defining the IST limits and breaks
@@ -380,17 +387,17 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R1.png"), plot1, bg = "w
 #start_time <- as.POSIXct("2024-01-01 06:00:00", tz = "Asia/Kolkata")
 #end_time <- as.POSIXct("2024-01-01 09:00:00", tz = "Asia/Kolkata")
 
-plot2 <- ggplot(data = filtered_data_r2) +
+plot2 <- ggplot(data = filtered_data_r2_new) +
   geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
   geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
   facet_wrap(~ village_name, scales = "free_x") +
   geom_hline(yintercept = 0.40, linetype = "dashed", color = "grey") +
   geom_hline(yintercept = 0.60, linetype = "dashed", color = "grey") +
   # Adjusted annotations
-  annotate("text", x = max(filtered_data_r2$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
-  annotate("text", x = max(filtered_data_r2$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
+  annotate("text", x = max(filtered_data_r2_new$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
+  annotate("text", x = max(filtered_data_r2_new$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
   labs(
-    title = "Temporal Presentation of Chlorine Readings by Village and Tap - Round 2",
+    title = "Temporal Presentation of Chlorine Readings by Village and Tap",
     x = "Minutes since start of supply time",
     y = "Free Chlorine Concentration (mg/L)",
     color = "Tap"
