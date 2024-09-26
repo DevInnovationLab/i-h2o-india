@@ -23,6 +23,7 @@ install.packages("leaflet")
 install.packages("quantitray")
 install.packages("xtable")
 install.packages("scales")
+install.packages("hms")
 
 
 #please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
@@ -198,6 +199,84 @@ df_clean$time <- sprintf("%02d:%02d", df_clean$hours, df_clean$minutes)
 #select(-hours, -minutes, -time_hms)  # removing temporary columns()
 
 View(df_clean)
+
+#-----------------------------Creating a separate df for stored water--------
+
+#creating a new cleaned dataframe for stored water readings
+df_clean_sw <- df_clean 
+
+# Converting the time_sw_collect variable to hms object
+df_clean_sw$time_sw_hms <- hms(df_clean$time_sw_collect)
+# Extract hours and minutes from the tw_time variable and store in a new var 'time'
+df_clean_sw$sw_hours <- hour(df_clean_sw$time_sw_hms)
+df_clean_sw$sw_minutes <- minute(df_clean_sw$time_sw_hms)
+# Combine hours and minutes into a single column
+df_clean_sw$sw_time_collect <- sprintf("%02d:%02d", df_clean_sw$sw_hours, df_clean_sw$sw_minutes)
+#select(-hours, -minutes, -time_hms)  # removing temporary columns()
+View(df_clean_sw)
+
+
+# Convert times to a suitable format
+#df_clean_sw$time <- as.POSIXct(df_clean_sw$time, format = "%I:%M %p")
+#df_clean_sw$sw_time_collect <- as.POSIXct(df_clean_sw$sw_time_collect, format = "%I:%M %p")
+
+#Exact Match Filtering
+df_exact_match <- df_clean_sw %>%
+  filter(time == sw_time_collect)
+View(df_exact_match)
+
+
+# Manual filtering (using Specific Conditions) for obs where time differnce does not allow exact matching 
+# Creating a list of conditions to retain values
+specific_conditions <- data.frame(
+  sw_time_collect = c("06:19", "06:14", "06:31", "06:45", "07:28", "07:21", "07:01", "07:17", "06:31", "06:09", "07:43", "07:15", "06:09", "06:08"),  # stored water collection times
+  time = c("06:16", "06:13", "06:29", "06:42", "07:23", "07:19", "06:56", "07:15", "06:27", "06:06", "07:39", "07:12", "06:07", "06:06"),              # running water times
+  village_name = c("Badabangi", "Badabangi", "Asada", "Asada", "Naira", "Naira", "Asada", "Asada", "Badabangi", "Mukundpur", "Mukundpur", "Naira", "Bichikote", "Bichikote")           # Corresponding villages
+)
+View(specific_conditions)
+
+# Initialize an empty dataframe for manual selections
+df_manual_selection <- data.frame()
+
+# Loop through each row in specific_conditions
+for (i in 1:nrow(specific_conditions)) {
+  matched_rows <- df_clean_sw %>%
+    filter(sw_time_collect == specific_conditions$sw_time_collect[i] &
+             time == specific_conditions$time[i] &
+             village_name == specific_conditions$village_name[i])
+  
+  # Append matching rows to the manual selection dataframe
+  df_manual_selection <- rbind(df_manual_selection, matched_rows)
+}
+
+# Combine results from both steps 
+df_clean_sw_final <- bind_rows(df_exact_match, df_manual_selection) %>%
+  distinct()  # Remove duplicates, if any
+View(df_clean_sw_final)
+
+
+# Create the scatterplot for decay in stored water 
+
+plot <- ggplot(df_clean_sw_final, aes(x = tw_fc, y = sw_fc, color = village_name)) +
+  geom_point() +  # Add points
+  labs(title = "Chlorine Decay in Stored Water Over Time",
+       x = "FC in Running Water at Time of Stored Water Collection", 
+       y = "FC in Stored Water 45 Minutes After Water Collection") +
+  theme_minimal() +  # Use a minimal theme
+  scale_color_discrete(name = "Village") +  # Legend title
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
+  geom_smooth(aes(linetype = "Trend Line"), method = "lm", se = FALSE, color = "black") +  # Dotted trend line
+  scale_linetype_manual(name = "Line Type", values = "dotted") +  # Add legend for trend line
+  scale_x_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  scale_y_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) 
+
+print(plot)
 
 #------------------------------Creating variables for minutes since supply and round--------
 
