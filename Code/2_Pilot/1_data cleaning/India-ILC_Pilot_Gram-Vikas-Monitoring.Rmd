@@ -139,9 +139,9 @@ visit_date <- seq.Date(start_of_week, length.out = 4, by = "day")
 weekly_plan <- tibble(Date = date(visit_date),
        Day = c( "Thursday", "Friday",
                "Saturday", "Sunday"),
-       Plan = c("Mukundpur, Naira, Bichikote, Tandipur, BNPur",
-                "Asada, Bangi, Naira",
-                "Nathma, Gopi Kankubadi, Naira",
+       Plan = c("Gopi Kankubadi; BNPur; Naira; Bangi",
+                "Asada; Bichikote; Mukundpur; Tandipur ",
+                "Tandipur; Nathma; Naira",
                 "Flexible Day")
        )
 
