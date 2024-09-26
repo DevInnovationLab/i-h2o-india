@@ -87,6 +87,9 @@ user_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/"
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/" 
+  } 
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -114,6 +117,10 @@ github_path <- function() {
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
   } 
+  else if (user == "uchicago"){
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/" 
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     github = getwd()
@@ -141,6 +148,9 @@ overleaf <- function() {
   else if (user == "jerem"){
     overleaf = "C:/Users/jerem/Dropbox/Apps/Overleaf/Everything document -ILC/"
   }  
+  else if (user == "uchicago"){
+    overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf/Everything document -ILC/" 
+  } 
   else {
     warning("No path found for current user (", user, ")")
     overleaf = getwd()
@@ -170,6 +180,10 @@ pre_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/99_Preload/"
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/99_Preload/" 
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -200,6 +214,10 @@ temp_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/99_temp/"
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/99_temp/" 
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -229,6 +247,10 @@ Final_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/3_final/" 
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -258,6 +280,10 @@ raw_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/1_raw/"
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/" 
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -290,6 +316,9 @@ DI_path <- function() {
   } 
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
+  } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/2_deidentified/" 
   } 
   
   else {
@@ -324,6 +353,9 @@ Lab_path <- function() {
   } 
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
+  } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned//" 
   } 
   
   else {
@@ -2545,10 +2577,12 @@ MM_idexx <- read_csv(paste0(Final_path(), "idexx_monthly_master_cleaned.csv"))
 MM_idexx$date <- as.POSIXct(MM_idexx$SubmissionDate.x, format = "%m/%d/%Y")
 
 names(MM_idexx)
-MM_idexx_vis <- MM_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, village_name, ec_mpn, cf_mpn, date_processed, date, tap_water_fc)
+#tap_water_fc variable renames as fc_tap_avg in the cleaning file for R2, changing the name of var below
+MM_idexx_vis <- MM_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, village_name, ec_mpn, cf_mpn, date_processed, date, fc_tap_avg)
 
-MM_idexx_vis <- MM_idexx_vis %>% 
-  rename (fc_tap_avg = tap_water_fc)
+#Commenting out the code beow as the var has been renames in 1_10_monthly_Monitoring_Cleaning_R2 file
+#MM_idexx_vis <- MM_idexx_vis %>% 
+#  rename (fc_tap_avg = tap_water_fc)
 
 MM_idexx_vis <- MM_idexx_vis %>% 
   rename (village = village_name)
@@ -3086,6 +3120,81 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_PATvsCvsRounds.png"), ecoli_pa
 
 
 
+#Code for checking the mean fc readings in tap water over different periods
+mean_fc_tap_avg_1 <- merged_data_f %>%
+  filter(assignment == "Treatment") %>%
+  group_by(period) %>%
+  summarise(mean_fc_tap_avg_1 = mean(fc_tap_avg, na.rm = TRUE))
+
+print(mean_fc_tap_avg_1) #to get readings across periods
+
+#Code for checking the mean fc readings in tap water over different rounds of monsoon idexx testing
+#above code does not give us specific avg readings for each of teh monsoon rounds; categorising by month as well (Jul 24: Monsoon Round 1 (R4); Aug 24: Monsoon Round 2 (R5) and Oct 24: Monsoon Round 3 (R6))
+mean_fc_tap_avg_2 <- merged_data_f %>%
+  filter(assignment == "Treatment") %>%
+  group_by(period) %>%
+  summarise(mean_fc_tap_avg_2 = mean(fc_tap_avg, na.rm = TRUE))
+
+print(mean_fc_tap_avg_2) #to get readings across periods
+
+
+#Code for scatterplot (Ecoli levels vs Chlorine results)
+ec_fc <- ggplot(merged_data_f, aes(x = fc_tap_avg, y = ec_log, color = assignment)) +
+  geom_point(alpha = 0.6) +  # Colors will be determined by treatment_status
+  labs(
+    title = "Scatterplot of Chlorine residual and E.coli contamination in Rayagada study sample",
+    x = "Free Chlorine Concentration in Running Water (mg/L)",
+    y = "Magnitude of E.coli detected (log 10 MPN)",
+    caption = "N=401. \nData points are from IDEXX and Chlorine monitoring results from baseline to the second monsoon round of IDEXX."
+  ) +
+  coord_fixed(ratio=0.5) +
+  scale_x_continuous(limits = c(0.0, 2.0), breaks = seq(0.0, 2.0, by = 0.5)) +  # Adjust limits and breaks
+  scale_y_continuous(limits = c(-0.5, 3.5), breaks = seq(0.0, 4, by = 1)) +  # Adjust limits and breaks
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0))+
+  geom_hline(yintercept = 0, linetype = "dotted", color = "red", size = 1)  # Add dotted line
+  annotate("text", x = Inf, y = 0, label = "Minimum Acceptable Concentration of E. coli", 
+           vjust = -0.5, hjust = 1.1, color = "red", size = 4)  # Add label
+
+print(ec_fc)
+
+
+#PEriod-wise grpahs 
+ec_fc_periodwise <- ggplot(merged_data_f, aes(x = fc_tap_avg, y = ec_log, color = assignment)) +
+  geom_point(alpha = 0.6) +  # Colors will be determined by treatment_status
+  labs(
+    title = "Scatterplot of Chlorine residual and E.coli contamination in Rayagada study sample across differnt rounds ",
+    x = "Free Chlorine Concentration in Running Water (mg/L)",
+    y = "Magnitude of E.coli detected (log 10 MPN)",
+    caption = "N=401. \nData points are from IDEXX and Chlorine monitoring results from baseline to the second monsoon round of IDEXX."
+  ) +
+  coord_fixed(ratio=0.5) +
+  scale_x_continuous(limits = c(0.0, 2.0), breaks = seq(0.0, 2.0, by = 0.5)) +  # Adjust limits and breaks
+  scale_y_continuous(limits = c(-0.5, 3.5), breaks = seq(0.0, 4, by = 1)) +  # Adjust limits and breaks
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0))+
+  facet_wrap(~ period, ncol = 3) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "red", size = 1)   # Add dotted line
+
+
+print(ec_fc_periodwise)
 
 
 
+#Scatterplot for monsoon round of idexx and chrloiine levels 
+monsoon_merged_df <- merged_data_f %>% filter(period == "Monthly monitoring")
+ec_fc_monsoon <- ggplot(monsoon_merged_df, aes(x = fc_tap_avg, y = ec_log, color = assignment)) +
+  geom_point(alpha = 0.6) +  # Colors will be determined by treatment_status
+  labs(
+    title = "E. coli Levels in Water at Varying Levels of Chlorine During Monsoon",
+    x = "Free Chlorine Concentration in Running Water (mg/L)",
+    y = "E.coli Magnitude",
+    caption = "Data points are from IDEXX and chlorine monitoring results from the monsoon rounds of IDEXX."
+  ) +
+  coord_fixed(ratio=0.5) +
+  scale_x_continuous(limits = c(0.0, 2.0), breaks = seq(0.0, 2.0, by = 0.5)) +  # Adjust limits and breaks
+  scale_y_continuous(limits = c(-0.5, 3.5), breaks = seq(-0.5, 4, by = 1)) +  # Adjust limits and breaks
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0))
+
+print(ec_fc_monsoon)
