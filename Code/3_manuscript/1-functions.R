@@ -242,7 +242,15 @@ round_stats <- function(idexx_data){
       "WHO 'High' Risk Contamination (> 100 MPN E. coli per 100 mL)" = round(sum(ec_risk == "High Risk") / n()*100, 1)
       
       
-    )
+    )%>%
+    mutate(data_round_month = ifelse(data_round == "BL", "2023-10-01",
+                                     ifelse(data_round == "R1", "2024-02-01",
+                                            ifelse(data_round == "R2", "2024-03-01",
+                                                   ifelse(data_round == "R3", "2024-04-01",
+                                                          ifelse(data_round == "R4", "2024-07-01",
+                                                                 ifelse(data_round == "R5", "2024-08-01", "2024-09-25")))))))
+  tc$data_round_month <- ymd(tc$data_round_month)
+  
   
   tc <- tc%>%
     #Adjusting so the CI cannot be more or less than 0 or 100

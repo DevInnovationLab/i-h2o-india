@@ -263,12 +263,10 @@ ilc_model_table(all_models)
 #Summary of monitoring data across all villages
   
 cl_p1 <- ggplot(data = mon_summary_weekly) + 
-    geom_errorbar(aes(x = test_week, ymin = lower_ci, ymax = upper_ci,  color = chlorine_test),
+    geom_errorbar(aes(x = test_week, ymin = lower_ci, ymax = upper_ci),
                   width = 2) + #Does not include robust standard errors for village clustering
-    geom_point(aes(x = test_week, y = avg_concentration,
-                   color = chlorine_test))+
-    geom_line(aes(x = test_week, y = avg_concentration,
-                  color = chlorine_test))+
+    geom_point(aes(x = test_week, y = avg_concentration))+
+    geom_line(aes(x = test_week, y = avg_concentration))+
     geom_hline(yintercept=0.20, linetype="dashed", color = "red")+
     geom_hline(yintercept=0.60, linetype="dashed", color = "red")+
     scale_y_continuous(
@@ -287,6 +285,29 @@ cl_p1 <- ggplot(data = mon_summary_weekly) +
   
   
 cl_p1
+
+
+#Summary of proportion of positive samples across all villages over time
+  
+cl_p2 <- ggplot(data = mon_summary_weekly) + 
+    #geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
+     #             width = 2) + #Does not include robust standard errors for village clustering
+    geom_col(aes(x = test_week, y = cl_presence))+
+    scale_y_continuous(
+                     limits = c(0, 100.0),
+                     expand = c(0,0))+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+    labs(x = "Date", 
+       y = "Proportion of Samples Positive for Free Chlorine (> 0.2 mg/L)",
+       title = (paste0("Chlorine Monitoring - February-September 2024")),
+       caption = "Concentrations were averaged across 2 taps in each village on a weekly-basis across the 10 treatment villages.")+
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  
+  
+cl_p2
 
 
 ```
@@ -315,8 +336,8 @@ p_mon_long <- ggplot(data = mon_long) +
     strip.text = element_text(size = 12)
   ) +
   scale_y_continuous(
-    limits = c(0, 2),
-    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+    limits = c(0, 1),
+    breaks = seq(from = 0.0, to = 1.0, by = 0.2)
   ) 
 
 
@@ -648,48 +669,59 @@ p_pooled
 
 #Creating figure of IDEXX results stratified by round
 
+#Tap samples -----------------------------------------------
 #Plotting treatment/control stats on a bar plot
-p_ec_by_round <- ggplot(data = tc_stats_round) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                    fill = assignment), position = position_dodge(width = 0.9),
-                width = 0.25) +
+p_tap_ec_by_round <- tc_stats_round%>%
+  filter(sample_type == "Tap")%>%
+  ggplot() + 
+  geom_col(aes(x = data_round_month, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = data_round_month, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 27),
+                width = 10) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
-  labs(x = "Sample Type", 
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  labs(x = "Date", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
        title = "",
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  facet_wrap(~ data_round)+
+  #facet_wrap(~ data_round)+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-p_cf_by_round <- ggplot(data = tc_stats_round) + 
-  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
-    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+p_tap_cf_by_round <- tc_stats_round%>%
+  filter(sample_type == "Tap")%>%
+  ggplot() + 
+  geom_col(aes(x = data_round_month, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+    geom_errorbar(aes(x = data_round_month, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
                       fill = assignment), position = position_dodge(width = 0.9),
                  width = 0.25) +
   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
-  labs(x = "Sample Type", 
+    scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  labs(x = "Date", 
        y = expression(paste("% positive for total coliform")),
        fill = "Assignment",
        title = "",
        caption = ""
        )+
-  facet_wrap(~ data_round)+
+  #facet_wrap(~ data_round)+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 #Patchwork package addition
 p_by_round <- 
-  p_cf_by_round + p_ec_by_round +
+  p_tap_cf_by_round + p_tap_ec_by_round +
   plot_annotation(
   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 960)")),
   caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
@@ -699,49 +731,49 @@ p_by_round
 
 
 #Creating box plot of log MPN counts across rounds
-
-#Plotting treatment/control stats on a bar plot
-p_ec_by_round <- ggplot(data = idexx_tab) + 
-  geom_boxplot(aes(x = sample_type, y = ec_log, fill = assignment)) +
-  scale_y_continuous(
-                     limits = c(-0.5, 4),
-                     expand = c(0,0))+
-  labs(x = "Sample Type", 
-       y = expression(paste("Log10 MPN ",italic("E. coli"), " per 100 mL")),
-       fill = "Assignment",
-       title = "",
-       caption = ""
-       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
-       )+
-  facet_wrap(~ data_round)+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-
-p_cf_by_round <- ggplot(data = idexx_tab) + 
-  geom_boxplot(aes(x = sample_type, y = cf_log, fill = assignment), position = "dodge") +
-  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
-  scale_y_continuous(
-                     limits = c(-0.5, 4),
-                     expand = c(0,0))+
-  labs(x = "Sample Type", 
-       y = expression(paste("Log10 MPN Total Coliform per 100 mL")),
-       fill = "Assignment",
-       title = "",
-       caption = ""
-       )+
-  facet_wrap(~ data_round)+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-
-#Patchwork package addition
-p_by_round <- 
-  p_cf_by_round + p_ec_by_round +
-  plot_annotation(
-  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 960)")),
-  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
-)
-
-p_by_round
+# 
+# #Plotting treatment/control stats on a bar plot
+# p_ec_by_round <- ggplot(data = idexx_tab) + 
+#   geom_boxplot(aes(x = sample_type, y = ec_log, fill = assignment)) +
+#   scale_y_continuous(
+#                      limits = c(-0.5, 4),
+#                      expand = c(0,0))+
+#   labs(x = "Sample Type", 
+#        y = expression(paste("Log10 MPN ",italic("E. coli"), " per 100 mL")),
+#        fill = "Assignment",
+#        title = "",
+#        caption = ""
+#        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+#        )+
+#   facet_wrap(~ data_round)+
+#   theme_bw() + 
+#   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+# 
+# p_cf_by_round <- ggplot(data = idexx_tab) + 
+#   geom_boxplot(aes(x = sample_type, y = cf_log, fill = assignment), position = "dodge") +
+#   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+#   scale_y_continuous(
+#                      limits = c(-0.5, 4),
+#                      expand = c(0,0))+
+#   labs(x = "Sample Type", 
+#        y = expression(paste("Log10 MPN Total Coliform per 100 mL")),
+#        fill = "Assignment",
+#        title = "",
+#        caption = ""
+#        )+
+#   facet_wrap(~ data_round)+
+#   theme_bw() + 
+#   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+# 
+# #Patchwork package addition
+# p_by_round <- 
+#   p_cf_by_round + p_ec_by_round +
+#   plot_annotation(
+#   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 960)")),
+#   caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
+# )
+# 
+# p_by_round
 
 
 #Creating plot of pooled results from the monsoon rounds

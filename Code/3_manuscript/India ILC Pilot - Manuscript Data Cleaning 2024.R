@@ -1362,8 +1362,9 @@ el <- el%>%
 
 #Creating variable for complaints about taste and smell
 el <- el%>%
-  mutate(tap_issues_taste = ifelse(tap_issues_type_1 == 1, 2, 1))%>%
-  replace_na(tap_issues_taste, value = 1)
+  mutate(tap_issues_taste = ifelse(tap_issues_type_1 == 1, 2, 1))
+el$tap_issues_taste <- el$tap_issues_taste%>%
+  replace_na(replace = 1)
 
 
 
@@ -1508,14 +1509,22 @@ mon_summary_weekly <- mon_summary %>%
 
 # Group by week and calculate the average concentration
 mon_summary_weekly <- mon_summary_weekly%>%
-  group_by(test_week, chlorine_test) %>%
+  group_by(test_week)%>% #To add back in nearest vs farthest tap, add in "chlorine_test" variable here
   summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
             se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
             lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
-            upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration)
-
-# Correcting negative lower CI values to be 0 instead
-mon_summary_weekly <- mon_summary_weekly%>%
+            upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration,
+            cl_presence = round((sum(cl_pa == 1) / n()) * 100, 1),
+            lower_ci_pa = (sum(cl_pa == 1) / n()) * 100 -
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())), #Can I use a 95% CI on presence/absence data?
+            upper_ci_pa = (sum(cl_pa == 1) / n()) * 100 +
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n()))
+            )%>%
+  # Correcting negative lower CI values to be 0 instead
+  mutate(lower_ci_pa = case_when(lower_ci_pa < 0 ~ 0,
+                                     lower_ci_pa >= 0 ~ lower_ci_pa))%>%
+  mutate(upper_ci_pa = case_when(upper_ci_pa > 100 ~ 100,
+                                     upper_ci_pa <= 100 ~ upper_ci_pa))%>%
   mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
 
 #Summarizing percentage of samples that are positive for chlorine
