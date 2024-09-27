@@ -18,7 +18,7 @@ packages <- c("rsurveycto", "expss", "labelled", "httr", "lubridate", "quantitra
               "sjmisc", "knitr", "kableExtra", "readxl", "experiment", "stargazer",
               "haven", "googlesheets4", "ggsignif", "patchwork", "table1", "gtsummary",
               "gt", "webshot2", "clubSandwich", "sandwich", "lmtest", "broom",
-              "tidyverse", "sf", "gridExtra", "crosstable")
+              "tidyverse", "sf", "gridExtra", "crosstable", "viridis")
 
 #Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
@@ -671,8 +671,8 @@ p_pooled
 
 #Tap samples -----------------------------------------------
 #Plotting treatment/control stats on a bar plot
-p_tap_ec_by_round <- tc_stats_round%>%
-  filter(sample_type == "Tap")%>%
+p_ec_by_round <- tc_stats_round%>%
+  #filter(sample_type == "Tap")%>%
   ggplot() + 
   geom_col(aes(x = data_round_month, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
   geom_errorbar(aes(x = data_round_month, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
@@ -691,17 +691,17 @@ p_tap_ec_by_round <- tc_stats_round%>%
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  #facet_wrap(~ data_round)+
+  facet_wrap(~ sample_type)+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-p_tap_cf_by_round <- tc_stats_round%>%
-  filter(sample_type == "Tap")%>%
+p_cf_by_round <- tc_stats_round%>%
+  #filter(sample_type == "Tap")%>%
   ggplot() + 
   geom_col(aes(x = data_round_month, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
     geom_errorbar(aes(x = data_round_month, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
-                      fill = assignment), position = position_dodge(width = 0.9),
-                 width = 0.25) +
+                      fill = assignment), position = position_dodge(width = 27),
+                 width = 10) +
   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
   scale_y_continuous(
                      limits = c(0, 100),
@@ -715,13 +715,13 @@ p_tap_cf_by_round <- tc_stats_round%>%
        title = "",
        caption = ""
        )+
-  #facet_wrap(~ data_round)+
+  facet_wrap(~ sample_type)+
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 #Patchwork package addition
 p_by_round <- 
-  p_tap_cf_by_round + p_tap_ec_by_round +
+  p_cf_by_round + p_ec_by_round +
   plot_annotation(
   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 960)")),
   caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
@@ -923,145 +923,7 @@ kbl(caption = paste(
 # )%>%
 #   column_spec(1, bold = TRUE)
 
-# Poisson Regression - Baseline Balance -------------------------------------------------
 
-#Separating by tap and stored water
-idexx_bl_tap <- idexx%>%
-  filter(sample_type == "Tap")
-
-idexx_bl_stored <- idexx%>%
-  filter(sample_type == "Stored")
-  
-
-#Running Poisson Regression on Tap Samples ----
-
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_bl_tap, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_tap <- ilc_model_table_only(all_models)
-idexx_poisson_tap <- idexx_poisson_tap%>%
-  mutate(sample_type = "Tap")
-
-
-#Running Poisson Regression on Stored Samples ----
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_bl_stored, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_stored <- ilc_model_table_only(all_models)
-idexx_poisson_stored <- idexx_poisson_stored%>%
-  mutate(sample_type = "Stored")
-
-
-idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
-
-
-
-
-# Poisson Regression - Treatment Effect -------------------------------------------------
-
-#Removing BL data
-idexx_fu <- idexx_tab%>%
-  filter(data_round != "BL")
-
-#Separating by tap and stored water
-idexx_fu_tap <- idexx_fu%>%
-  filter(sample_type == "Tap")
-
-idexx_fu_stored <- idexx_fu%>%
-  filter(sample_type == "Stored")
-  
-
-#Running Poisson Regression on Tap Samples ----
-
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_tap <- ilc_model_table_only(all_models)
-idexx_poisson_tap <- idexx_poisson_tap%>%
-  mutate(sample_type = "Tap")
-
-
-#Running Poisson Regression on Stored Samples ----
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_stored <- ilc_model_table_only(all_models)
-idexx_poisson_stored <- idexx_poisson_stored%>%
-  mutate(sample_type = "Stored")
-
-
-idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
-
-
-
-
-
-
-
-
-#-----------------------------------------------------------------------------
-
-
-#-----------------------------------------------------------------------------
-
-
-# Chlorine Concentration -----------------------------------------------------
 
 #Desc stats -------------------
 
@@ -1113,6 +975,8 @@ fu_rounds <- all_rounds%>%
 #   column_spec(2, width = "75px")
 
 
+#Chlorine Concentration-------------------------------------------------------
+
 #Making desc stat table for summarizing chlorine results from followup
 #Summarizing presence absence results after removing non-JJM samples
 desc_stats_tap <- fu_rounds%>%
@@ -1153,115 +1017,9 @@ kbl(desc_stats_stored)%>%
 
 
 
-#Running regression models -----------------------------------------------
-
-#Variables
-outcome_vars <- c("fc_tap_binary", "fc_stored_binary")
-
-fu_model <- factormaker(fu_rounds, outcome_vars)
 
 
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                     function(var){ #This functions "subsets" the ilc_glm function
-                       ilc_glm(data = fu_model, var)
-                     }
-                       )
-
-#linear regression
-# all_models <- lapply(outcome_vars, 
-#                      function(var){ #This functions "subsets" the ilc_glm function
-#                        ilc_lm(data = fu_rounds, var)
-#                      }
-#                        )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Making regression table output
-cl_poisson <- ilc_model_table_only(all_models)
-cl_poisson <- cl_poisson%>%
-  mutate(sample_type = ifelse(model_name == "fc_tap_binary", "Tap", "Stored"))
-
-
-#Combining microbial contamination and chlorination treatment effect results
-fu_poisson <- rbind(idexx_poisson, cl_poisson)
-
-
-#Displaying results in a forestplot -----
-
-library(forestplot)
-
-
-#Adjusting model values to specifically fit forestplot function
-el_models_forestplot <- fu_poisson%>%
-  mutate(mean = estimate)%>%
-  mutate(estimate = as.character(round(estimate, 2)))%>%
-  mutate(Lower_CI = round(Lower_CI, 1))%>%
-  mutate(Upper_CI = round(Upper_CI, 1))%>%
-  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
-  mutate(lower = Lower_CI)%>%
-  mutate(upper = Upper_CI)%>%
-  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
-
-#Changing model names
-el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
-  factor()%>%
-  fct_recode("Presence of Free Chlorine (>0.1 mg/L)" = "fc_tap_binary",
-             "Presence of Free Chlorine (>0.1 mg/L)" = "fc_stored_binary",
-              "Presence of Total Coliform"= "cf_pa_binary",
-              "Presence of E. coli"= "ec_pa_binary")
-
-el_forestplot <- el_models_forestplot%>%
-  forestplot(labeltext = c(model_name, estimate, p_value, sample_type, N),
-             title = "Intervention Effect on Microbiological Contamination and Chlorination",
-             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
-             clip = c(0, 2),
-             xticks = c(0, 0.5, 1, 1.5, 2),
-             fn.ci_norm = fpDrawCircleCI,
-             vertices = TRUE,
-             xlog = FALSE,
-             txt_gp = fpTxtGp(
-               label = gpar(fontsize = 10),       # Adjust label text size
-               ticks = gpar(fontsize = 15),       # Adjust tick text size
-               xlab = gpar(fontsize = 15)),
-             boxsize = 0.2
-             )%>%
-  fp_add_lines(h_3 = gpar(lty = 1), 
-               h_9 = gpar(lwd = 1, columns = 1:6, col = "black"))%>% 
-  fp_set_style(box = "black",
-               line = "black",
-               summary = "black",
-               align = "lrrr",
-               hrz_lines = "black")%>% 
-  fp_add_header(model_name = c("", "Outcome"),
-                estimate = c("Prevalence Ratio", "(95% CI)")%>%
-                  fp_align_center(),
-                p_value = c("", "P-value")%>% 
-                  fp_align_center(),
-                sample_type = c("", "Sample")%>%
-                  fp_align_center(),
-                N = c("", "N")%>%
-                  fp_align_center()
-                )%>%
-  fp_decorate_graph(grid = structure(c(1), 
-                              gp = gpar(lty = 2, col = "grey")))
-
-print(el_forestplot)
-
-
-
-
-
-
-
-
-
-
-
-
-#Comparing Chlorine Concentrations to E. coli contamination
+#Comparing Chlorine Concentrations to E. coli contamination--------------
 
   
 #Comparing IDEXX results to average chlorine concentration
@@ -1362,6 +1120,74 @@ p_pooled <-
 p_pooled
 
 
+#Plotting time series data of microbial contamination and chlorine testing
+
+#combining summary IDEXX data with weekly chlorine monitoring
+
+idexx_cl_comb_1 <- mon_summary_weekly%>%
+  select(test_week, avg_concentration, lower_ci, upper_ci)%>% #Selecting key variables
+  mutate(sample_type = NA)%>%
+  mutate(assignment = "Treatment")%>%
+  mutate(`% Positive for E. coli` = NA)%>%
+  mutate(`Lower CI - EC` = NA)%>%
+  mutate(`Upper CI - EC` = NA) #Adding in variables from the other dataset so they can be directly combined
+
+
+idexx_cl_comb_2 <- tc_stats_round%>%
+  rename("test_week" = "data_round_month")%>% #renaming to align with other dataset
+  select(test_week, assignment, sample_type, `% Positive for E. coli`,
+         `Lower CI - EC`, `Upper CI - EC`)%>%
+  filter(sample_type == "Tap")%>%
+  mutate(avg_concentration = NA,
+         lower_ci = NA,
+         upper_ci = NA)
+
+#Combining datasets together
+idexx_cl_comb <- rbind(idexx_cl_comb_1, idexx_cl_comb_2)
+
+#Creating scale value for figure
+#scale_value <- max(idexx_cl_comb$`% Positive for E. coli`,
+                    #na.rm = TRUE)/ max(idexx_cl_comb$avg_concentration, na.rm = TRUE)
+scale_value <- 100/2
+
+
+#Creating desc plot of weekly free chlorine results + IDEXX E. coli results
+
+#Plotting treatment/control stats on a bar plot
+p_ec_cl <- idexx_cl_comb%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+           position = "dodge", width = 12) +
+   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     fill = assignment), position = position_dodge(width = 12),
+                 width = 6, color = "black") +
+   geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
+                 width = 2, color = "red") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
+  geom_path(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0),
+                     sec.axis = sec_axis(~./scale_value,
+                                          name = 'Free Chlorine Concentration (mg/L)',
+                                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
+                                                     1.4, 1.6, 1.8, 2.0))
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = expression(paste("% tap samples positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
 
 
 ```
@@ -1400,36 +1226,170 @@ p_ec_abr <- ggplot(data = tc_stats_abr) +
   theme_bw() + 
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
-p_cf_abr <- ggplot(data = tc_stats_abr) + 
-  geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
-    geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
-                      fill = assignment), position = position_dodge(width = 0.9),
-                 width = 0.25) +
-  #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
-  scale_y_continuous(
-                     limits = c(0, 100),
-                     expand = c(0,0))+
-  labs(x = "Sample Type", 
-       y = expression(paste("% positive for ABR total coliform")),
-       fill = "Assignment",
-       title = "",
-       caption = ""
-       )+
-  facet_wrap(~ data_round)+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+# p_cf_abr <- ggplot(data = tc_stats_abr) + 
+#   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
+#     geom_errorbar(aes(x = sample_type, ymin = `Lower CI - TC`, ymax = `Upper CI - TC`,
+#                       fill = assignment), position = position_dodge(width = 0.9),
+#                  width = 0.25) +
+#   #geom_signif(comparisons = list(c("Control", "Treatment"), map_signif_level = TRUE))+
+#   scale_y_continuous(
+#                      limits = c(0, 100),
+#                      expand = c(0,0))+
+#   labs(x = "Sample Type", 
+#        y = expression(paste("% positive for ABR total coliform")),
+#        fill = "Assignment",
+#        title = "",
+#        caption = ""
+#        )+
+#   facet_wrap(~ data_round)+
+#   theme_bw() + 
+#   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 #Patchwork package addition
-p_abr <- 
-  p_cf_abr + p_ec_abr +
-  plot_annotation(
-  title = expression(paste("Presence of Antibiotic Resistant Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 388 so far)")),
-  caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
-)
+# p_abr <- 
+#   p_cf_abr + p_ec_abr +
+#   plot_annotation(
+#   title = expression(paste("Presence of Antibiotic Resistant Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 388 so far)")),
+#   caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
+# )
+# 
+# p_abr
+# 
 
-p_abr
+p_ec_abr
 
 
+
+
+# Poisson Regression - Treatment Effect -------------------------------------------------
+
+#Removing BL data
+idexx_abr_fu <- idexx_abr%>%
+  filter(data_round != "BL")
+
+#Separating by tap and stored water
+idexx_abr_tap <- idexx_abr_fu%>%
+  filter(sample_type == "Tap")
+
+idexx_abr_stored <- idexx_abr_fu%>%
+  filter(sample_type == "Stored")
+  
+
+#Running Poisson Regression on Tap Samples ----
+
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_abr_tap, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_tap <- ilc_model_table_only(all_models)
+idexx_poisson_tap <- idexx_poisson_tap%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
+  mutate(sample_type = "Tap")
+
+
+#Running Poisson Regression on Stored Samples ----
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_abr_stored, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_stored <- ilc_model_table_only(all_models)
+idexx_poisson_stored <- idexx_poisson_stored%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
+  mutate(sample_type = "Stored")
+
+
+idexx_abr_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
+
+
+
+
+#Displaying results in a forestplot -----
+
+library(forestplot)
+
+
+#Adjusting model values to specifically fit forestplot function -- forestplot requires these names
+el_models_forestplot <- idexx_abr_poisson%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 1))%>%
+  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+#Changing model names
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Presence of Free Chlorine (>0.1 mg/L)" = "fc_tap_binary",
+             "Presence of Free Chlorine (>0.1 mg/L)" = "fc_stored_binary",
+              "Stored - Presence of Total Coliform"= "cf_stored",
+              "Stored - Presence of E. coli"= "ec_stored",
+              "Tap - Presence of Total Coliform"= "cf_tap",
+              "Tap - Presence of E. coli"= "ec_tap"
+             )
+
+el_forestplot <- el_models_forestplot%>%
+  forestplot(labeltext = c(model_name, estimate, p_value, N),
+             title = "Intervention Effect on Cefotaxime-resistant Total Coliform and E. coli",
+             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+             clip = c(0, 2),
+             xticks = c(0, 0.5, 1, 1.5, 2),
+             fn.ci_norm = fpDrawCircleCI,
+             vertices = TRUE,
+             xlog = FALSE,
+             txt_gp = fpTxtGp(
+               label = gpar(fontsize = 10),       # Adjust label text size
+               ticks = gpar(fontsize = 15),       # Adjust tick text size
+               xlab = gpar(fontsize = 15)),
+             boxsize = 0.1
+             )%>%
+  fp_add_lines(h_3 = gpar(lty = 1), 
+               h_7 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black",
+               align = "lrrr",
+               hrz_lines = "black")%>% 
+  fp_add_header(model_name = c("", "Outcome"),
+                estimate = c("Prevalence Ratio", "(95% CI)")%>%
+                  fp_align_center(),
+                p_value = c("", "P-value")%>% 
+                  fp_align_center(),
+                N = c("", "N")%>%
+                  fp_align_center()
+                )%>%
+  fp_decorate_graph(grid = structure(c(1), 
+                              gp = gpar(lty = 2, col = "grey")))
+
+print(el_forestplot)
 
 
 
@@ -1437,8 +1397,268 @@ p_abr
 ```
 
 
+
+
+
+
 \newpage
-# Endline Census Comparison
+# Chlorine and Microbial Contamination Treatment Effect
+
+```{r Chlorine and Microbial Contamination Treatment Effect}
+
+
+# Poisson Regression - Baseline Balance -------------------------------------------------
+
+#Separating by tap and stored water
+idexx_bl_tap <- idexx%>%
+  filter(sample_type == "Tap")
+
+idexx_bl_stored <- idexx%>%
+  filter(sample_type == "Stored")
+  
+
+#Running Poisson Regression on Tap Samples ----
+
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_bl_tap, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_tap <- ilc_model_table_only(all_models)
+idexx_poisson_tap <- idexx_poisson_tap%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
+  mutate(sample_type = "Tap")
+
+
+#Running Poisson Regression on Stored Samples ----
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_bl_stored, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_stored <- ilc_model_table_only(all_models)
+idexx_poisson_stored <- idexx_poisson_stored%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
+  mutate(sample_type = "Stored")
+
+
+idexx_poisson_bl <- rbind(idexx_poisson_tap, idexx_poisson_stored)
+
+
+
+
+# Poisson Regression - Treatment Effect -------------------------------------------------
+
+#Removing BL data
+idexx_fu <- idexx_tab%>%
+  filter(data_round != "BL")
+
+#Separating by tap and stored water
+idexx_fu_tap <- idexx_fu%>%
+  filter(sample_type == "Tap")
+
+idexx_fu_stored <- idexx_fu%>%
+  filter(sample_type == "Stored")
+  
+
+#Running Poisson Regression on Tap Samples ----
+
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_tap <- ilc_model_table_only(all_models)
+idexx_poisson_tap <- idexx_poisson_tap%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
+  mutate(sample_type = "Tap")
+
+
+#Running Poisson Regression on Stored Samples ----
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_stored <- ilc_model_table_only(all_models)
+idexx_poisson_stored <- idexx_poisson_stored%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
+  mutate(sample_type = "Stored")
+
+
+idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------
+
+
+#-----------------------------------------------------------------------------
+
+
+# Chlorine Concentration -----------------------------------------------------
+
+
+#Running regression models -----------------------------------------------
+
+#Variables
+outcome_vars <- c("fc_tap_binary", "fc_stored_binary")
+
+fu_model <- factormaker(fu_rounds, outcome_vars)
+
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                     function(var){ #This functions "subsets" the ilc_glm function
+                       ilc_glm(data = fu_model, var)
+                     }
+                       )
+
+#linear regression
+# all_models <- lapply(outcome_vars, 
+#                      function(var){ #This functions "subsets" the ilc_glm function
+#                        ilc_lm(data = fu_rounds, var)
+#                      }
+#                        )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Making regression table output
+cl_poisson <- ilc_model_table_only(all_models)
+cl_poisson <- cl_poisson%>%
+  mutate(model_name = ifelse(model_name == "fc_tap_binary", "fc_tap", "fc_stored"))%>%
+  mutate(sample_type = ifelse(model_name == "fc_tap_binary", "Tap", "Stored"))
+
+
+#Combining microbial contamination and chlorination treatment effect results
+fu_poisson <- rbind(idexx_poisson, cl_poisson)
+
+
+#Displaying results in a forestplot -----
+
+library(forestplot)
+
+
+#Adjusting model values to specifically fit forestplot function
+el_models_forestplot <- fu_poisson%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 1))%>%
+  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+#Changing model names
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Tap - Presence of Free Chlorine (>0.1 mg/L)" = "fc_tap",
+             "Stored - Presence of Free Chlorine (>0.1 mg/L)" = "fc_stored",
+              "Tap - Presence of Total Coliform"= "cf_tap",
+              "Tap - Presence of E. coli"= "ec_tap",
+             "Stored - Presence of Total Coliform"= "cf_stored",
+              "Stored - Presence of E. coli"= "ec_stored")
+
+el_forestplot <- el_models_forestplot%>%
+  forestplot(labeltext = c(model_name, estimate, p_value, N),
+             title = "Intervention Effect on Microbiological Contamination and Chlorination",
+             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+             clip = c(0, 2),
+             xticks = c(0, 0.5, 1, 1.5, 2),
+             fn.ci_norm = fpDrawCircleCI,
+             vertices = TRUE,
+             xlog = FALSE,
+             txt_gp = fpTxtGp(
+               label = gpar(fontsize = 10),       # Adjust label text size
+               ticks = gpar(fontsize = 15),       # Adjust tick text size
+               xlab = gpar(fontsize = 15)),
+             boxsize = 0.2
+             )%>%
+  fp_add_lines(h_3 = gpar(lty = 1), 
+               h_9 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black",
+               align = "lrrr",
+               hrz_lines = "black")%>% 
+  fp_add_header(model_name = c("", "Outcome"),
+                estimate = c("Prevalence Ratio", "(95% CI)")%>%
+                  fp_align_center(),
+                p_value = c("", "P-value")%>% 
+                  fp_align_center(),
+                N = c("", "N")%>%
+                  fp_align_center()
+                )%>%
+  fp_decorate_graph(grid = structure(c(1), 
+                              gp = gpar(lty = 2, col = "grey")))
+
+print(el_forestplot)
+
+
+
+
+```
+
+
+
+\newpage
+# Endline Treatment Effect
 
 ```{r Endline Census Comparison}
 
@@ -1446,13 +1666,13 @@ p_abr
 #Desc Stats --------------------------------------------------
 
 #Selecting variables
-outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat")
 
 
 #GT method
 #Summarizing desc stats for each variable
 desc_stats <- el%>%
-  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary")%>%
+  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat")%>%
   tbl_summary(
   by = assignment,
   statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
@@ -1464,7 +1684,7 @@ desc_stats <- el%>%
 
 # Poisson Regression -- Treatment Effect -------------------------------------
 
-outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "tap_issues_taste")
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat")
 
 el_model <- factormaker(el, outcome_vars) #Making variables numeric
 
@@ -1625,7 +1845,8 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
              "Use a Secondary Source" = "sec_source",
              "Drink Tap Water" = "jjm_drinking",
              "Treat Water" = "water_treat_binary",
-             "Reported Water Taste/Smell Issue" = "tap_issues_taste")
+             "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+             "Treat Water in Less Than the Median Time" = "time_spent_treat")
 
 el_forestplot <- el_models_forestplot%>%
   forestplot(labeltext = c(model_name, estimate, p_value),
@@ -1643,7 +1864,7 @@ el_forestplot <- el_models_forestplot%>%
              boxsize = 0.2
              )%>%
   fp_add_lines(h_3 = gpar(lty = 1), 
-               h_8 = gpar(lwd = 1, columns = 1:4, col = "black"))%>% 
+               h_9 = gpar(lwd = 1, columns = 1:4, col = "black"))%>% 
   fp_set_style(box = "black",
                line = "black",
                summary = "black",

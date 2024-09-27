@@ -1351,7 +1351,7 @@ el <- el%>%
   mutate(water_treat_binary = case_when(
     water_treat == "Yes" ~ 1,
     water_treat == "No" ~ 0
-  ))
+  )) #630 Households reported treating their drinking water
 
 #Setting JJM use variable
 el <- el%>%
@@ -1367,7 +1367,23 @@ el$tap_issues_taste <- el$tap_issues_taste%>%
   replace_na(replace = 1)
 
 
+#Time spent collecting drinking water
+#Need to update
 
+
+#Time spent treating water
+#619 households reported time spent treating water
+#Could check against their baseline result?
+el$treat_time <- as.numeric(el$treat_time)
+el <- el%>%
+  mutate(time_spent_treat = ifelse(treat_time <= 10, 1, #10 is the median value
+                                   ifelse(treat_time == 999, NA,
+                                          ifelse(treat_time == 888, NA, 0)))) #888 is a permanent filter
+  
+
+
+#Decided to not treat water because of lack of time
+#el$not_treat_tim
 
 
 #--------------------------------Paired Census Data--------------------------
@@ -1504,7 +1520,7 @@ mon_summary <- mon_summary%>%
 #Summarizing data on a weekly basis for taps only
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
-  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>%
+  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>% #Filtering only for tap water here
   mutate(test_week = floor_date(test_date, unit = "week"))
 
 # Group by week and calculate the average concentration
