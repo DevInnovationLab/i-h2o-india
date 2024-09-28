@@ -278,7 +278,7 @@ cl_p1 <- ggplot(data = mon_summary_weekly) +
     labs(x = "Date", 
        y = "Free Chlorine Concentration (mg/L)",
        color = "Sample Type",
-       title = (paste0("Chlorine Monitoring - February-September 2024")),
+       title = (paste0("Chlorine Monitoring - February-October 2024")),
        caption = "Concentrations were averaged on a weekly-basis across the 10 treatment villages.")+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -293,6 +293,10 @@ cl_p2 <- ggplot(data = mon_summary_weekly) +
     #geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
      #             width = 2) + #Does not include robust standard errors for village clustering
     geom_col(aes(x = test_week, y = cl_presence))+
+  geom_text(aes(x = ymd("2024-06-02"), y = 7, label = "NA"),
+            position = position_dodge(width = 0.7), size = 3)+
+  geom_text(aes(x = ymd("2024-06-30"), y = 7, label = "NA"),
+            position = position_dodge(width = 0.7), size = 3)+
     scale_y_continuous(
                      limits = c(0, 100.0),
                      expand = c(0,0))+
@@ -300,8 +304,8 @@ cl_p2 <- ggplot(data = mon_summary_weekly) +
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
     labs(x = "Date", 
-       y = "Proportion of Samples Positive for Free Chlorine (> 0.2 mg/L)",
-       title = (paste0("Chlorine Monitoring - February-September 2024")),
+       y = "Proportion of Samples Positive for Free Chlorine (> 0.1 mg/L)",
+       title = (paste0("Chlorine Monitoring - February-October 2024")),
        caption = "Concentrations were averaged across 2 taps in each village on a weekly-basis across the 10 treatment villages.")+
     theme_bw() + 
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
@@ -1162,14 +1166,17 @@ p_ec_cl <- idexx_cl_comb%>%
                      fill = assignment), position = position_dodge(width = 12),
                  width = 6, color = "black") +
    geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
-                 width = 2, color = "red") + #Does not include robust standard errors for village clustering
-  geom_point(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
-  geom_path(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
+                 width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week, y = avg_concentration*scale_value), color = "#FF474C")+
+  geom_path(aes(x = test_week, y = avg_concentration*scale_value), color = "#FF474C")+
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"), size = 3,
+            nudge_x = -20, color = "#FF474C")+
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0),
                      sec.axis = sec_axis(~./scale_value,
-                                          name = 'Free Chlorine Concentration (mg/L)',
+                                          name = 'Average Free Chlorine Concentration (mg/L)',
                                           breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
                                                      1.4, 1.6, 1.8, 2.0))
                      )+
@@ -1188,6 +1195,43 @@ p_ec_cl <- idexx_cl_comb%>%
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 
+p_ec_cl
+
+
+
+
+#Creating plot to display the average chlorine concentrations along with the % of positive chlorine samples over time
+p_cl <- mon_summary_weekly%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = cl_presence), width = 12) +
+   # geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+   #                   fill = assignment), position = position_dodge(width = 12),
+                 #width = 6, color = "black") +
+   geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
+                 width = 2, color = "red") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
+  geom_path(aes(x = test_week, y = avg_concentration*scale_value), color = "red")+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0),
+                     sec.axis = sec_axis(~./scale_value,
+                                          name = 'Free Chlorine Concentration (mg/L)',
+                                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
+                                                     1.4, 1.6, 1.8, 2.0))
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  labs(x = "Date", 
+       y = "% tap samples positive for free chlorine (> 0.1 mg/L)",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_cl
 
 
 ```
