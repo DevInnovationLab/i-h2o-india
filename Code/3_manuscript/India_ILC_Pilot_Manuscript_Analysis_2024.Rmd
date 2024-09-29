@@ -1197,7 +1197,7 @@ p_ec_cl <- idexx_cl_comb%>%
 
 p_ec_cl
 
-
+ggsave(filename = "manuscript_ecoli_chlorine_time_series.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
 
 
 #Creating plot to display the average chlorine concentrations along with the % of positive chlorine samples over time
@@ -1401,6 +1401,8 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
              )
 
 el_forestplot <- el_models_forestplot%>%
+  filter(model_name != "Presence of Total Coliform at Taps" )%>%
+  filter(model_name != "Presence of Total Coliform in Stored Water")
   forestplot(labeltext = c(model_name, estimate, p_value, N),
              title = "Intervention Effect on Cefotaxime-resistant Total Coliform and E. coli",
              caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
@@ -1434,6 +1436,13 @@ el_forestplot <- el_models_forestplot%>%
                               gp = gpar(lty = 2, col = "grey")))
 
 print(el_forestplot)
+
+
+
+
+
+
+
 
 
 
@@ -1652,12 +1661,12 @@ el_models_forestplot <- fu_poisson%>%
 #Changing model names
 el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
   factor()%>%
-  fct_recode("Tap - Presence of Free Chlorine (>0.1 mg/L)" = "fc_tap",
-             "Stored - Presence of Free Chlorine (>0.1 mg/L)" = "fc_stored",
-              "Tap - Presence of Total Coliform"= "cf_tap",
-              "Tap - Presence of E. coli"= "ec_tap",
-             "Stored - Presence of Total Coliform"= "cf_stored",
-              "Stored - Presence of E. coli"= "ec_stored")
+  fct_recode("Presence of Free Chlorine at Taps (>0.1 mg/L)" = "fc_tap",
+             "Presence of Free Chlorine in Stored Water (>0.1 mg/L)" = "fc_stored",
+              "Presence of Total Coliform at Taps"= "cf_tap",
+              "Presence of E. coli at Taps"= "ec_tap",
+              "Presence of Total Coliform in Stored Water"= "cf_stored",
+              "Presence of E. coli in Stored Water"= "ec_stored")
 
 el_forestplot <- el_models_forestplot%>%
   forestplot(labeltext = c(model_name, estimate, p_value, N),
@@ -1693,6 +1702,86 @@ el_forestplot <- el_models_forestplot%>%
                               gp = gpar(lty = 2, col = "grey")))
 
 print(el_forestplot)
+
+
+
+
+
+
+
+#combined regular and ABR IDEXX results
+
+#Removed total coliform results from ABR IDEXX
+idexx_abr_poisson <- idexx_abr_poisson%>%
+  filter(model_name != "cf_tap")%>%
+  filter(model_name != "cf_stored")%>%
+  mutate(model_name = ifelse(model_name == "ec_tap", "Presence Antibiotic Resistant E. coli at Taps",
+         "Presence Antibiotic Resistant E. coli in Stored Water"))
+
+#Joining poisson results
+el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson)
+
+
+#Changing model names
+el_models_forestplot <- el_models_forestplot%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 1))%>%
+  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Presence of Free Chlorine at Taps (>0.1 mg/L)" = "fc_tap",
+             "Presence of Free Chlorine in Stored Water (>0.1 mg/L)" = "fc_stored",
+              "Presence of Total Coliform at Taps"= "cf_tap",
+              "Presence of E. coli at Taps"= "ec_tap",
+              "Presence of Total Coliform in Stored Water"= "cf_stored",
+              "Presence of E. coli in Stored Water"= "ec_stored",
+             "Presence Antibiotic Resistant E. coli at Taps" = 
+               "Presence Antibiotic Resistant E. coli at Taps",
+             "Presence Antibiotic Resistant E. coli in Stored Water" =
+               "Presence Antibiotic Resistant E. coli in Stored Water"
+             )
+
+el_forestplot <- el_models_forestplot%>%
+  forestplot(labeltext = c(model_name, estimate, p_value, N),
+             title = "Intervention Effect on Microbiological Contamination and Chlorination",
+             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+             clip = c(0, 2),
+             xticks = c(0, 0.5, 1, 1.5, 2),
+             fn.ci_norm = fpDrawCircleCI,
+             vertices = TRUE,
+             xlog = FALSE,
+             txt_gp = fpTxtGp(
+               label = gpar(fontsize = 10),       # Adjust label text size
+               ticks = gpar(fontsize = 15),       # Adjust tick text size
+               xlab = gpar(fontsize = 15)),
+             boxsize = 0.2
+             )%>%
+  fp_add_lines(h_3 = gpar(lty = 1), 
+               h_11 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black",
+               align = "lrrr",
+               hrz_lines = "black")%>% 
+  fp_add_header(model_name = c("", "Outcome"),
+                estimate = c("Prevalence Ratio", "(95% CI)")%>%
+                  fp_align_center(),
+                p_value = c("", "P-value")%>% 
+                  fp_align_center(),
+                N = c("", "N")%>%
+                  fp_align_center()
+                )%>%
+  fp_decorate_graph(grid = structure(c(1), 
+                              gp = gpar(lty = 2, col = "grey")))
+
+print(el_forestplot)
+
 
 
 
