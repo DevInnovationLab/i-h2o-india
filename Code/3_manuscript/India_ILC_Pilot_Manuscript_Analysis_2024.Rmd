@@ -1402,7 +1402,7 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
 
 el_forestplot <- el_models_forestplot%>%
   filter(model_name != "Presence of Total Coliform at Taps" )%>%
-  filter(model_name != "Presence of Total Coliform in Stored Water")
+  filter(model_name != "Presence of Total Coliform in Stored Water")%>%
   forestplot(labeltext = c(model_name, estimate, p_value, N),
              title = "Intervention Effect on Cefotaxime-resistant Total Coliform and E. coli",
              caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
@@ -1709,80 +1709,6 @@ print(el_forestplot)
 
 
 
-#combined regular and ABR IDEXX results
-
-#Removed total coliform results from ABR IDEXX
-idexx_abr_poisson <- idexx_abr_poisson%>%
-  filter(model_name != "cf_tap")%>%
-  filter(model_name != "cf_stored")%>%
-  mutate(model_name = ifelse(model_name == "ec_tap", "Presence Antibiotic Resistant E. coli at Taps",
-         "Presence Antibiotic Resistant E. coli in Stored Water"))
-
-#Joining poisson results
-el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson)
-
-
-#Changing model names
-el_models_forestplot <- el_models_forestplot%>%
-  mutate(mean = estimate)%>%
-  mutate(estimate = as.character(round(estimate, 2)))%>%
-  mutate(Lower_CI = round(Lower_CI, 1))%>%
-  mutate(Upper_CI = round(Upper_CI, 1))%>%
-  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
-  mutate(lower = Lower_CI)%>%
-  mutate(upper = Upper_CI)%>%
-  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
-
-el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
-  factor()%>%
-  fct_recode("Presence of Free Chlorine at Taps (>0.1 mg/L)" = "fc_tap",
-             "Presence of Free Chlorine in Stored Water (>0.1 mg/L)" = "fc_stored",
-              "Presence of Total Coliform at Taps"= "cf_tap",
-              "Presence of E. coli at Taps"= "ec_tap",
-              "Presence of Total Coliform in Stored Water"= "cf_stored",
-              "Presence of E. coli in Stored Water"= "ec_stored",
-             "Presence Antibiotic Resistant E. coli at Taps" = 
-               "Presence Antibiotic Resistant E. coli at Taps",
-             "Presence Antibiotic Resistant E. coli in Stored Water" =
-               "Presence Antibiotic Resistant E. coli in Stored Water"
-             )
-
-el_forestplot <- el_models_forestplot%>%
-  forestplot(labeltext = c(model_name, estimate, p_value, N),
-             title = "Intervention Effect on Microbiological Contamination and Chlorination",
-             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
-             clip = c(0, 2),
-             xticks = c(0, 0.5, 1, 1.5, 2),
-             fn.ci_norm = fpDrawCircleCI,
-             vertices = TRUE,
-             xlog = FALSE,
-             txt_gp = fpTxtGp(
-               label = gpar(fontsize = 10),       # Adjust label text size
-               ticks = gpar(fontsize = 15),       # Adjust tick text size
-               xlab = gpar(fontsize = 15)),
-             boxsize = 0.2
-             )%>%
-  fp_add_lines(h_3 = gpar(lty = 1), 
-               h_11 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
-  fp_set_style(box = "black",
-               line = "black",
-               summary = "black",
-               align = "lrrr",
-               hrz_lines = "black")%>% 
-  fp_add_header(model_name = c("", "Outcome"),
-                estimate = c("Prevalence Ratio", "(95% CI)")%>%
-                  fp_align_center(),
-                p_value = c("", "P-value")%>% 
-                  fp_align_center(),
-                N = c("", "N")%>%
-                  fp_align_center()
-                )%>%
-  fp_decorate_graph(grid = structure(c(1), 
-                              gp = gpar(lty = 2, col = "grey")))
-
-print(el_forestplot)
-
-
 
 
 
@@ -2023,40 +1949,136 @@ print(el_forestplot)
 
 
 
-formula <- as.formula(paste("jjm_drinking", "~ assignment + block + panchayat_village"))
-  #Running model
-  model <- glm(formula, data = el_model, family = poisson)
-  
-  #Storing N
-  N <- length(model$y)
-  
-  #Storing Standard Errors
-  #std_errors <- sqrt(diag(vcov(model)))
-  
-  #Calculating conf intervals
-  #conf_intervals <- exp(confint.default(model)) #This shows how my original estimation method was off!
-  
-  # Adjust for clustering at the village level
-  cluster_vcov <- vcovCL(model, cluster = el_model$village, type = "HC1")
-  # Get the coefficients with clustered standard errors
-  clustered_results <- coeftest(model, vcov. = cluster_vcov)
-  
-  #Tidying models -- need to understand how to use clustered results option
-  tidy_results <- tidy(clustered_results)
-  # Rename the columns for better readability
-  colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
-  
-  #Adding N
-  tidy_results <- tidy_results%>%
-    mutate(N = N)
-  
-  #exponentiate the estimates/std errors to get Prevalence Ratio
-  
-  tidy_results$estimate <- exp(tidy_results$estimate)
-  tidy_results$std_error <- exp(tidy_results$std_error)
-  
-  tidy_results
+# formula <- as.formula(paste("jjm_drinking", "~ assignment + block + panchayat_village"))
+#   #Running model
+#   model <- glm(formula, data = el_model, family = poisson)
+#   
+#   #Storing N
+#   N <- length(model$y)
+#   
+#   #Storing Standard Errors
+#   #std_errors <- sqrt(diag(vcov(model)))
+#   
+#   #Calculating conf intervals
+#   #conf_intervals <- exp(confint.default(model)) #This shows how my original estimation method was off!
+#   
+#   # Adjust for clustering at the village level
+#   cluster_vcov <- vcovCL(model, cluster = el_model$village, type = "HC1")
+#   # Get the coefficients with clustered standard errors
+#   clustered_results <- coeftest(model, vcov. = cluster_vcov)
+#   
+#   #Tidying models -- need to understand how to use clustered results option
+#   tidy_results <- tidy(clustered_results)
+#   # Rename the columns for better readability
+#   colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
+#   
+#   #Adding N
+#   tidy_results <- tidy_results%>%
+#     mutate(N = N)
+#   
+#   #exponentiate the estimates/std errors to get Prevalence Ratio
+#   
+#   tidy_results$estimate <- exp(tidy_results$estimate)
+#   tidy_results$std_error <- exp(tidy_results$std_error)
+#   
+#   tidy_results
 
 ```
 
+## Combined Microbial Contamination and Water Use Effects
+
+```{r Full Forestplot results}
+
+
+#combined regular and ABR IDEXX results
+
+#Removed total coliform results from ABR IDEXX
+idexx_abr_poisson <- idexx_abr_poisson%>%
+  filter(model_name != "cf_tap")%>%
+  filter(model_name != "cf_stored")%>%
+  mutate(model_name = ifelse(model_name == "ec_tap", "Presence Antibiotic Resistant E. coli at Taps",
+         "Presence Antibiotic Resistant E. coli in Stored Water"))%>%
+  select(!(sample_type))
+
+
+#Removing chlorine results from regular IDEXX results
+fu_poisson <- fu_poisson%>%
+  filter(model_name != "fc_tap")%>%
+  filter(model_name != "fc_stored")%>%
+  select(!(sample_type))
+
+#Joining poisson results
+el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson, el_models)
+
+
+#Changing model names
+el_models_forestplot <- el_models_forestplot%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 1))%>%
+  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Presence of Total Coliform at Taps"= "cf_tap",
+              "Presence of E. coli at Taps"= "ec_tap",
+              "Presence of Total Coliform in Stored Water"= "cf_stored",
+              "Presence of E. coli in Stored Water"= "ec_stored",
+             "Presence Antibiotic Resistant E. coli at Taps" = 
+               "Presence Antibiotic Resistant E. coli at Taps",
+             "Presence Antibiotic Resistant E. coli in Stored Water" =
+               "Presence Antibiotic Resistant E. coli in Stored Water",
+             "Taps as Primary Source" = "prim_source_jjm",
+             "Use a Secondary Source" = "sec_source",
+             "Drink Tap Water" = "jjm_drinking",
+             "Treat Water" = "water_treat_binary",
+             "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+             "Treat Water in Less Than the Median Time" = "time_spent_treat"
+             )
+
+el_forestplot <- el_models_forestplot%>%
+  forestplot(labeltext = c(model_name, estimate, p_value, N),
+             title = "Intervention Effect on Key Water Use and Quality Outcomes",
+             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+             clip = c(0, 2),
+             xticks = c(0, 0.5, 1, 1.5, 2),
+             fn.ci_norm = fpDrawCircleCI,
+             vertices = TRUE,
+             xlog = FALSE,
+             txt_gp = fpTxtGp(
+               label = gpar(fontsize = 10),       # Adjust label text size
+               ticks = gpar(fontsize = 15),       # Adjust tick text size
+               xlab = gpar(fontsize = 15)),
+             boxsize = 0.2
+             )%>%
+  fp_add_lines(h_3 = gpar(lty = 1), 
+               h_15 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black",
+               align = "lrrr",
+               hrz_lines = "black")%>% 
+  fp_add_header(model_name = c("", "Outcome"),
+                estimate = c("Prevalence Ratio", "(95% CI)")%>%
+                  fp_align_center(),
+                p_value = c("", "P-value")%>% 
+                  fp_align_center(),
+                N = c("", "N")%>%
+                  fp_align_center()
+                )%>%
+  fp_decorate_graph(grid = structure(c(1), 
+                              gp = gpar(lty = 2, col = "grey")))
+
+print(el_forestplot)
+
+
+
+
+
+
+```
 
