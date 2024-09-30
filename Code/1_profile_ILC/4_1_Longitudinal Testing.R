@@ -326,6 +326,13 @@ View(filtered_data_r2)
 filtered_data_r2_new <- df_clean %>%
   filter(date_only >= cutoff_date & !(village_name == "Mukundpur" & date_only == "2024-09-06"))
 
+#removing the observations of Tandipur where test was conducted at the nearest tap by Jeremy 
+filtered_data_r2_new <- filtered_data_r2_new %>%
+  filter(date_only >= cutoff_date & !(village_name == "Tandipur" & date_only == "2024-09-12"))
+#Creating new variable to store anonymised village names
+filtered_data_r2_new <- filtered_data_r2_new %>%
+  mutate(anonymized_village_name = paste("Village", dense_rank(village_name)))
+
 View(filtered_data_r2_new)
 
 
@@ -387,40 +394,6 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R1.png"), plot1, bg = "w
 #start_time <- as.POSIXct("2024-01-01 06:00:00", tz = "Asia/Kolkata")
 #end_time <- as.POSIXct("2024-01-01 09:00:00", tz = "Asia/Kolkata")
 
-plot2 <- ggplot(data = filtered_data_r2_new) +
-  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
-  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
-  facet_wrap(~ village_name, scales = "free_x") +
-  geom_hline(yintercept = 0.40, linetype = "dashed", color = "grey") +
-  geom_hline(yintercept = 0.60, linetype = "dashed", color = "grey") +
-  # Adjusted annotations
-  annotate("text", x = max(filtered_data_r2_new$time_since_supply), y = 0.37, label = "Targeted Range", hjust = 1, size = 3) +
-  annotate("text", x = max(filtered_data_r2_new$time_since_supply), y = 0.63, label = "Targeted Range", hjust = 1, size = 3) +
-  labs(
-    title = "Temporal Presentation of Chlorine Readings by Village and Tap",
-    x = "Minutes since start of supply time",
-    y = "Free Chlorine Concentration (mg/L)",
-    color = "Tap"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust = 1),
-    legend.position = "bottom",
-    strip.text = element_text(size = 12),
-    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
-  ) +
-  scale_y_continuous(
-    limits = c(0, 2),
-    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
-  ) +
-  scale_x_continuous(
-    limits = c(0, max(filtered_data_r2$time_since_supply)),
-    breaks = seq(0, max(filtered_data_r2$time_since_supply), by = 10),
-  ) 
-
-
-print(plot2)
-ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R2.png"), plot2, bg = "white", width = 10, height = 6, dpi = 200)
 
 plot2 <- ggplot(data = filtered_data_r2) +
   geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
@@ -451,6 +424,44 @@ plot2 <- ggplot(data = filtered_data_r2) +
 #  ) 
 
 print(plot2)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_R2.png"), plot2, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+#Figure with adjustments for sharing results 
+# Define colors for nearest and farthest taps
+color_nearest <- "blue"
+color_farthest <- "#FF8C00" 
+
+# Adjust the color mapping based on location
+plot3 <- ggplot(data = filtered_data_r2_new) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
+  facet_wrap(~ anonymized_village_name, scales = "free_x") +
+  labs(
+    title = "Temporal Presentation of Chlorine Readings across different villages in Rayagada study sample",
+    x = "Minutes since start of supply time",
+    y = "Free Chlorine Concentration in Running Water (mg/L)",
+    color = "Tap"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 90, vjust = 1, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12),
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(filtered_data_r2_new$time_since_supply)),
+    breaks = seq(0, max(filtered_data_r2_new$time_since_supply), by = 10)
+  ) +
+  scale_color_manual(values = c("Nearest Tap" = color_nearest, "Farthest Tap" = color_farthest))
+
+print(plot3)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_findings.png"), plot3, bg = "white", width = 10, height = 6, dpi = 200)
 
 #------------------------Creating new dfs for each village----------------------
 
