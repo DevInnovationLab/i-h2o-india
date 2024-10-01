@@ -54,152 +54,152 @@ merge 1:1 unique_id using "${DataTemp}Endline_Preg_status_wide.dta", gen(merge_d
 ********************************************************************************
 *** Generating relevant variables
 ********************************************************************************
-drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
-//1 obs dropped
-
-
-* Combined variable for Number of HH members (both BL and EL including the new members)
-//changing the storage type of the no of HH members from baseline census
-destring R_Cen_hh_member_names_count, gen(R_Cen_hhmember_count_new) 
-destring R_E_n_hhmember_count, replace
-
-egen total_hhmembers=rowtotal(R_Cen_hhmember_count_new R_E_n_hhmember_count) 
-label var total_hhmembers "Total HH Members"
-
-
-* Number of U5 Children
-//Generating new binary variable if age of HH member is <5
-forvalues i=1/17 { //loop for all family members in Baseline Census
-	gen Cen_U5child_`i' =1 if R_Cen_a6_hhmember_age_`i'<5 
-}
-forvalues i=1/20 { //loop for all new members in Endline Census
-    destring R_E_n_fam_age`i', gen (R_E_n_fam_age`i'_num) 
-	gen E_n_U5child_`i'=1 if  R_E_n_fam_age`i'_num<5
-}
-//Generating variable for total no of U5 children in Baseline and Endline
-egen total_U5children= rowtotal(Cen_U5child_* E_n_U5child_*)
-label var total_U5children "U5 Children"
-
-
-* Number of pregnant women
-//Generating new binary variable if HH member is pregnant 
-forvalues i = 1/17 { //loop for all HH memebers in Baseline Census
-	gen Cen_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
-}
-
-// Generating variable for total no of pregnant women in Endline 
-egen total_pregnant= rowtotal(comb_preg_status*)
-label var total_pregnant "Pregnant Women (Endline)" 
-	
-	
-* Number of Women of Child Bearing Age
-forvalues i=1/17 { //loop for all family members in Baseline Census
-	gen Cen_female_15to49_`i'=1 if R_Cen_a6_hhmember_age_`i'>=15 & R_Cen_a6_hhmember_age_`i'<=49
-}
-destring R_E_n_num_female_15to49, gen (R_E_n_num_female_15to49_num) //changing the storage type
-egen total_CBW= rowtotal(R_E_n_num_female_15to49_num Cen_female_15to49_*)
-label var total_CBW "Women of Child Bearing Age"
-
-
-* Number of Other Members in the HH 
-//Generating binary variable if HH member is neither CBW nor U5
-forvalues i=1/17{ //loop for all HH members in Baseline
-	gen Cen_noncri_members_`i'=1 if (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a4_hhmember_gender_`i'==1) | (R_Cen_a6_hhmember_age_`i'>49 & R_Cen_a4_hhmember_gender_`i'==2) | (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a6_hhmember_age_`i'<15 & R_Cen_a4_hhmember_gender_`i'==2)
-}
-//Generating vairable for total no of non criteria/Other members in Baseline and Endline
-destring  R_E_n_num_allmembers_h, gen (R_E_n_num_allmembers_h_num) //chnaging the storage type
-egen total_noncri_members=rowtotal(Cen_noncri_members_* R_E_n_num_allmembers_h_num)
-label var total_noncri_members "Other Members (non-U5/non-CBW)"
-
-* Index of the HH Head (to ascertain which HH member is the head)
-//Extracting the index from name of HH Head
-gen hh_head_index =.
-replace hh_head_index=R_Cen_a10_hhhead
-label var hh_head_index "Household Head's index"
-
-* Age of the HH head
-gen hh_head_age = .
-forval i = 1/17 { 
-    replace hh_head_age = R_Cen_a6_hhmember_age_`i' if hh_head_index== `i'
-}
-label var hh_head_age "Age of the HH Head"
-
-// * Whether HH head ever attended school
-// gen hh_head_attend_school=.
-// forval i = 1/17 {
-//     replace hh_head_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
+// //1 obs dropped
+//
+//
+// * Combined variable for Number of HH members (both BL and EL including the new members)
+// //changing the storage type of the no of HH members from baseline census
+// destring R_Cen_hh_member_names_count, gen(R_Cen_hhmember_count_new) 
+// destring R_E_n_hhmember_count, replace
+//
+// egen total_hhmembers=rowtotal(R_Cen_hhmember_count_new R_E_n_hhmember_count) 
+// label var total_hhmembers "Total HH Members"
+//
+//
+// * Number of U5 Children
+// //Generating new binary variable if age of HH member is <5
+// forvalues i=1/17 { //loop for all family members in Baseline Census
+// 	gen Cen_U5child_`i' =1 if R_Cen_a6_hhmember_age_`i'<5 
 // }
-// label var hh_head_attend_school "HH head attended school"
-// label define hh_head_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
-// label values hh_head_attend_school hh_head_attend_school
-
-* Education Level of the HH Head
-gen hh_head_edu = .
-forval i = 1/17 {
-    replace hh_head_edu = R_Cen_a9_school_level_`i' if hh_head_index== `i'
-	replace hh_head_edu = 0 if R_Cen_a9_school_level_`i'==. & hh_head_index== `i'
-}
-label var hh_head_edu "Level of Education of HH Head"
-label define hh_head_edu 0 "Never Attended School" 1 "HH head: Incomplete Pre-school" 2 "HH head: Completed Pre-school" ///
-3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
-5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
-7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
-label values hh_head_edu hh_head_edu
-
-* Age of the Respondent
-gen respondent_age = .
-replace respondent_age = R_Cen_a6_hhmember_age_1
-// replace respondent_age=. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
-label var respondent_age "Age of the Respondent"
-
-* Gender of the Respondent
-gen respondent_gender = .
-replace respondent_gender =R_Cen_a4_hhmember_gender_1
-// replace respondent_gender =. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
-label var respondent_gender "Gender of the Respondent"
-label define respondent_gender 1 "Male" 2 "Female" 3 "Other" 
-label values respondent_gender respondent_gender
-
-// * Whether respondent ever attended school
-// gen resp_attend_school=.
-// forval i = 1/17 {
-//     replace resp_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// forvalues i=1/20 { //loop for all new members in Endline Census
+//     destring R_E_n_fam_age`i', gen (R_E_n_fam_age`i'_num) 
+// 	gen E_n_U5child_`i'=1 if  R_E_n_fam_age`i'_num<5
 // }
-// label var resp_attend_school "Respondent attended school"
-// label define resp_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
-// label values resp_attend_school resp_attend_school
-
-
-* Education Level of the Respondent
-gen respondent_edu = .
-replace respondent_edu = R_Cen_a9_school_level_1
-replace respondent_edu = 0 if R_Cen_a9_school_level_1==. //replcaing the missing values (in case respondent never attended school) with 0
-// replace respondent_edu =. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
-label var respondent_edu "Level of Education of Respondent"
-label define respondent_edu 0 "Never Attended School" 1 "Incomplete Pre-school" 2 "Completed Pre-school" ///
-3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
-5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
-7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
-label values respondent_edu respondent_edu
-
-* Asset index
-local assets R_Cen_a33_ac R_Cen_a33_bicycle R_Cen_a33_bwtv R_Cen_a33_car R_Cen_a33_cart R_Cen_a33_chair R_Cen_a33_colourtv R_Cen_a33_computer R_Cen_a33_cotbed R_Cen_a33_electricfan R_Cen_a33_electricity R_Cen_a33_fridge R_Cen_a33_internet R_Cen_a33_landline R_Cen_a33_mattress R_Cen_a33_mobile R_Cen_a33_motorcycle R_Cen_a33_pressurecooker R_Cen_a33_radiotransistor R_Cen_a33_sewingmachine R_Cen_a33_table R_Cen_a33_thresher R_Cen_a33_tractor R_Cen_a33_washingmachine R_Cen_a33_watchclock R_Cen_a33_waterpump R_Cen_labels
- foreach i in `assets' {
-    replace `i'=. if `i'==-99 | `i'==-98 //if respondent didn't know or refused to answer, recoding as missing value
-   }
-egen asset_index=rowtotal(R_Cen_a33_*) //total of 26 assets
-label var asset_index "Asset Index (total of 26 assets)"
-
-* Asset Quintiles
-egen asset_rank = rank(asset_index)
-
-egen asset_quintile = xtile(asset_rank), nq(5)
-label var asset_quintile "Asset Quintiles"
-label define asset_quintile 1 "Quintile 1" 2 "Quintile 2" 3 "Quintile 3" 4 "Quintile 4" 5 "Quintile 5"
-label values asset_quintile asset_quintile
-
-drop asset_rank //dropping the var that is not required 
-
+// //Generating variable for total no of U5 children in Baseline and Endline
+// egen total_U5children= rowtotal(Cen_U5child_* E_n_U5child_*)
+// label var total_U5children "U5 Children"
+//
+//
+// * Number of pregnant women
+// //Generating new binary variable if HH member is pregnant 
+// forvalues i = 1/17 { //loop for all HH memebers in Baseline Census
+// 	gen Cen_total_pregnant_`i'= 1 if R_Cen_a7_pregnant_`i'==1
+// }
+//
+// // Generating variable for total no of pregnant women in Endline 
+// egen total_pregnant= rowtotal(comb_preg_status*)
+// label var total_pregnant "Pregnant Women (Endline)" 
+//	
+//	
+// * Number of Women of Child Bearing Age
+// forvalues i=1/17 { //loop for all family members in Baseline Census
+// 	gen Cen_female_15to49_`i'=1 if R_Cen_a6_hhmember_age_`i'>=15 & R_Cen_a6_hhmember_age_`i'<=49
+// }
+// destring R_E_n_num_female_15to49, gen (R_E_n_num_female_15to49_num) //changing the storage type
+// egen total_CBW= rowtotal(R_E_n_num_female_15to49_num Cen_female_15to49_*)
+// label var total_CBW "Women of Child Bearing Age"
+//
+//
+// * Number of Other Members in the HH 
+// //Generating binary variable if HH member is neither CBW nor U5
+// forvalues i=1/17{ //loop for all HH members in Baseline
+// 	gen Cen_noncri_members_`i'=1 if (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a4_hhmember_gender_`i'==1) | (R_Cen_a6_hhmember_age_`i'>49 & R_Cen_a4_hhmember_gender_`i'==2) | (R_Cen_a6_hhmember_age_`i'>=5 & R_Cen_a6_hhmember_age_`i'<15 & R_Cen_a4_hhmember_gender_`i'==2)
+// }
+// //Generating vairable for total no of non criteria/Other members in Baseline and Endline
+// destring  R_E_n_num_allmembers_h, gen (R_E_n_num_allmembers_h_num) //chnaging the storage type
+// egen total_noncri_members=rowtotal(Cen_noncri_members_* R_E_n_num_allmembers_h_num)
+// label var total_noncri_members "Other Members (non-U5/non-CBW)"
+//
+// * Index of the HH Head (to ascertain which HH member is the head)
+// //Extracting the index from name of HH Head
+// gen hh_head_index =.
+// replace hh_head_index=R_Cen_a10_hhhead
+// label var hh_head_index "Household Head's index"
+//
+// * Age of the HH head
+// gen hh_head_age = .
+// forval i = 1/17 { 
+//     replace hh_head_age = R_Cen_a6_hhmember_age_`i' if hh_head_index== `i'
+// }
+// label var hh_head_age "Age of the HH Head"
+//
+// // * Whether HH head ever attended school
+// // gen hh_head_attend_school=.
+// // forval i = 1/17 {
+// //     replace hh_head_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// // }
+// // label var hh_head_attend_school "HH head attended school"
+// // label define hh_head_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+// // label values hh_head_attend_school hh_head_attend_school
+//
+// * Education Level of the HH Head
+// gen hh_head_edu = .
+// forval i = 1/17 {
+//     replace hh_head_edu = R_Cen_a9_school_level_`i' if hh_head_index== `i'
+// 	replace hh_head_edu = 0 if R_Cen_a9_school_level_`i'==. & hh_head_index== `i'
+// }
+// label var hh_head_edu "Level of Education of HH Head"
+// label define hh_head_edu 0 "Never Attended School" 1 "HH head: Incomplete Pre-school" 2 "HH head: Completed Pre-school" ///
+// 3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
+// 5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
+// 7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
+// label values hh_head_edu hh_head_edu
+//
+// * Age of the Respondent
+// gen respondent_age = .
+// replace respondent_age = R_Cen_a6_hhmember_age_1
+// // replace respondent_age=. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
+// label var respondent_age "Age of the Respondent"
+//
+// * Gender of the Respondent
+// gen respondent_gender = .
+// replace respondent_gender =R_Cen_a4_hhmember_gender_1
+// // replace respondent_gender =. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
+// label var respondent_gender "Gender of the Respondent"
+// label define respondent_gender 1 "Male" 2 "Female" 3 "Other" 
+// label values respondent_gender respondent_gender
+//
+// // * Whether respondent ever attended school
+// // gen resp_attend_school=.
+// // forval i = 1/17 {
+// //     replace resp_attend_school = R_Cen_a9_school_`i' if hh_head_index== `i'
+// // }
+// // label var resp_attend_school "Respondent attended school"
+// // label define resp_attend_school 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+// // label values resp_attend_school resp_attend_school
+//
+//
+// * Education Level of the Respondent
+// gen respondent_edu = .
+// replace respondent_edu = R_Cen_a9_school_level_1
+// replace respondent_edu = 0 if R_Cen_a9_school_level_1==. //replcaing the missing values (in case respondent never attended school) with 0
+// // replace respondent_edu =. if unique_id=="30501107052" //coded as missing as the respondent for this unique id was not a member of the HH 
+// label var respondent_edu "Level of Education of Respondent"
+// label define respondent_edu 0 "Never Attended School" 1 "Incomplete Pre-school" 2 "Completed Pre-school" ///
+// 3 "Incomplete Primary Education" 4 "Completed Primary Education" ///
+// 5 "Incomplete Secondary Education" 6 "Completed Secondary Education" ///
+// 7 "Post-secondary Education" -98 "Refused" 999 "Don't know"
+// label values respondent_edu respondent_edu
+//
+// * Asset index
+// local assets R_Cen_a33_ac R_Cen_a33_bicycle R_Cen_a33_bwtv R_Cen_a33_car R_Cen_a33_cart R_Cen_a33_chair R_Cen_a33_colourtv R_Cen_a33_computer R_Cen_a33_cotbed R_Cen_a33_electricfan R_Cen_a33_electricity R_Cen_a33_fridge R_Cen_a33_internet R_Cen_a33_landline R_Cen_a33_mattress R_Cen_a33_mobile R_Cen_a33_motorcycle R_Cen_a33_pressurecooker R_Cen_a33_radiotransistor R_Cen_a33_sewingmachine R_Cen_a33_table R_Cen_a33_thresher R_Cen_a33_tractor R_Cen_a33_washingmachine R_Cen_a33_watchclock R_Cen_a33_waterpump R_Cen_labels
+//  foreach i in `assets' {
+//     replace `i'=. if `i'==-99 | `i'==-98 //if respondent didn't know or refused to answer, recoding as missing value
+//    }
+// egen asset_index=rowtotal(R_Cen_a33_*) //total of 26 assets
+// label var asset_index "Asset Index (total of 26 assets)"
+//
+// * Asset Quintiles
+// egen asset_rank = rank(asset_index)
+//
+// egen asset_quintile = xtile(asset_rank), nq(5)
+// label var asset_quintile "Asset Quintiles"
+// label define asset_quintile 1 "Quintile 1" 2 "Quintile 2" 3 "Quintile 3" 4 "Quintile 4" 5 "Quintile 5"
+// label values asset_quintile asset_quintile
+//
+// drop asset_rank //dropping the var that is not required 
+//
 * relabelling caste variable for table
 // label drop R_Cen_a37_caste
 label define R_Cen_a37_caste 1 "Scheduled Caste" 2 "Scheduled Tribe" 3 "Other Backward Caste" 4 "Other Caste" 999 "Don't know"
@@ -221,7 +221,7 @@ foreach i in respondent_edu hh_head_edu /*hh_head_attend_school resp_attend_scho
 // }	
 
 ********************************************************************************
-*** Creating Dummy variables
+*** Creating Dummy variables/ Indicator variables
 ********************************************************************************
 
 foreach v in R_Cen_a10_hhhead_gender respondent_gender respondent_edu ///
@@ -385,79 +385,79 @@ use "${DataFinal}0_Master_HHLevel.dta", clear
 ********************************************************************************
 
 * Changing the storage type of relevant variables
-		
-destring R_E_jjm_drinking R_E_jjm_yes R_E_tap_supply_freq R_E_tap_supply_daily R_E_tap_function R_E_tap_function_reason R_E_tap_function_reason_1 R_E_tap_function_reason_2 R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 R_E_tap_function_reason_999 R_E_tap_function_reason__77 R_E_tap_issues R_E_tap_issues_type R_E_tap_issues_type_1 R_E_tap_issues_type_2 R_E_tap_issues_type_3 R_E_tap_issues_type_4 R_E_tap_issues_type_5 R_E_tap_issues_type__77 R_E_consent, replace
+//		
+// destring R_E_jjm_drinking R_E_jjm_yes R_E_tap_supply_freq R_E_tap_supply_daily R_E_tap_function R_E_tap_function_reason R_E_tap_function_reason_1 R_E_tap_function_reason_2 R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 R_E_tap_function_reason_999 R_E_tap_function_reason__77 R_E_tap_issues R_E_tap_issues_type R_E_tap_issues_type_1 R_E_tap_issues_type_2 R_E_tap_issues_type_3 R_E_tap_issues_type_4 R_E_tap_issues_type_5 R_E_tap_issues_type__77 R_E_consent, replace
+//
+//
+// * Supply schedule of JJM tap water
+// replace R_E_tap_supply_freq=1 if R_E_tap_supply_freq==-77 //recoding the other category into "Daily" category given that water is supplied daily but the quantity is less
+//
+// * Reason that the jjm tap was not functional
+// //Recoding the other category responses into proper categories
+// replace R_E_tap_function_reason_1=1 if R_E_tap_function_oth=="Salary nehin mila pump operator ko is liye nehin chod raha hain" //PO didnt turn on water as he didn't get his salary
+// replace R_E_tap_function_reason_1=1 if R_E_tap_function_oth=="Pump opertator Not in village"
+// replace R_E_tap_function_reason_4=1 if R_E_tap_function_oth=="Electricity problem" 
+// replace R_E_tap_function_reason_2=1 if R_E_tap_function_oth=="1month hogeya khud ka JJm tab Hight me hai to pani nehi arahahai" | ///
+// R_E_tap_function_oth=="Unke ghar last pe he ,pani ane me late hota he" | ///
+// R_E_tap_function_oth=="Tap connection hight place me hai isilie pani nai aratha" | ///
+// R_E_tap_function_oth=="tap connection place hight me hai isilie pani thik se nai arahe hamari tap me" //tap or the house is at the end or at an elevation
+//
+// //Replacing the values in "Other" category with zero after categorizing them 
+// replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Salary nehin mila pump operator ko is liye nehin chod raha hain" //PO didnt turn on water as he didn't get his salary
+// replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Pump opertator Not in village"
+// replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Electricity problem" 
+// replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="1month hogeya khud ka JJm tab Hight me hai to pani nehi arahahai" | ///
+// R_E_tap_function_oth=="Unke ghar last pe he ,pani ane me late hota he" | ///
+// R_E_tap_function_oth=="Tap connection hight place me hai isilie pani nai aratha" | ///
+// R_E_tap_function_oth=="tap connection place hight me hai isilie pani thik se nai arahe hamari tap me" //tap or the house is at the end or at an elevation
+//
+// /**Responses Not categorised yet: R_E_tap_function_oth
+//
+// "Late re uthi thibaru Pani banda hoi gala"
+// "Alpa samaya pain pani chhadi thile"
+//
+// */
+//
+// * Issues with water supply
+// //the variable R_E_tap_issues_type (select multiple) has 7 categories including dont know and other; creating new variable to recategorise some of the other category responses 
+// gen R_E_tap_issues_type_6=.
+// replace R_E_tap_issues_type_6=0 if R_E_tap_issues==1
+// replace R_E_tap_issues_type_6=1 if R_E_tap_issues_type_oth=="Not available water" | ///
+// R_E_tap_issues_type_oth=="Pani bich bich meain nehin ata hain" | ///
+// R_E_tap_issues_type_oth=="Ek din current nehi aya tha isilea thoda taklip hua tha" | ///
+// R_E_tap_issues_type_oth=="Tank problem" 
+//
+// //Categorizing the other category variables into proper categories
+// replace R_E_tap_issues_type_1=1 if R_E_tap_issues_type_oth=="Pani re gunda bhasuchhi" 
+// replace R_E_tap_issues_type_3=1 if R_E_tap_issues_type_oth=="Pani ke sath anya kuch chota mota cheej aa jata hain" 
+//
+// //Replacing the values in "Other" category with zero after categorizing them 
+// replace R_E_tap_issues_type__77=0 if R_E_tap_issues_type_oth=="Not available water" | ///
+// R_E_tap_issues_type_oth=="Pani bich bich meain nehin ata hain" | ///
+// R_E_tap_issues_type_oth=="Ek din current nehi aya tha isilea thoda taklip hua tha" | ///
+// R_E_tap_issues_type_oth=="Tank problem" | R_E_tap_issues_type_oth=="Pani re gunda bhasuchhi" | ///
+// R_E_tap_issues_type_oth=="Pani ke sath anya kuch chota mota cheej aa jata hain" 
+//
+//
+// /**Responses Not categorised yet: R_E_tap_issues_type_oth
+// Pani re siuli aasuchhi
+// Cold
+// Handire pani rakhile cement rakhila vali hei jauchhi
+// //two blank responses also present
+// */
 
 
-* Supply schedule of JJM tap water
-replace R_E_tap_supply_freq=1 if R_E_tap_supply_freq==-77 //recoding the other category into "Daily" category given that water is supplied daily but the quantity is less
-
-* Reason that the jjm tap was not functional
-//Recoding the other category responses into proper categories
-replace R_E_tap_function_reason_1=1 if R_E_tap_function_oth=="Salary nehin mila pump operator ko is liye nehin chod raha hain" //PO didnt turn on water as he didn't get his salary
-replace R_E_tap_function_reason_1=1 if R_E_tap_function_oth=="Pump opertator Not in village"
-replace R_E_tap_function_reason_4=1 if R_E_tap_function_oth=="Electricity problem" 
-replace R_E_tap_function_reason_2=1 if R_E_tap_function_oth=="1month hogeya khud ka JJm tab Hight me hai to pani nehi arahahai" | ///
-R_E_tap_function_oth=="Unke ghar last pe he ,pani ane me late hota he" | ///
-R_E_tap_function_oth=="Tap connection hight place me hai isilie pani nai aratha" | ///
-R_E_tap_function_oth=="tap connection place hight me hai isilie pani thik se nai arahe hamari tap me" //tap or the house is at the end or at an elevation
-
-//Replacing the values in "Other" category with zero after categorizing them 
-replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Salary nehin mila pump operator ko is liye nehin chod raha hain" //PO didnt turn on water as he didn't get his salary
-replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Pump opertator Not in village"
-replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="Electricity problem" 
-replace R_E_tap_function_reason__77=0 if R_E_tap_function_oth=="1month hogeya khud ka JJm tab Hight me hai to pani nehi arahahai" | ///
-R_E_tap_function_oth=="Unke ghar last pe he ,pani ane me late hota he" | ///
-R_E_tap_function_oth=="Tap connection hight place me hai isilie pani nai aratha" | ///
-R_E_tap_function_oth=="tap connection place hight me hai isilie pani thik se nai arahe hamari tap me" //tap or the house is at the end or at an elevation
-
-/**Responses Not categorised yet: R_E_tap_function_oth
-
-"Late re uthi thibaru Pani banda hoi gala"
-"Alpa samaya pain pani chhadi thile"
-
-*/
-
-* Issues with water supply
-//the variable R_E_tap_issues_type (select multiple) has 7 categories including dont know and other; creating new variable to recategorise some of the other category responses 
-gen R_E_tap_issues_type_6=.
-replace R_E_tap_issues_type_6=0 if R_E_tap_issues==1
-replace R_E_tap_issues_type_6=1 if R_E_tap_issues_type_oth=="Not available water" | ///
-R_E_tap_issues_type_oth=="Pani bich bich meain nehin ata hain" | ///
-R_E_tap_issues_type_oth=="Ek din current nehi aya tha isilea thoda taklip hua tha" | ///
-R_E_tap_issues_type_oth=="Tank problem" 
-
-//Categorizing the other category variables into proper categories
-replace R_E_tap_issues_type_1=1 if R_E_tap_issues_type_oth=="Pani re gunda bhasuchhi" 
-replace R_E_tap_issues_type_3=1 if R_E_tap_issues_type_oth=="Pani ke sath anya kuch chota mota cheej aa jata hain" 
-
-//Replacing the values in "Other" category with zero after categorizing them 
-replace R_E_tap_issues_type__77=0 if R_E_tap_issues_type_oth=="Not available water" | ///
-R_E_tap_issues_type_oth=="Pani bich bich meain nehin ata hain" | ///
-R_E_tap_issues_type_oth=="Ek din current nehi aya tha isilea thoda taklip hua tha" | ///
-R_E_tap_issues_type_oth=="Tank problem" | R_E_tap_issues_type_oth=="Pani re gunda bhasuchhi" | ///
-R_E_tap_issues_type_oth=="Pani ke sath anya kuch chota mota cheej aa jata hain" 
-
-
-/**Responses Not categorised yet: R_E_tap_issues_type_oth
-Pani re siuli aasuchhi
-Cold
-Handire pani rakhile cement rakhila vali hei jauchhi
-//two blank responses also present
-*/
-
-
-* Water supply frequecny on the days water is supplied regularly
-gen water_supply_freq=.
-replace water_supply_freq=1 if R_E_tap_supply_daily==555
-replace water_supply_freq=2 if R_E_tap_supply_daily==1
-replace water_supply_freq=3 if R_E_tap_supply_daily==2
-replace water_supply_freq=4 if R_E_tap_supply_daily==7 | R_E_tap_supply_daily==14
-
-label var water_supply_freq "Frequency of Water supply"
-label define water_supply_freq 1 "Supplied 24/7" 2 "Supplied once a day" 3 "Supplied twice a day" 4 "Supplied more than twice a day"
-label values water_supply_freq water_supply_freq
-
+// * Water supply frequecny on the days water is supplied regularly
+// gen water_supply_freq=.
+// replace water_supply_freq=1 if R_E_tap_supply_daily==555
+// replace water_supply_freq=2 if R_E_tap_supply_daily==1
+// replace water_supply_freq=3 if R_E_tap_supply_daily==2
+// replace water_supply_freq=4 if R_E_tap_supply_daily==7 | R_E_tap_supply_daily==14
+//
+// label var water_supply_freq "Frequency of Water supply"
+// label define water_supply_freq 1 "Supplied 24/7" 2 "Supplied once a day" 3 "Supplied twice a day" 4 "Supplied more than twice a day"
+// label values water_supply_freq water_supply_freq
+//
 
 
 // * Recoding don't know observations as missing values 
@@ -851,335 +851,335 @@ use "${DataFinal}0_Master_HHLevel.dta", clear
 ********************************************************************************
 
 *** Changing the storage type of relevant variables
-destring R_E_jjm_drinking R_E_jjm_yes R_E_jjm_use R_E_jjm_use_1 R_E_jjm_use_2 R_E_jjm_use_3 R_E_jjm_use_4 R_E_jjm_use_5 R_E_jjm_use_6 R_E_jjm_use_7 R_E_jjm_use__77 R_E_jjm_use_999 R_E_reason_nodrink R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 R_E_reason_nodrink_4 R_E_reason_nodrink_999 R_E_reason_nodrink__77 R_E_consent, replace
-
-*** Recoding observations (manual corrections)
-* Recoding observations as missing for the section: usage of govt tap 
-//the following three obs do not use govt tap water as their primary or secondary source of water (the source used by them was recorded in "Other" category in  "A12_prim_source_oth"). Given the section is applicable only for HHs who use govt tap as prim or sec source in Baseline, replacing the responses to these questions as missing
-replace R_Cen_a18_reason_nodrink="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink_1=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink_2=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink_3=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink_4=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink_999=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_reason_nodrink__77=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_water_treat_oth="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a18_jjm_drinking=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_yes=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_1=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_2=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_3=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_4=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_5=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_6=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_7=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_999=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use__77=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-replace R_Cen_a20_jjm_use_oth="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
-
-*** Cleaning the variables
-
-* Reasons for not drinking JJM tap water: Baseline
-//Categorizing the responses from "Other category to the relevant categories"
-//Option 4: Reason for not drinking: Water is smelly or muddy 
-replace R_Cen_a18_reason_nodrink_4=1 if  R_Cen_a18_water_treat_oth=="Luha luha gandhuchi & dost asuchi" | ///
-R_Cen_a18_water_treat_oth=="Supply pani piu nahanti kintu anya kama re lagauchhnti , gadheiba, basana dhaiba, luga dhaiba" 
-
-/*
-//Option 3: Reason for not drinking: Water supply is intermittent 
-replace R_Cen_a18_reason_nodrink_3=1 if R_Cen_a18_water_treat_oth==
-
-//Option 2: Reason for not drinking: Water supply is inadequate
-replace R_Cen_a18_reason_nodrink_2=1 if R_Cen_a18_water_treat_oth==
-*/
-
-//Option 1: Reason for not drinking: Tap is broken and doesn't supply water 
-replace R_Cen_a18_reason_nodrink_1=1 if R_Cen_a18_water_treat_oth=="Tap bhangi jaichhi" //tap is broken 
-
-//Creating a new category for those who dont drink jjm water because they do not have a govt tap connection or are not connected to the tank  
-gen R_Cen_a18_reason_nodrink_5=.
-replace R_Cen_a18_reason_nodrink_5=0 if R_Cen_a18_reason_nodrink!=""
-replace R_Cen_a18_reason_nodrink_5=1 if R_Cen_a18_jjm_drinking==2 
-replace R_Cen_a18_reason_nodrink_5=1 if R_Cen_a18_water_treat_oth=="Paipe connection heinai" | ///
-R_Cen_a18_water_treat_oth=="Paip connection nahi" | R_Cen_a18_water_treat_oth=="Tape connection nahi" | ///
-R_Cen_a18_water_treat_oth=="Tap aasi nahi" | R_Cen_a18_water_treat_oth=="Tap Nehni Mila" | ///
-R_Cen_a18_water_treat_oth=="Tap pani lagi nahi" | R_Cen_a18_water_treat_oth=="FHTC Tap Not contacting this house hold." | ///
-R_Cen_a18_water_treat_oth=="Tap connection dia heini" | R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | ///
-R_Cen_a18_water_treat_oth=="Respondent doesn't have personal household Tap water connection provided by government" | ///
-R_Cen_a18_water_treat_oth=="Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Government don't supply house hold taps" | ///
-R_Cen_a18_water_treat_oth=="Tape conektion nahi" | R_Cen_a18_water_treat_oth=="Gharme government tap nehni laga hai" 
-
-label var R_Cen_a18_reason_nodrink_5 "Don't have a JJM tap connection"
-label define R_Cen_a18_reason_nodrink_5 1 "Yes" 0 "No"
-label values R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_5
-
-//Creating a new category for those who dont drink jjm water because they fetch drinking water from other private water source
-gen R_Cen_a18_reason_nodrink_6=.
-replace R_Cen_a18_reason_nodrink_6=0 if R_Cen_a18_reason_nodrink!=""
-replace R_Cen_a18_reason_nodrink_6=1 if R_Cen_a18_water_treat_oth=="Jehetu Nijara kua achi se government pani ku use karantini," | ///
-R_Cen_a18_water_treat_oth=="Jehetu nija Borwell achi se government tap pani piunahanti" | ///
-R_Cen_a18_water_treat_oth=="Nija ghare bore water achi Sethi pai aame supply pani bebahara karunahanti" | ///
-R_Cen_a18_water_treat_oth=="Ghare motor achi Sethi pae" | R_Cen_a18_water_treat_oth=="Pani pahanchi parunathila sethipai nija Borwell kholilu" | ///
-R_Cen_a18_water_treat_oth=="Government tap pare diahela sethipai nijara Borwell kholeiki piuchu"
-
-label var R_Cen_a18_reason_nodrink_6 "Have other private drinking water source "
-label define R_Cen_a18_reason_nodrink_6 1 "Yes" 0 "No"
-label values R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink_6
-
-//Replacing the values in "Other" with zero after categorizing them 
-replace R_Cen_a18_reason_nodrink__77=0 if R_Cen_a18_water_treat_oth=="Paipe connection heinai" | ///
-R_Cen_a18_water_treat_oth=="Paip connection nahi" | R_Cen_a18_water_treat_oth=="Tape connection nahi" | ///
-R_Cen_a18_water_treat_oth=="Tap aasi nahi" | R_Cen_a18_water_treat_oth=="Tap Nehni Mila" | ///
-R_Cen_a18_water_treat_oth=="Tap pani lagi nahi" | R_Cen_a18_water_treat_oth=="FHTC Tap Not contacting this house hold." | ///
-R_Cen_a18_water_treat_oth=="Tap connection dia heini" | R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | ///
-R_Cen_a18_water_treat_oth=="Respondent doesn't have personal household Tap water connection provided by government" | ///
-R_Cen_a18_water_treat_oth=="Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Government don't supply house hold taps" | ///
-R_Cen_a18_water_treat_oth=="Tape conektion nahi" | R_Cen_a18_water_treat_oth=="Gharme government tap nehni laga hai" | ///
-R_Cen_a18_water_treat_oth=="Luha luha gandhuchi & dost asuchi" | R_Cen_a18_water_treat_oth=="Tap bhangi jaichhi" | ///
-R_Cen_a18_water_treat_oth=="Supply pani piu nahanti kintu anya kama re lagauchhnti , gadheiba, basana dhaiba, luga dhaiba" | ///
-R_Cen_a18_water_treat_oth=="Jehetu Nijara kua achi se government pani ku use karantini," | ///
-R_Cen_a18_water_treat_oth=="Jehetu nija Borwell achi se government tap pani piunahanti" | ///
-R_Cen_a18_water_treat_oth=="Nija ghare bore water achi Sethi pai aame supply pani bebahara karunahanti" | ///
-R_Cen_a18_water_treat_oth=="Ghare motor achi Sethi pae" | R_Cen_a18_water_treat_oth=="Pani pahanchi parunathila sethipai nija Borwell kholilu" | ///
-R_Cen_a18_water_treat_oth=="Government tap pare diahela sethipai nijara Borwell kholeiki piuchu" 
-
-//Replacing the missing observations for "0" where R_Cen_a18_reason_nodrink==2 
-*(the reason for not drinking jjm water was skipped for those who said they do nothave a tap connection in baseline. Given that this response has been recoded into a new category/reason for not drinking jjm water in line804, replacing the missing values for consistnency in no of obs)
-foreach var in R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 R_Cen_a18_reason_nodrink_999 {
-	replace `var'=0 if R_Cen_a18_jjm_drinking==2
-}
-
-
-/** Responses not catergorised yet:  R_Cen_a18_water_treat_oth 
-//Not sure about the category:
-
-//Does the hh not get water from the tap (to be categorised into R_Cen_a18_reason_nodrink_1) or does the hh not have a tap connection (to be categorised into reason_nodrink_5_bl): 
-"Government doesn't provide house hold tap water"
-"No government supply tap water"
-"No government supply tap water for household"
-"No government supply tap water"
-"No supply govt tap water in this Home" 
-
-//the person selected JJM tap water as primary source of water; not sure if this is the case where water is not being supplied or the HH doesn't have a tap connection
-"No direct supply water tap" 
-
-
-//Vague
-"Not interested"
-"Supply Pani bhala lagunagi" //dont like tap water - should we categorize it into muddy/silty? - R_Cen_a18_reason_nodrink_4
-"Pani aasunahi" //water supply related issue - should we categorize it into "intermittent water supply" or "tap is broken and doesn't supply water"
-
-
-
-//Translations required: 
-"Jane asi pani chek kari kahithile pani kharap achhi" //someone came to check the water and said it's bad?
-"Supply pani timing re dia jaunahi Sethi pai tanka bore water used karunahanti" // water not supplied at a fixed time? (irregular supply)
-"Nijara bor pani 1st ru piba pain byabahara karichhanti sethipain" 
-"Agaru  handpump paniobhayas heichu Sethi pae  tap Pani piunu" 
-"Tankara bore water achi Sethi pai tap Pani used karunahanti"
-"Ghare morar achi Sethi pae suffly Pani piunahnti"
-"Nija ra  electrical motar pani achi Sethi pae piunahi"
-"Ye hamlet me jo nichewala hissa he usko hi pani atahe khud ki tap he lekin pani nehi atahe wo dusre gharse latehe."
-"Ehi ghara ra sakaranka jogaidiajaithiba gharei tap uchha jagare achhi tenu pani  totally asuni sethipain se podishi Gharara sarakaranka jogaithiba ghorei tap ru pani piba pain anuchhanti"
-"Agaru abhayas heichanti to ghorai tap pani piunahanti" 
-"Pani stock rahithibaru , bacteria thiba boli pintini"
-"Sarakara nka tarafaru pani jogai dia jainahni"
-"Tube well pani peibara abhyasa hoijaichhi sethipai sarakari tap pani pieunahu"
-"Thanda kasa haba boli tap pani peunahanti"
-"Pani aani ki ghare rakhile tela bhalia hoi hauchi au gadheile dehare phutuka hoi jauchi"
-"Pakhare Manual Hand pump achhi" 
-*/
-
-
-* Reasons for not drinking JJM tap water: Endline
-//Categorizing the responses from "Other category to the relevant categories"
-//Option 4: Reason for not drinking: Water is silty or muddy 
-// replace R_E_reason_nodrink_4=1 if R_E_nodrink_water_treat_oth==
-
-//Option 3: Reason for not drinking: Water supply is intermittent 
-replace R_E_reason_nodrink_3=1 if R_E_nodrink_water_treat_oth=="Ise mahine me time pe pani nahi aya esliye wo pani nahi piye hein"  
-
-/*
-//Option 2: Reason for not drinking: Water supply is inadequate
-replace R_E_reason_nodrink_2=1 if R_E_nodrink_water_treat_oth==
-
-//Option 1: Reason for not drinking: Tap is broken and doesn't supply water 
-replace R_E_reason_nodrink_1=1 if R_E_nodrink_water_treat_oth==
-*/
-
-//Creating a new category for those who dont drink jjm water because they do not have a govt tap connection or are not connected to the tank 
-gen R_E_reason_nodrink_5=.
-replace R_E_reason_nodrink_5=0 if R_E_reason_nodrink!=""
-replace R_E_reason_nodrink_5=1 if R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | ///
-R_E_nodrink_water_treat_oth=="Hh not connected to jjm" | R_E_nodrink_water_treat_oth=="Sarakari tap nai dia hua hai is sahi me" | ///
-R_E_nodrink_water_treat_oth=="Sarakari tap idhara nai dia hua hai" | R_E_nodrink_water_treat_oth=="Tap lagi nahi" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm hh tap" | R_E_nodrink_water_treat_oth=="Tap nahi diya hua hain" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi laga hua hain" | R_E_nodrink_water_treat_oth=="Tap nahi deyegaye hain" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi diye gaye hai" | R_E_nodrink_water_treat_oth=="Connection nhi hai" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi laga hua hai" | R_E_nodrink_water_treat_oth=="Tap connection dia heini" | ///
-R_E_nodrink_water_treat_oth=="Tap connection nahi" | R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Basudha  connection nehi hai  Annya logo ka jaga se hokar pipe hokar anatha bo log manakarnese pani ka connection nehi hua." | ///
-R_E_nodrink_water_treat_oth=="Unki ghar me JJm tap nehi he." | R_E_nodrink_water_treat_oth=="JJm ,Basudha connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="JJm Basudha connection nehi hua hai" | R_E_nodrink_water_treat_oth=="Dia hoi nahi" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | R_E_nodrink_water_treat_oth=="Not connected" | ///
-R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="No connection" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm tap" | R_E_nodrink_water_treat_oth=="Govt tap no connection" | ///
-R_E_nodrink_water_treat_oth=="Is household me JJM  tab connection nehi hua hai." | ///
-R_E_nodrink_water_treat_oth=="Isi household meJJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household ka basudha ka tap connection nahi hei" | ///
-R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hei isi bajase wo tap pani nahin pite hei" | ///
-R_E_nodrink_water_treat_oth=="Is household JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Is family me JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Jjm supply water not connected in this house hold" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Not connected to jjm tank" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hei" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hei" | R_E_nodrink_water_treat_oth=="Not connected to JJM tank" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Government tap nahi." | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Jjm supply not connected this house hold" | ///
-R_E_nodrink_water_treat_oth=="Is household me JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap ka connection nahi hai" 
-
-label var R_E_reason_nodrink_5 "Don't have a JJM tap connection"
-label define R_E_reason_nodrink_5 1 "Yes" 0 "No"
-label values R_E_reason_nodrink_5 R_E_reason_nodrink_5
-
-//Creating a new category for those who dont drink jjm water because they fetch drinking water from other private water source
-gen R_E_reason_nodrink_6=.
-replace R_E_reason_nodrink_6=0 if R_E_reason_nodrink!=""
-replace R_E_reason_nodrink_6=1 if R_E_nodrink_water_treat_oth=="Khud ka baruel hai" | ///
-R_E_nodrink_water_treat_oth=="Unke ghara me khudka surakhita kuan hai," | ///
-R_E_nodrink_water_treat_oth=="Khud ka boruel hai" | R_E_nodrink_water_treat_oth=="Khudka bore laga hai isliye use nhi karte hain" | ///
-R_E_nodrink_water_treat_oth=="Khudka bore hai isliye" | R_E_nodrink_water_treat_oth=="Electrical Borwell achi to use korunahanti" |  ///
-R_E_nodrink_water_treat_oth=="Khudka borewell hei isiliye JJM tap ka pani nahi pite hei" | ///
-R_E_nodrink_water_treat_oth=="Don't need inke ghar main already Borewell hain electricity wala" | ///
-R_E_nodrink_water_treat_oth=="Borwell achi to use karunahanti kohile" | ///
-R_E_nodrink_water_treat_oth=="Electricity pump boring available that's and" | ///
-R_E_nodrink_water_treat_oth=="Nija ghare Borwell pani achi to tap pani use korunahanti" | ///
-R_E_nodrink_water_treat_oth=="Borwell achi to use koruchu" | R_E_nodrink_water_treat_oth=="Borwell achi to use karunu" | ///
-R_E_nodrink_water_treat_oth=="Apna khudka borwell he ishliye tape pani pinekeliye byabahar nehikartehe" | ///
-R_E_nodrink_water_treat_oth=="No connection" 
-
-label var R_E_reason_nodrink_6 "Have other private drinking water source "
-label define R_E_reason_nodrink_6 1 "Yes" 0 "No"
-label values R_E_reason_nodrink_6 R_E_reason_nodrink_6
-
-//Replacing the values in "Other" with zero after categorizing them 
-replace R_E_reason_nodrink__77=0 if R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | ///
-R_E_nodrink_water_treat_oth=="Hh not connected to jjm" | R_E_nodrink_water_treat_oth=="Sarakari tap nai dia hua hai is sahi me" | ///
-R_E_nodrink_water_treat_oth=="Sarakari tap idhara nai dia hua hai" | R_E_nodrink_water_treat_oth=="Tap lagi nahi" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm hh tap" | R_E_nodrink_water_treat_oth=="Tap nahi diya hua hain" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi laga hua hain" | R_E_nodrink_water_treat_oth=="Tap nahi deyegaye hain" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi diye gaye hai" | R_E_nodrink_water_treat_oth=="Connection nhi hai" | ///
-R_E_nodrink_water_treat_oth=="Tap nahi laga hua hai" | R_E_nodrink_water_treat_oth=="Tap connection dia heini" | ///
-R_E_nodrink_water_treat_oth=="Tap connection nahi" | R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Basudha  connection nehi hai  Annya logo ka jaga se hokar pipe hokar anatha bo log manakarnese pani ka connection nehi hua." | ///
-R_E_nodrink_water_treat_oth=="Unki ghar me JJm tap nehi he." | R_E_nodrink_water_treat_oth=="JJm ,Basudha connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="JJm Basudha connection nehi hua hai" | R_E_nodrink_water_treat_oth=="Dia hoi nahi" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | R_E_nodrink_water_treat_oth=="Not connected" | ///
-R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="No connection" | ///
-R_E_nodrink_water_treat_oth=="Not connected to jjm tap" | R_E_nodrink_water_treat_oth=="Govt tap no connection" | ///
-R_E_nodrink_water_treat_oth=="Is household me JJM  tab connection nehi hua hai." | ///
-R_E_nodrink_water_treat_oth=="Isi household meJJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household ka basudha ka tap connection nahi hei" | ///
-R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hei isi bajase wo tap pani nahin pite hei" | ///
-R_E_nodrink_water_treat_oth=="Is household JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Is family me JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Jjm supply water not connected in this house hold" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Not connected to jjm tank" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hei" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hei" | R_E_nodrink_water_treat_oth=="Not connected to JJM tank" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Government tap nahi." | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Jjm supply not connected this house hold" | ///
-R_E_nodrink_water_treat_oth=="Is household me JJM connection nehi hua hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Esi household me JJM tap ka connection nahi hai" | ///
-R_E_nodrink_water_treat_oth=="Khud ka baruel hai" | ///
-R_E_nodrink_water_treat_oth=="Unke ghara me khudka surakhita kuan hai," | ///
-R_E_nodrink_water_treat_oth=="Khud ka boruel hai" | R_E_nodrink_water_treat_oth=="Khudka bore laga hai isliye use nhi karte hain" | ///
-R_E_nodrink_water_treat_oth=="Khudka bore hai isliye" | R_E_nodrink_water_treat_oth=="Electrical Borwell achi to use korunahanti" |  ///
-R_E_nodrink_water_treat_oth=="Khudka borewell hei isiliye JJM tap ka pani nahi pite hei" | ///
-R_E_nodrink_water_treat_oth=="Don't need inke ghar main already Borewell hain electricity wala" | ///
-R_E_nodrink_water_treat_oth=="Borwell achi to use karunahanti kohile" | ///
-R_E_nodrink_water_treat_oth=="Electricity pump boring available that's and" | ///
-R_E_nodrink_water_treat_oth=="Nija ghare Borwell pani achi to tap pani use korunahanti" | ///
-R_E_nodrink_water_treat_oth=="Borwell achi to use koruchu" | R_E_nodrink_water_treat_oth=="Borwell achi to use karunu" | ///
-R_E_nodrink_water_treat_oth=="Apna khudka borwell he ishliye tape pani pinekeliye byabahar nehikartehe" | ///
-R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="Ise mahine me time pe pani nahi aya esliye wo pani nahi piye hein"
-
-
-// * Recoding don't know observations as missing values 
-// //Reason for not drinking jjm tap water: Baseline
-// foreach var in  R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 ///
-// R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 {
-// 	replace `var'=. if R_Cen_a18_reason_nodrink=="999"
+// destring R_E_jjm_drinking R_E_jjm_yes R_E_jjm_use R_E_jjm_use_1 R_E_jjm_use_2 R_E_jjm_use_3 R_E_jjm_use_4 R_E_jjm_use_5 R_E_jjm_use_6 R_E_jjm_use_7 R_E_jjm_use__77 R_E_jjm_use_999 R_E_reason_nodrink R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 R_E_reason_nodrink_4 R_E_reason_nodrink_999 R_E_reason_nodrink__77 R_E_consent, replace
+//
+// *** Recoding observations (manual corrections)
+// * Recoding observations as missing for the section: usage of govt tap 
+// //the following three obs do not use govt tap water as their primary or secondary source of water (the source used by them was recorded in "Other" category in  "A12_prim_source_oth"). Given the section is applicable only for HHs who use govt tap as prim or sec source in Baseline, replacing the responses to these questions as missing
+// replace R_Cen_a18_reason_nodrink="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink_1=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink_2=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink_3=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink_4=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink_999=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_reason_nodrink__77=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_water_treat_oth="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a18_jjm_drinking=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_yes=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_1=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_2=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_3=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_4=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_5=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_6=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_7=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_999=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use__77=. if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+// replace R_Cen_a20_jjm_use_oth="" if unique_id=="10101113025" | unique_id=="30602107130" | unique_id=="50301117063" | unique_id=="50501109014" | unique_id=="50501109017" | unique_id=="50501109023"
+//
+// *** Cleaning the variables
+//
+// * Reasons for not drinking JJM tap water: Baseline
+// //Categorizing the responses from "Other category to the relevant categories"
+// //Option 4: Reason for not drinking: Water is smelly or muddy 
+// replace R_Cen_a18_reason_nodrink_4=1 if  R_Cen_a18_water_treat_oth=="Luha luha gandhuchi & dost asuchi" | ///
+// R_Cen_a18_water_treat_oth=="Supply pani piu nahanti kintu anya kama re lagauchhnti , gadheiba, basana dhaiba, luga dhaiba" 
+//
+// /*
+// //Option 3: Reason for not drinking: Water supply is intermittent 
+// replace R_Cen_a18_reason_nodrink_3=1 if R_Cen_a18_water_treat_oth==
+//
+// //Option 2: Reason for not drinking: Water supply is inadequate
+// replace R_Cen_a18_reason_nodrink_2=1 if R_Cen_a18_water_treat_oth==
+// */
+//
+// //Option 1: Reason for not drinking: Tap is broken and doesn't supply water 
+// replace R_Cen_a18_reason_nodrink_1=1 if R_Cen_a18_water_treat_oth=="Tap bhangi jaichhi" //tap is broken 
+//
+// //Creating a new category for those who dont drink jjm water because they do not have a govt tap connection or are not connected to the tank  
+// gen R_Cen_a18_reason_nodrink_5=.
+// replace R_Cen_a18_reason_nodrink_5=0 if R_Cen_a18_reason_nodrink!=""
+// replace R_Cen_a18_reason_nodrink_5=1 if R_Cen_a18_jjm_drinking==2 
+// replace R_Cen_a18_reason_nodrink_5=1 if R_Cen_a18_water_treat_oth=="Paipe connection heinai" | ///
+// R_Cen_a18_water_treat_oth=="Paip connection nahi" | R_Cen_a18_water_treat_oth=="Tape connection nahi" | ///
+// R_Cen_a18_water_treat_oth=="Tap aasi nahi" | R_Cen_a18_water_treat_oth=="Tap Nehni Mila" | ///
+// R_Cen_a18_water_treat_oth=="Tap pani lagi nahi" | R_Cen_a18_water_treat_oth=="FHTC Tap Not contacting this house hold." | ///
+// R_Cen_a18_water_treat_oth=="Tap connection dia heini" | R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | ///
+// R_Cen_a18_water_treat_oth=="Respondent doesn't have personal household Tap water connection provided by government" | ///
+// R_Cen_a18_water_treat_oth=="Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Government don't supply house hold taps" | ///
+// R_Cen_a18_water_treat_oth=="Tape conektion nahi" | R_Cen_a18_water_treat_oth=="Gharme government tap nehni laga hai" 
+//
+// label var R_Cen_a18_reason_nodrink_5 "Don't have a JJM tap connection"
+// label define R_Cen_a18_reason_nodrink_5 1 "Yes" 0 "No"
+// label values R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_5
+//
+// //Creating a new category for those who dont drink jjm water because they fetch drinking water from other private water source
+// gen R_Cen_a18_reason_nodrink_6=.
+// replace R_Cen_a18_reason_nodrink_6=0 if R_Cen_a18_reason_nodrink!=""
+// replace R_Cen_a18_reason_nodrink_6=1 if R_Cen_a18_water_treat_oth=="Jehetu Nijara kua achi se government pani ku use karantini," | ///
+// R_Cen_a18_water_treat_oth=="Jehetu nija Borwell achi se government tap pani piunahanti" | ///
+// R_Cen_a18_water_treat_oth=="Nija ghare bore water achi Sethi pai aame supply pani bebahara karunahanti" | ///
+// R_Cen_a18_water_treat_oth=="Ghare motor achi Sethi pae" | R_Cen_a18_water_treat_oth=="Pani pahanchi parunathila sethipai nija Borwell kholilu" | ///
+// R_Cen_a18_water_treat_oth=="Government tap pare diahela sethipai nijara Borwell kholeiki piuchu"
+//
+// label var R_Cen_a18_reason_nodrink_6 "Have other private drinking water source "
+// label define R_Cen_a18_reason_nodrink_6 1 "Yes" 0 "No"
+// label values R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink_6
+//
+// //Replacing the values in "Other" with zero after categorizing them 
+// replace R_Cen_a18_reason_nodrink__77=0 if R_Cen_a18_water_treat_oth=="Paipe connection heinai" | ///
+// R_Cen_a18_water_treat_oth=="Paip connection nahi" | R_Cen_a18_water_treat_oth=="Tape connection nahi" | ///
+// R_Cen_a18_water_treat_oth=="Tap aasi nahi" | R_Cen_a18_water_treat_oth=="Tap Nehni Mila" | ///
+// R_Cen_a18_water_treat_oth=="Tap pani lagi nahi" | R_Cen_a18_water_treat_oth=="FHTC Tap Not contacting this house hold." | ///
+// R_Cen_a18_water_treat_oth=="Tap connection dia heini" | R_Cen_a18_water_treat_oth=="Government pani tap connection heini" | ///
+// R_Cen_a18_water_treat_oth=="Respondent doesn't have personal household Tap water connection provided by government" | ///
+// R_Cen_a18_water_treat_oth=="Don't have government supply tap" | R_Cen_a18_water_treat_oth=="Government don't supply house hold taps" | ///
+// R_Cen_a18_water_treat_oth=="Tape conektion nahi" | R_Cen_a18_water_treat_oth=="Gharme government tap nehni laga hai" | ///
+// R_Cen_a18_water_treat_oth=="Luha luha gandhuchi & dost asuchi" | R_Cen_a18_water_treat_oth=="Tap bhangi jaichhi" | ///
+// R_Cen_a18_water_treat_oth=="Supply pani piu nahanti kintu anya kama re lagauchhnti , gadheiba, basana dhaiba, luga dhaiba" | ///
+// R_Cen_a18_water_treat_oth=="Jehetu Nijara kua achi se government pani ku use karantini," | ///
+// R_Cen_a18_water_treat_oth=="Jehetu nija Borwell achi se government tap pani piunahanti" | ///
+// R_Cen_a18_water_treat_oth=="Nija ghare bore water achi Sethi pai aame supply pani bebahara karunahanti" | ///
+// R_Cen_a18_water_treat_oth=="Ghare motor achi Sethi pae" | R_Cen_a18_water_treat_oth=="Pani pahanchi parunathila sethipai nija Borwell kholilu" | ///
+// R_Cen_a18_water_treat_oth=="Government tap pare diahela sethipai nijara Borwell kholeiki piuchu" 
+//
+// //Replacing the missing observations for "0" where R_Cen_a18_reason_nodrink==2 
+// *(the reason for not drinking jjm water was skipped for those who said they do nothave a tap connection in baseline. Given that this response has been recoded into a new category/reason for not drinking jjm water in line804, replacing the missing values for consistnency in no of obs)
+// foreach var in R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 R_Cen_a18_reason_nodrink_999 {
+// 	replace `var'=0 if R_Cen_a18_jjm_drinking==2
 // }
-// 
-// //Reason for not drinking jjm tap water: Endline
-// foreach var in  R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 ///
-// R_E_reason_nodrink_4 R_E_reason_nodrink_5 R_E_reason_nodrink_6 R_E_reason_nodrink__77 {
-// 	replace `var'=. if R_E_reason_nodrink=="999"
-// }
-
-
-/** Responses not catergorised yet:  R_E_nodrink_water_treat_oth 
-//Translations required
-"Pani ru dhulli gunda baharuchhi" 
-"Alga jagare rahuchacnti Sethi TAP conection deinahanti"
-"Aagaru khola kua ra Pani  abhiyasa hoi jaichi boli tap Pani piu nahanti"
-"Kasa haijauthiba ru piunahanti"
-"Nijara achhi bali"
-"3 month hogeya supply pani khud bandha kardiya hai  kunki manual Handpump ka pani unko achche lagta hai" //turned off the tap themselves or the water hasn't been supplied in three months??
-"Ghare available panira subidha achi"
-"Ghare available achi boli"
-"Ghare pani achi to use koruchu, tap connection nahi"
-"Panire poka ,machhi baharuchhi"
-"Gharki borki pani agar mortar chalunehi hone se pite he."
-"Handire pani rakhile siment lagila pari hauchhi"
-
-//Unsure about the right category
-"Abhi tak supply pani nehi a raha hea." //water hasnt been supplied yet (can be categorised into 1 or 3?)
-"Pehele se manual handpump kapanipiyehe ishliye tap pani achanehi lagtahe ishliye manual handpump kapanipitehe" //used to drinking water from handpump and dont like tap water (can be clubbed with reason_nodrink_6_el?)
-"Time houni morning utiki dhariba ku Sethi pae jjm tap use korunu" //dont have the time in the morning to fill water from JJM tap 
-"Tap ru bhala Pani aasu nahi" // tap water isn't good? (can be categorised as muddy or silty???)
-"Tanki saf nahin karne bajase Pani nahin pite hai" //don't drink tap water as tank is not clean (new category or muddy and silty?)
-"Tanki ko saf nahi karne bajase Pani nahin pite hain" //don't drink tap water as tank is not clean (new category or muddy and silty?)
-"Unki Basudha tap jo hei unki dusre jaga pe hei distance bajase pani nahin pite hei" //their basudha tap is at a diff location 
-"Pani ka test achha nhi lag raha hai" //dont like the taste (can be clubbed with silty and muddy?)
-"Supply watreTank nehi he ish village pe" //no water tank in the village???? - probably means no water supply 
-"Ish Hamlet pe supply water nehi he" //water not supplied to this hamlet 
-"Ish Hamlet pe supply water nehi he" //water not supplied to this hamlet 
-"Jjm not supply in this area"
-"Jjm water not supply in this hamlet"
-"Paip  nehihe" //dont have a pipe
-"Tap bohot distance me hai isilie" //tap is placed far from the house
-
-//taste and smell?
-"Pani ka test achha nhi lag raha hai" //dont like the taste (can be clubbed with silty and muddy?)
-"Basna bohut jada hora hai" 
-"Chlorine smell pain" 
-"Bliching smell" 
-"blinchi poudar ka smell ara hai isilie ni pura he" 
-
-//vague
-"No specific problem"
-"Not safety according to Respondent"
-"Not suplay to govt water"
-*/
-
+//
+//
+// /** Responses not catergorised yet:  R_Cen_a18_water_treat_oth 
+// //Not sure about the category:
+//
+// //Does the hh not get water from the tap (to be categorised into R_Cen_a18_reason_nodrink_1) or does the hh not have a tap connection (to be categorised into reason_nodrink_5_bl): 
+// "Government doesn't provide house hold tap water"
+// "No government supply tap water"
+// "No government supply tap water for household"
+// "No government supply tap water"
+// "No supply govt tap water in this Home" 
+//
+// //the person selected JJM tap water as primary source of water; not sure if this is the case where water is not being supplied or the HH doesn't have a tap connection
+// "No direct supply water tap" 
+//
+//
+// //Vague
+// "Not interested"
+// "Supply Pani bhala lagunagi" //dont like tap water - should we categorize it into muddy/silty? - R_Cen_a18_reason_nodrink_4
+// "Pani aasunahi" //water supply related issue - should we categorize it into "intermittent water supply" or "tap is broken and doesn't supply water"
+//
+//
+//
+// //Translations required: 
+// "Jane asi pani chek kari kahithile pani kharap achhi" //someone came to check the water and said it's bad?
+// "Supply pani timing re dia jaunahi Sethi pai tanka bore water used karunahanti" // water not supplied at a fixed time? (irregular supply)
+// "Nijara bor pani 1st ru piba pain byabahara karichhanti sethipain" 
+// "Agaru  handpump paniobhayas heichu Sethi pae  tap Pani piunu" 
+// "Tankara bore water achi Sethi pai tap Pani used karunahanti"
+// "Ghare morar achi Sethi pae suffly Pani piunahnti"
+// "Nija ra  electrical motar pani achi Sethi pae piunahi"
+// "Ye hamlet me jo nichewala hissa he usko hi pani atahe khud ki tap he lekin pani nehi atahe wo dusre gharse latehe."
+// "Ehi ghara ra sakaranka jogaidiajaithiba gharei tap uchha jagare achhi tenu pani  totally asuni sethipain se podishi Gharara sarakaranka jogaithiba ghorei tap ru pani piba pain anuchhanti"
+// "Agaru abhayas heichanti to ghorai tap pani piunahanti" 
+// "Pani stock rahithibaru , bacteria thiba boli pintini"
+// "Sarakara nka tarafaru pani jogai dia jainahni"
+// "Tube well pani peibara abhyasa hoijaichhi sethipai sarakari tap pani pieunahu"
+// "Thanda kasa haba boli tap pani peunahanti"
+// "Pani aani ki ghare rakhile tela bhalia hoi hauchi au gadheile dehare phutuka hoi jauchi"
+// "Pakhare Manual Hand pump achhi" 
+// */
+//
+//
+// * Reasons for not drinking JJM tap water: Endline
+// //Categorizing the responses from "Other category to the relevant categories"
+// //Option 4: Reason for not drinking: Water is silty or muddy 
+// // replace R_E_reason_nodrink_4=1 if R_E_nodrink_water_treat_oth==
+//
+// //Option 3: Reason for not drinking: Water supply is intermittent 
+// replace R_E_reason_nodrink_3=1 if R_E_nodrink_water_treat_oth=="Ise mahine me time pe pani nahi aya esliye wo pani nahi piye hein"  
+//
+// /*
+// //Option 2: Reason for not drinking: Water supply is inadequate
+// replace R_E_reason_nodrink_2=1 if R_E_nodrink_water_treat_oth==
+//
+// //Option 1: Reason for not drinking: Tap is broken and doesn't supply water 
+// replace R_E_reason_nodrink_1=1 if R_E_nodrink_water_treat_oth==
+// */
+//
+// //Creating a new category for those who dont drink jjm water because they do not have a govt tap connection or are not connected to the tank 
+// gen R_E_reason_nodrink_5=.
+// replace R_E_reason_nodrink_5=0 if R_E_reason_nodrink!=""
+// replace R_E_reason_nodrink_5=1 if R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | ///
+// R_E_nodrink_water_treat_oth=="Hh not connected to jjm" | R_E_nodrink_water_treat_oth=="Sarakari tap nai dia hua hai is sahi me" | ///
+// R_E_nodrink_water_treat_oth=="Sarakari tap idhara nai dia hua hai" | R_E_nodrink_water_treat_oth=="Tap lagi nahi" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm hh tap" | R_E_nodrink_water_treat_oth=="Tap nahi diya hua hain" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi laga hua hain" | R_E_nodrink_water_treat_oth=="Tap nahi deyegaye hain" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi diye gaye hai" | R_E_nodrink_water_treat_oth=="Connection nhi hai" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi laga hua hai" | R_E_nodrink_water_treat_oth=="Tap connection dia heini" | ///
+// R_E_nodrink_water_treat_oth=="Tap connection nahi" | R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Basudha  connection nehi hai  Annya logo ka jaga se hokar pipe hokar anatha bo log manakarnese pani ka connection nehi hua." | ///
+// R_E_nodrink_water_treat_oth=="Unki ghar me JJm tap nehi he." | R_E_nodrink_water_treat_oth=="JJm ,Basudha connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="JJm Basudha connection nehi hua hai" | R_E_nodrink_water_treat_oth=="Dia hoi nahi" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | R_E_nodrink_water_treat_oth=="Not connected" | ///
+// R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="No connection" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm tap" | R_E_nodrink_water_treat_oth=="Govt tap no connection" | ///
+// R_E_nodrink_water_treat_oth=="Is household me JJM  tab connection nehi hua hai." | ///
+// R_E_nodrink_water_treat_oth=="Isi household meJJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household ka basudha ka tap connection nahi hei" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hei isi bajase wo tap pani nahin pite hei" | ///
+// R_E_nodrink_water_treat_oth=="Is household JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Is family me JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Jjm supply water not connected in this house hold" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Not connected to jjm tank" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hei" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hei" | R_E_nodrink_water_treat_oth=="Not connected to JJM tank" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Government tap nahi." | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Jjm supply not connected this house hold" | ///
+// R_E_nodrink_water_treat_oth=="Is household me JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap ka connection nahi hai" 
+//
+// label var R_E_reason_nodrink_5 "Don't have a JJM tap connection"
+// label define R_E_reason_nodrink_5 1 "Yes" 0 "No"
+// label values R_E_reason_nodrink_5 R_E_reason_nodrink_5
+//
+// //Creating a new category for those who dont drink jjm water because they fetch drinking water from other private water source
+// gen R_E_reason_nodrink_6=.
+// replace R_E_reason_nodrink_6=0 if R_E_reason_nodrink!=""
+// replace R_E_reason_nodrink_6=1 if R_E_nodrink_water_treat_oth=="Khud ka baruel hai" | ///
+// R_E_nodrink_water_treat_oth=="Unke ghara me khudka surakhita kuan hai," | ///
+// R_E_nodrink_water_treat_oth=="Khud ka boruel hai" | R_E_nodrink_water_treat_oth=="Khudka bore laga hai isliye use nhi karte hain" | ///
+// R_E_nodrink_water_treat_oth=="Khudka bore hai isliye" | R_E_nodrink_water_treat_oth=="Electrical Borwell achi to use korunahanti" |  ///
+// R_E_nodrink_water_treat_oth=="Khudka borewell hei isiliye JJM tap ka pani nahi pite hei" | ///
+// R_E_nodrink_water_treat_oth=="Don't need inke ghar main already Borewell hain electricity wala" | ///
+// R_E_nodrink_water_treat_oth=="Borwell achi to use karunahanti kohile" | ///
+// R_E_nodrink_water_treat_oth=="Electricity pump boring available that's and" | ///
+// R_E_nodrink_water_treat_oth=="Nija ghare Borwell pani achi to tap pani use korunahanti" | ///
+// R_E_nodrink_water_treat_oth=="Borwell achi to use koruchu" | R_E_nodrink_water_treat_oth=="Borwell achi to use karunu" | ///
+// R_E_nodrink_water_treat_oth=="Apna khudka borwell he ishliye tape pani pinekeliye byabahar nehikartehe" | ///
+// R_E_nodrink_water_treat_oth=="No connection" 
+//
+// label var R_E_reason_nodrink_6 "Have other private drinking water source "
+// label define R_E_reason_nodrink_6 1 "Yes" 0 "No"
+// label values R_E_reason_nodrink_6 R_E_reason_nodrink_6
+//
+// //Replacing the values in "Other" with zero after categorizing them 
+// replace R_E_reason_nodrink__77=0 if R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | ///
+// R_E_nodrink_water_treat_oth=="Hh not connected to jjm" | R_E_nodrink_water_treat_oth=="Sarakari tap nai dia hua hai is sahi me" | ///
+// R_E_nodrink_water_treat_oth=="Sarakari tap idhara nai dia hua hai" | R_E_nodrink_water_treat_oth=="Tap lagi nahi" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm hh tap" | R_E_nodrink_water_treat_oth=="Tap nahi diya hua hain" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi laga hua hain" | R_E_nodrink_water_treat_oth=="Tap nahi deyegaye hain" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi diye gaye hai" | R_E_nodrink_water_treat_oth=="Connection nhi hai" | ///
+// R_E_nodrink_water_treat_oth=="Tap nahi laga hua hai" | R_E_nodrink_water_treat_oth=="Tap connection dia heini" | ///
+// R_E_nodrink_water_treat_oth=="Tap connection nahi" | R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Basudha  connection nehi hai  Annya logo ka jaga se hokar pipe hokar anatha bo log manakarnese pani ka connection nehi hua." | ///
+// R_E_nodrink_water_treat_oth=="Unki ghar me JJm tap nehi he." | R_E_nodrink_water_treat_oth=="JJm ,Basudha connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="JJm Basudha connection nehi hua hai" | R_E_nodrink_water_treat_oth=="Dia hoi nahi" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm tape" | R_E_nodrink_water_treat_oth=="Not connected" | ///
+// R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="No connection" | ///
+// R_E_nodrink_water_treat_oth=="Not connected to jjm tap" | R_E_nodrink_water_treat_oth=="Govt tap no connection" | ///
+// R_E_nodrink_water_treat_oth=="Is household me JJM  tab connection nehi hua hai." | ///
+// R_E_nodrink_water_treat_oth=="Isi household meJJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household ka basudha ka tap connection nahi hei" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me basudha ka tap connection nahi hei isi bajase wo tap pani nahin pite hei" | ///
+// R_E_nodrink_water_treat_oth=="Is household JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Is family me JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Jjm supply water not connected in this house hold" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Not connected to jjm tank" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hei" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hei" | R_E_nodrink_water_treat_oth=="Not connected to JJM tank" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Isi household me JJM ka tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | R_E_nodrink_water_treat_oth=="Government tap nahi." | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Jjm supply not connected this house hold" | ///
+// R_E_nodrink_water_treat_oth=="Is household me JJM connection nehi hua hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Esi household me JJM tap ka connection nahi hai" | ///
+// R_E_nodrink_water_treat_oth=="Khud ka baruel hai" | ///
+// R_E_nodrink_water_treat_oth=="Unke ghara me khudka surakhita kuan hai," | ///
+// R_E_nodrink_water_treat_oth=="Khud ka boruel hai" | R_E_nodrink_water_treat_oth=="Khudka bore laga hai isliye use nhi karte hain" | ///
+// R_E_nodrink_water_treat_oth=="Khudka bore hai isliye" | R_E_nodrink_water_treat_oth=="Electrical Borwell achi to use korunahanti" |  ///
+// R_E_nodrink_water_treat_oth=="Khudka borewell hei isiliye JJM tap ka pani nahi pite hei" | ///
+// R_E_nodrink_water_treat_oth=="Don't need inke ghar main already Borewell hain electricity wala" | ///
+// R_E_nodrink_water_treat_oth=="Borwell achi to use karunahanti kohile" | ///
+// R_E_nodrink_water_treat_oth=="Electricity pump boring available that's and" | ///
+// R_E_nodrink_water_treat_oth=="Nija ghare Borwell pani achi to tap pani use korunahanti" | ///
+// R_E_nodrink_water_treat_oth=="Borwell achi to use koruchu" | R_E_nodrink_water_treat_oth=="Borwell achi to use karunu" | ///
+// R_E_nodrink_water_treat_oth=="Apna khudka borwell he ishliye tape pani pinekeliye byabahar nehikartehe" | ///
+// R_E_nodrink_water_treat_oth=="No connection" | R_E_nodrink_water_treat_oth=="Ise mahine me time pe pani nahi aya esliye wo pani nahi piye hein"
+//
+//
+// // * Recoding don't know observations as missing values 
+// // //Reason for not drinking jjm tap water: Baseline
+// // foreach var in  R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_reason_nodrink_3 ///
+// // R_Cen_a18_reason_nodrink_4 R_Cen_a18_reason_nodrink_5 R_Cen_a18_reason_nodrink_6 R_Cen_a18_reason_nodrink__77 {
+// // 	replace `var'=. if R_Cen_a18_reason_nodrink=="999"
+// // }
+// // 
+// // //Reason for not drinking jjm tap water: Endline
+// // foreach var in  R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 ///
+// // R_E_reason_nodrink_4 R_E_reason_nodrink_5 R_E_reason_nodrink_6 R_E_reason_nodrink__77 {
+// // 	replace `var'=. if R_E_reason_nodrink=="999"
+// // }
+//
+//
+// /** Responses not catergorised yet:  R_E_nodrink_water_treat_oth 
+// //Translations required
+// "Pani ru dhulli gunda baharuchhi" 
+// "Alga jagare rahuchacnti Sethi TAP conection deinahanti"
+// "Aagaru khola kua ra Pani  abhiyasa hoi jaichi boli tap Pani piu nahanti"
+// "Kasa haijauthiba ru piunahanti"
+// "Nijara achhi bali"
+// "3 month hogeya supply pani khud bandha kardiya hai  kunki manual Handpump ka pani unko achche lagta hai" //turned off the tap themselves or the water hasn't been supplied in three months??
+// "Ghare available panira subidha achi"
+// "Ghare available achi boli"
+// "Ghare pani achi to use koruchu, tap connection nahi"
+// "Panire poka ,machhi baharuchhi"
+// "Gharki borki pani agar mortar chalunehi hone se pite he."
+// "Handire pani rakhile siment lagila pari hauchhi"
+//
+// //Unsure about the right category
+// "Abhi tak supply pani nehi a raha hea." //water hasnt been supplied yet (can be categorised into 1 or 3?)
+// "Pehele se manual handpump kapanipiyehe ishliye tap pani achanehi lagtahe ishliye manual handpump kapanipitehe" //used to drinking water from handpump and dont like tap water (can be clubbed with reason_nodrink_6_el?)
+// "Time houni morning utiki dhariba ku Sethi pae jjm tap use korunu" //dont have the time in the morning to fill water from JJM tap 
+// "Tap ru bhala Pani aasu nahi" // tap water isn't good? (can be categorised as muddy or silty???)
+// "Tanki saf nahin karne bajase Pani nahin pite hai" //don't drink tap water as tank is not clean (new category or muddy and silty?)
+// "Tanki ko saf nahi karne bajase Pani nahin pite hain" //don't drink tap water as tank is not clean (new category or muddy and silty?)
+// "Unki Basudha tap jo hei unki dusre jaga pe hei distance bajase pani nahin pite hei" //their basudha tap is at a diff location 
+// "Pani ka test achha nhi lag raha hai" //dont like the taste (can be clubbed with silty and muddy?)
+// "Supply watreTank nehi he ish village pe" //no water tank in the village???? - probably means no water supply 
+// "Ish Hamlet pe supply water nehi he" //water not supplied to this hamlet 
+// "Ish Hamlet pe supply water nehi he" //water not supplied to this hamlet 
+// "Jjm not supply in this area"
+// "Jjm water not supply in this hamlet"
+// "Paip  nehihe" //dont have a pipe
+// "Tap bohot distance me hai isilie" //tap is placed far from the house
+//
+// //taste and smell?
+// "Pani ka test achha nhi lag raha hai" //dont like the taste (can be clubbed with silty and muddy?)
+// "Basna bohut jada hora hai" 
+// "Chlorine smell pain" 
+// "Bliching smell" 
+// "blinchi poudar ka smell ara hai isilie ni pura he" 
+//
+// //vague
+// "No specific problem"
+// "Not safety according to Respondent"
+// "Not suplay to govt water"
+// */
+//
 ********************************************************************************
 *** Generating a baseline dataset - for tables
 ********************************************************************************
@@ -1625,66 +1625,66 @@ drop R_E_comb_hhmember_gender*
 *******************************************************************************
 
 
-*** Changing the storage type of relevant variables
-destring R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers , replace
-
-
-*** Manual corrections
-*Replacing the values of vars to misssing
-//respondent does not treat water but enumertaor incorrectly selected that respondent treats water and later mentioned that they don't treat water in the "other" category for treat_water_type
-//replcing R_E_water_treat to 0: does not treat water
-replace R_E_water_treat=0 if unique_id=="50401117020"
-
-//replacing follow-up numeric vars to missing 
-foreach var in R_E_collect_treat_difficult R_E_treat_freq R_E_treat_time R_E_treat_primresp   {
-replace `var'=. if unique_id=="50401117020"
-}
-
-//replacing follow-up string vars to missing 
-foreach var in R_E_water_treat_type R_E_treat_resp  R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_4 R_E_water_treat_type_3 R_E_water_treat_type_999 R_E_water_treat_type__77 {
-replace `var'="" if unique_id=="50401117020"
-}
-
-*** Generating new variables - Water collection burden 
-** Split the R_E_collect_resp string into separate variables
-split R_E_collect_resp, parse(" ") generate(coll_resp)
-
-** Generate variables to store the age and gender of the person actually responsible for collecting water (Stored in "R_E_prim_collect_resp")
-* Create variables for storing age and gender of the water collector
-gen collector_age = .
-gen collector_gender = .
-
-* Create a variable to store the selected index in "R_E_collect_resp"
-gen selected_index = .
-
-* Create a new variable to hold the correct index from collect_resp
-destring coll_resp*, replace
-forvalues i = 1/6 {
-    * Check if resp`i' matches prim_collect_resp and assign the corresponding index
-    qui replace selected_index = coll_resp`i' if `i' == R_E_prim_collect_resp
-}
-
-* Extract age and gender based on selected_index
-/* Determining if selected_index refers to a Census or new member:
-
-* If selected_index <= 20: it's a Census member
-* If selected_index > 20: it's a new member
-*/
-// For census members
-forval i=1/20 {
-replace collector_age = R_E_cen_fam_age`i' if selected_index==`i' 
-replace collector_gender = R_E_cen_fam_gender`i' if selected_index==`i'
-}
-
-// For new members (selected_index: max value is 23)
-replace collector_age = R_E_n_fam_age1 if selected_index==21
-replace collector_age = R_E_n_fam_age2 if selected_index==22
-replace collector_age = R_E_n_fam_age3 if selected_index==23
-
-replace collector_gender = comb_hhmember_gender1 if selected_index==21 
-replace collector_gender = comb_hhmember_gender2 if selected_index==22 
-replace collector_gender = comb_hhmember_gender3 if selected_index==23 
-
+// *** Changing the storage type of relevant variables
+// destring R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers , replace
+//
+//
+// *** Manual corrections
+// *Replacing the values of vars to misssing
+// //respondent does not treat water but enumertaor incorrectly selected that respondent treats water and later mentioned that they don't treat water in the "other" category for treat_water_type
+// //replcing R_E_water_treat to 0: does not treat water
+// replace R_E_water_treat=0 if unique_id=="50401117020"
+//
+// //replacing follow-up numeric vars to missing 
+// foreach var in R_E_collect_treat_difficult R_E_treat_freq R_E_treat_time R_E_treat_primresp   {
+// replace `var'=. if unique_id=="50401117020"
+// }
+//
+// //replacing follow-up string vars to missing 
+// foreach var in R_E_water_treat_type R_E_treat_resp  R_E_water_treat_type_1 R_E_water_treat_type_2 R_E_water_treat_type_4 R_E_water_treat_type_3 R_E_water_treat_type_999 R_E_water_treat_type__77 {
+// replace `var'="" if unique_id=="50401117020"
+// }
+//
+// *** Generating new variables - Water collection burden 
+// ** Split the R_E_collect_resp string into separate variables
+// split R_E_collect_resp, parse(" ") generate(coll_resp)
+//
+// ** Generate variables to store the age and gender of the person actually responsible for collecting water (Stored in "R_E_prim_collect_resp")
+// * Create variables for storing age and gender of the water collector
+// gen collector_age = .
+// gen collector_gender = .
+//
+// * Create a variable to store the selected index in "R_E_collect_resp"
+// gen selected_index = .
+//
+// * Create a new variable to hold the correct index from collect_resp
+// destring coll_resp*, replace
+// forvalues i = 1/6 {
+//     * Check if resp`i' matches prim_collect_resp and assign the corresponding index
+//     qui replace selected_index = coll_resp`i' if `i' == R_E_prim_collect_resp
+// }
+//
+// * Extract age and gender based on selected_index
+// /* Determining if selected_index refers to a Census or new member:
+//
+// * If selected_index <= 20: it's a Census member
+// * If selected_index > 20: it's a new member
+// */
+// // For census members
+// forval i=1/20 {
+// replace collector_age = R_E_cen_fam_age`i' if selected_index==`i' 
+// replace collector_gender = R_E_cen_fam_gender`i' if selected_index==`i'
+// }
+//
+// // For new members (selected_index: max value is 23)
+// replace collector_age = R_E_n_fam_age1 if selected_index==21
+// replace collector_age = R_E_n_fam_age2 if selected_index==22
+// replace collector_age = R_E_n_fam_age3 if selected_index==23
+//
+// replace collector_gender = comb_hhmember_gender1 if selected_index==21 
+// replace collector_gender = comb_hhmember_gender2 if selected_index==22 
+// replace collector_gender = comb_hhmember_gender3 if selected_index==23 
+//
 
 ** Time taken to collect water from primary source
 gen time_collect=.
@@ -1703,45 +1703,45 @@ replace freq_collect=0 if R_E_collect_prim_freq==999 //don't know
 gen treats_water=0 
 replace treats_water=1 if R_E_water_stored==1 | R_E_water_treat==1
 
-** Generate variables to store the Age and gender of the person actually responsible for treating water(Stored in "R_E_treat_primresp")
-* Split the R_E_treat_resp string into separate variables
-split R_E_treat_resp, parse(" ") generate(treat_resp)
-
-* Create variables for storing age and gender of the person who treats water
-gen treat_age = .
-gen treat_gender = . //1 ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
-
-* Create a variable to store the selected index in "R_E_treat_resp"
-gen selected_index_treat = .
-
-* Create a new variable to hold the correct index from treat_resp
-destring treat_resp*, replace
-forvalues i = 1/6 {
-    * Check if resp`i' matches R_E_treat_primresp and assign the corresponding index
-    qui replace selected_index_treat = treat_resp`i' if `i' == R_E_treat_primresp
-}
-
-* Extract age and gender based on selected_index
-/* Determining if selected_index refers to a Census or new member:
-
-* If selected_index <= 20: it's a Census member
-* If selected_index > 20: it's a new member
-*/
-// For census members
-forval i=1/20 {
-replace treat_age = R_E_cen_fam_age`i' if selected_index_treat==`i' 
-replace treat_gender = R_E_cen_fam_gender`i' if selected_index_treat==`i'
-}
-
-// For new members (selected_index_treat: max value is 23)
-replace treat_age = R_E_n_fam_age1 if selected_index_treat==21
-replace treat_age = R_E_n_fam_age2 if selected_index_treat==22
-replace treat_age = R_E_n_fam_age3 if selected_index_treat==23
-
-replace treat_gender = comb_hhmember_gender1 if selected_index_treat==21 
-replace treat_gender = comb_hhmember_gender2 if selected_index_treat==22 
-replace treat_gender = comb_hhmember_gender3 if selected_index_treat==23 
-// replace treat_gender=0 if treats_water==0 //hh does not treat water 
+// ** Generate variables to store the Age and gender of the person actually responsible for treating water(Stored in "R_E_treat_primresp")
+// * Split the R_E_treat_resp string into separate variables
+// split R_E_treat_resp, parse(" ") generate(treat_resp)
+//
+// * Create variables for storing age and gender of the person who treats water
+// gen treat_age = .
+// gen treat_gender = . //1 ob missing as respondent selected that one person is responsible (treat_resp) but selected a missing obs in the person who actually treats water (treat_primresp) - should the details of the person who was selected in treat_resp be used here or should this be considered a case where the hh doesnot treat water : to check with Akito 
+//
+// * Create a variable to store the selected index in "R_E_treat_resp"
+// gen selected_index_treat = .
+//
+// * Create a new variable to hold the correct index from treat_resp
+// destring treat_resp*, replace
+// forvalues i = 1/6 {
+//     * Check if resp`i' matches R_E_treat_primresp and assign the corresponding index
+//     qui replace selected_index_treat = treat_resp`i' if `i' == R_E_treat_primresp
+// }
+//
+// * Extract age and gender based on selected_index
+// /* Determining if selected_index refers to a Census or new member:
+//
+// * If selected_index <= 20: it's a Census member
+// * If selected_index > 20: it's a new member
+// */
+// // For census members
+// forval i=1/20 {
+// replace treat_age = R_E_cen_fam_age`i' if selected_index_treat==`i' 
+// replace treat_gender = R_E_cen_fam_gender`i' if selected_index_treat==`i'
+// }
+//
+// // For new members (selected_index_treat: max value is 23)
+// replace treat_age = R_E_n_fam_age1 if selected_index_treat==21
+// replace treat_age = R_E_n_fam_age2 if selected_index_treat==22
+// replace treat_age = R_E_n_fam_age3 if selected_index_treat==23
+//
+// replace treat_gender = comb_hhmember_gender1 if selected_index_treat==21 
+// replace treat_gender = comb_hhmember_gender2 if selected_index_treat==22 
+// replace treat_gender = comb_hhmember_gender3 if selected_index_treat==23 
+// // replace treat_gender=0 if treats_water==0 //hh does not treat water 
 
 ** Creating new variable for age categories 
 //age of person who treats water
@@ -1819,19 +1819,19 @@ To check with Akito - should we categorise the observations for these three case
 ********************************************************************************
 *** Labelling the variables
 ********************************************************************************
-label var collector_age "Age of person person responsible for collecting water"
-label var treat_age "Age of person person responsible for treating water"
+// label var collector_age "Age of person person responsible for collecting water"
+// label var treat_age "Age of person person responsible for treating water"
 label var freq_collect "Frequency of water collection"
 label var freq_treat "Frequency of periodic water treatment"
 label var R_E_clean_freq_containers "Frequency of cleaning water containers"
 
-label var collector_gender "Gender of person responsible for collecting water"
-label define collector_gender 1 "Male" 2 "Female"
-label values collector_gender collector_gender
-
-label var treat_gender "Gender of person responsible for treating water"
-label define treat_gender 1 "Male" 2 "Female" 0 "HH Does not treat water"
-label values treat_gender treat_gender
+// label var collector_gender "Gender of person responsible for collecting water"
+// label define collector_gender 1 "Male" 2 "Female"
+// label values collector_gender collector_gender
+//
+// label var treat_gender "Gender of person responsible for treating water"
+// label define treat_gender 1 "Male" 2 "Female" 0 "HH Does not treat water"
+// label values treat_gender treat_gender
 
 label var R_E_where_prim_locate "Location of water source"
 label define R_E_where_prim_locate 1 "In own dwelling" 2 "In own yard/plot" 3 "Elsewhere"
