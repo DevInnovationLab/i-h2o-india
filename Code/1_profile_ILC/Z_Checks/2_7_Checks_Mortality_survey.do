@@ -1716,7 +1716,6 @@ restore
 
 
 
-
 //Mortality tables start
 
 
@@ -1735,17 +1734,16 @@ so we have to use mortality survey numbers for these 4 villages and append it to
 ---------------------------------------------------------------------------------------------------------------------------*/ 
 
 
+//child died repeat loop {This dataset has information about the children that died in the endline census so it has their identifiers. Please note that this gets created in the  } 
 
 
-//
-
-//child died repeat loop
-
+//this dataset gets created in "1_8_A_Endline_cleaning_HFC_Data_creation" This dataset only contains main endline census data like no revisit observations 
+//IMP NOTE: Please note that there is no need to combine revisit dataset with main endline census data here because there were no child deaths found in revisit as a result long datasets for child death is empty 
 use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
 
 rename key R_E_key
 
-
+//this step is being done to get valid unique IDs and village name 
 merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
 
 drop if unique_id=="30501107052"
@@ -1753,10 +1751,23 @@ drop if unique_id=="30501107052"
 //dropping the obs as it was submitted before the start date of the survey 
 drop if unique_id=="10101101001" //need to move it to 
 
+//there are 4 IDs which are in master (mortality dataset) but not in using(main endline dataset) so the explanation for this is below- 
+/*
+These are all the training IDs of badaalubadi
+so we can drop _merge == 1
+br if key == "uuid:100f2352-5a9f-430c-bbc2-a12a2deb845b - training ID"
+R_E_key
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID 
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID //
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //traaining ID
+*/
+//
 
 keep if _merge == 3
 
 drop _merge
+
+
 
 //EXPLANNATION AS TO WHY THIS NEEDS TO BE DROPPED 
 
@@ -1780,8 +1791,11 @@ drop if unique_id== "40301110002" & R_E_key == "uuuid:b9836516-0c12-4043-92e9-36
 preserve
 
 //We are using final merged dataset between main endline census and revisit dataset
+//this gets created in the do file - "5_1_Endline_main_revisit_merge_final" 
 use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
 
+//we are dropping these entries because they are not applicable for child bearing women  
+drop if comb_resp_avail_comb == .
 
 *** Manual corrections
 *Dropping observations 
@@ -1791,7 +1805,8 @@ drop if unique_id=="30501107052"
 //dropping the obs as it was submitted before the start date of the survey 
 drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
 
- 
+
+//since this dataset also contains revisit data observations so we need to create a nother variable that has keys from both types of observations- one that was main endline census and other that was revisit dataset
 gen  merged_key  =  parent_key
 replace merged_key  = Revisit_parent_key if merged_key == ""
 
@@ -1799,7 +1814,7 @@ keep unique_id R_E_village_name_str comb_name_comb_woman_earlier comb_resp_avail
 
 bys unique_id: gen Num=_n
 
-//reshaping 
+//reshaping because we wnat to avoid m:m merge at any cost 
 reshape wide  comb_name_comb_woman_earlier comb_resp_avail_comb comb_child_stillborn_num, i(unique_id) j(Num)
 
 save "${DataTemp}Reshaped_wide_CBW_data.dta", replace
@@ -1842,6 +1857,19 @@ count if dup_HHID > 0
 tab dup_HHID
 
 
+/*comb_name_child_earlier	comb_age_child	comb_unit_child_days	comb_unit_child_months	comb_unit_child_years	comb_dob_date_comb	comb_dob_month_comb	comb_dob_year_comb	comb_dod_date_comb	comb_dod_month_comb	comb_dod_year_comb	comb_cause_death	comb_cause_death_diagnosed	comb_cause_death_str	unique_id	R_E_village_name_str	R_E_enum_name_label	comb_name_comb_woman_earlier1	comb_name_comb_woman_earlier2	comb_name_comb_woman_earlier3	comb_name_comb_woman_earlier4	comb_name_comb_woman_earlier5	comb_name_comb_woman_earlier6	comb_name_comb_woman_earlier7	comb_name_comb_woman_earlier8	comb_name_comb_woman_earlier9	comb_name_comb_woman_earlier10
+O	Days	0			8	3	2023	8	3	2023	3	Yes	Pila peta bhitaru mori jaithila	50501109021	Nathma	Jitendra Bagh	Lachhi Nachhika	New baby	Sane Nachhika							
+
+
+br comb_name_child_earlier comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years comb_dob_date_comb comb_dob_month_comb comb_dob_year_comb comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_cause_death comb_cause_death_diagnosed comb_cause_death_str unique_id R_E_village_name_str R_E_enum_name_label comb_name_comb_woman_earlier* if comb_name_comb_woman_earlier1 == "Anita Pidika" |comb_name_comb_woman_earlier1 == "Lachhi Nachhika"
+
+unique_id
+50501109016
+50501109021
+*/
+
+//br comb_name_comb_woman_earlier Revisit_R_E_key if unique_id == "50501109016" | unique_id == "50501109021"
+
 //br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years comb_dob_date_comb  comb_dob_month_comb comb_dob_year_comb comb_dod_date_comb comb_dod_month_comb comb_dod_year_comb comb_dod_concat_comb comb_dob_concat_comb comb_dod_autoage comb_year_comb comb_curr_year_comb comb_curr_mon_comb  comb_age_years_comb comb_age_mon_comb comb_age_years_f_comb comb_age_months_f_comb comb_age_decimal_comb 
 
 //br comb_age_child comb_unit_child_days comb_unit_child_months comb_unit_child_years
@@ -1849,6 +1877,7 @@ tab dup_HHID
 
 //drop if comb_cause_death_3 == 1
 
+//this variable gives them the unit
 gen deaths_under_one_month = .
 replace deaths_under_one_month = 1 if comb_age_child == 1 & comb_unit_child_days <= 30
 replace deaths_under_one_month = 1 if comb_age_child == 2 & comb_unit_child_months <= 1
@@ -1907,10 +1936,70 @@ replace deaths_from_4_5_year = 1 if comb_unit_child_years > 4 & comb_unit_child_
 
 //stop
 
+//Objective: while merging it replicates the value of variable for eg if the UID = 434433 is coming twice in the master dataset in this case in the child death dataset while matching it with the wide dataset UID it will replicate the value of varaible in the using dataset based on the number of observations in the master for eg if UID = 434433 has two chuld names in master but for that UID in the using no. of stillborn kids is 1 it repeats stillbron value twice so that leads to double couting so we want to avoid that at any cost 
 sort unique_id
 duplicates tag unique_id, gen(dup_tag)
 bysort unique_id (dup_tag): replace total_stillborn_UID_wise = . if _n > 1
 
+
+preserve
+//drop if total_stillborn_UID_wise > 0 
+collapse (sum) comb_cause_death_1 comb_cause_death_2 comb_cause_death_3 comb_cause_death_4 comb_cause_death_5 comb_cause_death_6 comb_cause_death_7 comb_cause_death_8 comb_cause_death_9 comb_cause_death_10 comb_cause_death_11 comb_cause_death_12 comb_cause_death_13 comb_cause_death_14 comb_cause_death_15 comb_cause_death_16 comb_cause_death_17 comb_cause_death_18 comb_cause_death__77 comb_cause_death_999 comb_cause_death__98
+
+label variable comb_cause_death_1 "Pneumonia" 
+label variable comb_cause_death_2 "Other_respiratory infections (like excessive cough, etc)"
+label variable comb_cause_death_3 "Birth complications (premature, stillborn, etc)" 
+label variable comb_cause_death_4 "Dengue"
+label variable comb_cause_death_5 "Diarrheal illness"
+label variable comb_cause_death_6 "Injury/accident"
+label variable comb_cause_death_7 "Malaria"
+label variable comb_cause_death_8 "Tuberculosis"
+label variable comb_cause_death_9 "Malnutrition and other nutritional deficiencies"
+label variable comb_cause_death_10 "Anemia"
+label variable comb_cause_death_11 "Bacterial meningitis"
+label variable comb_cause_death_12 "Birth asphyxia"
+label variable comb_cause_death_13 "Jaundice"
+label variable comb_cause_death_14 "Low birth weight"
+label variable comb_cause_death_15 "Measles"
+label variable comb_cause_death_16 "Septicemia"
+label variable comb_cause_death_17 "Other bleeding disorders"
+label variable comb_cause_death_18 "Other congenital malformations"
+label variable comb_cause_death__77 "Other"
+label variable comb_cause_death_999 "Don't know" 
+label variable comb_cause_death__98 "Refused to answer" 
+
+
+xpose, clear varname
+
+rename _varname categories
+rename v1 numbers 
+
+order categories numbers
+
+replace categories = "Pneumonia" if categories == "comb_cause_death_1"
+replace categories =  "Other_respiratory infections (like excessive cough, etc)" if categories == "comb_cause_death_2"
+replace categories =  "Birth complications (premature, stillborn, etc)" if categories == "comb_cause_death_3"
+replace categories =  "Dengue" if categories == "comb_cause_death_4"
+replace categories =  "Diarrheal illness" if categories == "comb_cause_death_5"
+replace categories =  "Injury/accident" if categories == "comb_cause_death_6"
+replace categories =  "Malaria" if categories == "comb_cause_death_7"
+replace categories =  "Tuberculosis" if categories == "comb_cause_death_8"
+replace categories =  "Malnutrition and other nutritional deficiencies" if categories == "comb_cause_death_9"
+replace categories =  "Anemia" if categories == "comb_cause_death_10"
+replace categories =  "Bacterial meningitis" if categories == "comb_cause_death_11"
+replace categories =  "Birth asphyxia" if categories == "comb_cause_death_12"
+replace categories =  "Jaundice" if categories == "comb_cause_death_13"
+replace categories =  "Low birth weight" if categories == "comb_cause_death_14"
+replace categories =  "Measles" if categories == "comb_cause_death_15"
+replace categories =  "Septicemia" if categories == "comb_cause_death_16"
+replace categories =  "Other bleeding disorders" if categories == "comb_cause_death_17"
+replace categories =  "Other congenital malformations" if categories == "comb_cause_death_18"
+replace categories =  "Other" if categories == "comb_cause_death__77"
+replace categories =  "Don't know" if categories == "comb_cause_death_999"
+replace categories =  "Refused to answer" if categories == "comb_cause_death__98"
+
+
+restore
 
 //putting some checks for DOB and DOD
 
@@ -1921,6 +2010,7 @@ egen total_deaths = rowtotal( deaths_* )
 drop temp_group
 br R_E_village_name_str total_deaths
 
+//the variable below removes stillborn cases 
 gen new_deaths_under_one_month  = deaths_under_one_month 
 replace new_deaths_under_one_month = deaths_under_one_month - total_stillborn_UID_wise
 
@@ -2078,13 +2168,25 @@ br comb_child_breastfeeding comb_child_breastfed_num comb_child_age unique_id co
 *TROUBLESHOOTING
 //Archi to do - after browsing I found this one case where child name "Krish Gouda" is marked as 6 years of age but in the variable comb_child_breastfed_num  (A45.1) Up to which months was ${N_child_u5_name_label} exclusively breastfed?) enum has marked the option - 888 (Child is still being breastfed) so this has to be corrected. 
 
+replace comb_child_age = 0.5 if comb_child_comb_name_label == "Krish Gouda" & comb_child_breastfed_num == 888 & comb_child_age == 6 & unique_id == "40301108016" & parent_key == "uuid:dbf4f7ec-4c08-49b9-a147-41798f285168" 
+
 keep if comb_child_caregiver_present == 8
 rename comb_child_comb_name_label  R_Cen_u5_child_pre_ 
+keep unique_id comb_child_caregiver_present R_Cen_u5_child_pre_
+
+bys unique_id: gen Num=_n
+
+//reshaping because we wnat to avoid m:m merge at any cost 
+reshape wide  R_Cen_u5_child_pre_ comb_child_caregiver_present, i(unique_id) j(Num)
+
+rename R_Cen_u5_child_pre_1 R_Cen_u5_child_pre_ 
+rename  comb_child_caregiver_present1 comb_child_caregiver_present
 save "${DataTemp}U5_cases_to_be_excluded.dta", replace
 restore 
 
 //I am doing m:m merge with 2 variables as key unique_id R_Cen_u5_child_pre_ since this is a long dataset so we need to make sure that only eligible names are dropped and unecessary values aren't dropped
-merge m:m unique_id R_Cen_u5_child_pre_  using"${DataTemp}U5_cases_to_be_excluded.dta", gen (match) keepusing(unique_id comb_child_caregiver_present R_Cen_u5_child_pre_ )
+merge m:1 unique_id R_Cen_u5_child_pre_  using"${DataTemp}U5_cases_to_be_excluded.dta", gen (match) keepusing(unique_id R_Cen_u5_child_pre_ comb_child_caregiver_present )
+
 
 //we have to drop these matched entries because these are the cases where U5 child is now no longer in the criteria
 drop if match == 3
@@ -2108,11 +2210,14 @@ append using "${DataTemp}New_U5_cases_for_append.dta"
 //mergingto get village names 
 merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", gen(vill_m) keepusing(R_E_village_name_str)
 
-
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
 drop if unique_id=="30501107052"
 
 //dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
 
 keep if R_Cen_u5_child_pre_ != ""
 
@@ -2593,10 +2698,10 @@ global Variables village total_last5preg_CBW total_live_births total_deaths U5_c
 
 
 
-replace village = subinstr(village,"Nathma","Nathma*",1)
+/*replace village = subinstr(village,"Nathma","Nathma*",1)
 replace village = subinstr(village,"BK Padar","BK Padar*",1)
 replace village = subinstr(village,"Gopi Kankubadi","Gopi Kankubadi*",1)
-replace village = subinstr(village,"Kuljing","Kuljing*",1)
+replace village = subinstr(village,"Kuljing","Kuljing*",1)*/
 
 /*label variable total_live_births "total_live_births\textsuperscript{1}"
 
@@ -2607,15 +2712,14 @@ label variable total_deaths"total_live_births\textsuperscript{2}"*/
 
 
 texsave $Variables using "${Table}Mortality_Numbers_village_wise.tex", ///
-        title("Mortality Numbers village wise") autonumber ///
-		footnote(\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline * : The mortality survey for these four villages in Dec/Jan covered all households, unlike the endline census, which only included screened households (those with pregnant women or children under 5). The screening was done again for these villages. \newline 1: Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000") replace varlabels frag location(htbp) 
+        title("Village-Wise Child Mortality and Birth Statistics") autonumber ///
+		footnote(\addlinespace "1: Eligible women or respondents refer to women of childbearing age (15-49 years) \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000") replace varlabels frag location(htbp) label(tab:villagewise) 
 		
 		
 
 export excel using "${Personal}Mortality_quality.xlsx", sheet("aggregate_numbers_village_wise") sheetreplace firstrow(varlabels)
 
 restore
-
 
 
 //generating aggregate numbers 
@@ -2638,9 +2742,16 @@ drop child_stillborn_num
 
 gen deaths_from_1st_4th_month =  deaths_from_1st_2nd_month + deaths_from_2nd_3rd_month + deaths_from_3rd_4th_month
 
-order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 new_deaths_under_one_month deaths_from_1st_4th_month  deaths_from_1_2_year  total_live_births total_deaths U5_crude_mortality_rate 
+gen deaths_under_2_months = new_deaths_under_one_month + deaths_from_1st_2nd_month
 
-drop deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_2_3_year deaths_from_3_4_year deaths_from_4_5_year deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month
+gen U2_mortality_rate = (deaths_under_2_months/total_live_births)*1000
+
+
+order total_households total_avail_households C_Screened Total_CBW total_avail_CBW total_last5preg_CBW child_living_num child_notliving_num  child_alive_died_less24_num child_alive_died_more24_num Total_U5 R_Cen_a6_hhmember_age__0 R_Cen_a6_hhmember_age__1 R_Cen_a6_hhmember_age__2 R_Cen_a6_hhmember_age__3 R_Cen_a6_hhmember_age__4 new_deaths_under_one_month deaths_from_1st_4th_month  deaths_from_1_2_year  total_live_births total_deaths U5_crude_mortality_rate U2_mortality_rate 
+
+
+
+drop deaths_from_4th_5th_month deaths_from_5th_6th_month deaths_from_6th_7th_month deaths_from_7th_8th_month deaths_from_2_3_year deaths_from_3_4_year deaths_from_4_5_year deaths_from_1st_2nd_month deaths_from_2nd_3rd_month deaths_from_3rd_4th_month deaths_under_2_months 
 
 
 
@@ -2673,16 +2784,16 @@ order categories numbers
 replace categories = "Total live births in the village(2)" if categories == "total_live_births"
 replace categories = "Total U5 children deaths in the village(3)" if categories == "total_deaths"
 replace categories = "U5 children deaths per 1000 live births(4)" if categories == "U5_crude_mortality_rate"
-replace categories = "No. of U5 children living with the respondent currently" if categories == "child_living_num"
+replace categories = "No. of alive U5 children living with the respondent currently" if categories == "child_living_num"
 replace categories = "No. of alive U5 children not living with the respondent currently" if categories == "child_notliving_num"
 //replace categories = "No. of stillborn U5 kids" if categories == "child_stillborn_num"
 replace categories = "No. of children that died in less than 24 hours" if categories == "child_alive_died_less24_num"
 replace categories = "No. of children that died after 24 hours" if categories == "child_alive_died_more24_num"
-replace categories = "Total eligible women avaialble to give survey" if categories == "total_avail_CBW"
+replace categories = "Total eligible women available to give survey" if categories == "total_avail_CBW"
 replace categories = "Total eligible women present**" if categories == "Total_CBW"
 replace categories = "Total eligible women pregnant in the last 5 years" if categories == "total_last5preg_CBW"
 
-replace categories = "Total screened households(1)" if categories == "C_Screened"
+replace categories = "Total screened households" + char(185) if categories == "C_Screened"
 
 replace categories = "Total housheholds present" if categories == "total_households"
 replace categories = "Total housheholds available for survey" if categories == "total_avail_households"
@@ -2693,6 +2804,9 @@ replace categories = "No. of alive children of 3 years of age" if categories == 
 replace categories = "No. of alive children of 4 years of age" if categories == "R_Cen_a6_hhmember_age__4"
 
 replace categories = "No. of children died between 1 year and 2 years of age" if categories == "deaths_from_1_2_year"
+
+replace categories = "U2 months children deaths per 1000 live births" if categories == "U2_mortality_rate" 
+
 //replace categories = "Child died between 1 month and 2 months of age" if categories == "deaths_from_1st_2nd_month"
 /*replace categories = "Child died between 2 years and 3 years of age" if categories == "deaths_from_2_3_year"
 replace categories = "Child died between 3 years and 4 years of age" if categories == "deaths_from_3_4_year"
@@ -2708,7 +2822,7 @@ replace categories = "No. of children died within 1 month of age" if categories 
 
 replace categories = "No. of children died between after 1 month and within 4 months of age" if categories == "deaths_from_1st_4th_month" 
 
-replace categories = "Total U5 children present" if categories == "Total_U5"
+replace categories = "Total alive U5 children present" if categories == "Total_U5"
 
 replace numbers = round(numbers, 0.01)
 
@@ -2717,7 +2831,7 @@ replace numbers = round(numbers, 0.01)
 global Variables categories numbers
 texsave $Variables using "${Table}Mortality_Numbers_all_villages.tex", ///
         hlines (3 6 10  16 19) autonumber ///
-        title("Aggregate Mortality numbers")  footnote (\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years). \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023). \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp)  headerlines("&\multicolumn{8}{c}{Categories}") 
+        title("Aggregate Mortality numbers")  footnote (\addlinespace "Notes: The table is autocreated by 2_7_Checks_Mortality_survey.do. \newline ** : Eligible women or respondents refer to women of childbearing age (15-49 years). \newline 1: Screened households refer to those where pregnant women or U5 kids are present. This screening was done in baseline census (Sept-Oct 2023). \newline 2: Total live births include U5 kids living with respondent, U5 kids alive but not living with the respondent, U5 kids died in less than 24 hours, U5 kids died between 24 hours and the age of 5 years. \newline 3: Total U5 deaths include U5 kids died in less than 24 hours, U5 kids died between 24 hours and at the age 5 years. \newline 4: U5 child deaths per 1000= (Total U5 deaths/Total live births)*1000 \newline 5: Total no. of stillborn kids = 16")replace varlabels frag location(htbp) headlines() headerlines("&\multicolumn{8}{c}{Categories}") 
 
 
 

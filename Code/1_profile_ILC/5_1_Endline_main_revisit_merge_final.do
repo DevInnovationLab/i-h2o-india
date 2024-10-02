@@ -405,8 +405,11 @@ tab dup_HHID
 
 
 save "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", replace 
- 
- 
+
+//please note that we can get rid of these cases where  comb_resp_avail_comb == . because these are all the non applicable cases for women since the loop for new women section use to take all roster members name ito account so non applicable nams like new baby and all used to come as a result these entries are present in the dataset so if we want a filtered data of just applicable women we can drop such entries  
+drop if   comb_resp_avail_comb == .
+save "${DataFinal}Endline_CBW_level_merged_dataset_final_applicable_cases.dta", replace 
+
  
  
  
