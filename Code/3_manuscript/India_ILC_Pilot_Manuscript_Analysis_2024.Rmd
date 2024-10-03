@@ -1129,7 +1129,7 @@ p_pooled
 #combining summary IDEXX data with weekly chlorine monitoring
 
 idexx_cl_comb_1 <- mon_summary_weekly%>%
-  select(test_week, avg_concentration, lower_ci, upper_ci)%>% #Selecting key variables
+  select(test_week, avg_concentration, lower_ci, upper_ci, cl_presence, lower_ci_pa, upper_ci_pa)%>% #Selecting key variables
   mutate(sample_type = NA)%>%
   mutate(assignment = "Treatment")%>%
   mutate(`% Positive for E. coli` = NA)%>%
@@ -1144,7 +1144,10 @@ idexx_cl_comb_2 <- tc_stats_round%>%
   filter(sample_type == "Tap")%>%
   mutate(avg_concentration = NA,
          lower_ci = NA,
-         upper_ci = NA)
+         upper_ci = NA,
+         cl_presence = NA,
+         lower_ci_pa = NA,
+         upper_ci_pa = NA)
 
 #Combining datasets together
 idexx_cl_comb <- rbind(idexx_cl_comb_1, idexx_cl_comb_2)
@@ -1232,6 +1235,50 @@ p_cl <- mon_summary_weekly%>%
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p_cl
+
+
+#Creating desc plot of weekly free chlorine positive samples + IDEXX E. coli results
+
+#Plotting treatment/control stats on a bar plot
+p_ec_cl_2 <- idexx_cl_comb%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+           position = "dodge", width = 12) +
+   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     fill = assignment), position = position_dodge(width = 12),
+                 width = 6, color = "black") +
+   geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
+                 width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week, y = cl_presence), color = "#FF474C", size = 3)+
+  #geom_path(aes(x = test_week, y = cl_presence), color = "#FF474C")+ #Geom path makes the plot cluttered
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
+            nudge_x = -25, color = "#FF474C")+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0),
+                     sec.axis = sec_axis(~.,
+                                          name = '% of tap samples positive for free chlorine (> 0.1 mg/L)',
+                                          breaks = c(0, 25, 50, 75, 100))
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = expression(paste("% of tap samples positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p_ec_cl_2
+
+ggsave(filename = "manuscript_ecoli_chlorine_time_series_v2.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
 
 
 ```
@@ -1731,7 +1778,7 @@ outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_
 #GT method
 #Summarizing desc stats for each variable
 desc_stats <- el%>%
-  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat")%>%
+  dplyr::select("assignment", "prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat", "time_spent_treat_binary")%>%
   tbl_summary(
   by = assignment,
   statistic = list(all_continuous() ~ "{mean} ({sd})", all_categorical() ~ "{n} / {N} ({p}%)"),
@@ -1905,7 +1952,7 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
              "Drink Tap Water" = "jjm_drinking",
              "Treat Water" = "water_treat_binary",
              "Reported Water Taste/Smell Issue" = "tap_issues_taste",
-             "Treat Water in Less Than the Median Time" = "time_spent_treat")
+             "Time Spent Treating Water is >10 minutes" = "time_spent_treat")
 
 el_forestplot <- el_models_forestplot%>%
   forestplot(labeltext = c(model_name, estimate, p_value),
@@ -1992,12 +2039,12 @@ print(el_forestplot)
 
 #combined regular and ABR IDEXX results
 
-#Removed total coliform results from ABR IDEXX
+#Removed total coliform and e. coli tap results from ABR IDEXX
 idexx_abr_poisson <- idexx_abr_poisson%>%
   filter(model_name != "cf_tap")%>%
   filter(model_name != "cf_stored")%>%
-  mutate(model_name = ifelse(model_name == "ec_tap", "Presence Antibiotic Resistant E. coli at Taps",
-         "Presence Antibiotic Resistant E. coli in Stored Water"))%>%
+  filter(model_name != "ec_tap")%>%
+  mutate(model_name = ifelse(model_name == "ec_stored","Presence Antibiotic Resistant E. coli in Stored Water", NA))%>%
   select(!(sample_type))
 
 
@@ -2015,8 +2062,8 @@ el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson, el_models)
 el_models_forestplot <- el_models_forestplot%>%
   mutate(mean = estimate)%>%
   mutate(estimate = as.character(round(estimate, 2)))%>%
-  mutate(Lower_CI = round(Lower_CI, 1))%>%
-  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(Lower_CI = round(Lower_CI, 2))%>%
+  mutate(Upper_CI = round(Upper_CI, 2))%>%
   mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
   mutate(lower = Lower_CI)%>%
   mutate(upper = Upper_CI)%>%
@@ -2028,8 +2075,6 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
               "Presence of E. coli at Taps"= "ec_tap",
               "Presence of Total Coliform in Stored Water"= "cf_stored",
               "Presence of E. coli in Stored Water"= "ec_stored",
-             "Presence Antibiotic Resistant E. coli at Taps" = 
-               "Presence Antibiotic Resistant E. coli at Taps",
              "Presence Antibiotic Resistant E. coli in Stored Water" =
                "Presence Antibiotic Resistant E. coli in Stored Water",
              "Taps as Primary Source" = "prim_source_jjm",
@@ -2037,7 +2082,7 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
              "Drink Tap Water" = "jjm_drinking",
              "Treat Water" = "water_treat_binary",
              "Reported Water Taste/Smell Issue" = "tap_issues_taste",
-             "Treat Water in Less Than the Median Time" = "time_spent_treat"
+             "Time Spent Treating Water is >10 Minutes" = "time_spent_treat"
              )
 
 el_forestplot <- el_models_forestplot%>%
@@ -2056,7 +2101,7 @@ el_forestplot <- el_models_forestplot%>%
              boxsize = 0.2
              )%>%
   fp_add_lines(h_3 = gpar(lty = 1), 
-               h_15 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+               h_14 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
   fp_set_style(box = "black",
                line = "black",
                summary = "black",

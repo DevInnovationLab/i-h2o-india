@@ -1376,9 +1376,10 @@ el$tap_issues_taste <- el$tap_issues_taste%>%
 #Could check against their baseline result?
 el$treat_time <- as.numeric(el$treat_time)
 el <- el%>%
-  mutate(time_spent_treat = ifelse(treat_time <= 10, 1, #10 is the median value
-                                   ifelse(treat_time == 999, NA,
-                                          ifelse(treat_time == 888, NA, 0)))) #888 is a permanent filter
+  mutate(treat_time = ifelse(is.na(treat_time) == TRUE, 0, treat_time))%>% #Making people who do not report treating their water = 0 
+  mutate(time_spent_treat_binary = ifelse(treat_time == 0, 0, 1))%>%
+  mutate(time_spent_treat = ifelse(treat_time >= 10, 1, #10 is the median value
+                                   ifelse(treat_time == 999, NA, 0))) #888 is a permanent filter
   
 
 
@@ -1521,7 +1522,8 @@ mon_summary <- mon_summary%>%
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
   filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>% #Filtering only for tap water here
-  mutate(test_week = floor_date(test_date, unit = "week"))
+  mutate(test_week = floor_date(test_date, unit = "week"))%>%
+  mutate(test_week = floor_date(test_date - weeks(week(test_date) %% 2), unit = "week"))
 
 # Group by week and calculate the average concentration
 mon_summary_weekly <- mon_summary_weekly%>%
