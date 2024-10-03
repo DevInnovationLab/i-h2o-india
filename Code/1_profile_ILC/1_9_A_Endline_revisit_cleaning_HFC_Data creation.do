@@ -153,11 +153,11 @@ save  "${DataTemp}Endline_Revisit_Long_Indiv_analysis.dta", replace
  ---------------------------------------------------------------------------*/
  
  
- * ID 24
+ * RV_ID 24
 //no data in the dataset below because no new member included
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_child_followup.dta", clear
 
- * ID 23
+ * RV_ID 23
  
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup.dta", clear
 
