@@ -247,7 +247,7 @@ isid R_E_key
 //
 
 *** Changing the storage type of variables for consistency and ease 
-foreach var in R_Cen_hh_member_names_count R_E_n_hhmember_count R_E_n_num_female_15to49 R_E_n_num_allmembers_h R_E_jjm_drinking R_E_jjm_yes R_E_tap_supply_freq R_E_tap_supply_daily R_E_tap_function R_E_tap_function_reason R_E_tap_function_reason_1 R_E_tap_function_reason_2 R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 R_E_tap_function_reason_999 R_E_tap_function_reason__77 R_E_tap_issues R_E_tap_issues_type R_E_tap_issues_type_1 R_E_tap_issues_type_2 R_E_tap_issues_type_3 R_E_tap_issues_type_4 R_E_tap_issues_type_5 R_E_tap_issues_type__77 R_E_consent R_E_jjm_use R_E_jjm_use_1 R_E_jjm_use_2 R_E_jjm_use_3 R_E_jjm_use_4 R_E_jjm_use_5 R_E_jjm_use_6 R_E_jjm_use_7 R_E_jjm_use__77 R_E_jjm_use_999 R_E_reason_nodrink R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 R_E_reason_nodrink_4 R_E_reason_nodrink_999 R_E_reason_nodrink__77 R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_E_water_treat_kids R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type__77 R_E_water_treat_kids_type_999 R_Cen_phone_number_count R_E_water_source_sec_* R_E_sec_source_reason_* R_E_water_sec_freq R_E_water_treat_freq_* R_E_water_treat_kids_type_* R_E_treat_kids_freq_* R_E_water_source_prim R_E_water_treat_type_* R_E_water_prim_source_kids {
+foreach var in R_Cen_hh_member_names_count R_E_n_hhmember_count R_E_n_num_female_15to49 R_E_n_num_allmembers_h R_E_jjm_drinking R_E_jjm_yes R_E_tap_supply_freq R_E_tap_supply_daily R_E_tap_function R_E_tap_function_reason R_E_tap_function_reason_1 R_E_tap_function_reason_2 R_E_tap_function_reason_3 R_E_tap_function_reason_4 R_E_tap_function_reason_5 R_E_tap_function_reason_999 R_E_tap_function_reason__77 R_E_tap_issues R_E_tap_issues_type R_E_tap_issues_type_1 R_E_tap_issues_type_2 R_E_tap_issues_type_3 R_E_tap_issues_type_4 R_E_tap_issues_type_5 R_E_tap_issues_type__77 R_E_consent R_E_jjm_use R_E_jjm_use_1 R_E_jjm_use_2 R_E_jjm_use_3 R_E_jjm_use_4 R_E_jjm_use_5 R_E_jjm_use_6 R_E_jjm_use_7 R_E_jjm_use__77 R_E_jjm_use_999 R_E_reason_nodrink R_E_reason_nodrink_1 R_E_reason_nodrink_2 R_E_reason_nodrink_3 R_E_reason_nodrink_4 R_E_reason_nodrink_999 R_E_reason_nodrink__77 R_E_treat_freq R_E_treat_time R_E_collect_treat_difficult R_E_water_stored R_E_water_treat R_E_treat_primresp R_E_where_prim_locate R_E_collect_time R_E_collect_prim_freq R_E_prim_collect_resp R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_E_clean_freq_containers R_E_clean_time_containers R_E_treat_kids_freq_1 R_E_treat_kids_freq_2 R_E_treat_kids_freq_3 R_E_treat_kids_freq_4 R_E_treat_kids_freq_5 R_E_treat_kids_freq_6 R_E_treat_kids_freq__77 R_E_water_treat_kids R_E_water_treat_kids_type_1 R_E_water_treat_kids_type_3 R_E_water_treat_kids_type_2 R_E_water_treat_kids_type_4 R_E_water_treat_kids_type__77 R_E_water_treat_kids_type_999 R_Cen_phone_number_count R_E_water_source_sec_* R_E_sec_source_reason_* R_E_water_sec_freq R_E_water_treat_freq_* R_E_water_treat_kids_type_* R_E_treat_kids_freq_* R_E_water_source_prim R_E_water_treat_type_* R_E_water_prim_source_kids R_E_water_sec_yn R_E_no_consent_reason_* R_E_water_source_kids R_E_jjm_stored {
 	destring `var', replace
 }
 
@@ -545,6 +545,8 @@ foreach var in R_Cen_a18_reason_nodrink_1 R_Cen_a18_reason_nodrink_2 R_Cen_a18_r
 "Pakhare Manual Hand pump achhi" 
 */
 
+*Recategorising obs where respondents said they don't drink jjm water as they dont have a tap connection in "R_Cen_jjm_drinking" to "No" given a new option has been created in "R_Cen_reason_nodrink" (for consistency with Endline)
+replace R_Cen_a18_jjm_drinking=0 if R_Cen_a18_jjm_drinking==2
 
 *** R_Cen_a20_jjm_use_oth: "or what other purposes do you use water collected from the government provided household taps?" (options include 7 categories, other and dont know)
 *Recategorising into existing categories
@@ -1660,6 +1662,19 @@ drop C_E_treat_resp* R_E_num_treat_resp R_E_treat_resp_list_count R_E_setoftreat
 *** Saving the cleaned HH Level dataset
 ********************************************************************************
 save "${DataFinal}0_Master_HHLevel_new.dta", replace
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

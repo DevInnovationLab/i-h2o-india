@@ -52,14 +52,23 @@ library(tidyverse)
 #from Box
 
 #Jeremy's file path
-mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+#mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
 
-mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+#mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+
+#village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
+
+#gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
+
+
+#Niharika's file path
+mon <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+
+mon_full <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
-gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
-
+gv <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
 
 ```
 
@@ -90,6 +99,11 @@ user_path <- function() {
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
 		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
   } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+		overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf"
+  } 
+
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -114,6 +128,10 @@ github_path <- function() {
   else if (user == "jerem") {
     github = "C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC"
   } 
+  else if (user == "uchicago") {
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC"
+  } 
+
   else {
     warning("No path found for current user (", user, ")")
     github = getwd()
@@ -146,6 +164,10 @@ overleaf_path <- function() {
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
 		overleaf = "C:/Users/jerem/DropBox/Apps/Overleaf"
+  } 
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+		overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -313,13 +335,13 @@ mon_full <- mon_full%>%
   mutate(farthest_stored_fc = (far_first_stored_water_fc + far_second_stored_water_fc)/2)%>%
   mutate(farthest_stored_tc = (far_first_stored_water_tc + far_second_stored_water_tc)/2)
 
-
+#Niharika to Jeremy: chnaging the format from mdy_hms to dmy_hms based on raw data downloaded on Oct 3, 2024
 #Getting date of test
-mon$valve_open_time <- mdy_hms(mon$valve_open_time)
+mon$valve_open_time <- dmy_hms(mon$valve_open_time)
 mon <- mon%>%
   mutate(test_date = date(valve_open_time))
 
-mon_full$valve_open_time <- mdy_hms(mon_full$valve_open_time)
+mon_full$valve_open_time <- dmy_hms(mon_full$valve_open_time)
 mon_full <- mon_full%>%
   mutate(test_date = date(valve_open_time))
 
@@ -518,7 +540,7 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
             aes(x = as.Date("2024-04-12"), y = 1.08), 
             label = "Refill", angle = 0, vjust = -0.5, color = "darkgreen", size = 3)+
     geom_text(data = filter(mon_wide, village_name == "Asada"), 
-            aes(x = as.Date("2024-04-18"), y = 1.2), 
+            aes(x = as.Date("2024-04-25"), y = 1.2), 
             label = "Target Range", angle = 0, vjust = -0.5, color = "red", size = 3)
   
   print(p1)
