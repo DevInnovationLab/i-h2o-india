@@ -103,6 +103,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 		global git_trim "C:\Users\Archi Gupta\Documents\GitHub\"
 		global external "C:\Users\Archi Gupta\Box\India ILC_Survey External\"
 		global Personal "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress\"
+		global  Intermediate  "C:\Users\Archi Gupta\Box\Data\8_Intermediate Datasets\"
 
 	}
     

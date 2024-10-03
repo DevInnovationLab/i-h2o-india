@@ -211,11 +211,22 @@ save "${DataFinal}1_1_Endline_Mortality_19B_20B_part2.dta", replace
 * ID 26 (N=322) All new household members
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
 key_creation 
-keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
+******************************************************************************************
+/*
+REASON FOR COMMENTING OUT THE KEEP COMMAND BELOW- 
+Archi- We should keep all the variables here so that people can selectively drop whatever they don't need. If we keep only specific variables here then if someone else is using this in the future they will face issues  if they want a variable that we didn't keep and they will have to come again to run this. For that reason I am commenting out the command below.*/
+**********************************************************************************************
+/*keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
       key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth ///
 	  n_dob_date n_dob_month n_dob_year ///
-	  n_cbw_age n_all_age 
-// List all variables starting with "n_"
+	  n_cbw_age n_all_age */
+	  
+// List all variables starting with "n_" and if some variables don't have n_ prefix we should attach this prefix as these are all new members so they should be treated with n_ prefix itself. It is fine if keys dont have n_prefix because they are same across the datasets and they will be used as identifiers  
+
+ds namenumber namefromearlier current_year current_month age_years age_months age_years_final age_months_final age_decimal 
+foreach var of varlist `r(varlist)' {
+rename `var' n_`var'
+}
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -223,7 +234,7 @@ foreach var of varlist n_* {
 }
 save "${DataTemp}temp0.dta", replace
 
-* ID 22
+* ID 22 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 key_creation 
 //drop if n_resp_avail_cbw==.
@@ -303,10 +314,13 @@ save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 * Baseline hosuehold member
 * "${DataTemp}Requested_long_backcheck2.dta"
 
-
+stop 
 /* ---------------------------------------------------------------------------
 * ID 21, 22, 23 and 24: List of U5 and Morbidity for U5 children
  ---------------------------------------------------------------------------*/
+ //Archi: Comment for myself - You need to change name of the dataset used in Akito's file and drop entreies where child was unavailable because Akito is using that file for analysis and since we are creating only one version of each dataset we need to make sure whosoever is using that dataset it gets chnaged in their file too 
+ 
+ 
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
 * Respondent available for an interview 
@@ -370,9 +384,27 @@ rename R_E_village_name_str Village
 * Village
 replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
-save "${DataTemp}U5_Child_Endline_Census.dta", replace
+//save "${DataTemp}U5_Child_Endline_Census.dta", replace
+
+
 save "${DataTemp}U5_Child_23_24_part1.dta", replace
 
+
+
+/*
+*************************************************************************************************
+WHY I AM COMMENTING OUT THIS WHOLE PART BELOW ?  😺
+************************************************************************************************
+Earlier we had created two versions of these datasets because Akito and ARchi were using these appended datasets for different purposes. 
+- Akito was using this for analysis 
+- Archi was using this for preload creation of revisit 
+
+Issue- For analysis, we want only those observations where child was available and data is present but for preload you need only those child names where the entry was unavailable because only those cases would be re-visited right so these two purposes are opposite so Akito and Archi agreed upon on creating two versions for their uses but now we are done with all these processes so we should make sure there is only 1 version of these datasets so that people don't get confused which one to use for that reason Archi will drop unavailable cases from Akito's do file by using only one version of dataset and replace the name of the dataset wherever required 
+
+Archi will make changes to Akito's file- "GitHub\i-h2o-india\Code\1_profile_ILC\3_5_Descriptive_Endline.do"
+
+----Commented out code starts from here ---------
+-------------------------------------------------------
 * Respondent available for an interview 
 keep if comb_child_caregiver_present==1
 //Archi to Akito- I think you want to perform the merge below for analaysis purposes but I am creating another dataset so that any value doesn't get missed out so I am gonna use ${DataTemp}U5_Child_23_24_part1 for re-visit purpose 
@@ -388,6 +420,12 @@ br unique_id Village if _merge==1
 keep if comb_child_caregiver_present == 1
 save "${DataFinal}1_1_Endline_U5_Child_23_24.dta", replace
 savesome using "${DataFinal}1_1_Endline_Morbidity_23_24.dta" if comb_med_out_home_comb!="", replace
+
+
+*/
+
+
+
 
 /* ---------------------------------------------------------------------------
 * ID of the data 5 and 11, 21 and 22
