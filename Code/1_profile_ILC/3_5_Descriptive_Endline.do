@@ -31,37 +31,134 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
 * Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
+
+
+
+/*
+------------------------------------------------------------------------------------------------
+IMP NOTE FOR DATASET CHANGE : 
+-------------------------------------------------------------------------------------------------
+we are using the below dataset "${DataTemp}U5_Child_23_24_part1.dta"  for analysis now  instead of "${DataFinal}1_1_Endline_U5_Child_23_24.dta" because we are creating final versions of the dataset as a result we are removing duplicate datasets. The only difference between ${DataFinal}1_1_Endline_U5_Child_23_24.dta and use "${DataTemp}U5_Child_23_24_part1.dta is that first one only contains those values where the caregiver were available and the second one contains alll the values where caregiver was or wasn't available. We should be using second type of dataset for any analysis because we can just drop the irrelevant entries that are not applicable for our use and this way we will only be using one version of dataset. */
+
+use "${DataTemp}U5_Child_23_24_part1.dta", clear  //endline main child dataset (both new and census child) 
+drop if comb_child_comb_name_label == ""
+drop if comb_child_caregiver_present == .   //this commands gets rid of unecessary entry that might have been created in the process of loop. 
+cap drop _merge
+
+
+/*we need to certain opeartions on this dataset because we need variables like Age for analysis so we need to get this age variable for some children. 
+
+🧐 WHY THE AGE VARIABLE IS PRESENT IN A DIFFERENT DATASET?
+
+The reason that is the case is because when creating individual datasets survey cto divides the dataset based on the loops so for eg- age of the new children were asked in the loop of new roster members which is at the beginning but the questions about new child's health were asked in a different loop so survey cto divided these two datasets now to get the age variable for new children we would need to get it from where the new member roster data was present which is ${DataTemp}Requested_long_backcheck1.dta.  We only need to get this age variable for new child and not the census child because ages of the census child were asked within this loop itself so we are on the safe side for that. Cen type = 4 means census entry and 5 means new entry. To tabulate census and new entries just tab Cen_type variable 
+To do -  add age variable, remove unavailable cases, assign treatment status 
+*/
+
+/* WHY ARE CREATING NEW UNIQUE IDENTIFIERS? 
+So, in the individual datasets such as  child dataset we don't have any "unique" keys as such because unique_id variable in our dataset is assigned at the household level. So, at one household we can have more than 1 U5 children right so they will both share the same unique_id because unique_id is at the housheold level. So, to create any identifiers for child we need to see what makes every row unique. In our case combination of two variables: key  and comb_child_comb_name_label(child name) makes it unique so the command below is to check for that. If there are 0 duplicates, we can treat this as a unique identifier across other datasets in this case new member roster dataset. 
+
+There are 5 ways to look for duplicates in child names - 
+
+1. Way 1: Finding duplicates by bysorting by key and then wherever keys are repeated manually check if child names are same  (Most Preferred and most accurate)
+
+2. Way 2:  Finding duplicates using key and child name. If they are no duplicats that means at each key, we have unique child names. (Exactly similar)
+
+3. Way 3: Finding duplicates using key and child name. If they are no duplicats that means at each key, we have unique child names. (Exactly similar)
+
+4. Way 4: This uses basic duplicate command but is not very hand as if there are any duplicates this doens't allow you to browse and check specific entreis 
+
+5. Way 5: Fuzzy match- Create a unique idnetifier and then use reclink to check if duplicates can be found in strings that might have spelling mistakes. This is not the most perfect way because the first step is to create unique idnetifiers which is what we are looking for so it acts as a good verification check but not the solution to the orgininal problem 
+*/
+
+// WAY 1
+bysort key: gen dup_key = cond(_N ==1,0,_n)	
+br comb_child_comb_name_label dup_key if dup_key != 0
+
+//WAY 2
+duplicates tag key comb_child_comb_name_label, gen(dup_HH)
+tab dup_HH
+
+//WAY 3
+bysort key comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
+tab dup_HHID
+
+//WAY 4
+unique key comb_child_comb_name_label
+
+//WAY 5 	
+/*
+Check with Akito- 
+Lets do a fuzzy match just to be sure. 
+	
+preserve
 use "${DataTemp}U5_Child_23_24_part1.dta", clear 
 drop if comb_child_comb_name_label == ""
 unique key comb_child_comb_name_label
-// duplicates tag key comb_child_comb_name_label, gen(dup_HH)
-bysort key comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
-count if dup_HHID > 0 
-tab dup_HHID
-cap drop _merge
-// add age variable, remove unavailable cases, assign treatment status 
-//Cen type = 4 means census entry and 5 means new entry 
+keep comb_child_comb_name_label comb_child_comb_caregiver_label key comb_child_caregiver_present
+drop if comb_child_caregiver_present == .	
+gen unique_identifier = _n
+clonevar final_resp_name = comb_child_comb_name_label 
+clonevar  unique_identifier_A =  unique_identifier
+replace comb_child_comb_name_label  = lower(comb_child_comb_name_label )
+save "${DataTemp}Child_Fuzzy_1.dta", replace
+restore
+
+preserve
+use "${DataTemp}U5_Child_23_24_part1.dta", clear 
+drop if comb_child_comb_name_label == ""
+unique key comb_child_comb_name_label
+keep comb_child_comb_name_label comb_child_comb_caregiver_label key comb_child_caregiver_present
+drop if comb_child_caregiver_present == .	
+gen unique_identifier = _n
+clonevar  unique_identifier_B =  unique_identifier
+//clonevar final_resp_name = comb_child_comb_name_label 
+//clonevar  unique_identifier_2 =  unique_identifier
+replace comb_child_comb_name_label  = lower(comb_child_comb_name_label )
+save "${DataTemp}Child_Fuzzy_2.dta", replace
+reclink unique_identifier comb_child_comb_name_label using "${DataTemp}Child_Fuzzy_1.dta", idmaster(unique_identifier_B) idusing(unique_identifier_A) required (unique_identifier) gen(fuzzy) minscore(.9)
+assert fuzzy > 0.9 //
+restore
+
+*/
+
+//we need the age variable from this dataset so making it usuable for any merge
 preserve
 use "${DataTemp}Requested_long_backcheck1.dta", clear
 drop if comb_namefromearlier == ""
+duplicates tag key comb_namefromearlier, gen(dup_HH)
+//below is the alternative way to check for it 
 bysort key comb_namefromearlier : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 rename  comb_namefromearlier comb_child_comb_name_label
 cap drop _merge
-
 save "${DataTemp}new_roster_temp.dta", replace
 //after that do 1;1 merge 
 restore
+merge 1:1 key comb_child_comb_name_label using "${DataTemp}new_roster_temp.dta", keepusing (comb_hhmember_age unique_id)
+keep if _merge == 1 | _merge == 3
+//please note that we have to keep both _merge == 1 and _merge == 3 because _merge == 1 are census child entries and _merge == 3 are new child entries they together make child dataset 
 
-merge 1:1 key comb_child_comb_name_label using "${DataTemp}new_roster_temp.dta", keepusing (comb_hhmember_age)
 
+keep if comb_child_caregiver_present == 1 //we will only analyse data for available children 
+clonevar R_E_key = key
+drop _merge
+//checking consented cases 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", keepusing (unique_id R_E_consent)  
+//plaese note that we have found 99 unmatches out of which 4 are from master (child dataset) and 95 are from using (household level dataset) 
+keep if _merge == 1 | _merge == 3
+/*
+Detailed Explanation: Why are keeping _merge == 1. Aren't they non-consented? 
 
+The R_E_consent variable in the household dataset only captures consent of the main respondents that is those respondents who asnwer us about WASH etc. The respondents who give us survey about children are the child caregivers so it is possible that the main respondent can say No to the WASH section survey but if there is any child caregiver is present in the house we will still go and take their survey so if the child caregiver refuses the survey that we will capture in the variable comb_child_caregiver_present  as -98 or in others and these are the cases that we anyway are dropping so we are good to go I did this merge just for verification and explain why household consent is different from caregiver consent! 
+*/
 
+drop  R_E_consent //dropping this to avoid confusion. I explained earlier why this is not required for the child dataset 
 
-use "${DataFinal}1_1_Endline_U5_Child_23_24.dta", clear
+//AKITO'S CODE STARTS 
+
 missings dropvars, force
-* Cleaning age variable
+* Cleaning age variable and creating one age variable 
 replace comb_child_age=comb_hhmember_age if comb_child_age==.
 drop comb_hhmember_age
  
