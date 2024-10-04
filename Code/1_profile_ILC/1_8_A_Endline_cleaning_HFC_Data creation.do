@@ -258,8 +258,15 @@ merge 1:1 key key3 using "${DataTemp}temp1.dta"
 gen Cen_Type=2
 * N=141
 unique key key3
+cap drop _merge
+clonevar R_E_key = key 
+//after investigating we find that keys that 16 keys that haven't matched in master are the keys that are no longer valid eg- they were training submissions so that is why it is okay if there are mismatches in this. We should just keep _merge == 3 cases
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing (unique_id)  
+keep if _merge == 3
+drop R_E_key
+drop _merge
 save "${DataTemp}Requested_long_backcheck1.dta", replace
-
+//stop
 * ID 25
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 key_creation 
@@ -314,7 +321,6 @@ save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 * Baseline hosuehold member
 * "${DataTemp}Requested_long_backcheck2.dta"
 
-stop 
 /* ---------------------------------------------------------------------------
 * ID 21, 22, 23 and 24: List of U5 and Morbidity for U5 children
  ---------------------------------------------------------------------------*/
@@ -380,11 +386,17 @@ rename key R_E_key
 merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_str) keep(3) nogen
 
 rename R_E_key  key
-rename R_E_village_name_str Village
+//we should not touch the original village variable
+clonevar Village = R_E_village_name_str
+
 * Village
-replace Village="Bhujabala" if Village=="Bhujbal"
+//replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
 //save "${DataTemp}U5_Child_Endline_Census.dta", replace
+
+//stop_it
+//getting treatment status and stuff
+merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 
 
 save "${DataTemp}U5_Child_23_24_part1.dta", replace
