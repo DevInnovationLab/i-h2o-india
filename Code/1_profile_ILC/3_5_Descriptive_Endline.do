@@ -33,6 +33,8 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
 * Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
 use "${DataTemp}U5_Child_23_24_part1.dta", clear 
 drop if comb_child_comb_name_label == ""
+unique key comb_child_comb_name_label
+// duplicates tag key comb_child_comb_name_label, gen(dup_HH)
 bysort key comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID

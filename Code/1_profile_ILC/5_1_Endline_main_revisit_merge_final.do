@@ -106,7 +106,7 @@ Conclusion: That is why you see two prefix in the revisit form: comb_ and N_
 //no data in the dataset below because no new member included. This being empty means there were no new children included in the revisit form so our work gets easier.
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_child_followup.dta", clear
 
-
+//specify what long is here and specify the unit 
  * RV_ID 23 (The dataset below contains enteris for combined child enteries i.e. the nams in the preload) 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup.dta", clear
 
@@ -127,6 +127,7 @@ where does this dataset comes from? Refer to this cleaning file: "GitHub\i-h2o-i
 Why- We are merging this over R_E_key because this is the only identifier to connect both of them and we want some other identifiers like UID, Village, enum label to use this dataset for basic cleaning and stats. That is why we are getting these variables from Endline_Revisit_Cleaned dataset
 */
 
+//we are merging this with wide dataset 
 merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code R_E_village_name_str) 
 
 /* 😏Why are there some unmatched keys? 
