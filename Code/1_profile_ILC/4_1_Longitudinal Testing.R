@@ -254,19 +254,28 @@ df_clean_sw_final <- bind_rows(df_exact_match, df_manual_selection) %>%
   distinct()  # Remove duplicates, if any
 View(df_clean_sw_final)
 
+#Creating new variable to store anonymised village names
+df_clean_sw_final_new <- df_clean_sw_final %>%
+  mutate(anonymized_village_name = paste("Village", dense_rank(village_name)))
 
-# Create the scatterplot for decay in stored water 
 
+
+# Create the scatterplot for decay in stored water with Village names 
 plot <- ggplot(df_clean_sw_final, aes(x = tw_fc, y = sw_fc, color = village_name)) +
   geom_point() +  # Add points
   labs(title = "Chlorine Decay in Stored Water Over Time",
-       x = "FC in Running Water at Time of Stored Water Collection", 
-       y = "FC in Stored Water 45 Minutes After Water Collection") +
+       x = "FC in Running Water at Time of Stored Water Collection (mg/L)", 
+       y = "FC in Stored Water 45 Minutes After Water Collection (mg/L)",
+       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 minutes after sample collection in seven villages. \nTesting was performed across two rounds at different chlorine levels at the nearest and farthest taps, which accounts for multiple observations per village.") +
   theme_minimal() +  # Use a minimal theme
   scale_color_discrete(name = "Village") +  # Legend title
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
-  geom_smooth(aes(linetype = "Trend Line"), method = "lm", se = FALSE, color = "black") +  # Dotted trend line
-  scale_linetype_manual(name = "Line Type", values = "dotted") +  # Add legend for trend line
+  annotate("text", x = 1.2, y = 1.2, label = "45° Line of Reference", 
+           color = "red", size = 4, vjust = -1) +  # Annotate 45-degree line
+  geom_smooth(aes(linetype = "Trend Line"), method = "lm", se = FALSE, color = "black", show.legend = FALSE) +  # Dotted trend line without legend
+  annotate("text", x = 1.2, y = 0.8, label = "Trend Line", 
+           color = "black", size = 4, vjust = -1) +  # Annotate trend line
+  scale_linetype_manual(name = "Line Type", values = "dotted") +  # Add legend for line type
   scale_x_continuous(
     limits = c(0.0, 1.4),
     breaks = seq(from = 0.0, to = 1.4, by = 0.2)
@@ -274,9 +283,79 @@ plot <- ggplot(df_clean_sw_final, aes(x = tw_fc, y = sw_fc, color = village_name
   scale_y_continuous(
     limits = c(0.0, 1.4),
     breaks = seq(from = 0.0, to = 1.4, by = 0.2)
-  ) 
-
+  ) +
+  theme(plot.caption = element_text(hjust = 0))  # Left-justify the caption
 print(plot)
+ggplot2::ggsave(paste0(overleaf(), "Figure/Chlorine decay in stored water.png"), plot, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+# Create the scatterplot for decay in stored water without  Village names 
+plot_sw <- ggplot(df_clean_sw_final_new, aes(x = tw_fc, y = sw_fc, color = anonymized_village_name)) +
+  geom_point() +  # Add points
+  labs(title = "Chlorine Decay in Stored Water Over Time",
+       x = "FC in Running Water at Time of Stored Water Collection (mg/L)", 
+       y = "FC in Stored Water 45 Minutes After Water Collection (mg/L)",
+       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 minutes after sample collection in seven villages. \nTesting was performed across two rounds at different chlorine levels at the nearest and farthest taps, which accounts for multiple observations per village.") +
+  theme_minimal() +  # Use a minimal theme
+  scale_color_discrete(name = "Village") +  # Legend title
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
+  annotate("text", x = 1.2, y = 1.2, label = "45° Line of Reference", 
+           color = "red", size = 4, vjust = -1) +  # Annotate 45-degree line
+  geom_smooth(aes(linetype = "Trend Line"), method = "lm", se = FALSE, color = "black", show.legend = FALSE) +  # Dotted trend line without legend
+  annotate("text", x = 1.2, y = 0.8, label = "Trend Line", 
+           color = "black", size = 4, vjust = -1) +  # Annotate trend line
+  scale_linetype_manual(name = "Line Type", values = "dotted") +  # Add legend for line type
+  scale_x_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  scale_y_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  theme(plot.caption = element_text(hjust = 0))  # Left-justify the caption
+print(plot_sw)
+ggplot2::ggsave(paste0(overleaf(), "Figure/Chlorine decay_stored water_wo vill names.png"), plot_sw, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+# Calculate chlorine decay
+df_clean_sw_final <- df_clean_sw_final %>%
+  mutate(chlorine_decay = tw_fc - sw_fc)  # Calculate the decay
+
+# Calculate the average chlorine decay
+average_decay <- df_clean_sw_final %>%
+  summarise(average_decay = mean(chlorine_decay, na.rm = TRUE))  # Mean decay, excluding NA values
+
+# View the result
+print(average_decay)
+
+# Calculate the percent decrease in chlorine levels
+df_clean_sw_final <- df_clean_sw_final %>%
+  mutate(percent_decrease = ((tw_fc - sw_fc) / tw_fc) * 100)  # Calculate percent decrease
+
+# Calculate the average percent decrease
+average_percent_decrease <- df_clean_sw_final %>%
+  summarise(average_percent_decrease = mean(percent_decrease, na.rm = TRUE))  # Mean percent decrease, excluding NA values
+
+# View the result
+print(average_percent_decrease)
+
+# Calculate average tw_fc and sw_fc
+averages <- df_clean_sw_final %>%
+  summarise(
+    average_tw_fc = mean(tw_fc, na.rm = TRUE),
+    average_sw_fc = mean(sw_fc, na.rm = TRUE)
+  )
+
+# Create a message about the average decrease
+average_decrease_message <- paste(
+  "The average chlorine level decreased from",
+  round(averages$average_tw_fc, 2), "mg/L to",
+  round(averages$average_sw_fc, 2), "mg/L."
+)
+
+# Print the message
+print(average_decrease_message)
 
 #------------------------------Creating variables for minutes since supply and round--------
 
@@ -438,17 +517,18 @@ plot3 <- ggplot(data = filtered_data_r2_new) +
   geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
   facet_wrap(~ anonymized_village_name, scales = "free_x") +
   labs(
-    title = "Temporal Presentation of Chlorine Readings across different villages in Rayagada study sample",
+    title = "Chlorine Concentrations Over Supply Time in Rayagada Study Sample",
     x = "Minutes since start of supply time",
     y = "Free Chlorine Concentration in Running Water (mg/L)",
-    color = "Tap"
+    color = "Tap",
+    caption = "Note: Data points from longitudinal testing throughout the supply time in six villages at the nearest and farthest taps."
   ) +
   theme_bw() +
   theme(
     axis.text.x = element_text(size = 8, angle = 90, vjust = 1, hjust = 1),
     legend.position = "bottom",
     strip.text = element_text(size = 12),
-    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)
+    plot.caption = element_text(size = 10, hjust = 0, face = "plain", color = "black", lineheight = 0.5)
   ) +
   scale_y_continuous(
     limits = c(0, 2),

@@ -3177,17 +3177,17 @@ ec_fc <- ggplot(merged_data_f, aes(x = fc_tap_avg, y = ec_log, color = Assignmen
   ) +
   coord_fixed(ratio = 0.5) +
   scale_x_continuous(limits = c(0.0, 2.5), breaks = seq(0.0, 2.5, by = 0.5)) +  # Adjust limits and breaks
-  scale_y_continuous(limits = c(-0.5, 4), breaks = seq(-0.5, 4, by = 1)) +  # Adjust limits and breaks
+  scale_y_continuous(limits = c(-0.5, 4), breaks = seq(0, 4, by = 1)) +  # Adjust limits and breaks
   theme_minimal() +
   theme(plot.caption = element_text(hjust = 0),
         legend.position = "right") +
-  geom_hline(yintercept = 0, linetype = "solid", color = "grey", size = 1) +  # Smooth grey line
-  annotate("text", x = Inf, y = 0.1, label = "E. Coli Presence", 
-           vjust = -0.5, hjust = 1.1, color = "black", size = 4) +  # Annotate line
-  geom_vline(xintercept = 0.2, linetype = "solid", color = "grey", size = 1) +  # Vertical line at x = 0.2
-  annotate("text", x = 0.2, y = 3.5, label = "Acceptable Chlorine Levels", 
-           vjust = -0.5, hjust = -0.1, color = "black", size = 4) +  # Annotate vertical line
-  scale_color_manual(values = c("Control" = "red", "Treatment" = "green"))  # Assign colors for assignment
+  geom_hline(yintercept = -0.05, linetype = "solid", color = "grey", size = 0.5) +
+  annotate("text", x = Inf, y = -0.05, label = "E. Coli Presence", 
+           vjust = -0.5, hjust = 1.1, color = "black", size = 3) +  # Adjusted position for horizontal line
+  geom_vline(xintercept = 0.2, linetype = "solid", color = "grey", size = 0.5) +
+  annotate("text", x = 0.12, y = 3.5, label = "Minimum Chlorine Concentration (0.2 mg/L)", 
+           vjust = -0.5, hjust = -0.1, color = "black", size = 3) +  # Adjusted position for vertical line
+  scale_color_manual(values = c("Control" = "red", "Treatment" = "green"))
 
 print(ec_fc)
 ggplot2::ggsave(paste0(overleaf(), "Figure/Ecoli and FC presence.png"), ec_fc, bg = "white", width = 10, height = 6, dpi = 200)
@@ -3200,21 +3200,21 @@ ec_fc_periodwise <- ggplot(merged_data_f, aes(x = fc_tap_avg, y = ec_log, color 
     title = "Scatterplot of Chlorine residual and E.coli contamination in Rayagada study sample over time",
     x = "Free Chlorine Concentration in Running Water (mg/L)",
     y = "Magnitude of E.coli Detected (log 10 MPN)",
-    caption = "N=401. \nData points are from Water Quality Testing and Chlorine Testing results from Oct 2023 till Aug 2024."
+    caption = "Data points are from Water Quality Testing and Chlorine Testing results from Oct 2023 till Aug 2024."
   ) +
   coord_fixed(ratio = 0.5) +
   scale_x_continuous(limits = c(0.0, 2.5), breaks = seq(0.0, 2.5, by = 0.5)) +  # Adjust limits and breaks
-  scale_y_continuous(limits = c(-0.5, 4), breaks = seq(-0.5, 4, by = 1)) +  # Adjust limits and breaks
+  scale_y_continuous(limits = c(-0.5, 4), breaks = seq(0, 4, by = 1)) +  # Adjust limits and breaks
   theme_minimal() +
   theme(plot.caption = element_text(hjust = 0),
         legend.position = "right") +
   facet_wrap(~ period_new, ncol = 3) +
-  geom_hline(yintercept = 0, linetype = "solid", color = "grey", size = 1) +  # Smooth grey line
-  annotate("text", x = Inf, y = 0.1, label = "E. Coli Presence", 
-           vjust = -0.5, hjust = 1.1, color = "black", size = 4) +  # Annotate line
-#  geom_vline(xintercept = 0.2, linetype = "solid", color = "grey", size = 1) +  # Vertical line at x = 0.2
-#  annotate("text", x = 0.2, y = 3.5, label = "Acceptable Chlorine Levels", 
-          #vjust = -0.5, hjust = -0.1, color = "black", size = 4) +  # Annotate vertical line
+  geom_hline(yintercept = -0.05, linetype = "solid", color = "grey", size = 0.5) +
+  annotate("text", x = Inf, y = -0.05, label = "E. Coli Presence", 
+           vjust = -0.5, hjust = 1.1, color = "black", size = 3) +  # Adjusted position for horizontal line
+  #  geom_vline(xintercept = 0.2, linetype = "solid", color = "grey", size = 1) +  # Vertical line at x = 0.2
+  #  annotate("text", x = 0.2, y = 3.5, label = "Acceptable Chlorine Levels", 
+  #vjust = -0.5, hjust = -0.1, color = "black", size = 4) +  # Annotate vertical line
   scale_color_manual(values = c("Control" = "red", "Treatment" = "green"))  # Assign colors for assignment
 
 print(ec_fc_periodwise)
