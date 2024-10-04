@@ -545,6 +545,7 @@ ms_idexx_v <- ms_idexx %>% select(sample_ID, sample_type, unique_id, village_nam
 
 #View(ms_idexx_v)
 
+#Generating a new var to store whether the test was regular idexx or ABR
 
 
 #------------------------------------------------------------------------
@@ -698,8 +699,17 @@ idexx <- idexx%>%
 
 
 
+#----------Manual Corrections--------------------------------------------------#
+#Creating a new variable for samples tested for anti-biotic resistance (whether the sample was tested for ABR or not is captured in end comments; filtering based on this var)
+idexx <- idexx %>%
+  mutate(ABR = ifelse(end_comments == "ABR", 1, 0))
 
+# Manually correcting stray values - data entry error: coded an ABR sample as non-ABR sample 
+idexx <- idexx %>%
+  mutate(ABR = ifelse(endtime.x == "9/27/2024, 10:48:54 AM", 1, ABR))
 
+# checking the results
+head(idexx)
 
 
 #-------------------------Writing Cleaned Final Datasets----------------------

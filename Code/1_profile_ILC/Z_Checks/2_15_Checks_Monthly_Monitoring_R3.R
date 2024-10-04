@@ -365,6 +365,10 @@ tc_stats <- function(idexx_data){
       "Mean Log10 MPN Total Coliform/100 mL" = round(mean(cf_log), 3),
       "Mean Log10 MPN E. coli/100 mL" = round(mean(ec_log), 3),
       "WHO Risk - % of Samples with 'High Risk' (> 100 MPN/100 mL)" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
+      "WHO Risk - % of Samples with 'Intermediate Risk' (> 11 and <=100 MPN/100 mL)" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
+      "WHO Risk - % of Samples with 'Low Risk' (>= 1 MPN and <=10/100 mL)" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
+      "WHO Risk - % of Samples with 'Very Low Risk' (< 1 MPN/100 mL)" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
+      
       "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3)
     )
   
@@ -509,9 +513,9 @@ ms_consent <- ms_consent %>%
   mutate(reason_replacement = ifelse(reason_replacement == 2, 1, reason_replacement))
 
 ms_consent$reason_replacement <- ifelse(ms_consent$reason_replacement == "1", "HH was unavailable", 
-                                        ifelse(ms_consent$water_source_prim == "3", "Household refused", 
-                                               ifelse(ms_consent$water_source_prim == "4", "No stored or running water", 
-                                                      ms_consent$water_source_prim)))
+                                        ifelse(ms_consent$reason_replacement == "3", "Household refused", 
+                                               ifelse(ms_consent$reason_replacement == "4", "No stored or running water", 
+                                                      ms_consent$reason_replacement)))
 
 replace_percentage <- ms_consent %>%
   group_by(reason_replacement) %>%
@@ -549,7 +553,7 @@ stargazer(replace_percentage, summary=F, title= "Reasons of Replacement breakdow
 filtered_data <- ms_consent %>%
   filter(replacement == 0)
 
-# Calculate the percentages of Yes and No for stored_sample_collection
+# Calculate the percentages of Yes and No for stored_sample_collection: able to collect stored water sample (samples with no replacement)
 stored_sample_summary <- filtered_data %>%
   group_by(stored_sample_collection) %>%
   summarise(Count = n()) %>%
@@ -557,13 +561,30 @@ stored_sample_summary <- filtered_data %>%
 
 print(stored_sample_summary)
 
+# Calculate the percentages of Yes and No for stored_sample_collection: able to collect stored water sample (all available HHs)
+stored_sample_summary <- ms_consent %>%
+  group_by(stored_sample_collection) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(stored_sample_summary)
+
+
 #_____________________________________________
 
 #stored_tap
 #_____________________________________________
 
-# Calculate the percentages of Yes and No for stored_sample_collection
+# Calculate the percentages of Yes and No for stored_tap: stored water sample originally from tap (samples with no replacement)
 stored_sample_summary <- filtered_data %>%
+  group_by(stored_tap) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(stored_sample_summary)
+
+# Calculate the percentages of Yes and No for stored_tap: stored water sample originally from tap (all available HHs)
+stored_sample_summary <- ms_consent %>%
   group_by(stored_tap) %>%
   summarise(Count = n()) %>%
   mutate(Percentage = (Count / sum(Count)) * 100)
@@ -574,7 +595,15 @@ print(stored_sample_summary)
 #tap_sample_collection
 #_____________________________________________
 
-# Calculate the percentages of Yes and No for tap_sample_collection
+# Calculate the percentages of Yes and No for tap_sample_collection: able to collect tap water sample (samples with no replacement)
+tap_sample_summary <- filtered_data %>%
+  group_by(tap_sample_collection) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+print(tap_sample_summary)
+
+# Calculate the percentages of Yes and No for tap_sample_collection: able to collect tap water sample (all available hhs)
 tap_sample_summary <- filtered_data %>%
   group_by(tap_sample_collection) %>%
   summarise(Count = n()) %>%
@@ -584,7 +613,7 @@ print(tap_sample_summary)
 
 #_____________________________________________
 
-#tap_error
+#tap_error - errors in tap water readings 
 #_____________________________________________
 
 tap_error_sum <- ms_consent %>%
@@ -596,8 +625,9 @@ print(tap_error_sum)
 
 #_____________________________________________
 
-#stored_error
+#stored_error - errors in stored water samples
 #_____________________________________________
+
 stored_error_sum <- ms_consent %>%
   group_by(stored_error) %>%
   summarise(Count = n()) %>%
@@ -605,10 +635,20 @@ stored_error_sum <- ms_consent %>%
 
 print(stored_error_sum)
 
+#---------------------------------------------
+
+#JJM drinking: Drinking JJM Water
+#_____________________________________________
+
+jjm_drinking_sum <- ms_consent %>%
+  group_by(jjm_drinking) %>%
+  summarise(Sum = n()) %>%
+  mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
+print(jjm_drinking_sum)
 
 
 #-----------------------------------------------------------------
-#  stored_water_fc    stored_water_tc   tap_water_tc tap_water_fc
+#  stored_water_fc    stored_water_tc   tap_water_tc tap_water_fc: variables renames to: fc_stored_avg, tc_stored_avg, tc_tap_avg, fc_tap_avg
 #------------------------------------------------------------------
 
 # NO values greater than 0.1 in C
@@ -618,14 +658,14 @@ ms_C <- ms_consent %>% filter(assignment == "C")
 
 View(ms_C)
 # Count values greater than 1 for each variable
-count_stored_water_fc <- sum(ms_C$stored_water_fc > 0.1, na.rm = TRUE)
-count_stored_water_tc <- sum(ms_C$stored_water_tc > 0.1, na.rm = TRUE)
-count_tap_water_tc <- sum(ms_C$tap_water_tc > 0.1, na.rm = TRUE)
-count_tap_water_fc <- sum(ms_C$tap_water_fc > 0.1, na.rm = TRUE)
+count_stored_water_fc <- sum(ms_C$fc_stored_avg > 0.1, na.rm = TRUE)
+count_stored_water_tc <- sum(ms_C$tc_stored_avg > 0.1, na.rm = TRUE)
+count_tap_water_tc <- sum(ms_C$tc_tap_avg > 0.1, na.rm = TRUE)
+count_tap_water_fc <- sum(ms_C$fc_tap_avg > 0.1, na.rm = TRUE)
 
 # Create a summary dataframe
 summary_counts <- data.frame(
-  Variable = c("stored_water_fc", "stored_water_tc", "tap_water_tc", "tap_water_fc"),
+  Variable = c("fc_stored_avg", "tc_stored_avg", "tc_tap_avg", "fc_tap_avg"),
   Count_Greater_Than_0.1 = c(count_stored_water_fc, count_stored_water_tc, count_tap_water_tc, count_tap_water_fc)
 )
 
@@ -897,20 +937,17 @@ stargazer(sums_long,
 
 
 #------------------------------------------------------------------------
+#Combining the results for usage of sec source and sec source into one table 
 #--------------------------------------------------------------
-#--------------------------------------------------------------
 
-
-# Assuming `ms_consent` is your data frame
-
-# Step 1: Calculate the percentage of "Yes" and "No" for `water_sec_yn`
+# Calculate the percentage of "Yes" and "No" for `water_sec_yn`
 water_sec_yn_summary <- ms_consent %>%
   group_by(water_sec_yn) %>%
   summarise(Sum = n()) %>%
   mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
 print(water_sec_yn_summary)
 
-# Step 2: For those who said "Yes" (assuming "Yes" is coded as 1), calculate the percentage of each secondary water source
+# For those who said "Yes" (assuming "Yes" is coded as 1), calculate the percentage of each secondary water source
 ms_consent_yes <- ms_consent %>%
   filter(water_sec_yn == 1)
 
@@ -942,7 +979,7 @@ sums_long_yes <- sums_long_yes %>%
   mutate(Percentage = round((Sum / total_sum_yes) * 100, 1))
 print(sums_long_yes)
 
-# Step 3: Combine the `water_sec_yn_summary` with `sums_long_yes`
+# Combine the `water_sec_yn_summary` with `sums_long_yes`
 # Create a combined table
 combined_table <- bind_rows(
   water_sec_yn_summary %>% mutate(Variable = if_else(water_sec_yn == 1, "Yes to secondary source", "No to secondary source"), .keep = "unused"),
@@ -982,29 +1019,46 @@ starpolishr::star_tex_write(star.out,  file =paste0(overleaf(),"Table/Sec_source
 
 
 
-#JJM drinking
-jjm_drinking_sum <- ms_consent %>%
-  group_by(jjm_drinking) %>%
-  summarise(Sum = n()) %>%
-  mutate(Percentage = round((Sum / sum(Sum)) * 100, 2))
-print(jjm_drinking_sum)
-
+#------------------------------------------------------------------------
+# Saving the dataset  
+#--------------------------------------------------------------
 write_csv(ms_consent, paste0(user_path(), "/3_final/2_11_monthly_follow_up_cleaned_consented_R3.csv"))
 
-#-----------------------------------IDEXX Data Check-----------------------------------
+
+
+#------------------------------------------------------------------------
+#-----------------------------------IDEXX Data Check---------------------
+#------------------------------------------------------------------------
+
+
+###Checking for duplicate IDs of SAMPLE ID 
+# Count sample_ID where ABR is 0
+idexx %>%
+  filter(ABR == 0) %>%
+  count(sample_ID) %>%
+  filter(n > 1) -> duplicates_sample_ID_ABR_0
+
+# Count sample_ID where ABR is 1
+idexx %>%
+  filter(ABR == 1) %>%
+  count(sample_ID) %>%
+  filter(n > 1) -> duplicates_sample_ID_ABR_1
 
 
 
-#Checking for duplicate IDs
-idexx%>%
-  count(sample_ID)%>% 
-  filter(n > 1)
-idexx%>%
-  count(unique_bag_id)%>% 
-  filter(n > 1)
-#Sample ID 20351 is duplicated. Sample ID was recorded incorrectly in the survey. 
-#Bag ID 90722 corresponds to ID 20354
-#Change made in cleaning code
+###Checking for duplicate IDs of UNIQUE BAG ID
+# Count unique_bag_id where ABR is 0
+idexx %>%
+  filter(ABR == 0) %>%
+  count(unique_bag_id) %>%
+  filter(n > 1) -> duplicates_unique_bag_id_ABR_0
+
+# Count unique_bag_id where ABR is 1
+idexx %>%
+  filter(ABR == 1) %>%
+  count(unique_bag_id) %>%
+  filter(n > 1) -> duplicates_unique_bag_id_ABR_1
+
 
 #Checking IDs which do not match between survey data and lab data
 #Gathering IDEXX sample IDs
@@ -1020,20 +1074,23 @@ idexx_id_check <- idexx%>%
 print(idexx_id_check)
 
 
-#Summarizing desc stats
+#Summarizing desc stats for all samples: abr and non-abr
 idexx_desc_stats <- tc_stats(idexx)
 idexx_desc_stats <- t(idexx_desc_stats) #Transposing data
 idexx_desc_stats <- idexx_desc_stats[,c(1,3,2,4)]%>%
   data.frame() #Switching Columns
 colnames(idexx_desc_stats) <-  c("Control - Stored Water", "Treatment - Stored Water",
                                  "Control - Tap Water", "Treatment - Tap Water") #Setting Column Names
-idexx_desc_stats <- idexx_desc_stats[3:9,] #Indexing for rows of interest
+idexx_desc_stats <- idexx_desc_stats[3:12,] #Indexing for rows of interest
 rownames(idexx_desc_stats) <- c("Number of Samples",
                                 "% Positive for Total Coliform",
                                 "% Positive for E. coli",
                                 "Average Log10 MPN Total Coliform/100 mL",
                                 "Average Log10 MPN E. coli/100 mL",
                                 "% 'High Risk' Samples (> 100 MPN E. coli/100 mL)",
+                                "% 'Intermediate Risk' Samples",
+                                "% 'Low Risk' Samples",
+                                "% 'Very Low Risk' Samples (>1 MPN E. coli/100 mL)",
                                 #"Median MPN E. coli/100 mL",
                                 #expression(paste0("% Positive for ", italic("E. coli"))),
                                 #expression(paste0("Median MPN ", italic("E. coli"),"/100 mL")),
@@ -1050,6 +1107,70 @@ idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,
                               out=paste0(overleaf(),"Table/Desc_stats_monthly_idexx_r3.tex"))
 
 
+
+#Summarizing desc stats for ABR samples
+idexx_abr_stats <- tc_stats(idexx %>% filter(ABR == 1))
+idexx_abr_stats <- t(idexx_abr_stats)  # Transpose data
+idexx_abr_stats <- idexx_abr_stats[, c(1, 3, 2, 4)] %>%
+  data.frame()  # Switch Columns
+colnames(idexx_abr_stats) <- c("Control - Stored Water", "Treatment - Stored Water",
+                               "Control - Tap Water", "Treatment - Tap Water")
+
+# Selecting rows of interest
+idexx_abr_stats <- idexx_abr_stats[3:12, ] 
+rownames(idexx_abr_stats) <- c("Number of Samples",
+                               "% Positive for Total Coliform",
+                               "% Positive for E. coli",
+                               "Average Log10 MPN Total Coliform/100 mL",
+                               "Average Log10 MPN E. coli/100 mL",
+                               "% 'High Risk' Samples (> 100 MPN E. coli/100 mL)",
+                               "% 'Intermediate Risk' Samples",
+                               "% 'Low Risk' Samples",
+                               "% 'Very Low Risk' Samples (>1 MPN E. coli/100 mL)",
+                               "Tap Average Free Chlorine Concentration (mg/L)")
+
+# Creating table output for ABR samples
+idexx_abr_desc_stats <- stargazer(idexx_abr_stats, summary = FALSE,
+                                  title = "ABR Samples - Monthly Survey - IDEXX Results",
+                                  float = FALSE,
+                                  rownames = TRUE,
+                                  covariate.labels = NULL,
+                                  font.size = "tiny",
+                                  column.sep.width = "1pt",
+                                  out = paste0(overleaf(), "Table/Desc_stats_monthly_idexx_abr.tex"))
+
+
+
+#Summarizing desc stats for non-ABR samples
+idexx_non_abr_stats <- tc_stats(idexx %>% filter(ABR == 0))
+idexx_non_abr_stats <- t(idexx_non_abr_stats)  # Transpose data
+idexx_non_abr_stats <- idexx_non_abr_stats[, c(1, 3, 2, 4)] %>%
+  data.frame()  # Switch Columns
+colnames(idexx_non_abr_stats) <- c("Control - Stored Water", "Treatment - Stored Water",
+                                   "Control - Tap Water", "Treatment - Tap Water")
+
+# Selecting rows of interest
+idexx_non_abr_stats <- idexx_non_abr_stats[3:12, ]
+rownames(idexx_non_abr_stats) <- c("Number of Samples",
+                                   "% Positive for Total Coliform",
+                                   "% Positive for E. coli",
+                                   "Average Log10 MPN Total Coliform/100 mL",
+                                   "Average Log10 MPN E. coli/100 mL",
+                                   "% 'High Risk' Samples (> 100 MPN E. coli/100 mL)",
+                                   "% 'Intermediate Risk' Samples",
+                                   "% 'Low Risk' Samples",
+                                   "% 'Very Low Risk' Samples (>1 MPN E. coli/100 mL)",
+                                   "Tap Average Free Chlorine Concentration (mg/L)")
+
+# Creating table output for non-ABR samples
+idexx_non_abr_desc_stats <- stargazer(idexx_non_abr_stats, summary = FALSE,
+                                      title = "Non-ABR Samples - Monthly Survey - IDEXX Results",
+                                      float = FALSE,
+                                      rownames = TRUE,
+                                      covariate.labels = NULL,
+                                      font.size = "tiny",
+                                      column.sep.width = "1pt",
+                                      out = paste0(overleaf(), "Table/Desc_stats_monthly_idexx_non_abr.tex"))
 
 #-------------------Chlorine Desc Stats ---------------------------------------
 
