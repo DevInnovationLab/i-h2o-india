@@ -3181,6 +3181,7 @@ ec_fc <- ggplot(merged_data_f, aes(x = fc_tap_avg, y = ec_log, color = Assignmen
   theme_minimal() +
   theme(plot.caption = element_text(hjust = 0),
         legend.position = "right") +
+  geom_hline(yintercept = -0.05, linetype = "solid", color = "grey", size = 0.5) +
   annotate("text", x = Inf, y = -0.05, label = "E. Coli Presence", 
            vjust = -0.5, hjust = 1.1, color = "black", size = 3) +  # Adjusted position for horizontal line
   geom_vline(xintercept = 0.2, linetype = "solid", color = "grey", size = 0.5) +
