@@ -31,6 +31,34 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
 * Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
+use "${DataTemp}U5_Child_23_24_part1.dta", clear 
+drop if comb_child_comb_name_label == ""
+unique key comb_child_comb_name_label
+// duplicates tag key comb_child_comb_name_label, gen(dup_HH)
+bysort key comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+cap drop _merge
+// add age variable, remove unavailable cases, assign treatment status 
+//Cen type = 4 means census entry and 5 means new entry 
+preserve
+use "${DataTemp}Requested_long_backcheck1.dta", clear
+drop if comb_namefromearlier == ""
+bysort key comb_namefromearlier : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+rename  comb_namefromearlier comb_child_comb_name_label
+cap drop _merge
+
+save "${DataTemp}new_roster_temp.dta", replace
+//after that do 1;1 merge 
+restore
+
+merge 1:1 key comb_child_comb_name_label using "${DataTemp}new_roster_temp.dta", keepusing (comb_hhmember_age)
+
+
+
+
 use "${DataFinal}1_1_Endline_U5_Child_23_24.dta", clear
 missings dropvars, force
 * Cleaning age variable

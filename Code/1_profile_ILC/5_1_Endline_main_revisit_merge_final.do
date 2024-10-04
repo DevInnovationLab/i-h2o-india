@@ -1,3 +1,26 @@
+/*=========================================================================* 
+* Project information at:https://github.com/DevInnovationLab/i-h2o-india/
+****** Country: India (Odisha)
+****** Purpose: This do file creates final version of  endline indvidual datasets
+****** Created by: DIL
+****** Used by:  DIL
+****** Input data : 
+****** Output data : 
+	
+****** Do file to run before this do file
+
+****** Language: English
+****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
+
+*=========================================================================*/
+
+/***************************************************************************************
+MAIN OBJECTIVE OF THIS DO FILE 🤓
+
+We are merging/appending main endline census long datasets with revisit endline census long datasets. Majorly we have 4 long datasets- Child, Women, Census Roster, New roster. So, after we are done making their appended versions. We will create one master individual dataset which will have these variables so this will serve two purposes: combined cleaning and analysis. Based on our conveninece we can drop the set that we don't want.  
+
+****************************************************************************************/
+
 clear
 set seed 758235657 // Just in case
 
@@ -83,7 +106,7 @@ Conclusion: That is why you see two prefix in the revisit form: comb_ and N_
 //no data in the dataset below because no new member included. This being empty means there were no new children included in the revisit form so our work gets easier.
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_child_followup.dta", clear
 
-
+//specify what long is here and specify the unit 
  * RV_ID 23 (The dataset below contains enteris for combined child enteries i.e. the nams in the preload) 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup.dta", clear
 
@@ -104,6 +127,7 @@ where does this dataset comes from? Refer to this cleaning file: "GitHub\i-h2o-i
 Why- We are merging this over R_E_key because this is the only identifier to connect both of them and we want some other identifiers like UID, Village, enum label to use this dataset for basic cleaning and stats. That is why we are getting these variables from Endline_Revisit_Cleaned dataset
 */
 
+//we are merging this with wide dataset 
 merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code R_E_village_name_str) 
 
 /* 😏Why are there some unmatched keys? 
@@ -131,7 +155,7 @@ drop _merge
 */
 
 //wohoo we have got our combined revisit child dataset
-save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24.dta", replace   
+save "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", replace   
 
 
 
@@ -142,14 +166,14 @@ What does this mean? 😱 😱 😱
 
 See the purpose of collecting revisit data was to actually use these observations in our main dataset right ? So, how would we know which observations to keep and which to drop from both the datasets. The approach here would be to follow the following steps-
 
-A) Rename the variables (comb_child_comb_caregiver_label and  comb_child_caregiver_present) in the endline child revisit dataset. The logic behind this step would get  clearer. If these two varaibles are not re-named we won't able to identify the entry that we have to keep. 
+A) Rename the variables (comb_main_caregiver_label and  comb_child_caregiver_present) in the endline child revisit dataset. The logic behind this step would get  clearer. If these two varaibles are not re-named we won't able to identify the entry that we have to keep. 
 
 B) After renaming these variables in the child revisit dataset we are going to merge this with main endline child dataset to see for eg Unique ID and child name which entry needs to be kept from main child dataset or revisit data. For ge- for the UID - 1234567 and the child name - Sukesh if in the main endline census dataset this child was unavailable and we have gotten good data for Sukesh in the revisit data we would need to remove Sukesh's entry from main child dataset and replace it with revisit entry but you won't be able to identify without 1:1 merge that is why we are comparing using 2 key variables - unique ID and child name variable (comb_child_comb_name_label) because if we don't use these two key varaibles we won't be able to perform 1:1 merge and how would you verify if this is actually unqiue across the two datasets? To verify that we are using the command- 
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 Tabulating this would tell us how many duplicate pairs are there. In our case, there are none so we are good to go!!! 🚗 🚗 🚗
-So, that is why we are renamining variables: comb_child_comb_caregiver_label and  comb_child_caregiver_present because they are going to be used for verification if we are actually droppping the right entry or not! 
+So, that is why we are renamining variables: comb_main_caregiver_label and  comb_child_caregiver_present because they are going to be used for verification if we are actually droppping the right entry or not! 
 
 C) After you are done with merging, Flag the rows where in the main child dataset a particular entry of that specific unique ID alongwith the child name were unavailable because remember only unavailable IDs from the main endline census was given for revisit so we have no business in dropping actual valid observations where child was available in the main endline census so after you have flagged the observatiosn where child name and UID was unavailable you move to the next step (the variable to look for availability would be comb_child_caregiver_present)
 
@@ -157,13 +181,15 @@ D) After we have flagged these observations, we check if they are actually ident
 
 E) You generate a variable called gen to_drop = . and you then replace to_drop = 1  if Vcomb_child_caregiver_present == 1 & _merge == 3 (This means this is the entry where Sukesh's was marked as unavailable in the main endline child dataset but we have a valid entry for this in the revisit child dataset because 1 in the Vcomb_child_caregiver_present == 1 means that child was available in revisit and surveyed.) T
 drop if to_drop == 1
-hat is the reason we are good to drop this entry from the main child dataset. We will see later how replacement with revisit data is done. 
+That is the reason we are good to drop this entry from the main child dataset. We will see later how replacement with revisit data is done. 
 
 */
 *****************************************************************************************************************************************************
-use "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24.dta", clear   
-/*//we must rename these variables because these variables are present in the main endline census child level dataset too so we need these 2 variables for verification and compariosn  */
-rename comb_child_comb_caregiver_label Vcomb_child_comb_caregiver_label 
+use "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", clear   
+/*//we must rename these variables because these variables are present in the main endline census child level dataset too so we need these 2 variables for verification and . V prefix stands for verification here. */
+
+//please note that there are two caregiver name variables- one is this comb_child_comb_caregiver_label and other one is comb_main_caregiver_label. The only difference between the two is for revisit survey we wanted to capture who is the caregiver answering questions for the child currently and there was also a preloaded variable (comb_main_caregiver_label) guiding enum that this is the caregiver we found in the main endline census so they should make sure they talk to the same person but in case they are not able to they can talk to a different caregiver but record their name and the variable for this was (comb_child_comb_caregiver_label) that is why comb_main_caregiver_label (in revisit survey) and comb_child_comb_caregiver_label (main endline survey) are literally the same thing becaus ethey are actual caregiver of the children. (I will rename this while combing the datasets but for comparsion purpose we need to rename them here)
+rename comb_main_caregiver_label Vcomb_child_comb_caregiver_label
 rename comb_child_caregiver_present Vcomb_child_caregiver_present
 cap drop dup_HHID
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
@@ -173,69 +199,90 @@ save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
 
 //this is the main endline long child level dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do"
 use "${DataTemp}U5_Child_23_24_part1.dta", clear
+//there are these empty entries because the loop in survey cto also takes in null values and if it is null it moves to the next value but the observation still gets created so need to worry just drop it
 drop if comb_child_comb_name_label == ""
 cap drop dup_HHID
+//checking if this combinarion is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
 
-//merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison which I will explain later 
-merge 1:1 unique_id comb_child_comb_name_label using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present  ) 
+//merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison as explained earlier 
+merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label  ) 
+
+//we can just browse and check fi there is any unique ID and child combination where main caregiver doens't matches because these are the preloaded names so they should all match. After doing this you will find that there are 0 mismatches 😁
+br comb_child_comb_name_label comb_child_caregiver_present comb_child_comb_caregiver_label Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present if comb_child_comb_caregiver_label != Vcomb_child_comb_caregiver_label & _merge == 3
 
 /*
-.........................................................
-Objective of the exercise below: 
-.........................................................
-Instead of doing the replacement of the rows from the revisit data with the main dataset we are dropping the rows from the main dataset where that specific children was unavailable earlier but was revisited in the revisit round and was surveyed so can append that data from the revisit dataset to the main dataset and remove the entry for this specific child from the main census dataset to avoid having duplicates 
+.........................................................................................................................................................
+Objective of the exercise below: 🐻‍❄️
+.........................................................................................................................................................
+Instead of doing the replacement of the rows from the revisit data with the main dataset we are dropping the rows from the main dataset where that specific children on that Unique ID was unavailable (to check for unavailability look at this variable- comb_child_caregiver_present)  earlier but was revisited in the revisit round and was surveyed. We are avoid doing replacement of rows by using merge because m:m results in a lot of complication as a result we want to append it so that we can minimise discrepancies so we would append that data from the revisit dataset to the main dataset and remove the entry from the main census dataset to avoid having duplicates for such children where _merge == 3 that means they got matched with revisit data and they were unavailable in the main round 
 
-Here the _merge == 3 entry of the matched entry indicates that this entry is also available in the using dataset but this is not enough to help us in deciding whether we want to drop this row or not from the main endline datatset that is why we use another variable called  Vcomb_child_caregiver_present that will tell us whether this survey was actually completed in the revisit or not. If Vcomb_child_caregiver_present is qual to 1 then that means that child became available later so we can add this data that was available to our main dataset and drop the unavailable child entry from the main dataset 
+Here the _merge == 3 entry of the matched entry indicates that this entry is also available in the using dataset (revisit dataset) but this is not enough to help us in deciding whether we want to drop this row or not from the main endline datatset that is why we use another variable called  Vcomb_child_caregiver_present that will tell us whether this survey was actually completed in the revisit or not. If Vcomb_child_caregiver_present is qual to 1 then that means that child became available later so we can add this data that was available to our main dataset and drop the unavailable child entry from the main dataset. We can keep all other matched entries from the main dataset because if they were also unavailable during revisit then it doens't make any sense to put in time and efforts to replace other entries.  
 
 */
 
-
+//the browse gives us around 22 observations that we need to drop. Make sure to not drop values where Vcomb_child_caregiver_present  is anything other than 1 because there is no point of replacing if we don't have that data 
 br unique_id comb_combchild_index comb_combchild_status comb_child_comb_name_label comb_child_caregiver_present comb_child_comb_caregiver_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label _merge if _merge == 3 & Vcomb_child_caregiver_present == 1
 
-//whatever entries have the value 1 here that entry needs to be dropped from the main child dataset as we will add rows for such children from the revisit dataset to create a complete datatset 
+//whatever entries have the value 1 here that entry needs to be dropped from the main child dataset as we will add rows for such children from the revisit dataset to create a complete datatset so we are creating to_drop variable for the same reason
 gen to_drop = .
 
 replace to_drop = 1  if Vcomb_child_caregiver_present == 1 & _merge == 3
+replace to_drop = 0 if Vcomb_child_caregiver_present != 1 & _merge == 3
 
+//we have dropped all the entreis where revisit data will be replacing these rows
+drop if to_drop == 1 
 
-drop if to_drop == 1
-
-//we are importing endline child level dataset again to now prepare it for the actual append with the main child dataset so we would need to retain the keys of using child revisit dataset and give it diff prefix so here I am giving the prefix Revisit to the keys to differnetiate from the main endline census keys 
+//we are importing endline child level dataset again to now prepare it for the actual append with the main child dataset so we would need to retain the keys of using child revisit dataset and give it diff prefix so here I am giving the prefix Revisit to the keys to differentiate from the main endline census keys 
 preserve
-use "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_part1.dta", clear
+//please note that we are using intermediate dataset here because we want variable names to be same if we are appending
+use "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", clear  
 drop if comb_child_comb_name_label == ""
+//we are keeping only these observations here where comb_child_caregiver_present == 1 because these are the only entries that have been droppped from main endline child dataset. If we don't drop it we will have the problems of duplicates
 keep if comb_child_caregiver_present == 1
 foreach i in parent_key key_original R_E_key key2 key3{
 rename `i' Revisit_`i'
 }
+
+/*
+WHY RENAME THIS?  😭
+We are renaming the two varaibles below because this variable in endline revisit  comb_child_comb_caregiver_label was for the current caregiver who gave surveys to us about that child in case the main caregiver wasn't present so we need to make sure while appending main caregiver labels are at one places and those who gave us surveys in revisit as caregivers are recorded differently so here I am using the prefix RV_ for this this highlights that this is the Revisit set variable 
+*/
+rename comb_child_comb_caregiver_label RV_comb_child_caregiver_label
+rename comb_main_caregiver_label  comb_child_comb_caregiver_label
+
+//we will use the following dataset for append 
 save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp.dta", replace
 restore
 
 append using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp.dta"
 
-//checking for duplicates UID and child name wise. It is imp that there are no duplicates. This shows the append was succseful 
+//checking for duplicates UID and child name wise. It is imp that there are no duplicates. This shows the append was successul. You will also see the number of observations hasn't changed
 cap drop dup_HHID
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
+/*IMP NEXT STEP : We need to check if the variable names are similar throughout these long datasets if not, we must make it similar 🤠
+Lets drop variables with V prefix because we just created them for comparsion purpose. I have already renamed caregiver label so fret not!
+There doens't seem to be any extra variables that need renaming so lets move on
+*/
+drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present
 
-
-br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
+//br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
 
 save "${DataFinal}Endline_Child_level_merged_dataset_final.dta", replace 
 
 
-/*****************************************************************
+/**********************************************************************************
 ROSTER MEMBERS DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT
-*****************************************************************/
+**********************************************************************************/
 
 
-//this is the main endline long new roster member dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do"
+//this is the main endline long new roster member dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do". 
 
 * ID 26 (N=322) All new household members in the main endline census 
 
