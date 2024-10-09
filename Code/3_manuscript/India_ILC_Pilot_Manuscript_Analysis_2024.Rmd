@@ -1281,6 +1281,90 @@ p_ec_cl_2
 ggsave(filename = "manuscript_ecoli_chlorine_time_series_v2.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
 
 
+
+
+#Separate microbial contamination and chlorine results -----
+
+#Microbial results
+#Plotting treatment/control stats on a bar plot
+p_ec_cl_3 <- idexx_cl_comb%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+           position = "dodge", width = 12) +
+   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     fill = assignment), position = position_dodge(width = 12),
+                 width = 6, color = "black") +
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
+            nudge_x = -25, color = "#FF474C")+
+  scale_y_continuous(
+                     limits = c(0, 105),
+                     expand = c(0,0)
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = expression(paste("% of tap samples positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p_ec_cl_3
+
+ggsave(filename = "manuscript_ecoli_time_series_v1.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
+
+
+
+
+
+
+#Plotting chlorine positive samples time series
+p_ec_cl_4 <- idexx_cl_comb%>%
+  ggplot() + 
+   geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
+                 width = 2, color = "black") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week, y = cl_presence), color = "black", size = 3)+
+  #geom_path(aes(x = test_week, y = cl_presence), color = "#FF474C")+ #Geom path makes the plot cluttered
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
+            nudge_x = -25, color = "#FF474C")+
+  scale_y_continuous(
+                     limits = c(0, 105),
+                     expand = c(0,0)
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = '% of tap samples positive for free chlorine (> 0.1 mg/L)',
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p_ec_cl_4
+
+ggsave(filename = "manuscript_ecoli_chlorine_time_series_v2.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
+
+
+
+
+
+
+
+
 ```
 
 

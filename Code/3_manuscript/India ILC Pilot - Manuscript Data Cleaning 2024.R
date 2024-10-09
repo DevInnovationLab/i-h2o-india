@@ -1522,8 +1522,9 @@ mon_summary <- mon_summary%>%
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
   filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>% #Filtering only for tap water here
-  mutate(test_week = floor_date(test_date, unit = "week"))%>%
-  mutate(test_week = floor_date(test_date - weeks(week(test_date) %% 2), unit = "week"))
+  #mutate(test_week = floor_date(test_date, unit = "week"))%>%
+  mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
+                                unit = "day"))#Selecting weeks on a bi-weekly basis
 
 # Group by week and calculate the average concentration
 mon_summary_weekly <- mon_summary_weekly%>%
