@@ -73,6 +73,9 @@ user_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/"
   } 
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -99,6 +102,9 @@ github_path <- function() {
   } 
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
+  else if (user=="uchicago"){  
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -127,6 +133,9 @@ overleaf <- function() {
   else if (user == "jerem"){
     overleaf = "C:/Users/jerem/Dropbox/Apps/Overleaf/Everything document -ILC/"
   }  
+  else if (user=="uchicago"){  
+    overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     overleaf = getwd()
@@ -155,6 +164,9 @@ pre_path <- function() {
   } 
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/99_Preload/"
+  } 
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/99_Preload/"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -186,6 +198,9 @@ temp_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/99_temp/"
   } 
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/99_temp/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -215,6 +230,9 @@ Final_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
   } 
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/3_final/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -243,6 +261,9 @@ raw_path <- function() {
   } 
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/1_raw/"
+  } 
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -277,7 +298,9 @@ DI_path <- function() {
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
   } 
-  
+  else if (user=="uchicago"){  
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/2_deidentified/"
+  } 
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -342,7 +365,10 @@ tc_stats <- function(idexx_data){
       "Mean Log10 MPN Total Coliform/100 mL" = round(mean(cf_log), 3),
       "Mean Log10 MPN E. coli/100 mL" = round(mean(ec_log), 3),
       "WHO Risk - % of Samples with 'High Risk' (> 100 MPN/100 mL)" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-      "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(tap_water_fc), 3)
+      "WHO Risk - % of Samples with 'Intermediate Risk' (> 11 and <=100 MPN/100 mL)" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
+      "WHO Risk - % of Samples with 'Low Risk' (>= 1 MPN and <=10/100 mL)" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
+      "WHO Risk - % of Samples with 'Very Low Risk' (< 1 MPN/100 mL)" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
+      "Tap Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 3)
     )
   
   # tc <- tc%>%
@@ -621,14 +647,14 @@ print(summary_counts)
 summary_counts <- ms_consent %>%
   group_by(unique_id) %>%
   summarise(
-    stored_flag = sum(stored_water_tc < stored_water_fc, na.rm = TRUE),
-    tap_flag = sum(tap_water_tc < tap_water_fc, na.rm = TRUE),
+    stored_flag = sum(tc_stored_avg < fc_stored_avg, na.rm = TRUE),
+    tap_flag = sum(tc_tap_avg < fc_tap_avg, na.rm = TRUE),
     .groups = 'drop'
   ) %>%
   # Join with the original dataset to include the values
   inner_join(ms_consent, by = "unique_id") %>%
   filter(stored_flag > 0 | tap_flag > 0) %>%
-  select(unique_id, stored_water_fc, stored_water_tc, tap_water_tc, tap_water_fc,
+  select(unique_id, fc_stored_avg, tc_stored_avg, tc_tap_avg, fc_tap_avg,
          stored_flag, tap_flag)
 
 # Print the summary dataframe
@@ -643,16 +669,16 @@ stargazer(summary_counts, summary=F, title= "Cases where FC is lower than TC",fl
 #------------------------------------------------------------------------
 
 # Variables to check
-variables <- c("stored_water_fc", "stored_water_tc", "HR_stored_fc", "HR_stored_tc", 
-               "tap_water_fc", "tap_water_tc", "HR_tap_fc", "HR_tap_tc")
+variables <- c("fc_stored_avg", "tc_stored_avg", "HR_stored_fc", "HR_stored_tc", 
+               "fc_tap_avg", "tc_tap_avg", "HR_tap_fc", "HR_tap_tc")
 
 # Check the range of each variable
 for (var in variables) {
   cat(paste("Range of", var, ":", range(ms_consent[[var]], na.rm = TRUE), "\n"))
 }
 
-variables_x <- c("stored_water_fc", "stored_water_tc", 
-                 "tap_water_fc", "tap_water_tc")
+variables_x <- c("fc_stored_avg", "tc_stored_avg", 
+                 "fc_tap_avg", "tc_tap_avg")
 
 # Melt the data for ggplot2
 ms_melt <- melt(ms_consent, measure.vars = variables_x)
@@ -1004,13 +1030,16 @@ idexx_desc_stats <- idexx_desc_stats[,c(1,3,2,4)]%>%
   data.frame() #Switching Columns
 colnames(idexx_desc_stats) <-  c("Control - Stored Water", "Treatment - Stored Water",
                                  "Control - Tap Water", "Treatment - Tap Water") #Setting Column Names
-idexx_desc_stats <- idexx_desc_stats[3:9,] #Indexing for rows of interest
+idexx_desc_stats <- idexx_desc_stats[3:12,] #Indexing for rows of interest
 rownames(idexx_desc_stats) <- c("Number of Samples",
                                 "% Positive for Total Coliform",
                                 "% Positive for E. coli",
                                 "Average Log10 MPN Total Coliform/100 mL",
                                 "Average Log10 MPN E. coli/100 mL",
                                 "% 'High Risk' Samples (> 100 MPN E. coli/100 mL)",
+                                "% 'Intermediate Risk' Samples",
+                                "% 'Low Risk' Samples",
+                                "% 'Very Low Risk' Samples (>1 MPN E. coli/100 mL)",
                                 #"Median MPN E. coli/100 mL",
                                 #expression(paste0("% Positive for ", italic("E. coli"))),
                                 #expression(paste0("Median MPN ", italic("E. coli"),"/100 mL")),
