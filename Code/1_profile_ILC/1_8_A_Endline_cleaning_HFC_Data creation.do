@@ -222,7 +222,7 @@ Archi- We should keep all the variables here so that people can selectively drop
 	  n_cbw_age n_all_age */
 	  
 // List all variables starting with "n_" and if some variables don't have n_ prefix we should attach this prefix as these are all new members so they should be treated with n_ prefix itself. It is fine if keys dont have n_prefix because they are same across the datasets and they will be used as identifiers  
-
+drop if n_hhmember_name == ""
 ds namenumber namefromearlier current_year current_month age_years age_months age_years_final age_months_final age_decimal 
 foreach var of varlist `r(varlist)' {
 rename `var' n_`var'
@@ -350,6 +350,8 @@ foreach var of varlist *_u5*  {
     rename `var' `newname'
 }
 gen Cen_Type=4
+gen C_entry_type = "BC" //this variable shows that this is old child entry and was already present in the baseline census 
+
 save "${DataTemp}temp.dta", replace
 
 * ID 24
@@ -373,6 +375,7 @@ foreach var of varlist *_u5*  {
     rename `var' `newname'
 }
 gen Cen_Type=5
+gen C_entry_type = "N"  //this variable shows that this is new child entry and wasn't already present in the baseline census 
 //drop comb_child_care_pres_oth
 tostring  comb_child_care_pres_oth, replace
 //Archi to Akito - It is better to not drop it 

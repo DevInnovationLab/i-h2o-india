@@ -11,8 +11,10 @@
 
 ****** Language: English
 ****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
-
+Individual dataset types : Child, women, census roster, new roster 
+Wide dataset: Household level 
 *=========================================================================*/
+
 
 /***************************************************************************************
 MAIN OBJECTIVE OF THIS DO FILE 🤓
@@ -116,7 +118,11 @@ foreach var of varlist *_u5*  {
 	local newname = subinstr("`var'", "_u5", "_comb", 1)
     rename `var' `newname'
 }
-gen comb_type = "comb" //If the comb_type is comb that means this is the combined entry of Cen_ and N_ entry that is getting formatted. (Remember these are the preloaded child names that comes from the revisit preload) 
+
+gen comb_type = "comb" 
+//If the comb_type is comb that means this is the combined entry of Cen_ and N_ entry that is getting formatted. (Remember these are the preloaded child names that comes from the revisit preload) 
+gen C_entry_type = "RV" 
+ //this variable shows that this is revisit child entry and if it has the comb prefix it means this is entry from preload from the main endline census 
 
 save "${DataTemp}temp.dta", replace
 
@@ -183,32 +189,79 @@ E) You generate a variable called gen to_drop = . and you then replace to_drop =
 drop if to_drop == 1
 That is the reason we are good to drop this entry from the main child dataset. We will see later how replacement with revisit data is done. 
 
+//Finding duplicates can be done in two ways 
+
+1. Way 1: Finding duplicates by bysorting by key and then wherever keys are repeated manually check if child names are same  (Most Preferred and most accurate)
+
+2. Way 2:  Finding duplicates using key and child name. If they are no duplicats that means at each key, we have unique child names. 
+
+
 */
 *****************************************************************************************************************************************************
 use "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", clear   
+cap drop _merge
 /*//we must rename these variables because these variables are present in the main endline census child level dataset too so we need these 2 variables for verification and . V prefix stands for verification here. */
 
 //please note that there are two caregiver name variables- one is this comb_child_comb_caregiver_label and other one is comb_main_caregiver_label. The only difference between the two is for revisit survey we wanted to capture who is the caregiver answering questions for the child currently and there was also a preloaded variable (comb_main_caregiver_label) guiding enum that this is the caregiver we found in the main endline census so they should make sure they talk to the same person but in case they are not able to they can talk to a different caregiver but record their name and the variable for this was (comb_child_comb_caregiver_label) that is why comb_main_caregiver_label (in revisit survey) and comb_child_comb_caregiver_label (main endline survey) are literally the same thing becaus ethey are actual caregiver of the children. (I will rename this while combing the datasets but for comparsion purpose we need to rename them here)
 rename comb_main_caregiver_label Vcomb_child_comb_caregiver_label
 rename comb_child_caregiver_present Vcomb_child_caregiver_present
 cap drop dup_HHID
+//WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+br comb_child_comb_name_label dup_UID if dup_UID != 0
+
+drop dup_UID 
+//we haven't dound any duplicates in the child dataset 
+
 save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
 
 //this is the main endline long child level dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do"
+
+//stop
 use "${DataTemp}U5_Child_23_24_part1.dta", clear
 //there are these empty entries because the loop in survey cto also takes in null values and if it is null it moves to the next value but the observation still gets created so need to worry just drop it
 drop if comb_child_comb_name_label == ""
 cap drop dup_HHID
 //checking if this combinarion is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
+//WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
 
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+br unique_id comb_child_comb_name_label dup_UID if dup_UID != 0
+
+/*
+
+IMP NOTE: ONE DUPLICATE FOUND 
+
+What does 111 prefix mean before the name? 
+ Write 111- Name of the member if during baseline they were excluded from the criteria by writing the incorrect gender and age i.e. they should come in the criteria but they are not coming because either age or gender are wrongly recorded. 
+ 
+ Additional instructions given to the enum for this:
+ ********************************************************
+ 
+ For eg- if in the baseline census women age was recorded as 40 but her gender is recorded as "Male" in this situation she is an eligible member so she should be included in the criteria so please add her in the new member roster and in the question "What is the name of household member?" please write 111- Name for eg if the name of the woman in census was kamla devi and she is 40 years old but her gender was marked as Male in this situation when you fill the roster for her when writing her name don't just write Kamla instead write 111-Kamla devi
+111 would be now a code for any old census member you are adding in the new member roster because gender or age of the old census member was incorrect please note that this would be done only when the is coming in our criteria (either an U5 child, pregnant mother, child bearing women)
+Only though this 111 we would get to know that this is an old member from the roster otherwise we won't know this. Please fill this carefully
+
+
+ Please note that for this ID enum by mistake included  this child named "Ranbir/Ranveer Sabar" because this child no longer falls in the criteria and enum were supposed to re-enter names in the new roster using 111- only when these entries should have been included in the women or child loops but they weren't included because of wrong gender or age  so it was not required to re-enter this child because already in the child loop enum had shown that this child no longer falls in the criteria. Consult with Jeremy and Akito about how to go about dropping this case/ 
+
+unique_id	comb_child_comb_name_label
+20201111076	111-Ranbir sabar
+20201111076	Ranveer sabar
+
+*/
 //merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison as explained earlier 
+cap drop _merge
 merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label  ) 
 
 //we can just browse and check fi there is any unique ID and child combination where main caregiver doens't matches because these are the preloaded names so they should all match. After doing this you will find that there are 0 mismatches 😁
@@ -273,26 +326,48 @@ There doens't seem to be any extra variables that need renaming so lets move on
 drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present
 
 //br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
-
-save "${DataFinal}Endline_Child_level_merged_dataset_final.dta", replace 
+cap drop _merge
+save "${Intermediate}Endline_Child_level_merged_dataset_final.dta", replace 
 
 
 /**********************************************************************************
 ROSTER MEMBERS DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT
 **********************************************************************************/
 
+/*
 
-//this is the main endline long new roster member dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do". 
+OVERALL OBJECTIVE: 
+
+We have 3 types of dataset here: 
+
+1.  Type 1: "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta"
+
+This dataset contains information for new roster members that were inlcuded in the main endline census.  
+
+2. Type 2: 
+"${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta"
+
+This dataset contains information about the census roster members that were inlcuded in the main endline census. The roster for this is different because we wren't collecting all the identifiers like age, sex, etc. for baseline census members we were just asking 2 questions that is if they are still a member or not and  Since September 2023 how many DAYS has ${name_from_earlier_HH} spent away from this village?
+
+3. Type 3:  "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.dta"
+
+This dataset contains information about the revisit dataset where those baseline census members were revisited whose information we were not able to get in the main endline census and since this was a section only for census members that s why there is no comb_ type variable here 
+
+Our goal is to merge these 3 datasets and create a combined roster dataset 
+
+*/
 
 * ID 26 (N=322) All new household members in the main endline census 
 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
+///This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do"
+
 M_key_creation 
 drop if n_hhmember_name == ""
-keep n_hhmember_gender n_hhmember_relation n_hhmember_age n_u5mother_name n_u5mother n_u5father_name ///
-      key key3 n_hhmember_name n_u5mother_name_oth n_u5father_name_oth n_relation_oth ///
-	  n_dob_date n_dob_month n_dob_year ///
-	  n_cbw_age n_all_age 
+ds namenumber namefromearlier current_year current_month age_years age_months age_years_final age_months_final age_decimal 
+foreach var of varlist `r(varlist)' {
+rename `var' n_`var'
+}
 // List all variables starting with "n_"
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -305,104 +380,205 @@ merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(
 //there are around 16 keys that don't match with cleaned endline census data and that is because these are practise entries observations from endline census so in the long dataset unless we manually drop it it would still be present so we should just keep _mereg == 3
 keep if _merge == 3
 drop _merge
+
+gen C_entry_type = "N" 
+
 save "${DataTemp}temp2.dta", replace
 
-save "${DataFinal}Endline_New_member_roster_dataset_final.dta", replace 
+save "${Intermediate}Endline_New_member_roster_dataset_final.dta", replace 
 
 ********************************************************************************************************************************
 
-//PERFORMING THE DROP AND MERGE HERE  FOR ID 25
 
-//this is the main endline long new roster member dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do"
 
 * ID 25
 //census roster in the main endline census dataset 
+///This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do"
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 M_key_creation 
-
 drop if name_from_earlier_hh == ""
+ds hh_index name_from_earlier_hh
+foreach var of varlist `r(varlist)' {
+rename `var' cen_`var'
+}
+
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
     rename `var' `newname'
 }
 rename key R_E_key
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id)
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction )
 
 //296 entries that are just in master are all the practise entreis 
 keep if _merge == 3
 drop _merge 
+gen C_entry_type = "BC" 
+
+//check for unique entries on which the merge has to happen 
+
+// WAY 1  (explained earlier) 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+
+
+//WAY 2
+bysort unique_id comb_name_from_earlier_hh: gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+br unique_id comb_name_from_earlier_hh if dup_UID == 1
+sort unique_id
+
 save "${DataTemp}temp0.dta", replace
 
-
-//////////////////////////////////////////////////
 /*
 
+DUPLICATES FOUND in the above dataset- Discuss with the team how to go about this 
+
+unique_id	comb_name_from_earlier_hh
+30202109013	Pinky Kandagari
+30202109013	Pinky Kandagari
+30602105049	Priya Koushalya
+30602105049	Priya Koushalya
+
+Some names that could cause confusion- 
+unique_id	comb_name_from_earlier_hh
+//these two kids - Kahna Misal and Kahnei Misal are different. Their ages are different as verified from basleine census but names are so similar for that reason I flagged it here 
+10101108026	Kahna Misal
+10101108026	Kahnei Misal
+
+
+//these two cases had some issues. This needs to be reconciled with household level dataset and Niharika had pointd out the issue there. Will take this up during cleaning 
+unique_id	comb_name_from_earlier_hh
+40101111012	999
+unique_id	comb_name_from_earlier_hh
+40301108008	Gouri Gouda
+unique_id	comb_name_from_earlier_hh
+40301108013	Gouri Gouda
+
+*/
+
+
+/*
+
+CREATING COMBINED ENDLINE REVISIT ROSTER DATASET SO THAT IT CAN BE MERGED WITH MAIN ENDLINE ROSTER DATASETS 
+
 OBJECTIVE: 
-There was no new entry for a roster member in the revisit survey that is why we don't need to use that dataset in merge. 
-For ID 25 part 2, Endline revisit data is available so we would neeed to perform the drop and merge here.
+
+By now, you might have noticed the appraoch- 
+1. We firstly merge census and new sections from main endline census 
+2. Then we merge endline revisit sections- comb, cen_, n_ into comb 
+3. After that we merge these two merged datasets to create one final dataset that has both revisit entries and main endline census entries 
+
+The counterpart reviist dataset for new census members didn't have any entries that is why we are not using that for merging purposes that is why we are jumping directly into endline cenusus roster. There is no comb here because it was strictly only for census members so it didn't make sense to create a combined variable capturing new member entries too 
+
 Drop here means we would have to drop those rows from the main endline long roster dataset where respondent was unavailable here and data couldn't be collcted so we need to add rows in replacement for this from revisit endline roster level dataset 
 
 This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2_revisit.do"
 */
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 RV_key_creation
+drop if name_from_earlier_hh == ""
+
+ds hh_index name_from_earlier_hh
+foreach var of varlist `r(varlist)' {
+rename `var' cen_`var'
+}
+
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
     rename `var' `newname'
 }
-gen comb_type = 0
+gen comb_type = "Cen" 
+gen C_entry_type = "RV" 
 
 rename key R_E_key
 //firstly merging it with endline HH level dataset to get which HH were done
 
-merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_instruction) keep(3) nogen 
+merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_instruction)
 
-rename R_E_instruction V_R_E_instruction
-save "${DataTemp}temp3_merged.dta",  replace
+//using entries are 99 because using has a lot more entries as compared to the census roster as only selective housheolds were asked this quetsion so we need not worry if this ain't a perfect merge 
+
+keep if _merge == 3
+drop _merge
+
+//check for unique entries on which the merge has to happen 
+
+// WAY 1  (explained earlier) 
+//cond(_N == 1, 0, _n) assigns a value of 0 if the unique_id appears only once. If there are duplicates, it assigns a sequential number (_n) to each occurrence.
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID 
+
+//WAY 2
+bysort unique_id comb_name_from_earlier_hh: gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+//doing a manual check
+br unique_id comb_name_from_earlier_hh dup_UID if dup_UID > 0
+//no duplicates found! --> we can treat this as a unqiue idnetifier
 
 
+// please note that we are temporarily creating a clone variable this because we will use this to decide which entries should be dropped. This variable will help us in understanding which are the main endline census that need to be dropped because they were unavailable and which need to be replaced with revisit entries. Only those entries would be replaced where main endline census entry was unavailable and revisit entry was available. This variable shows the availability of the main respondent to whom this section was administered that is why it makes sense to verify entries using this variable  
 
-//we need to merge main endline census roster dataset with the using main endline census roster dataset to create a combined main endline roster and after that is done only then we can merge it with revisit dataset 
+clonevar V_R_E_instruction  = R_E_instruction 
 
-/*
-Archi to Akito- 
-Ok so I think we should not be merging main endline census roster with new memeber roster because the variables are different altogethre that is we aren't even asking the same information. So, it is advisable to keep new member roster as different dataset altogether
-*/
-
-//using census roster here 
-use "${DataTemp}temp0.dta", clear
-
-/////////////////////////////
-
-//importing temp3 which endline revisit census roster dataset here to create a combined census level dataset
-preserve
-cap drop _merge
-//FLAG- check again - m:m should not be used (Archi)
-merge m:m unique_id using "${DataTemp}temp3_merged.dta", keepusing(unique_id V_R_E_instruction   ) 
-//ther merge above tells us that there are no common UIDs between the two which is okay because temp0 dataset has all the available UIDS data and temp3_merged has the data for unavailable UIDs that were re-visited later 
-restore
-preserve
-use "${DataTemp}temp3_merged.dta", clear
-
-keep if V_R_E_instruction == 1
 foreach i in parent_key key_original R_E_key key2 key3{
 rename `i' Revisit_`i'
 }
 
- 
-save "${DataTemp}temp3_merged_final.dta", replace
+save "${DataTemp}temp3.dta",  replace
+
+
+//using main endline census roster dataset for census members only (created above- please check)
+use "${DataTemp}temp0.dta", clear
+/*as flagged earlier  these 2 IDs have duplicats: 
+unique_id	comb_name_from_earlier_hh
+30202109013	Pinky Kandagari
+30202109013	Pinky Kandagari
+30602105049	Priya Koushalya
+30602105049	Priya Koushalya
+Since we are creating a unqiue identifier using these two variables - unique_id  comb_name_from_earlier_hh so for merge purposes we need to make these two cases unique so that merge can happen.  For now, I am replacing one of the two names with _prefix and later on after consulting with Jeremy and Akito we can see how to go about this 
+*/
+
+//temporary replacement 
+replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2 
+
+replace comb_name_from_earlier_hh  = "_Priya Koushalya" if comb_name_from_earlier_hh == "Priya Koushalya" & unique_id == "30602105049" & comb_days_num_residence == 8
+
+
+preserve
+merge 1:1 unique_id  comb_name_from_earlier_hh   using "${DataTemp}temp3.dta", keepusing(unique_id comb_name_from_earlier_hh V_R_E_instruction ) 
+
+/*WHY IS THE A FULLY IMPERFECT MERGE : 
+
+The reason there are 0 matches is because this is a conditional section which means this section gets asked to the main respondent only when main respondent is available to answer this. So, in the temp0 dataset which is the main endline roster dataset it had only those entries where main respondent was available because in the cases where main respondent wasn't available there would be an empty entry that would be generated which we have already dropped ( check drop if name_from_earlier_hh == "") and the same logic applies for the revisit dataset for that reason when we merge these two datasets we get 0 matches so we don't need to worry as exactly this should happen.  To, the merged dataset has the entries where unavailable cases in main census were available and availabile cases from the main endline census 
+
+Conclusion: No drop is required 
+*/
 restore
 
-//we can do a simple append here because the var names are the same 
-append using "${DataTemp}temp3_merged_final.dta"
+//appending with revisit ccensus roster dataset
+append using "${DataTemp}temp3.dta"
+
+drop V_R_E_instruction  //this was created only for verification purposes so can drop this 
+
+save "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace 
 
 
-save "${Datatemp}Endline_Main_revisit_Census_roster_merge.dta", replace 
+/***********************************************************************************
 
-save "${DataFinal}Endline_census_roster_merged_dataset_final.dta", replace 
+CREATING A COMBINED ROSTER FOR NEW MEMBERS AND CENSUS MEMBERS 
 
+************************************************************************************/
+use "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace 
+
+append using "${Intermediate}Endline_New_member_roster_dataset_final.dta"
+
+save "${Intermediate}Endline_roster_merged_census_New_final.dta"
 
 /*****************************************************************
 WOMEN LEVEL DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT
@@ -481,6 +657,7 @@ tab dup_HHID
 
 save "${DataTemp}temp3.dta", replace
 save "${DataTemp}CBW_merge_Endline_census.dta", replace
+
  
  //women data from endline revisit survey 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_CBW_followup.dta", clear
@@ -746,7 +923,11 @@ save "${DataFinal}Endline_HH_level_merged_dataset_final_part2.dta", replace
 
 
 
-
+//unique ID creation 
+/*sort the people by age 
+drop it in the cleaning
+gen a variable using UID and sequential numbers
+assign in the raw dataset itself */
 
 
 
