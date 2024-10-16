@@ -165,7 +165,6 @@ append using "${DataTemp}temp.dta"
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
 
-
 /* ---------------------------------------------------------------------------
 * ID 19B and 20B: Child death and birth info
  ---------------------------------------------------------------------------*/
@@ -173,7 +172,6 @@ save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
 
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
-
 key_creation 
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -185,6 +183,9 @@ foreach var of varlist *_cbw {
     rename `var' `newname'
      }
 gen Cen_Type=3
+gen C_entry_type = "BC" 
+drop if  comb_name_comb_woman_earlier == ""
+
 save "${DataTemp}temp.dta", replace
 
 * ID 20B
@@ -249,6 +250,9 @@ foreach var of varlist *_cbw* {
 	local newname = subinstr("`var'", "_cbw", "_comb", 1)
     rename `var' `newname'
      }
+	 
+drop if  comb_name_comb_woman_earlier == ""
+	 
 save "${DataTemp}temp1.dta", replace
 
 * New hosuehold member
@@ -326,7 +330,9 @@ save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
  ---------------------------------------------------------------------------*/
  //Archi: Comment for myself - You need to change name of the dataset used in Akito's file and drop entreies where child was unavailable because Akito is using that file for analysis and since we are creating only one version of each dataset we need to make sure whosoever is using that dataset it gets chnaged in their file too 
  
- 
+ //PLEASE NOTE THAT THE DATASET  "${DataTemp}U5_Child_23_24_part1.dta" is now being created in 5_1_Endline_main_revisit_merge_final do file. To avoid duplication, I am commenting it out here 
+
+ /*
  * ID 23
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
 * Respondent available for an interview 
@@ -439,7 +445,7 @@ savesome using "${DataFinal}1_1_Endline_Morbidity_23_24.dta" if comb_med_out_hom
 
 */
 
-
+*/
 
 
 /* ---------------------------------------------------------------------------

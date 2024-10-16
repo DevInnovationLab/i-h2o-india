@@ -50,6 +50,11 @@ program define   RV_key_creation
 end
 
 
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 1
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
 
 /***************************************************************
 CHILD LEVEL DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT ENDLINE
@@ -123,6 +128,8 @@ gen comb_type = "comb"
 //If the comb_type is comb that means this is the combined entry of Cen_ and N_ entry that is getting formatted. (Remember these are the preloaded child names that comes from the revisit preload) 
 gen C_entry_type = "RV" 
  //this variable shows that this is revisit child entry and if it has the comb prefix it means this is entry from preload from the main endline census 
+drop if comb_child_caregiver_present == .
+drop if comb_child_comb_name_label == ""
 
 save "${DataTemp}temp.dta", replace
 
@@ -219,13 +226,85 @@ drop dup_UID
 
 save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
 
-//this is the main endline long child level dataset. This dataset is created in the file "1_8_A_Endline_cleaning_HFC_Data creation.do"
 
-//stop
-use "${DataTemp}U5_Child_23_24_part1.dta", clear
-//there are these empty entries because the loop in survey cto also takes in null values and if it is null it moves to the next value but the observation still gets created so need to worry just drop it
+/*******************************************************************************************
+
+Creating a combined child dataset from main endline census 
+
+**********************************************************************************************/
+ 
+ * ID 23
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
+tab cen_child_caregiver_present
+tab cen_child_act_age
+
+M_key_creation
+foreach var of varlist cen* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen", "comb", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_u5*  {
+	local newname = subinstr("`var'", "_u5", "_comb", 1)
+    rename `var' `newname'
+}
+gen Cen_Type=4
+gen C_entry_type = "BC" //this variable shows that this is old child entry and was already present in the baseline census 
+drop if comb_child_caregiver_present == . 
 drop if comb_child_comb_name_label == ""
+save "${DataTemp}temp.dta", replace
+
+* ID 24
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
+M_key_creation
+
+
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_u5*  {
+	local newname = subinstr("`var'", "_u5", "_comb", 1)
+    rename `var' `newname'
+}
+gen Cen_Type=5
+gen C_entry_type = "N"  //this variable shows that this is new child entry and wasn't already present in the baseline census 
+//drop comb_child_care_pres_oth
+tostring  comb_child_care_pres_oth, replace
+drop if comb_child_caregiver_present == . 
+drop if comb_child_comb_name_label == ""
+//Archi to Akito - It is better to not drop it 
+append using "${DataTemp}temp.dta"
+//drop if comb_child_caregiver_present==.
+//Archi - I commented this out because we still need names of the unavailable children 
+rename key R_E_key
+/*merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_res) keep(3) nogen*/
+
+//Archi - In the command above we are merging this data with consented values but if we want to survey unavailable respondents too we have to merge it with "${DataPre}1_8_Endline_XXX.dta"
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_enum_name_label End_date R_E_village_name_str) keep(3) nogen
+
+rename R_E_key  key
+//we should not touch the original village variable
+clonevar Village = R_E_village_name_str
+
+* Village
+//replace Village="Bhujabala" if Village=="Bhujbal"
+* Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
+//save "${DataTemp}U5_Child_Endline_Census.dta", replace
+
+//stop_it
+//getting treatment status and stuff
+merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+
+drop if comb_child_comb_name_label == ""
+//there are these empty entries because the loop in survey cto also takes in null values and if it is null it moves to the next value but the observation still gets created so need to worry just drop it
+
 cap drop dup_HHID
+
+save "${DataTemp}U5_Child_23_24_part1.dta", replace
+
+use "${DataTemp}U5_Child_23_24_part1.dta", clear
 //checking if this combinarion is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
 //WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
@@ -327,7 +406,16 @@ drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present
 
 //br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
 cap drop _merge
+drop if comb_child_caregiver_present == .
 save "${Intermediate}Endline_Child_level_merged_dataset_final.dta", replace 
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 2
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
 
 
 /**********************************************************************************
@@ -375,13 +463,15 @@ foreach var of varlist n_* {
     rename `var' `newname'
 }
 rename key R_E_key
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id) 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction) 
 
 //there are around 16 keys that don't match with cleaned endline census data and that is because these are practise entries observations from endline census so in the long dataset unless we manually drop it it would still be present so we should just keep _mereg == 3
 keep if _merge == 3
 drop _merge
 
 gen C_entry_type = "N" 
+drop if R_E_instruction == .
+drop R_E_instruction
 
 save "${DataTemp}temp2.dta", replace
 
@@ -427,6 +517,8 @@ bysort unique_id comb_name_from_earlier_hh: gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
+drop if  R_E_instruction == .
+drop R_E_instruction
 br unique_id comb_name_from_earlier_hh if dup_UID == 1
 sort unique_id
 
@@ -545,9 +637,9 @@ Since we are creating a unqiue identifier using these two variables - unique_id 
 */
 
 //temporary replacement 
-replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2 
+replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2  & comb_hh_index == 1
 
-replace comb_name_from_earlier_hh  = "_Priya Koushalya" if comb_name_from_earlier_hh == "Priya Koushalya" & unique_id == "30602105049" & comb_days_num_residence == 8
+replace comb_name_from_earlier_hh  = "_Priya Koushalya" if comb_name_from_earlier_hh == "Priya Koushalya" & unique_id == "30602105049" & comb_days_num_residence == 8  &  comb_hh_index == 8
 
 
 preserve
@@ -574,20 +666,28 @@ save "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace
 CREATING A COMBINED ROSTER FOR NEW MEMBERS AND CENSUS MEMBERS 
 
 ************************************************************************************/
-use "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace 
+use "${Intermediate}Endline_census_roster_merged_dataset_final.dta", clear
 
 append using "${Intermediate}Endline_New_member_roster_dataset_final.dta"
 
-save "${Intermediate}Endline_roster_merged_census_New_final.dta"
+save "${Intermediate}Endline_roster_merged_census_New_final.dta", replace
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 3
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
 
 /*****************************************************************
 WOMEN LEVEL DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT
 *****************************************************************/
 
 * ID 21
+//census women data from main endline census 
  use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
 M_key_creation 
-
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
@@ -597,33 +697,59 @@ foreach var of varlist *_cbw* {
 	local newname = subinstr("`var'", "_cbw", "_comb", 1)
     rename `var' `newname'
      }
-drop if  comb_name_comb_woman_earlier == ""
-	 
+drop if  comb_name_comb_woman_earlier == ""	 
+drop if comb_resp_avail_comb == .  //these are irrelevant entries so we can drop it 
 rename key R_E_key	 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
+
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) 
+
+//there are 104 IDs from master that don't match the reason is because these are practise entries from the endline census and 31 that don't match from using are not applicable for this so that is why there are 135 unmatched IDs and it is okay to have this imperfect match 
+
+keep if _merge == 3
+drop _merge 
 
 cap drop dup_HHID
-bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
+
+//finding duplicates 
+
+// WAY 1  (explained earlier) 
+//cond(_N == 1, 0, _n) assigns a value of 0 if the unique_id appears only once. If there are duplicates, it assigns a sequential number (_n) to each occurrence.
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID 
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_UID> 0
+
+
+//WAY 2
+bysort unique_id comb_name_comb_woman_earlier: gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_HHID > 0
 
+
+/*
+One duplicate found !
+
+How to identify which duplicate to drop? 
+*********************************************
+//also did the manual check and this is the only duplicate found
 //here we find that on UID - 30202109013  there are two women with the same name that is "Pinky Khandagiri" but they are different people so we have to rename one women so in this case I am renaming unmarried Pinky Khandagrii by adding a suffix underscore in her name 
-
-replace comb_name_comb_woman_earlier = "Pinky Kandagari_" if  unique_id == "30202109013" & comb_preg_hus == "444" & comb_name_comb_woman_earlier == "Pinky Kandagari" 
-
-gen Var_type = "C"
-	 
+we need to make sure that the replacement is consistent with the replacement done in the roster dataset and the only way to identify this is by the index number. The command in the roster section is -
+replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2  & comb_hh_index == 1
+Here you will see that index number of _Pinky is 1 that means her index number in women section should also be 1 and the variable comb_preg_index reflects index in this dataset so since that is 1 too we will replace this Pinky with _Pinky 
+*/
+replace comb_name_comb_woman_earlier  = "_Pinky Kandagari" if comb_name_comb_woman_earlier == "Pinky Kandagari" & unique_id == "30202109013"   & comb_preg_index == "1"
+gen C_entry_type = "BC" 
 save "${DataTemp}temp1.dta", replace
 
 
  //using new women data from main endline census 
- 
  * ID 22
 //new women
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
 M_key_creation
-//drop if n_resp_avail_cbw==.
-//Archi - I commente dthis out because we want all the values
 // List all variables starting with "n_"
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -636,12 +762,44 @@ foreach var of varlist *_cbw* {
      }
 	 
 drop if  comb_name_comb_woman_earlier == ""
+drop if comb_resp_avail_comb == .  //these are irrelevant entries so we can drop it 
+
 	 
 rename key R_E_key	 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str) 
+
+//there are 730 unmatched: 16 from master and 714 from using so this is absolutely okay because this is not supposed to have perfect merge 
+keep if _merge == 3
+drop _merge
+
+
+//finding duplicates 
+
+// WAY 1  (explained earlier) 
+//cond(_N == 1, 0, _n) assigns a value of 0 if the unique_id appears only once. If there are duplicates, it assigns a sequential number (_n) to each occurrence.
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID 
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_UID> 0
+
+/*unique_id	comb_name_comb_woman_earlier
+30301104006	111(Ambi praska)
+unique_id	comb_name_comb_woman_earlier
+40202113033	111 Simadri Manbik
+unique_id	comb_name_comb_woman_earlier
+40301113016	111 Triveni gouda*/
+
+
+//WAY 2
+bysort unique_id comb_name_comb_woman_earlier: gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_HHID > 0
+
 	 
-gen Var_type = "N"
- 
+gen C_entry_type = "N" 
  
 save "${DataTemp}temp2.dta", replace
 
@@ -649,17 +807,22 @@ use "${DataTemp}temp1.dta", clear
 append using "${DataTemp}temp2.dta"
 unique R_E_key key3
 unique unique_id comb_name_comb_woman_earlier
+isid unique_id comb_name_comb_woman_earlier
 
 cap drop dup_HHID
 bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
-save "${DataTemp}temp3.dta", replace
-save "${DataTemp}CBW_merge_Endline_census.dta", replace
+save "${Intermediate}CBW_merge_Endline_census.dta", replace
 
  
- //women data from endline revisit survey 
+
+ /*please know that counterpart section for new women has empty data which is this because we didn't any new women in ednline revisit:  use"${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_CBW_followup.dta", clear
+ That is why we are using only comb dataset */
+  
+ 
+ //women data from endline revisit survey (only comb section) 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_CBW_followup.dta", clear
 RV_key_creation
 
@@ -669,83 +832,518 @@ foreach var of varlist *_cbw* {
      }
 	 
 drop if comb_name_comb_woman_earlier == ""
- gen comb_type = 1
+drop if comb_resp_avail_comb == .
+gen C_entry_type = "RV" 
+gen comb_type = "comb"
  
  rename key R_E_key
- 
-gen Var_type = "R"
  
  merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_village_name_str) keep(3) nogen
  
  unique unique_id comb_name_comb_woman_earlier
  
- cap drop dup_HHID
-bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
+ //////////////////////////////////////////////////
+ //finding duplicates 
+////////////////////////////////////////////////////
+
+// WAY 1  (explained earlier) 
+//cond(_N == 1, 0, _n) assigns a value of 0 if the unique_id appears only once. If there are duplicates, it assigns a sequential number (_n) to each occurrence.
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID 
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_UID> 0
+
+//WAY 2
+bysort unique_id comb_name_comb_woman_earlier: gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
+sort unique_id 
+br unique_id comb_name_comb_woman_earlier if dup_HHID > 0
 
+/* why replicate this variable? 
+Approach: As explained earlier, to do this merge we need to first replicate availability variable from endline women dataset because we will drop only those rows from main endline census women data where the entry was unavailable and replace it with the women revisit data where that specific entry was available and completed but for that we need to do one-on-one comparison that is why we need to rename this availability variable ( comb_resp_avail_comb) from the revisit dataset
+*/
+clonevar Vcomb_resp_avail_comb = comb_resp_avail_comb 
 
+foreach i in parent_key key_original R_E_key key2 key3{
+rename `i' Revisit_`i'
+}
 
- save "${DataTemp}temp_women_revisit.dta", replace
+ save "${Intermediate}comb_women_endline_revisit.dta", replace
  
+
 
 
 /*************************************************************
 DOING THE MERGE WITH CENSUS WOMEN
+
 *************************************************************/
-
-
-use "${DataTemp}temp_women_revisit.dta", clear
-drop if  comb_name_comb_woman_earlier == ""
-rename comb_resp_avail_comb Vcomb_resp_avail_comb
-
-save "${DataTemp}temp_women_revisit_part1.dta", replace
-
 //importing combined women data from endline main census 
-use "${DataTemp}temp3.dta", clear
+use "${Intermediate}CBW_merge_Endline_census.dta", clear
 cap drop _merge
-merge 1:1 unique_id comb_name_comb_woman_earlier using "${DataTemp}temp_women_revisit_part1.dta", keepusing(unique_id Vcomb_resp_avail_comb) 
+merge 1:1 unique_id comb_name_comb_woman_earlier using "${Intermediate}comb_women_endline_revisit.dta", keepusing(unique_id Vcomb_resp_avail_comb) 
 
-
+//finding the entries where entry from main endline census women dataset is unavailable and the similar entry is available in revisit data 
 br unique_id comb_preg_index comb_name_comb_woman_earlier comb_resp_avail_comb Vcomb_resp_avail_comb _merge if _merge == 3 & Vcomb_resp_avail_comb == 1
 
+//dropping such entries where entry from main endline census women dataset is unavailable and the similar entry is available in revisit data  because we have valid data for such entries from revisit data 
 gen to_drop = .
-replace to_drop = 1 if _merge == 3 & Vcomb_resp_avail_comb == 1
+replace to_drop = 1 if _merge == 3 & Vcomb_resp_avail_comb == 1 & comb_resp_avail_comb ! = 1
 
 drop if to_drop == 1
 
-preserve
-use "${DataTemp}temp_women_revisit.dta", clear
-
-
-keep if comb_resp_avail_comb == 1
-foreach i in parent_key key_original R_E_key key2 key3{
-rename `i' Revisit_`i'
-}
- 
-save "${DataTemp}temp_women_revisit_part3.dta", replace
+preserve 
+use "${Intermediate}comb_women_endline_revisit.dta", clear
+drop if comb_resp_avail_comb != 1
+drop Vcomb_resp_avail_comb
+save "${DataTemp}comb_women_endline_revisit_t.dta", replace
 restore
 
-append using "${DataTemp}temp_women_revisit_part3.dta"
-drop _merge
-
- cap drop dup_HHID
+append using "${DataTemp}comb_women_endline_revisit_t.dta"
+cap drop _merge
+cap drop dup_HHID
 bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
+save "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", replace 
 
-save "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", replace 
 
-//please note that we can get rid of these cases where  comb_resp_avail_comb == . because these are all the non applicable cases for women since the loop for new women section use to take all roster members name ito account so non applicable nams like new baby and all used to come as a result these entries are present in the dataset so if we want a filtered data of just applicable women we can drop such entries  
-drop if   comb_resp_avail_comb == .
-save "${DataFinal}Endline_CBW_level_merged_dataset_final_applicable_cases.dta", replace 
 
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 5
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+
+  /*****************************************************************
+ COMBINING ALL INDIVIDUAL DATASETS 
+*****************************************************************/
+
+use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
+gen C_dataset_type = "Child"
+append using "${Intermediate}Endline_roster_merged_census_New_final.dta"
+replace C_dataset_type = "Roster" if  comb_name_from_earlier_hh != "" |  comb_hhmember_name != ""
+append using "${Intermediate}Endline_CBW_level_merged_dataset_final.dta"
+replace C_dataset_type = "CBW" if  comb_name_comb_woman_earlier != ""
+
+//Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
+order C_dataset_type 
+
+
+
+
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 6
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+
+
+                                                                 ******************************
+                                                                 * Final sample data creation *
+                                                                 ******************************
+
+
+/* Data set 2B: Redemption data: Collapse to make it wide (This one is inferior than the one above)
+use "${DataClean}Redemption_data.dta", clear
+collapse (sum) Redemption_num (min) min_date=Date_redeem (max) max_date=Date_redeem, by(barcode_result)
+merge 1:1 barcode_result using "${DataFinal}Final_IssueCoupon_Only.dta", gen(Merge_CouponIssue)
+* Dropping the case where redemption is recorded without coupon being issued (Need to list out if sample is being dropped)
+* Check
+drop if Merge_CouponIssue==1
+save "${DataClean}Redemption_data_wide.dta", replace
+*/
+
+* Sample size=ANC contact list
+cap program drop start_from_clean_file_ANC
+program define   start_from_clean_file_ANC
+  * Open clean file
+  use                       "${DataClean}Final_ANC.dta", clear
+  capture drop _merge 
+  keep projectid R_ANC_name R_ANC_key C_ANC_Expected_dob HDSS hdss_region R_ANC_gestation R_ANC_phone1 R_ANC_phone2 R_ANC_phoneowner R_ANC_end ///
+       R_ANC_visitdate R_ANC_visitdate_n Location R_ANC_submissiondate Num_weeks Last_week Gestation_categ
+  merge 1:1 projectid using "${DataClean}Final_Enrollment_consented.dta"   , gen(Merge_Enroll)
+  drop R_Enr_v213
+  merge 1:1 projectid using "${DataClean}Final_IssueCoupon.dta"            , gen(Merge_Issue)
+  merge 1:1 projectid using "${DataClean}Final_Redemption_wide.dta"        , gen(Merge_Redemption)
+  
+	* Merge _2 should be 0. Confirm 
+	* Create rules: If we find 
+	* If its ER + didnt have voucher (was 1st time to HF) + first redemption: drop
+	* If ER, women T, but its subsequent: ok to keep. To define: keep it? Which type is it? Akito to think
+  
+  /* Already droppping in the enrollment do file. DROP later
+  * Dropping the suspicous case for now from the stats
+  * Checking suspicious case (704 vs 5557+704)
+  merge 1:1 projectid using "${DataLogistic}Suspicious_less5.dta"    , gen(Merge_suspicious) keepusing(log_result sc_* model) keep(1 3)	//Only 709 match (April21,2024)
+  assert model=="ER" | model=="HDSS" if Merge_suspicious==3			//Confirm w Akito: OK to allow ER models here?
+  drop model
+  */
+  /*-------------------------------------
+          Basic cleaning
+  -------------------------------------*/
+  *Dropping non target population from analysis (Out of service not dropped for now. Also, there are non assigned cases)
+  merge 1:1 projectid using "${DataClean}Final_Calls_laststatus.dta", gen(Merge_Status) keep(match master) keepusing(TS_Status)
+  drop if TS_Status=="Miscarriage" | TS_Status=="Moving out" | TS_Status=="Outside HDSS" | TS_Status=="Wrong number"
+  
+  *Sele: Find out why not data in "R_Enr_preg_now"
+  *keep if R_Enr_preg_now==1 & R_Enr_area==1 & R_Enr_area_f==1 & R_Enr_consent==1 & R_Enr_hdss_survey!=0	//2139
+  
+  * Fixing typo informtion
+  replace C_ANC_Expected_dob = daily("22nov2023", "DMY") if C_ANC_Expected_dob==daily("22nov2022", "DMY")
+  
+  * Creating a new variable
+  gen       C_1st_Issued=Merge_Barcode
+  recode    C_1st_Issued 3=1 1 2=0
+  replace   C_1st_Issued=. if R_Enr_treatment==0
+  label var C_1st_Issued "1st redemption"
+  
+  gen     C_name=""
+  replace C_name=R_Enr_conf_name
+  replace C_name=R_ANC_name if C_name==""
+  drop R_Enr_conf_name R_ANC_name
+  
+  * Check this with Sele
+  sort C_name
+  * * Out of 126, (47 are not dry run): 79 were dry run, so it is okay that we drop. 
+    //Now 45 - we have enroll data, but we dont have ANC contact. Do reverse engineering.
+	//See if they actually redeem. Solve
+  br   if     Merge_Enroll==2
+  tab Dry_run Merge_Enroll,m
+  
+		*br if  Merge_Enroll==2 & Dry_run==0
+			
+  export excel C_name projectid Location R_ANC_key  using "${DataLogistic}Data_quality.xlsx" if Merge_Enroll==2 & Dry_run==0 , sheet("Enroll_Dropped") firstrow(var) cell(A1) sheetreplace
+  savesome C_name projectid Location R_ANC_key R_Enr_conf_hf R_Enr_conf_visitday R_Enr_key R_1st_key R_Enr_submissiondate R_ANC_phone1 R_Enr_phone_number using "${DataLogistic}Enroll_Dropped.dta" if Merge_Enroll==2 & Dry_run==0, replace
+  * 88 as merge_enroll==2. 70 are OK because of DRY-RUN! pEDNING TO SOLVE 18. On May9, 20! Is this stable?
+			
+			*br projectid R_Enr_phone_number C_name R_Enr_treatment if Merge_Enroll==2 & Dry_run==0
+			
+  drop if Merge_Enroll==2 
+  recode  Merge_Enroll 1=0 3=1
+  
+  drop R_Enr_phone_number R_Enr_phone_call *key R_Enr_isvalidated 
+  
+  * Date: R_Enr_date_today
+  split R_Enr_date_today, p("-")
+  destring R_Enr_date_today1 R_Enr_date_today2 R_Enr_date_today3, replace
+  gen R_Enr_date_today_num=mdy(R_Enr_date_today2, R_Enr_date_today3, R_Enr_date_today1)
+  gen Enroll_since = (d(`c(current_date)')- R_Enr_date_today_num)
+  format R_Enr_date_today_num %td
+  
+  foreach i in 1 3 4 5 6 7 8 other { 
+  rename R_Enr_dispenser_notuse_`i' dn`i'
+  }
  
+  gen     R_Enr_chlorine2_1_6=R_Enr_chlorine2_1
+  replace R_Enr_chlorine2_1_6=1 if R_Enr_chlorine2_1==1 | R_Enr_chlorine2_6==1
+  
+  * Replace the raw data: Brandon
+  replace R_Enr_cost_actual=88 if R_Enr_cost_actual==-88 
+  replace R_Enr_cost_transport=. if R_Enr_cost_transport==-99
+  
+  gen     Age=C_Enr_age  
+  replace Age=. if Age>100
+  
+  gen    C_Enr_age_categ=C_Enr_age
+  recode C_Enr_age_categ 12/15=1 15/20=2 20/25=3 25/30=4 30/150=5
+  
+  *R_Enr_water_chlorine
+  replace R_Enr_water_chlorine=. if R_Enr_water_chlorine==99
+  * Water source categorization
+  gen     C_Enr_ws_categ=.
+  replace C_Enr_ws_categ=1 if R_Enr_water_source==4
+  replace C_Enr_ws_categ=2 if R_Enr_water_source==1 | R_Enr_water_source==2  | R_Enr_water_source==3 | R_Enr_water_source==6
+  replace C_Enr_ws_categ=3 if R_Enr_water_source==11
+  replace C_Enr_ws_categ=4 if R_Enr_water_source==8 | R_Enr_water_source==9 | R_Enr_water_source==12
+  replace C_Enr_ws_categ=5 if R_Enr_water_source==5 | R_Enr_water_source==10 | R_Enr_water_source==13
+  replace C_Enr_ws_categ=6 if R_Enr_water_source==7
+  replace C_Enr_ws_categ=7 if R_Enr_water_source==98
+  
+  * Dealing with missing data
+  clonevar C_Enr_preg_diarrhea=R_Enr_preg_diarrhea
+  recode   C_Enr_preg_diarrhea 99=.
+
+  label   define C_Enr_ws_categl 1 "Borehole/well" 2 "Unprotected spring/river/stream/pond/lake" 3 "Rainfall" 4 "Pipe in dwelling/compound or public tap" 5 "Water vendor" 6 "Protected spring" 7 "Other", modify
+	label values C_Enr_ws_categ C_Enr_ws_categl
+	
+    tab C_Enr_Chlorine_type R_Enr_chlorine2_1_6,m
+	gen     Chlorine_type_taste=C_Enr_Chlorine_type
+	recode  Chlorine_type_taste 1=1 3=4
+	replace Chlorine_type_taste=2 if Chlorine_type_taste==2 & R_Enr_chlorine2_1_6==0
+	replace Chlorine_type_taste=3 if Chlorine_type_taste==2 & R_Enr_chlorine2_1_6==1
+	label   define Chlorine_type_tastel 1 "Currently using chlorine (own or source)" ///
+	        2 "Stop using chlorine (other than taste issue)" 3 "Stop using chlorine (taste issue)" ///
+            4 "Never used chlorine", modify
+	label values Chlorine_type_taste Chlorine_type_tastel
+	
+	* Shop redemption
+	gen     shop_hf_markets=0
+	* Mulaha (26) Akala (106) Aluor (107), Rera (114),  Kambare (120) Abidha (124) Ongielo (122) Lwak (123)
+	* Mulaha (26) Akala (106) Ongielo (122) - Limiting close three health facilities
+	* 105:  Siaya Referral
+	foreach i in 26 106 122 {
+	replace shop_hf_markets=1 if Location==`i'
+	replace shop_hf_markets=1 if R_Enr_expected_hf==`i'
+	}
+	
+	gen     shop_hf_markets_BA=.
+	replace shop_hf_markets_BA=0 if shop_hf_markets==1
+	* This is the date of Aug 18th
+	* replace shop_hf_markets_BA=1 if shop_hf_markets==1 & R_ANC_visitdate_n>23240
+	replace shop_hf_markets_BA=1 if shop_hf_markets==1 & R_Enr_date_today_num>23240
+	
+foreach x of var Redeem* { 
+	replace `x'=0 if `x'==.
+	replace `x'=100 if `x'==1
+} 
+
+foreach i in 1 2 3 4 {
+replace Redeem`i'=1 if Redeem`i'==100
+}
+foreach i in R_Enr_treatment Redeem1 Redeem2 Redeem3 Redeem4 {
+foreach d in 45 90 135 180 {
+	gen     `i'_`d'=0
+	replace `i'_`d'=1 if `i'==1 & Enroll_since>`d' & Enroll_since!=.		
+	replace `i'_`d'=. if Enroll_since<`d'
+}
+}
+
+/*
+randtreat, generate(C_mini_treatment) replace  multiple(3) setseed(758235657)
+
+  foreach i in R_Enr_ R_1st_ { 
+  split    `i'date_today, p("-")
+  destring `i'date_today1 `i'date_today2 `i'date_today3, replace
+  gen      `i'date_today_n = mdy(`i'date_today2, `i'date_today3, `i'date_today1)
+  }
+  */
+  gen Day_till_issue=round(R_1st_date_issue_end-R_Enr_date_today_num,1)
+  
+  gen    R_Enr_duration_categ=R_Enr_duration
+  recode R_Enr_duration_categ 0/3=1 3/5=2 5/10=3 4/1000=4
+
+  label var Age "Age_GW"
+  label var R_Enr_hh_size "Household size"
+  label var R_Enr_chlorine2_1_6 "Bad smell or taste"
+  label var R_ANC_gestation "Gestation in weeks"
+  label var C_1st_Issued "1st voucher redemption"
+  * label var Day_till_issue "Number of days took till issueing voucher since enrollment"
+  
+  * Create Dummy
+	*foreach v in R_Enr_duration_categ Chlorine_type_taste C_1st_duration_categ C_Enr_ws_categ {
+	*levelsof `v'
+	*foreach value in `r(levels)' {
+	*	gen     `v'_`value'=0
+	*	replace `v'_`value'=1 if `v'==`value'
+	*	replace `v'_`value'=. if `v'==.
+	*	label var `v'_`value' "`: label (`v') `value''"
+	*}
+	*}
+	
+	foreach v in R_Enr_duration_categ Chlorine_type_taste C_1st_duration_categ C_Enr_ws_categ Gestation_categ {
+    levelsof `v'
+    foreach value in `r(levels)' {
+        local clean_value : display round(`value')
+        gen     `v'_`clean_value'=0
+        replace `v'_`clean_value'=1 if `v'==`value'
+        replace `v'_`clean_value'=. if `v'==.
+        label var `v'_`clean_value' "`: label (`v') `value''"
+    }
+    }
+	
+ * label define R_Enr_water_chlorinel 0 "No" 1 "Water chlorinated at source_lab" 99 "Water chlorinated at source-Do not know", modify
+ * label values R_Enr_water_chlorine R_Enr_water_chlorinel
+ * label define R_Enr_dispenserl 0 "No" 1 "Dispenser for safe water in the community" 99 "Dispenser for safe water in the community-Do not know", modify
+ * label values R_Enr_dispenser R_Enr_dispenserl
+
+  label var C_Enr_chlorine1 "Ever used chlorine"
+  label var C_Enr_dispenser_use "Use dispenser for safe water"
+	
+  gen flag=1
+  gen Contact=1
+  
+  *Cleaning open ended answer
+ fre C_Enr_chlorine5
+ replace C_Enr_chlorine5="Not available" if strpos(C_Enr_chlorine5, "Not available") | strpos(C_Enr_chlorine5, "Not easily available") | C_Enr_chlorine5=="Not readily available" | strpos(C_Enr_chlorine5, "Notavailable")
+ replace C_Enr_chlorine5="Bad smell" if strpos(C_Enr_chlorine5, "bad smell ") | strpos(C_Enr_chlorine5, "Smells bad") | strpos(C_Enr_chlorine5, "Chlorine products not available") 
+ replace C_Enr_chlorine5="Bad taste" if strpos(C_Enr_chlorine5, "Bad tastes") 
+ replace C_Enr_chlorine5="Bad taste and bad smell" if strpos(C_Enr_chlorine5, "I don't like the smell and taste of water guard") | strpos(C_Enr_chlorine5, "Never liked") 
+ replace C_Enr_chlorine5="Expensive" if strpos(C_Enr_chlorine5, "lack of money") | strpos(C_Enr_chlorine5, "Don't have money") | strpos(C_Enr_chlorine5, "Not affordable") | strpos(C_Enr_chlorine5, "No money")  | strpos(C_Enr_chlorine5, "Expensive")
+replace C_Enr_chlorine5="Nothing" if strpos(C_Enr_chlorine5, "No reason") | strpos(C_Enr_chlorine5, "No idea") | strpos(C_Enr_chlorine5, "No genuine reason") | strpos(C_Enr_chlorine5, "No reasons") | strpos(C_Enr_chlorine5, "None")
+ replace C_Enr_chlorine5="Not accessible" if strpos(C_Enr_chlorine5, "Not easily accessible") | strpos(C_Enr_chlorine5, "Not accessed") | strpos(C_Enr_chlorine5, "Never had access") | strpos(C_Enr_chlorine5, "never accessed") | strpos(C_Enr_chlorine5, "Distance is far") | strpos(C_Enr_chlorine5, "Have never had access") | strpos(C_Enr_chlorine5, "Hard accessing it") | strpos(C_Enr_chlorine5, "not readily available")
+ replace C_Enr_chlorine5="Used to boiling" if strpos(C_Enr_chlorine5, "Prefers boiling") | strpos(C_Enr_chlorine5, "Prefers boiled")
+ replace C_Enr_chlorine5="Never bought" if strpos(C_Enr_chlorine5, "Never bought") | strpos(C_Enr_chlorine5, "never bought any")
+  replace C_Enr_chlorine5="Other" if C_Enr_chlorine5=="Broken dispense" | C_Enr_chlorine5=="Lived in Nairobi at a place with clean water" | C_Enr_chlorine5=="Perceived water as clean" | C_Enr_chlorine5=="Personal decision" | C_Enr_chlorine5=="Religion beliefs" | C_Enr_chlorine5=="Spouse is allergic to water guard" 
+  
+   	* Adding Weekly fixed effects
+	recode R_Enr_date_today3 1/8=1 9/17=2 18/23=3 24/32=4
+	egen   Weekly=group(R_Enr_date_today1 R_Enr_date_today2 R_Enr_date_today3)
+	
+	* Categorized
+	gen Age_categ=C_Enr_age
+	recode Age_categ 12/19.999999=1 20/29.9999999999=2 30/200=3
+	label   define Age_categl 1 "Younger than 19" 2 "20-29 years old" 3 "30 years old and older", modify
+	label values Age_categ Age_categl
+		
+	label var R_Enr_num_children_0 "No U5 children in the household"
+	gen       R_Enr_num_children_1_3=R_Enr_num_children_0
+	recode R_Enr_num_children_1_3 0=1 1=0
+	label var R_Enr_num_children_1_3 "Have some U5 children"
+  
+  * drop R_Enr_v268 R_Enr_v270 R_Enr_v293 R_Enr_v303 R_Enr_v309 R_Enr_v313 R_Enr_v330 R_Enr_v339
+  save "${DataFinal}Full_Final_ANC_W_Dry.dta", replace
+  
+  * Dropping the dry run sample
+  drop if Dry_run==1 
+  * Sele: Do enumeartor submit if the form is no consent, or declined? 
+  drop if TS_Status=="Declined" | | TS_Status=="No consent"
+  capture export excel Location projectid using "${DataLogistic}Data_quality.xlsx" if Merge_Redemption==2, sheet("No_ID_Redeemed") firstrow(var) cell(A1) sheetreplace
+  drop if Merge_Redemption==2
+  tab TS_Status,m
+  * Sele: What is the TS_Status=="missing"?
+  
+  save "${DataFinal}Full_Final_ANC_inclusive_a.dta", replace
+   * drop if Merge_suspicious==3 & (sc_confirmed!=1) // Already droppping in the enrollment do file. DROP later
+  save "${DataFinal}Full_Final_ANC.dta", replace
+end
+
+* Enrollment only
+cap program drop start_from_clean_file_E
+program define   start_from_clean_file_E
+
+*Inclusive file
+  use "${DataFinal}Full_Final_ANC_inclusive_a.dta", clear
+ keep if Merge_Enroll==1
+   gen type=1
+  lab def type 1 "HDSS" 2 "Choice", modify
+  lab val type type
+  save "${DataFinal}Full_Final_Enrollment_inclusive_a.dta", replace
+
+  * Open clean file
+  start_from_clean_file_ANC
+  keep if Merge_Enroll==1
+  gen type=1
+  lab def type 1 "HDSS" 2 "Choice", modify
+  lab val type type
+  save "${DataFinal}Full_Final_Enrollment.dta", replace
+  *save "${DataFinal}Full_Final_Enrollment_20240517.dta", replace	//run once in May17
+  
+end
+
+cap program drop start_from_clean_file_ET
+program define   start_from_clean_file_ET
+   start_from_clean_file_E
+   	
+   keep if R_Enr_treatment==1
+   save "${DataFinal}Full_Final_Treatment.dta", replace
  
- 
- ////////////////////////////////////
- 
+end
+
+* Opens clean dataset
+* Enrollment and redemption combined
+cap program drop start_from_clean_file_ETI
+program define   start_from_clean_file_ETI
+  start_from_clean_file_ET
+  keep if Merge_Redemption==3
+  save "${DataFinal}Full_Final_Voucher.dta", replace
+    
+end
+
+* Child level stats
+cap program drop start_from_clean_file_CR
+program define   start_from_clean_file_CR
+  * Open clean file
+  start_from_clean_file_E
+  foreach i in 1 2 3 {
+  replace              R_Enr_child_age_months_`i'=0 if R_Enr_child_age_`i'!=0 &  R_Enr_child_age_`i'!=.
+  gen R_Enr_child_age_im_`i'=R_Enr_child_age_months_`i'+R_Enr_child_age_`i'*12	
+  }
+
+  * rename (R_Enr_v368 R_Enr_v379 R_Enr_v410) (Sick_speicy_1 Sick_speicy_2 Sick_speicy_3)
+  keep R_Enr_child_diarrhea* projectid R_Enr_num_children R_Enr_treatment R_Enr_child_sickness_*  R_Enr_child_age_im_* hdss_region R_Enr_date_today_num R_Enr_name_child_* Location
+	reshape long R_Enr_name_child_ R_Enr_child_diarrhea_ R_Enr_child_diarrhea_num_ R_Enr_child_diarrhea_days_ R_Enr_child_diarrhea_symptom_ R_Enr_child_diarrhea_symptom_1_ R_Enr_child_diarrhea_symptom_2_ 	R_Enr_child_diarrhea_symptom_3_ R_Enr_child_diarrhea_symptom_4_ R_Enr_child_sickness_ R_Enr_child_sickness_1_ R_Enr_child_sickness_2_ R_Enr_child_sickness_3_ R_Enr_child_sickness_4_ R_Enr_child_sickness_5_ R_Enr_child_sickness_99_ R_Enr_child_sickness_other_  R_Enr_child_age_im_, i(Location projectid R_Enr_treatment hdss_region R_Enr_date_today_num) j(Num)
+	drop if R_Enr_child_diarrhea_==.
+	rename (R_Enr_child_diarrhea_days_ R_Enr_child_diarrhea_symptom_) (CD_days CD_symptom)
+	rename (R_Enr_child_diarrhea_symptom_1_ R_Enr_child_diarrhea_symptom_2_ R_Enr_child_diarrhea_symptom_3_ R_Enr_child_diarrhea_symptom_4_) (CD_symptom_1 CD_symptom_2 CD_symptom_3 CD_symptom_4)
+	rename  R_Enr_child_sickness_other_ CS_other
+	destring CD_symptom_* R_Enr_child_sickness_* CS_other projectid, replace
+	label var R_Enr_child_age_im_ "Child age in months"
+	label var R_Enr_child_diarrhea_ "Diarrhea in the last two weeks"
+	label var CD_days "Number of days with diarrhea"
+	label var  R_Enr_child_diarrhea_num_ "Number of stools in a 24 hour period"
+	label var CD_symptom_1 "Bloody diarrhea"
+	label var CD_symptom_2 "Restless/Irritable"
+	label var CD_symptom_3 "Watery diarrhea"
+	label var CD_symptom_4 "Very thirsty"
+	label var R_Enr_child_sickness_1_ "Cough"
+	label var R_Enr_child_sickness_2_ "Fever"
+	label var R_Enr_child_sickness_3_ "Difficulty in breathing"
+	label var R_Enr_child_sickness_4_ "Pneumonia"
+	label var R_Enr_child_sickness_5_ "Not sick"
+	label var R_Enr_child_sickness_99_ "I do not know"
+	label var CS_other "Other sickness"
+	
+	tostring projectid, replace
+	gen ID_BLCHILD=_n
+	rename R_Enr_name_child_ child_name
+	save "${DataFinal}BL_Final_Child Level.dta", replace
+
+end
+
+start_from_clean_file_ANC
+start_from_clean_file_E
+start_from_clean_file_ET 
+keep Redeem1 Redeem2 Redeem3 Redeem4 Location
+collapse Redeem1 Redeem2 Redeem3 Redeem4 (sum) N_Redeem1=Redeem1, by(Location)
+
+save "${DataClean}Final_Red_stats.dta", replace
+
+start_from_clean_file_ETI
+start_from_clean_file_CR
+
+
+start_from_clean_file_E
+drop R_Enr_name1_correct R_Enr_name2_correct R_Enr_name3_correct R_Enr_household_head R_Enr_nickname R_Enr_name1_father R_Enr_name2_father R_Enr_name3_father R_Enr_name1_mother R_Enr_name2_mother R_Enr_name3_mother R_Enr_name1_husband R_Enr_name2_husband R_Enr_name3_husband R_Enr_name_child_1 R_Enr_name_child_2 R_Enr_child_age_3 R_ANC_phone1 R_ANC_phone2 R_ANC_phoneowner R_Enr_collect_is_phone_app R_Enr_phonecalllog_real R_Enr_phone_owner R_Enr_call_new_opt R_Enr_phone_new R_Enr_phone_call2 R_Enr_basic_info_show R_Enr_owner_correct R_Enr_phone_2_yesno R_Enr_phone_2 R_Enr_phone_2_owner R_Enr_phone_3 R_Enr_phone_3_owner R_Enr_phone_4 R_Enr_phone_4_owner R_Enr_phone_air R_Enr_phone_air_add R_Enr_phone_contact_add
+save "${DataClean}Enrolled_Anon_Grace.dta", replace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+stop
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 7
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+  
+  /*****************************************************************
+ AVAILABILITY STATS 
+*****************************************************************/
+
  //common IDs
 import excel "${DataTemp}JPAL HH level tracker for Endline Census.xlsx", sheet("Main_Updated_endline_revisit_co") firstrow clear
 
@@ -883,9 +1481,10 @@ tab R_E_resp_available
 //To get U5 child status whether they are from baseline or endline
 *******************************************************/
 
+use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
 
-use "${DataTemp}U5_Child_Endline_Census.dta", clear
 drop if comb_child_comb_name_label== ""
+drop if comb_child_caregiver_present == .
 keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Cen_Type
 
 split comb_child_comb_name_label, generate(common_u5_names) parse("111")
