@@ -130,41 +130,8 @@ tab Any_seek
 reshape long comb_med_out_home_comb_, i(key key3) j(Num) 
 keep if comb_med_out_home_comb_==1
 
-/* ---------------------------------------------------------------------------
-* ID 19 and 20: Mortality info
- ---------------------------------------------------------------------------*/
- * ID 19
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta", clear
-key_creation 
-foreach var of varlist cen_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "cen_", "comb_", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_cbw {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
-gen Cen_Type=3
-save "${DataTemp}temp.dta", replace
-
-* ID 20
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta", clear
-key_creation 
-foreach var of varlist n_* {
-    // Generate the new variable name by replacing 'old' with 'new'
-    local newname = subinstr("`var'", "n_", "comb_", 1)
-    rename `var' `newname'
-}
-foreach var of varlist *_cbw {
-	local newname = subinstr("`var'", "_cbw", "_comb", 1)
-    rename `var' `newname'
-     }
-gen Cen_Type=2
-append using "${DataTemp}temp.dta"
-save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
-
-
+//refer to file - 5_1_Endline_main_revisit_merge-final to get combined mortality dataset. It is named as -  "${DataFinal}1_1_Endline_Mortality_19_20.dta"
+ 
 /* ---------------------------------------------------------------------------
 * ID 19B and 20B: Child death and birth info
  ---------------------------------------------------------------------------*/

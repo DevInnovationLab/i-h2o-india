@@ -471,8 +471,6 @@ drop _merge
 
 gen C_entry_type = "N" 
 drop if R_E_instruction == .
-drop R_E_instruction
-
 save "${DataTemp}temp2.dta", replace
 
 save "${Intermediate}Endline_New_member_roster_dataset_final.dta", replace 
@@ -518,7 +516,7 @@ count if dup_HHID > 0
 tab dup_HHID
 
 drop if  R_E_instruction == .
-drop R_E_instruction
+
 br unique_id comb_name_from_earlier_hh if dup_UID == 1
 sort unique_id
 
@@ -637,9 +635,9 @@ Since we are creating a unqiue identifier using these two variables - unique_id 
 */
 
 //temporary replacement 
-replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2  & comb_hh_index == 1
+replace comb_name_from_earlier_hh  = "_Pinky Kandagari" if comb_name_from_earlier_hh == "Pinky Kandagari" & unique_id == "30202109013" & comb_days_num_residence == 2  & comb_hh_index == "1"
 
-replace comb_name_from_earlier_hh  = "_Priya Koushalya" if comb_name_from_earlier_hh == "Priya Koushalya" & unique_id == "30602105049" & comb_days_num_residence == 8  &  comb_hh_index == 8
+replace comb_name_from_earlier_hh  = "_Priya Koushalya" if comb_name_from_earlier_hh == "Priya Koushalya" & unique_id == "30602105049" & comb_days_num_residence == 8  &  comb_hh_index == "8"
 
 
 preserve
@@ -913,7 +911,78 @@ save "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", replace
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 4
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+/*****************************************************************************
+CREATING A SEPARATE MORTALITY DATASET ONLY USING ENDLINE DATASETS
+******************************************************************************/
+
+use"${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta", clear
+
+use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.dta", clear
+
+
+
+/* ---------------------------------------------------------------------------
+* ID 19 and 20: Mortality info
+ ---------------------------------------------------------------------------*/
+ * ID 19
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta", clear
+key_creation 
+foreach var of varlist cen_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "cen_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=3
+save "${DataTemp}temp.dta", replace
+
+* ID 20
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta", clear
+key_creation 
+foreach var of varlist n_* {
+    // Generate the new variable name by replacing 'old' with 'new'
+    local newname = subinstr("`var'", "n_", "comb_", 1)
+    rename `var' `newname'
+}
+foreach var of varlist *_cbw {
+	local newname = subinstr("`var'", "_cbw", "_comb", 1)
+    rename `var' `newname'
+     }
+gen Cen_Type=2
+append using "${DataTemp}temp.dta"
+save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 5
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+  /*****************************************************************
+ 1. CLEANING COMBINED CHILD DATASET FIRST 
+*****************************************************************/
+
+use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
+
+*Duplicates check 
+//the only unqiue identifier in the child dataset is these two variables 
+isid unique_id comb_child_comb_name_label
+
+*Manual corrections from Github issues page- https://github.com/DevInnovationLab/i-h2o-india/issues
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 6
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
 
@@ -932,411 +1001,85 @@ replace C_dataset_type = "CBW" if  comb_name_comb_woman_earlier != ""
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
 order C_dataset_type 
 
+save "${DataFinal}Master_Individual_data_endline_census.dta", replace
 
 
-
-
-
-
-/*************************************************************************************************************************************************************************************
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-SECTION 6
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-*************************************************************************************************************************************************************************************/
-
-
-
-                                                                 ******************************
-                                                                 * Final sample data creation *
-                                                                 ******************************
-
-
-/* Data set 2B: Redemption data: Collapse to make it wide (This one is inferior than the one above)
-use "${DataClean}Redemption_data.dta", clear
-collapse (sum) Redemption_num (min) min_date=Date_redeem (max) max_date=Date_redeem, by(barcode_result)
-merge 1:1 barcode_result using "${DataFinal}Final_IssueCoupon_Only.dta", gen(Merge_CouponIssue)
-* Dropping the case where redemption is recorded without coupon being issued (Need to list out if sample is being dropped)
-* Check
-drop if Merge_CouponIssue==1
-save "${DataClean}Redemption_data_wide.dta", replace
-*/
-
-* Sample size=ANC contact list
-cap program drop start_from_clean_file_ANC
-program define   start_from_clean_file_ANC
-  * Open clean file
-  use                       "${DataClean}Final_ANC.dta", clear
-  capture drop _merge 
-  keep projectid R_ANC_name R_ANC_key C_ANC_Expected_dob HDSS hdss_region R_ANC_gestation R_ANC_phone1 R_ANC_phone2 R_ANC_phoneowner R_ANC_end ///
-       R_ANC_visitdate R_ANC_visitdate_n Location R_ANC_submissiondate Num_weeks Last_week Gestation_categ
-  merge 1:1 projectid using "${DataClean}Final_Enrollment_consented.dta"   , gen(Merge_Enroll)
-  drop R_Enr_v213
-  merge 1:1 projectid using "${DataClean}Final_IssueCoupon.dta"            , gen(Merge_Issue)
-  merge 1:1 projectid using "${DataClean}Final_Redemption_wide.dta"        , gen(Merge_Redemption)
-  
-	* Merge _2 should be 0. Confirm 
-	* Create rules: If we find 
-	* If its ER + didnt have voucher (was 1st time to HF) + first redemption: drop
-	* If ER, women T, but its subsequent: ok to keep. To define: keep it? Which type is it? Akito to think
-  
-  /* Already droppping in the enrollment do file. DROP later
-  * Dropping the suspicous case for now from the stats
-  * Checking suspicious case (704 vs 5557+704)
-  merge 1:1 projectid using "${DataLogistic}Suspicious_less5.dta"    , gen(Merge_suspicious) keepusing(log_result sc_* model) keep(1 3)	//Only 709 match (April21,2024)
-  assert model=="ER" | model=="HDSS" if Merge_suspicious==3			//Confirm w Akito: OK to allow ER models here?
-  drop model
-  */
-  /*-------------------------------------
-          Basic cleaning
-  -------------------------------------*/
-  *Dropping non target population from analysis (Out of service not dropped for now. Also, there are non assigned cases)
-  merge 1:1 projectid using "${DataClean}Final_Calls_laststatus.dta", gen(Merge_Status) keep(match master) keepusing(TS_Status)
-  drop if TS_Status=="Miscarriage" | TS_Status=="Moving out" | TS_Status=="Outside HDSS" | TS_Status=="Wrong number"
-  
-  *Sele: Find out why not data in "R_Enr_preg_now"
-  *keep if R_Enr_preg_now==1 & R_Enr_area==1 & R_Enr_area_f==1 & R_Enr_consent==1 & R_Enr_hdss_survey!=0	//2139
-  
-  * Fixing typo informtion
-  replace C_ANC_Expected_dob = daily("22nov2023", "DMY") if C_ANC_Expected_dob==daily("22nov2022", "DMY")
-  
-  * Creating a new variable
-  gen       C_1st_Issued=Merge_Barcode
-  recode    C_1st_Issued 3=1 1 2=0
-  replace   C_1st_Issued=. if R_Enr_treatment==0
-  label var C_1st_Issued "1st redemption"
-  
-  gen     C_name=""
-  replace C_name=R_Enr_conf_name
-  replace C_name=R_ANC_name if C_name==""
-  drop R_Enr_conf_name R_ANC_name
-  
-  * Check this with Sele
-  sort C_name
-  * * Out of 126, (47 are not dry run): 79 were dry run, so it is okay that we drop. 
-    //Now 45 - we have enroll data, but we dont have ANC contact. Do reverse engineering.
-	//See if they actually redeem. Solve
-  br   if     Merge_Enroll==2
-  tab Dry_run Merge_Enroll,m
-  
-		*br if  Merge_Enroll==2 & Dry_run==0
-			
-  export excel C_name projectid Location R_ANC_key  using "${DataLogistic}Data_quality.xlsx" if Merge_Enroll==2 & Dry_run==0 , sheet("Enroll_Dropped") firstrow(var) cell(A1) sheetreplace
-  savesome C_name projectid Location R_ANC_key R_Enr_conf_hf R_Enr_conf_visitday R_Enr_key R_1st_key R_Enr_submissiondate R_ANC_phone1 R_Enr_phone_number using "${DataLogistic}Enroll_Dropped.dta" if Merge_Enroll==2 & Dry_run==0, replace
-  * 88 as merge_enroll==2. 70 are OK because of DRY-RUN! pEDNING TO SOLVE 18. On May9, 20! Is this stable?
-			
-			*br projectid R_Enr_phone_number C_name R_Enr_treatment if Merge_Enroll==2 & Dry_run==0
-			
-  drop if Merge_Enroll==2 
-  recode  Merge_Enroll 1=0 3=1
-  
-  drop R_Enr_phone_number R_Enr_phone_call *key R_Enr_isvalidated 
-  
-  * Date: R_Enr_date_today
-  split R_Enr_date_today, p("-")
-  destring R_Enr_date_today1 R_Enr_date_today2 R_Enr_date_today3, replace
-  gen R_Enr_date_today_num=mdy(R_Enr_date_today2, R_Enr_date_today3, R_Enr_date_today1)
-  gen Enroll_since = (d(`c(current_date)')- R_Enr_date_today_num)
-  format R_Enr_date_today_num %td
-  
-  foreach i in 1 3 4 5 6 7 8 other { 
-  rename R_Enr_dispenser_notuse_`i' dn`i'
-  }
- 
-  gen     R_Enr_chlorine2_1_6=R_Enr_chlorine2_1
-  replace R_Enr_chlorine2_1_6=1 if R_Enr_chlorine2_1==1 | R_Enr_chlorine2_6==1
-  
-  * Replace the raw data: Brandon
-  replace R_Enr_cost_actual=88 if R_Enr_cost_actual==-88 
-  replace R_Enr_cost_transport=. if R_Enr_cost_transport==-99
-  
-  gen     Age=C_Enr_age  
-  replace Age=. if Age>100
-  
-  gen    C_Enr_age_categ=C_Enr_age
-  recode C_Enr_age_categ 12/15=1 15/20=2 20/25=3 25/30=4 30/150=5
-  
-  *R_Enr_water_chlorine
-  replace R_Enr_water_chlorine=. if R_Enr_water_chlorine==99
-  * Water source categorization
-  gen     C_Enr_ws_categ=.
-  replace C_Enr_ws_categ=1 if R_Enr_water_source==4
-  replace C_Enr_ws_categ=2 if R_Enr_water_source==1 | R_Enr_water_source==2  | R_Enr_water_source==3 | R_Enr_water_source==6
-  replace C_Enr_ws_categ=3 if R_Enr_water_source==11
-  replace C_Enr_ws_categ=4 if R_Enr_water_source==8 | R_Enr_water_source==9 | R_Enr_water_source==12
-  replace C_Enr_ws_categ=5 if R_Enr_water_source==5 | R_Enr_water_source==10 | R_Enr_water_source==13
-  replace C_Enr_ws_categ=6 if R_Enr_water_source==7
-  replace C_Enr_ws_categ=7 if R_Enr_water_source==98
-  
-  * Dealing with missing data
-  clonevar C_Enr_preg_diarrhea=R_Enr_preg_diarrhea
-  recode   C_Enr_preg_diarrhea 99=.
-
-  label   define C_Enr_ws_categl 1 "Borehole/well" 2 "Unprotected spring/river/stream/pond/lake" 3 "Rainfall" 4 "Pipe in dwelling/compound or public tap" 5 "Water vendor" 6 "Protected spring" 7 "Other", modify
-	label values C_Enr_ws_categ C_Enr_ws_categl
-	
-    tab C_Enr_Chlorine_type R_Enr_chlorine2_1_6,m
-	gen     Chlorine_type_taste=C_Enr_Chlorine_type
-	recode  Chlorine_type_taste 1=1 3=4
-	replace Chlorine_type_taste=2 if Chlorine_type_taste==2 & R_Enr_chlorine2_1_6==0
-	replace Chlorine_type_taste=3 if Chlorine_type_taste==2 & R_Enr_chlorine2_1_6==1
-	label   define Chlorine_type_tastel 1 "Currently using chlorine (own or source)" ///
-	        2 "Stop using chlorine (other than taste issue)" 3 "Stop using chlorine (taste issue)" ///
-            4 "Never used chlorine", modify
-	label values Chlorine_type_taste Chlorine_type_tastel
-	
-	* Shop redemption
-	gen     shop_hf_markets=0
-	* Mulaha (26) Akala (106) Aluor (107), Rera (114),  Kambare (120) Abidha (124) Ongielo (122) Lwak (123)
-	* Mulaha (26) Akala (106) Ongielo (122) - Limiting close three health facilities
-	* 105:  Siaya Referral
-	foreach i in 26 106 122 {
-	replace shop_hf_markets=1 if Location==`i'
-	replace shop_hf_markets=1 if R_Enr_expected_hf==`i'
-	}
-	
-	gen     shop_hf_markets_BA=.
-	replace shop_hf_markets_BA=0 if shop_hf_markets==1
-	* This is the date of Aug 18th
-	* replace shop_hf_markets_BA=1 if shop_hf_markets==1 & R_ANC_visitdate_n>23240
-	replace shop_hf_markets_BA=1 if shop_hf_markets==1 & R_Enr_date_today_num>23240
-	
-foreach x of var Redeem* { 
-	replace `x'=0 if `x'==.
-	replace `x'=100 if `x'==1
-} 
-
-foreach i in 1 2 3 4 {
-replace Redeem`i'=1 if Redeem`i'==100
-}
-foreach i in R_Enr_treatment Redeem1 Redeem2 Redeem3 Redeem4 {
-foreach d in 45 90 135 180 {
-	gen     `i'_`d'=0
-	replace `i'_`d'=1 if `i'==1 & Enroll_since>`d' & Enroll_since!=.		
-	replace `i'_`d'=. if Enroll_since<`d'
-}
-}
-
-/*
-randtreat, generate(C_mini_treatment) replace  multiple(3) setseed(758235657)
-
-  foreach i in R_Enr_ R_1st_ { 
-  split    `i'date_today, p("-")
-  destring `i'date_today1 `i'date_today2 `i'date_today3, replace
-  gen      `i'date_today_n = mdy(`i'date_today2, `i'date_today3, `i'date_today1)
-  }
-  */
-  gen Day_till_issue=round(R_1st_date_issue_end-R_Enr_date_today_num,1)
-  
-  gen    R_Enr_duration_categ=R_Enr_duration
-  recode R_Enr_duration_categ 0/3=1 3/5=2 5/10=3 4/1000=4
-
-  label var Age "Age_GW"
-  label var R_Enr_hh_size "Household size"
-  label var R_Enr_chlorine2_1_6 "Bad smell or taste"
-  label var R_ANC_gestation "Gestation in weeks"
-  label var C_1st_Issued "1st voucher redemption"
-  * label var Day_till_issue "Number of days took till issueing voucher since enrollment"
-  
-  * Create Dummy
-	*foreach v in R_Enr_duration_categ Chlorine_type_taste C_1st_duration_categ C_Enr_ws_categ {
-	*levelsof `v'
-	*foreach value in `r(levels)' {
-	*	gen     `v'_`value'=0
-	*	replace `v'_`value'=1 if `v'==`value'
-	*	replace `v'_`value'=. if `v'==.
-	*	label var `v'_`value' "`: label (`v') `value''"
-	*}
-	*}
-	
-	foreach v in R_Enr_duration_categ Chlorine_type_taste C_1st_duration_categ C_Enr_ws_categ Gestation_categ {
-    levelsof `v'
-    foreach value in `r(levels)' {
-        local clean_value : display round(`value')
-        gen     `v'_`clean_value'=0
-        replace `v'_`clean_value'=1 if `v'==`value'
-        replace `v'_`clean_value'=. if `v'==.
-        label var `v'_`clean_value' "`: label (`v') `value''"
-    }
-    }
-	
- * label define R_Enr_water_chlorinel 0 "No" 1 "Water chlorinated at source_lab" 99 "Water chlorinated at source-Do not know", modify
- * label values R_Enr_water_chlorine R_Enr_water_chlorinel
- * label define R_Enr_dispenserl 0 "No" 1 "Dispenser for safe water in the community" 99 "Dispenser for safe water in the community-Do not know", modify
- * label values R_Enr_dispenser R_Enr_dispenserl
-
-  label var C_Enr_chlorine1 "Ever used chlorine"
-  label var C_Enr_dispenser_use "Use dispenser for safe water"
-	
-  gen flag=1
-  gen Contact=1
-  
-  *Cleaning open ended answer
- fre C_Enr_chlorine5
- replace C_Enr_chlorine5="Not available" if strpos(C_Enr_chlorine5, "Not available") | strpos(C_Enr_chlorine5, "Not easily available") | C_Enr_chlorine5=="Not readily available" | strpos(C_Enr_chlorine5, "Notavailable")
- replace C_Enr_chlorine5="Bad smell" if strpos(C_Enr_chlorine5, "bad smell ") | strpos(C_Enr_chlorine5, "Smells bad") | strpos(C_Enr_chlorine5, "Chlorine products not available") 
- replace C_Enr_chlorine5="Bad taste" if strpos(C_Enr_chlorine5, "Bad tastes") 
- replace C_Enr_chlorine5="Bad taste and bad smell" if strpos(C_Enr_chlorine5, "I don't like the smell and taste of water guard") | strpos(C_Enr_chlorine5, "Never liked") 
- replace C_Enr_chlorine5="Expensive" if strpos(C_Enr_chlorine5, "lack of money") | strpos(C_Enr_chlorine5, "Don't have money") | strpos(C_Enr_chlorine5, "Not affordable") | strpos(C_Enr_chlorine5, "No money")  | strpos(C_Enr_chlorine5, "Expensive")
-replace C_Enr_chlorine5="Nothing" if strpos(C_Enr_chlorine5, "No reason") | strpos(C_Enr_chlorine5, "No idea") | strpos(C_Enr_chlorine5, "No genuine reason") | strpos(C_Enr_chlorine5, "No reasons") | strpos(C_Enr_chlorine5, "None")
- replace C_Enr_chlorine5="Not accessible" if strpos(C_Enr_chlorine5, "Not easily accessible") | strpos(C_Enr_chlorine5, "Not accessed") | strpos(C_Enr_chlorine5, "Never had access") | strpos(C_Enr_chlorine5, "never accessed") | strpos(C_Enr_chlorine5, "Distance is far") | strpos(C_Enr_chlorine5, "Have never had access") | strpos(C_Enr_chlorine5, "Hard accessing it") | strpos(C_Enr_chlorine5, "not readily available")
- replace C_Enr_chlorine5="Used to boiling" if strpos(C_Enr_chlorine5, "Prefers boiling") | strpos(C_Enr_chlorine5, "Prefers boiled")
- replace C_Enr_chlorine5="Never bought" if strpos(C_Enr_chlorine5, "Never bought") | strpos(C_Enr_chlorine5, "never bought any")
-  replace C_Enr_chlorine5="Other" if C_Enr_chlorine5=="Broken dispense" | C_Enr_chlorine5=="Lived in Nairobi at a place with clean water" | C_Enr_chlorine5=="Perceived water as clean" | C_Enr_chlorine5=="Personal decision" | C_Enr_chlorine5=="Religion beliefs" | C_Enr_chlorine5=="Spouse is allergic to water guard" 
-  
-   	* Adding Weekly fixed effects
-	recode R_Enr_date_today3 1/8=1 9/17=2 18/23=3 24/32=4
-	egen   Weekly=group(R_Enr_date_today1 R_Enr_date_today2 R_Enr_date_today3)
-	
-	* Categorized
-	gen Age_categ=C_Enr_age
-	recode Age_categ 12/19.999999=1 20/29.9999999999=2 30/200=3
-	label   define Age_categl 1 "Younger than 19" 2 "20-29 years old" 3 "30 years old and older", modify
-	label values Age_categ Age_categl
-		
-	label var R_Enr_num_children_0 "No U5 children in the household"
-	gen       R_Enr_num_children_1_3=R_Enr_num_children_0
-	recode R_Enr_num_children_1_3 0=1 1=0
-	label var R_Enr_num_children_1_3 "Have some U5 children"
-  
-  * drop R_Enr_v268 R_Enr_v270 R_Enr_v293 R_Enr_v303 R_Enr_v309 R_Enr_v313 R_Enr_v330 R_Enr_v339
-  save "${DataFinal}Full_Final_ANC_W_Dry.dta", replace
-  
-  * Dropping the dry run sample
-  drop if Dry_run==1 
-  * Sele: Do enumeartor submit if the form is no consent, or declined? 
-  drop if TS_Status=="Declined" | | TS_Status=="No consent"
-  capture export excel Location projectid using "${DataLogistic}Data_quality.xlsx" if Merge_Redemption==2, sheet("No_ID_Redeemed") firstrow(var) cell(A1) sheetreplace
-  drop if Merge_Redemption==2
-  tab TS_Status,m
-  * Sele: What is the TS_Status=="missing"?
-  
-  save "${DataFinal}Full_Final_ANC_inclusive_a.dta", replace
-   * drop if Merge_suspicious==3 & (sc_confirmed!=1) // Already droppping in the enrollment do file. DROP later
-  save "${DataFinal}Full_Final_ANC.dta", replace
-end
-
-* Enrollment only
-cap program drop start_from_clean_file_E
-program define   start_from_clean_file_E
-
-*Inclusive file
-  use "${DataFinal}Full_Final_ANC_inclusive_a.dta", clear
- keep if Merge_Enroll==1
-   gen type=1
-  lab def type 1 "HDSS" 2 "Choice", modify
-  lab val type type
-  save "${DataFinal}Full_Final_Enrollment_inclusive_a.dta", replace
-
-  * Open clean file
-  start_from_clean_file_ANC
-  keep if Merge_Enroll==1
-  gen type=1
-  lab def type 1 "HDSS" 2 "Choice", modify
-  lab val type type
-  save "${DataFinal}Full_Final_Enrollment.dta", replace
-  *save "${DataFinal}Full_Final_Enrollment_20240517.dta", replace	//run once in May17
-  
-end
-
-cap program drop start_from_clean_file_ET
-program define   start_from_clean_file_ET
-   start_from_clean_file_E
-   	
-   keep if R_Enr_treatment==1
-   save "${DataFinal}Full_Final_Treatment.dta", replace
- 
-end
-
-* Opens clean dataset
-* Enrollment and redemption combined
-cap program drop start_from_clean_file_ETI
-program define   start_from_clean_file_ETI
-  start_from_clean_file_ET
-  keep if Merge_Redemption==3
-  save "${DataFinal}Full_Final_Voucher.dta", replace
-    
-end
-
-* Child level stats
-cap program drop start_from_clean_file_CR
-program define   start_from_clean_file_CR
-  * Open clean file
-  start_from_clean_file_E
-  foreach i in 1 2 3 {
-  replace              R_Enr_child_age_months_`i'=0 if R_Enr_child_age_`i'!=0 &  R_Enr_child_age_`i'!=.
-  gen R_Enr_child_age_im_`i'=R_Enr_child_age_months_`i'+R_Enr_child_age_`i'*12	
-  }
-
-  * rename (R_Enr_v368 R_Enr_v379 R_Enr_v410) (Sick_speicy_1 Sick_speicy_2 Sick_speicy_3)
-  keep R_Enr_child_diarrhea* projectid R_Enr_num_children R_Enr_treatment R_Enr_child_sickness_*  R_Enr_child_age_im_* hdss_region R_Enr_date_today_num R_Enr_name_child_* Location
-	reshape long R_Enr_name_child_ R_Enr_child_diarrhea_ R_Enr_child_diarrhea_num_ R_Enr_child_diarrhea_days_ R_Enr_child_diarrhea_symptom_ R_Enr_child_diarrhea_symptom_1_ R_Enr_child_diarrhea_symptom_2_ 	R_Enr_child_diarrhea_symptom_3_ R_Enr_child_diarrhea_symptom_4_ R_Enr_child_sickness_ R_Enr_child_sickness_1_ R_Enr_child_sickness_2_ R_Enr_child_sickness_3_ R_Enr_child_sickness_4_ R_Enr_child_sickness_5_ R_Enr_child_sickness_99_ R_Enr_child_sickness_other_  R_Enr_child_age_im_, i(Location projectid R_Enr_treatment hdss_region R_Enr_date_today_num) j(Num)
-	drop if R_Enr_child_diarrhea_==.
-	rename (R_Enr_child_diarrhea_days_ R_Enr_child_diarrhea_symptom_) (CD_days CD_symptom)
-	rename (R_Enr_child_diarrhea_symptom_1_ R_Enr_child_diarrhea_symptom_2_ R_Enr_child_diarrhea_symptom_3_ R_Enr_child_diarrhea_symptom_4_) (CD_symptom_1 CD_symptom_2 CD_symptom_3 CD_symptom_4)
-	rename  R_Enr_child_sickness_other_ CS_other
-	destring CD_symptom_* R_Enr_child_sickness_* CS_other projectid, replace
-	label var R_Enr_child_age_im_ "Child age in months"
-	label var R_Enr_child_diarrhea_ "Diarrhea in the last two weeks"
-	label var CD_days "Number of days with diarrhea"
-	label var  R_Enr_child_diarrhea_num_ "Number of stools in a 24 hour period"
-	label var CD_symptom_1 "Bloody diarrhea"
-	label var CD_symptom_2 "Restless/Irritable"
-	label var CD_symptom_3 "Watery diarrhea"
-	label var CD_symptom_4 "Very thirsty"
-	label var R_Enr_child_sickness_1_ "Cough"
-	label var R_Enr_child_sickness_2_ "Fever"
-	label var R_Enr_child_sickness_3_ "Difficulty in breathing"
-	label var R_Enr_child_sickness_4_ "Pneumonia"
-	label var R_Enr_child_sickness_5_ "Not sick"
-	label var R_Enr_child_sickness_99_ "I do not know"
-	label var CS_other "Other sickness"
-	
-	tostring projectid, replace
-	gen ID_BLCHILD=_n
-	rename R_Enr_name_child_ child_name
-	save "${DataFinal}BL_Final_Child Level.dta", replace
-
-end
-
-start_from_clean_file_ANC
-start_from_clean_file_E
-start_from_clean_file_ET 
-keep Redeem1 Redeem2 Redeem3 Redeem4 Location
-collapse Redeem1 Redeem2 Redeem3 Redeem4 (sum) N_Redeem1=Redeem1, by(Location)
-
-save "${DataClean}Final_Red_stats.dta", replace
-
-start_from_clean_file_ETI
-start_from_clean_file_CR
-
-
-start_from_clean_file_E
-drop R_Enr_name1_correct R_Enr_name2_correct R_Enr_name3_correct R_Enr_household_head R_Enr_nickname R_Enr_name1_father R_Enr_name2_father R_Enr_name3_father R_Enr_name1_mother R_Enr_name2_mother R_Enr_name3_mother R_Enr_name1_husband R_Enr_name2_husband R_Enr_name3_husband R_Enr_name_child_1 R_Enr_name_child_2 R_Enr_child_age_3 R_ANC_phone1 R_ANC_phone2 R_ANC_phoneowner R_Enr_collect_is_phone_app R_Enr_phonecalllog_real R_Enr_phone_owner R_Enr_call_new_opt R_Enr_phone_new R_Enr_phone_call2 R_Enr_basic_info_show R_Enr_owner_correct R_Enr_phone_2_yesno R_Enr_phone_2 R_Enr_phone_2_owner R_Enr_phone_3 R_Enr_phone_3_owner R_Enr_phone_4 R_Enr_phone_4_owner R_Enr_phone_air R_Enr_phone_air_add R_Enr_phone_contact_add
-save "${DataClean}Enrolled_Anon_Grace.dta", replace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-stop
 
 
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 7
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+  /*****************************************************************
+ Data creation of the consented indiviudal datasets 
+*****************************************************************/
+
+//Creating consented child dataset for analysis 
+use "${DataFinal}Master_Individual_data_endline_census.dta", clear
+keep if C_dataset_type  == "Child" 
+ds // list all variables
+foreach var of varlist * {
+    // Calculate the number of non-missing values for the variable
+    count if !missing(`var')
+    // Drop the variable if all values are missing
+    if r(N) == 0 {
+        drop `var'
+    }
+}
+keep if comb_child_caregiver_present == 1
+cap drop Vcomb_resp_avail_comb //keeping only available and consented ones 
+save "${DataFinal}Child_consented_individual_endline_census.dta", replace
+
+//creating consented women dataset for analysis 
+use "${DataFinal}Master_Individual_data_endline_census.dta", clear
+keep if C_dataset_type  == "CBW" 
+ds // list all variables
+foreach var of varlist * {
+    // Calculate the number of non-missing values for the variable
+    count if !missing(`var')
+    // Drop the variable if all values are missing
+    if r(N) == 0 {
+        drop `var'
+    }
+}
+keep if comb_resp_avail_comb == 1 //keeping only available and consented ones 
+cap drop Vcomb_resp_avail_comb
+save "${DataFinal}CBW_consented_individual_endline_census.dta", replace
+
+
+//creating consented roster dataset for analysis 
+use "${DataFinal}Master_Individual_data_endline_census.dta", clear
+keep if C_dataset_type  == "Roster" 
+ds // list all variables
+foreach var of varlist * {
+    // Calculate the number of non-missing values for the variable
+    count if !missing(`var')
+    // Drop the variable if all values are missing
+    if r(N) == 0 {
+        drop `var'
+    }
+}
+keep if R_E_instruction == 1 //keeping only available and consented ones 
+cap drop Vcomb_resp_avail_comb
+save "${DataFinal}Roster_consented_individual_endline_census.dta", replace
+
+
+
+
+
+
+
+
+
+
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 8
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
   

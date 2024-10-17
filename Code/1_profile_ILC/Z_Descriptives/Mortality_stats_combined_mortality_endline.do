@@ -1,5 +1,44 @@
+/*=========================================================================* 
+* Project information at:https://github.com/DevInnovationLab/i-h2o-india/
+****** Country: India (Odisha)
+****** Purpose: This do file creates final version of  endline indvidual datasets
+****** Created by: DIL
+****** Used by:  DIL
+****** Input data : 
+****** Output data : 
+	
+****** Do file to run before this do file
 
+****** Language: English
+=========================================================================*/
 
+/* 
+* Summary of the DO File: Mortality Data Processing
+* 
+* Objective: This DO file processes mortality survey datasets to analyze child mortality rates, focusing on both screened and non-screened child death information. It generates several variables related to child age at death and merges datasets to create a comprehensive mortality analysis.
+*
+* Datasets Used:
+* 1. Screened Child Death Dataset: 
+*    - Mortality survey data for children who were screened for mortality.
+*    - File path: "${DataRaw}Mortality survey long datasets/1_10_Mortality_survey-start_pc_survey_sc-consented_pc_sc-start_5_years_pregnant_sc-child_died_repeat_sc.dta"
+* 2. Non-Screened Child Death Dataset: 
+*    - Mortality survey data for children who were not screened.
+*    - File path: "${DataRaw}Mortality survey long datasets/1_10_Mortality_survey-start_pc_survey-consented_pc-start_5_years_pregnant-child_died_repeat.dta"
+* 3. Merged Mortality Data:
+*    - Final dataset combining data from both screened and non-screened children.
+*    - File path: "${DataFinal}1_10_Mortality_survey_Dec-Jan_M1_M2.dta"
+*
+* Important Prefixes Used:
+* - R_Mor_: Prefix for variables related to mortality data.
+* - sc_: Prefix for variables initially indicating screened child data.
+* - comb_: Prefix for combined variables after renaming and merging datasets.
+*
+* Key Functions:
+* - Mor_key_creation: Splits keys and renames variables for easier identification.
+* - prefix_rename: Renames variables with the prefix R_Mor_ for consistency.
+*
+* The file also includes manual corrections for specific unique IDs where data entry errors occurred, ensuring the integrity of the dataset.
+*/
 
 //importing long child datasets 
 
@@ -38,6 +77,8 @@ end
  ---------------------------------------------------------------------------*/
  * ID M1
 
+ *NOTE: please refer to the mortality survey data processing file to understand the structure of the dataset better and why manual corrections are being done. It can be found here: "GitHub\i-h2o-india\Code\1_profile_ILC\1_1_D_Mortality_cleaning.do" 
+ 
 //this has screened child death infor
 
 use "${DataRaw}Mortality survey long datasets/1_10_Mortality_survey-start_pc_survey_sc-consented_pc_sc-start_5_years_pregnant_sc-child_died_repeat_sc.dta", clear
@@ -280,7 +321,7 @@ so we have to use mortality survey numbers for these 4 villages and append it to
 //child died repeat loop {This dataset has information about the children that died in the endline census so it has their identifiers. Please note that this gets created in the  } 
 
 
-//this dataset gets created in "1_8_A_Endline_cleaning_HFC_Data_creation" This dataset only contains main endline census data like no revisit observations 
+//this dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do" This dataset only contains main endline census data like no revisit observations 
 //IMP NOTE: Please note that there is no need to combine revisit dataset with main endline census data here because there were no child deaths found in revisit as a result long datasets for child death is empty 
 use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
 
@@ -335,7 +376,7 @@ preserve
 
 //We are using final merged dataset between main endline census and revisit dataset
 //this gets created in the do file - "5_1_Endline_main_revisit_merge_final" 
-use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
+use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
 
 //we are dropping these entries because they are not applicable for child bearing women  
 drop if comb_resp_avail_comb == .
@@ -738,7 +779,7 @@ drop match
 
 //importing new member roster to get ages of new child 
 preserve
-use "${DataFinal}Endline_New_member_roster_dataset_final.dta", clear
+use "${Intermediate}Endline_New_member_roster_dataset_final.dta", clear
 keep if comb_hhmember_age < 5
 keep unique_id comb_hhmember_name comb_hhmember_age 
 rename comb_hhmember_name R_Cen_u5_child_pre_
@@ -882,7 +923,7 @@ OBJECTIVE: In endline census module we have an opion to mark those U5 child from
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${DataFinal}Endline_Child_level_merged_dataset_final.dta", clear
+use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
 
 
 gen exclude_U5_BL = 0
@@ -1085,7 +1126,7 @@ OBJECTIVE: In endline census module we have an opion to mark those women from ba
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
+use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
 drop if comb_resp_avail_comb == .
 
 
@@ -1123,7 +1164,7 @@ IMPORTING ENDLINE LONG DATASET FOR CHILD BEARING WOMEN
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear
+use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
 
 drop if comb_resp_avail_comb == .
 

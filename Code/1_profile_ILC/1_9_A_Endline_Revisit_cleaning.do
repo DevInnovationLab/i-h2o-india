@@ -36,9 +36,8 @@ br submissiondate unique_id key enum_name_label resp_available instruction if du
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_child_u5_name_label_* comb_child_caregiver_present_* comb_main_caregiver_label_* comb_preg_index_1 comb_preg_index_2 comb_preg_index_3 comb_preg_index_4 comb_child_ind_1 comb_child_ind_2 if dup_HHID > 0
 
 
-
+*Akito's review required from row 42-row 124 
 /* 
-//create a spare key 
 
 APPROACH USED FOR DEALING WITH DUPLICATES 
 
@@ -52,31 +51,39 @@ TYPES OF DUPLICATES:
 
 TYPE 1: 
 Old version data was sent where women data was done as women were available but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but here the child data wasn't done and child was marked as unavailable 
-So, to deal with this we will replace applicable child variables in old version data to reflect that these children belong to this ID but their data wasn't done because of their unvailability 
+So, to deal with this we will replace applicable child variables in old version data to reflect that these children belong to this ID but their data wasn't done because of their unvailability  so we just need to replace the unavailability reasons of these children in the old version
  
 TYPE 2: 
 Old version data was sent where women data was done as women were available but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but here the child data was done and child was marked as available and full survey was administered 
-So, to deal with this we can't do normal replace we will have to merge child and women data on the UID to create a one observation where all sections pertaining to that ID are appearing 
+So, to deal with this we can't do normal replace we will have to merge child and women data on the UID to create a one observation where all sections pertaining to that ID are appearing. Thankfully we don't have any such case but it still good to highlight the possibility here.  
 
 TYPE 3: 
 Old version data was sent where women data was not done as women were unavailable but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing but but here the child data wasn't done and child was marked as unavailable 
-So, to deal with this we can just drop the observation where child names weren't appearing that is old version obs as nrew version also has the unavailable status for women so no data is being lost
+So, to deal with this we can just drop the observation where child names weren't appearing that is old version obs as new version also has the unavailable status for women so no data is being lost
 
 
 TYPE 4: 
 Old version data was sent where women data was not done as women were unavailable but applicable child names weren't appearing for that respective UID and then enum also submitted new version where all women and child names were appearing and here the child data was done and child was marked as available
-So, to deal with this we will replace applicable child variables in new version data to reflect that these children and women belong to this ID but women data wasn't done because of their unvailability
+So, to deal with this we will replace applicable child variables in new version data to reflect that these children and women belong to this ID but women data wasn't done because of their unvailability so we can then drop old version entry 
 
 
 TYPE 5: 
-both old version and new versions are sent but enum had alreday copied the data into new version so no replace,ent or merge is required we can just drop old version data because new version alreday has all the applicable cases 
+both old version and new versions are sent but enum had alreday copied the data into new version so no replacement or merge is required we can just drop old version data because new version alreday has all the applicable cases 
 
 
+TYPE 6: 
+Main respondent survey was applicable and child survey but in old version child names weren't appearing so only main respondent data was done and child names weren't even coming so we need to drop the new version submission because main resp survey was marked as unavailable there and child data was unavailable so replacements for child variable need to be done in the old version 
+
+TYPE 7: 
+Here enum did the women survey again because she had sent old version survey as well where women survey was done but child names weren't appearing that's why child surveys weren't done but this enum on the new version did women survey again and child survey again and sent it so we should drop old version data because new version has no missing data 
+
+TYPE 8: 
+ I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that means no survey was administered so I did replacements in the old version submission to reflect the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID 
 
 
 If replacements are being administered as a solution which variables get replaced: 
 
-Mandaory replace- 
+Mandatory replace- 
 
 comb_child_ind
 comb_child_u5_name_label
@@ -132,7 +139,8 @@ drop if key == "uuid:20270a02-5941-47a7-b53f-7194404e8b30" & unique_id == "30301
 
 //CASE OF ID - "30701119030"
 
-/*Main respondent survey was applicable and child survey but in old version child names weren't appearing so only main respondent data was done and child names weren't even coming so we need to drop the new version submission because main resp survey was marjked as unavailable there and child data was unavailable so replacements for child variable need to be done in the old version */
+//TYPE 6 DUPLICATE 
+/*Main respondent survey was applicable and child survey but in old version child names weren't appearing so only main respondent data was done and child names weren't even coming so we need to drop the new version submission because main resp survey was marked as unavailable there and child data was unavailable so replacements for child variable need to be done in the old version */
 
 
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "30701119030"
@@ -180,6 +188,7 @@ drop if key == "uuid:e6d04108-7221-4f6d-be77-7fc19092e8c0" & & unique_id == "402
 
 //Case of UID- 40202108039
 
+//TYPE 7 
 //Here enum did the women survey again because she had sent old version survey as well where women survey was done but child names weren't appearing that's why child surveys weren't done but this enum on the new version did women survey again and child survey again and sent it so we should drop old version data because new version has no missing data 
 
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "40202108039"
@@ -218,6 +227,7 @@ drop if key == "uuid:a6d45213-5337-44c7-951f-b5b51c631065" & & unique_id == "402
 
 //case of UID - 40301108013
 
+//TYPE 7 DUPLICATE
 //Here enum did the women survey again because she had sent old version survey as well where women survey was done but child names weren't appearing that's why child surveys weren't done but this enum on the new version did women survey again and child survey again and sent it so we should drop old version data because new version has no missing data 
 
 
@@ -242,7 +252,9 @@ drop if key == "uuid:62db341b-de7e-45cf-a983-0ab650e964f6" & unique_id == "40301
 
 //case of UID = 50201109021
 
-/* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
+//TYPE 8 DUPLICATE
+ 
+/* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that means no survey was administered so I did replacements in the old version submission to reflect the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
 
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201109021"
 
@@ -260,6 +272,8 @@ drop if key == "uuid:297b27f2-4101-4181-bf18-af6175f04797" & unique_id == "50201
 
 
 //Case of UID = 50201115026
+
+//TYPE 8 DUPLICATE
 
 /* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
 
@@ -281,6 +295,8 @@ drop if key == "uuid:59b8b051-e779-4467-a649-f2b49ef54e1b" & unique_id == "50201
 
 //case of UID - 50201115043
 
+//TYPE 8 DUPLICATE
+ 
 /* I dropped new version ID because the whole HH was unavailable so enum marked HH unavailable that measn no survey was administered so I did replacements in the old version submission to refelct the applicable child names on that ID. I referred to revisit preload to identify the child names applicable on this ID */
 
 br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_available instruction wash_applicable comb_name_cbw_woman_earlier_* comb_resp_avail_cbw_* comb_resp_avail_cbw_oth_*  comb_child_u5_name_label_1 comb_main_caregiver_label_1 comb_child_caregiver_present_1 comb_child_ind_1 comb_child_care_pres_oth_1 comb_child_caregiver_name_1 comb_child_residence_1 comb_child_name_1 comb_child_u5_name_label_2 comb_main_caregiver_label_2 comb_child_caregiver_present_2 comb_child_ind_2 comb_child_care_pres_oth_2 comb_child_caregiver_name_2 comb_child_residence_2 comb_child_name_2 if unique_id == "50201115043"
@@ -317,6 +333,8 @@ br submissiondate r_cen_village_name_str unique_id key enum_name_label resp_avai
 drop if key == "uuid:be4aefc3-cfc2-4b7a-87f7-06b8285b9dac" & unique_id == "50301117008" 
 
 //case of UID - 50301117064
+
+//UNIQUE CASE 
 
 /* There are 4 eligible women on this ID and all 4 women surveys were marked as unavailable earlier but in the new version 2 out 4 women were surveyed and child survey was also done on new version so it makes sense to drop the old version ID.
 
@@ -387,6 +405,8 @@ gen date_only = substr(date_string, 1, 9)
 gen date_final = date(date_only, "DMY")
 
 format date_final %td
+
+
 
 *drop if date_final < mdy(4,21,2024)
 
