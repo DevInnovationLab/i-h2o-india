@@ -325,50 +325,6 @@ so we have to use mortality survey numbers for these 4 villages and append it to
 //IMP NOTE: Please note that there is no need to combine revisit dataset with main endline census data here because there were no child deaths found in revisit as a result long datasets for child death is empty 
 use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
 
-rename key R_E_key
-
-//this step is being done to get valid unique IDs and village name 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
-
-drop if unique_id=="30501107052"
-
-//dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to 
-
-//there are 4 IDs which are in master (mortality dataset) but not in using(main endline dataset) so the explanation for this is below- 
-/*
-These are all the training IDs of badaalubadi
-so we can drop _merge == 1
-br if key == "uuid:100f2352-5a9f-430c-bbc2-a12a2deb845b - training ID"
-R_E_key
-uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID 
-uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID //
-uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //traaining ID
-*/
-//
-
-keep if _merge == 3
-
-drop _merge
-
-
-
-//EXPLANNATION AS TO WHY THIS NEEDS TO BE DROPPED 
-
-//Archi to investigate this case further Issue is that woman said that no child died but the question still asked for information of the dead child whhc shouldn't be the case. This was a miscarriage case that is why we need to drop it
-
-//Explanation to why this might have happened: 
-//miscarriage question was added later due to which two enums thpught miscarriage and stillborn is the same thing which is not that is why this question was added so they went back in the form and changed the stillborn answer to 0 but the loop for child death had started alreaday that is  despite of the constraint this loop still started because they while editing the form they skipped to this section
-
-//that is why you will see that in the women dataset use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear child dead for these 2 IDs is 0 but still these questions for asked
-
-
-drop if unique_id== "40301113022" & R_E_key == "uuid:29e4bbf5-a3f2-48a2-93e6-e32c751d834e" 
-
-drop if unique_id== "40301110002" & R_E_key == "uuuid:b9836516-0c12-4043-92e9-36d3d1215961" 
-
-
-
 
 //we want to find the number of kids that are stillborn and they need to be removed from this data so I am attching this variable with wide endline dataset 
 

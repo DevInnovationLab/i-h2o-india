@@ -338,7 +338,11 @@ unique_id	comb_child_comb_name_label
 20201111076	111-Ranbir sabar
 20201111076	Ranveer sabar
 
+SOLUTION: How was this duplicate treated?
+I dropped the entries where comb_child_caregiver_present == .  was empty because 111-Ranbir sabar and  Ranveer sabar
+ is the same child and enum entered his name again to write the correct age but he still falls oit of our criteria so we this entry gets dropped when we drop comb_child_caregiver_present == . 
 */
+
 //merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison as explained earlier 
 cap drop _merge
 merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label  ) 
@@ -566,6 +570,8 @@ The counterpart reviist dataset for new census members didn't have any entries t
 Drop here means we would have to drop those rows from the main endline long roster dataset where respondent was unavailable here and data couldn't be collcted so we need to add rows in replacement for this from revisit endline roster level dataset 
 
 This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2_revisit.do"
+
+
 */
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.dta", clear
 RV_key_creation
@@ -908,7 +914,6 @@ tab dup_HHID
 save "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", replace 
 
 
-
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 4
@@ -923,14 +928,14 @@ use"${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-N_CBW_start_eligible-N_star
 
 use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-comb_start_survey_CBW-comb_CBW_yes_consent-comb_start_5_years_pregnant-comb_child_died_repeat.dta", clear
 
-
+//Both the datasets above are empty but we are still importing it to explain why revisit mortality datasets are not being used to create master dataset 
 
 /* ---------------------------------------------------------------------------
 * ID 19 and 20: Mortality info
  ---------------------------------------------------------------------------*/
  * ID 19
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta", clear
-key_creation 
+M_key_creation 
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "cen_", "comb_", 1)
@@ -941,11 +946,12 @@ foreach var of varlist *_cbw {
     rename `var' `newname'
      }
 gen Cen_Type=3
+gen C_entry_type = "BC" 
 save "${DataTemp}temp.dta", replace
 
 * ID 20
 use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta", clear
-key_creation 
+M_key_creation 
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -956,7 +962,54 @@ foreach var of varlist *_cbw {
     rename `var' `newname'
      }
 gen Cen_Type=2
+gen C_entry_type = "N" 
 append using "${DataTemp}temp.dta"
+rename key R_E_key
+
+//this step is being done to get valid unique IDs and village name 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_village_name_str R_E_enum_name_label R_E_resp_available R_E_instruction) 
+
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to 
+
+//there are 4 IDs which are in master (mortality dataset) but not in using(main endline dataset) so the explanation for this is below- 
+/*
+These are all the training IDs of badaalubadi
+so we can drop _merge == 1
+br if key == "uuid:100f2352-5a9f-430c-bbc2-a12a2deb845b - training ID"
+R_E_key
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID 
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //training ID //
+uuid:a5994f35-1c8e-4ab9-9687-ad4a7f838140 //traaining ID
+*/
+//
+
+keep if _merge == 3
+
+drop _merge
+
+/*EXPLANNATION AS TO WHY THESE 2 IDs NEED TO BE DROPPED 
+
+ISSUE: further Issue is that woman said that no child died in the women dataset but the question still asked for information of the dead child which shouldn't be the case. This was a miscarriage case that is why we need to drop it
+
+Explanation to why this might have happened: 
+miscarriage question was added later due to which two enums thought miscarriage and stillborn is the same thing which is not that is why this question was added so they went back in the form and changed the stillborn answer to 0 but the loop for child death had started alreaday that is  despite of the constraint this loop still started because they while editing the form they skipped to this section and that is when the child dead quetsion came they entered details but this is not relevant for us in calculating mortality 
+
+that is why you will see that in the women dataset use "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear child dead for these 2 IDs is 0 but still these questions for asked*/
+
+//miscarriage
+drop if unique_id== "40301113022" & R_E_key == "uuid:29e4bbf5-a3f2-48a2-93e6-e32c751d834e" 
+
+//miscarriage
+drop if unique_id== "40301110002" & R_E_key == "uuid:b9836516-0c12-4043-92e9-36d3d1215961" 
+
+// The option to write father name and gender of the child wasn't getting displayed as a result enum couldn't write it so for this ID I manually entered the values. Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/120
+replace comb_fath_child = "Muna himirika" if unique_id == "50401117009" & R_E_key == "uuid:66fe3583-0e49-481a-98da-31393275ceca" 
+replace comb_gen_child = 1 if unique_id == "50401117009" & R_E_key == "uuid:66fe3583-0e49-481a-98da-31393275ceca" 
+
+
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
 
@@ -967,17 +1020,135 @@ SECTION 5
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
 
+
+********************************************************************************
   /*****************************************************************
  1. CLEANING COMBINED CHILD DATASET FIRST 
 *****************************************************************/
+********************************************************************************
 
 use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
-
+rename  key R_E_key 
 *Duplicates check 
 //the only unqiue identifier in the child dataset is these two variables 
 isid unique_id comb_child_comb_name_label
 
-*Manual corrections from Github issues page- https://github.com/DevInnovationLab/i-h2o-india/issues
+/*---------------------------------------------------------------------------
+Dropping IDs
+-----------------------------------------------------------------------------*/
+
+**Link of the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/139. This is a mid survey refusal so whatever data has been entered after WASH section is not applicable and needs to be dropped 
+drop if unique_id == "40202113033"
+
+/*---------------------------------------------------------------------------
+Manual corrections 
+-----------------------------------------------------------------------------*/
+//replacing names with correct surnames - replacing Jilaka with Jilakar. Also chnage this in the baseline census data - Check with Niharika 
+replace comb_child_comb_name_label = "Pauni Jilakar" if comb_child_comb_name_label == "Pauni Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_child_comb_name_label = "Raja Jilakar" if comb_child_comb_name_label == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+//enums had entered incorrect code. 666 had to be entered as the code if the HH member has died in the past few months and this was applicable for roster. 988 should be entered in the child section if the child name is already given to you and has not been renamed. This question  comb_child_name  was specifically for new child in case they have been named enums could highlight it here for others they could put 988 
+replace comb_child_name  = "988" if  comb_child_name  == "666" 
+
+
+//unusal case of breastfeeding- the child was breastfed till the age of 1.5 years that is 18 months so this needs to be reflected here as due to constrint enums couldn't reflect 18 in the answer that is why I am doing manual replacements here. Github issue no- https://github.com/DevInnovationLab/i-h2o-india/issues/124 
+replace comb_child_breastfed_month = 18 if comb_child_breastfed_month == 11 & unique_id == "40202111029" & R_E_key == "uuid:f97cdef1-a14d-46b3-83b0-2a4ba8cb0a2b" & comb_child_comb_name_label == "Dharmananda sabar" 
+
+//doing multiple replacements for Bhumika Kadraka because enum had reflected 1.5 years in days that is 356 and it was not allowed to add more days so to make it consistent I am chnaging it to 18 months 
+replace comb_child_breastfed_month = 18 if comb_child_breastfed_month == . & unique_id == "50201109029" & R_E_key == "uuid:687e106c-5908-4d83-9f30-0fb343ca24ff" & comb_child_comb_name_label == "Bhumika Kadraka" 
+
+replace comb_child_breastfed_days = . if comb_child_breastfed_days == 365 & unique_id == "50201109029" & R_E_key == "uuid:687e106c-5908-4d83-9f30-0fb343ca24ff" & comb_child_comb_name_label == "Bhumika Kadraka" 
+
+replace comb_child_breastfed_num = 1  if comb_child_breastfed_num == 2 & unique_id == "50201109029" & R_E_key == "uuid:687e106c-5908-4d83-9f30-0fb343ca24ff" & comb_child_comb_name_label == "Bhumika Kadraka" 
+
+//correcting breastfeeidng error. The child is still being breastfed and in such cases enum have to write 888 but enum was not able to in this case so she entered 365 days but this needs to be changed to 888 (Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/112) 
+replace comb_child_breastfed_num = 888 if comb_child_comb_name_label == "Gurucharan wataka" & unique_id == "50401105012" & R_E_key == "uuid:e3e7c93c-6623-450d-8f26-1d3ecc6abd72" 
+replace comb_child_breastfed_days = . if comb_child_breastfed_days == 365 & comb_child_comb_name_label == "Gurucharan wataka" & unique_id == "50401105012" & R_E_key == "uuid:e3e7c93c-6623-450d-8f26-1d3ecc6abd72" 
+
+/*---------------------------------------------------------------------------
+Outliers  
+-----------------------------------------------------------------------------*/
+ds 
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+}
+ds, has(type numeric)
+foreach var of varlist `r(varlist)'{
+summarize `var' if `var' != 888 & `var' !missing(varname), detail
+gen outlier = 0
+replace outlier = 1 if !missing(varname) & abs(varname - r(mean)) > 3*r(sd)
+}
+
+summarize comb_child_breastfed_num if !missing(comb_child_breastfed_num) & comb_child_breastfed_num != 888, detail
+gen outlier = 0
+replace outlier = 1 if comb_child_breastfed_num != 888 &  !missing(comb_child_breastfed_num) & abs(comb_child_breastfed_num - r(mean)) > 3*r(sd)
+
+
+********************************************************************************
+  /*****************************************************************
+ 2. CLEANING COMBINED CBW/WOMEN DATASET 
+*****************************************************************/
+********************************************************************************
+
+
+use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear 
+
+/*---------------------------------------------------------------------------
+Manual corrections 
+-----------------------------------------------------------------------------*/
+
+//Miscarriage question was added later that is why 2 enums couldn't reflect it in the survey for these 2 women. It is important to do this manual replacement because in the mortality dataset enum entered details for these 2 miscarriage cases which is not applicable to the mortality dataset so in mortality dataset these 2 IDs are being dropped. This github issue can be found at- https://github.com/DevInnovationLab/i-h2o-india/issues/141 
+
+//miscariage case
+replace comb_miscarriage = 1 if unique_id== "40301113022" & R_E_key == "uuid:29e4bbf5-a3f2-48a2-93e6-e32c751d834e" & comb_name_comb_woman_earlier == "Lija sabara" 
+
+//miscarriage
+replace comb_miscarriage = 1 if  unique_id== "40301110002" & R_E_key == "uuid:b9836516-0c12-4043-92e9-36d3d1215961" & comb_name_comb_woman_earlier == "Birajaini Sabara" 
+
+
+**RCH ID corrections 
+//correcting RCH ID because the constraint was for 12 digits but this respondent had only 11 didgits  - Github issue https://github.com/DevInnovationLab/i-h2o-india/issues/114. For Sone Nachika, I can't do any replacements because enum didn't provide RCH ID 
+
+//Damayanti miniaka
+replace  comb_preg_rch_id = "12100128602" if comb_preg_rch_id == "121001286020" & unique_id == "50501119018" & comb_name_comb_woman_earlier == "Damayanti miniaka" 
+
+//Jena pidika (Github issue link - https://github.com/DevInnovationLab/i-h2o-india/issues/112)
+replace  comb_preg_rch_id = "12100128603" if comb_preg_rch_id == "121001286030" & unique_id == "50501119004" & comb_name_comb_woman_earlier == "Jena pidika" 
+
+/*---------------------------------------------------------------------------
+Dropping IDs
+-----------------------------------------------------------------------------*/
+
+**Link of the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/139. This is a mid survey refusal so whatever data has been entered after WASH section is not applicable and needs to be dropped 
+drop if unique_id == "40202113033"
+
+
+
+
+
+
+********************************************************************************
+  /*****************************************************************
+ 2. CLEANING COMBINED ROSTER DATASET 
+*****************************************************************/
+********************************************************************************
+
+
+use "${Intermediate}Endline_roster_merged_census_New_final.dta", clear
+//need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
+
+/*---------------------------------------------------------------------------
+Manual corrections 
+-----------------------------------------------------------------------------*/
+
+//replacing names with correct surnames - replacing Jilaka with Jilakar. Also chnage this in the baseline census data - Check with Niharika 
+replace comb_name_from_earlier_hh = "Pauni Jilakar" if comb_name_from_earlier_hh == "Pauni Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_name_from_earlier_hh = "Raja Jilakar" if comb_name_from_earlier_hh == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_name_from_earlier_hh = "Sabitri Jilakar" if comb_name_from_earlier_hh == "Sabitri Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
 
 
 /*************************************************************************************************************************************************************************************
