@@ -123,6 +123,7 @@ foreach var of varlist *_u5*  {
 	local newname = subinstr("`var'", "_u5", "_comb", 1)
     rename `var' `newname'
 }
+// to make variable structure uniform across revisit and main dataset comb_child_u5_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_care_pres_oth comb_child_act_age comb_med_symp_u5 comb_med_symp_u5_1 comb_med_symp_u5_2 comb_med_symp_u5_3
 
 gen comb_type = "comb" 
 //If the comb_type is comb that means this is the combined entry of Cen_ and N_ entry that is getting formatted. (Remember these are the preloaded child names that comes from the revisit preload) 
@@ -475,6 +476,22 @@ drop _merge
 
 gen C_entry_type = "N" 
 drop if R_E_instruction == .
+
+
+//check for unique entries on which the merge has to happen 
+
+// WAY 1  (explained earlier) 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+
+
+//WAY 2
+bysort unique_id comb_namefromearlier: gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+
+//no duplicates found 
+
 save "${DataTemp}temp2.dta", replace
 
 save "${Intermediate}Endline_New_member_roster_dataset_final.dta", replace 
@@ -1020,7 +1037,6 @@ SECTION 5
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
 
-
 ********************************************************************************
   /*****************************************************************
  1. CLEANING COMBINED CHILD DATASET FIRST 
@@ -1069,20 +1085,56 @@ replace comb_child_breastfed_days = . if comb_child_breastfed_days == 365 & comb
 /*---------------------------------------------------------------------------
 Outliers  
 -----------------------------------------------------------------------------*/
-ds 
+ds  comb_child_act_age comb_child_age comb_child_breastfed_month comb_child_breastfed_days comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq comb_anti_child_days comb_anti_child_last_months comb_anti_child_last_days comb_med_visits_comb comb_med_nights_comb comb_med_days_caretaking_comb comb_med_t_exp_comb
 foreach var of varlist `r(varlist)'{
 destring `var', replace
 }
-ds, has(type numeric)
+ds  comb_child_act_age comb_child_age comb_child_breastfed_month comb_child_breastfed_days comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq comb_anti_child_days comb_anti_child_last_months comb_anti_child_last_days comb_med_visits_comb comb_med_nights_comb comb_med_days_caretaking_comb comb_med_t_exp_comb
 foreach var of varlist `r(varlist)'{
-summarize `var' if `var' != 888 & `var' !missing(varname), detail
-gen outlier = 0
-replace outlier = 1 if !missing(varname) & abs(varname - r(mean)) > 3*r(sd)
+summarize `var' if `var' != 888 & `var' != 999 & !missing(`var'), detail
+gen o`var' = 0
+replace o`var' = 1 if `var' != 888 & `var' != 999 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
+graph box `var' if `var' != 999 & `var' != 888
+graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+quietly count if `var' != 0  //Counts the number of non-zero values in the current variable.
+    if r(N) == 0 {   //Checks if the count of non-zero values is zero.
+        drop o`var'
+    }
 }
 
-summarize comb_child_breastfed_num if !missing(comb_child_breastfed_num) & comb_child_breastfed_num != 888, detail
-gen outlier = 0
-replace outlier = 1 if comb_child_breastfed_num != 888 &  !missing(comb_child_breastfed_num) & abs(comb_child_breastfed_num - r(mean)) > 3*r(sd)
+//have found 9 cases where the child was breastfed only for a month. To see how to go about this 
+br comb_child_breastfed_month ocomb_child_breastfed_month if ocomb_child_breastfed_month != 0
+drop o*
+
+/*---------------------------------------------------------------------------
+Checking consistency of codes for Don't know, others etc
+-----------------------------------------------------------------------------*/
+ds comb_child_caregiver_present comb_child_age_v comb_child_residence comb_child_comb_relation comb_child_care_dia_day comb_child_care_dia_wk comb_child_care_dia_2wk comb_child_breastfeeding comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk comb_child_diarr_day comb_child_diarr_wk comb_child_diarr_2wk comb_child_stool_24h comb_child_stool_yest comb_child_stool_wk comb_child_stool_2wk comb_child_blood_day comb_child_blood_wk comb_child_blood_2wk comb_child_cuts_day comb_child_cuts_wk comb_child_cuts_2wk comb_anti_child_wk comb_anti_child_last comb_med_seek_care_comb comb_med_diarrhea_comb comb_translator_comb comb_hh_prsnt_comb
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 | `var' == -99 
+replace `var' = -98  if `var' == 98 
+replace `var' = -77 if `var' == 77
+}
+
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+label define comb_child_caregiver_present_x 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "U5 died or is no longer a member of the household" 8 "U5 child no longer falls in the criteria (less than 5 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_child_caregiver_present comb_child_caregiver_present_x
+
+/*---------------------------------------------------------------------------
+Missing values
+-----------------------------------------------------------------------------*/
+foreach var of varlist _all {
+    quietly count if missing(`var')
+    if r(N) > 0 {
+        // Action to take if `var` contains missing values
+        display "`var' contains missing values"
+        // You can replace the above display command with any action you want to take
+    }
+}
 
 
 ********************************************************************************
@@ -1123,9 +1175,54 @@ Dropping IDs
 **Link of the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/139. This is a mid survey refusal so whatever data has been entered after WASH section is not applicable and needs to be dropped 
 drop if unique_id == "40202113033"
 
+/*---------------------------------------------------------------------------
+Outliers  
+-----------------------------------------------------------------------------*/
 
+//creating clones for some variables for which variable names are too big to perform this check
+clonevar child_died_less24 = comb_child_alive_died_less24_num 
+clonevar child_died_more24 = comb_child_alive_died_more24_num
 
+ds  comb_preg_month comb_preg_delivery comb_resp_age_comb comb_preg_stay_days comb_preg_stay_months comb_wom_diarr_num_wk comb_wom_diarr_num_2wks comb_anti_preg_days comb_anti_preg_last_months comb_anti_preg_last_days comb_child_living_num comb_child_notliving_num comb_child_stillborn_num child_died_less24 child_died_more24   comb_med_visits_comb comb_med_nights_comb comb_med_t_exp_comb comb_med_days_caretaking_comb
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+}
+ds comb_preg_month comb_preg_delivery comb_resp_age_comb comb_preg_stay_days comb_preg_stay_months comb_wom_diarr_num_wk comb_wom_diarr_num_2wks comb_anti_preg_days comb_anti_preg_last_months comb_anti_preg_last_days comb_child_living_num comb_child_notliving_num comb_child_stillborn_num  child_died_less24 child_died_more24 comb_med_visits_comb comb_med_nights_comb comb_med_t_exp_comb comb_med_days_caretaking_comb
+foreach var of varlist `r(varlist)'{
+summarize `var' if `var' != 888 & `var' != 999 & !missing(`var'), detail
+gen o`var' = 0
+replace o`var' = 1 if `var' != 888 & `var' != 999 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
+graph box `var' if `var' != 999 & `var' != 888
+graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero values in the current variable.
+    if r(N) == 0 {   //Checks if the count of non-zero values is zero.
+        drop o`var'
+    }
+}
 
+//found one case for this where respondent age was 13 but as mentioned in the comb_resp_avail_comb she no longer falls in the criteria so this is fine 
+br ocomb_resp_age_comb comb_resp_age_comb if ocomb_resp_age_comb != 0
+//This was the only case all other outliers are fine. Additionally, you will see some major outliers in medical expenditure so these are not mistakes so no need to worry about this 
+drop o* 
+
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+
+label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_resp_avail_comb comb_resp_avail_comb_ex
+
+/*---------------------------------------------------------------------------
+Checking consistency of codes for Don't know, others etc
+-----------------------------------------------------------------------------*/
+ds comb_child_caregiver_present comb_child_age_v comb_child_residence comb_child_comb_relation comb_child_care_dia_day comb_child_care_dia_wk comb_child_care_dia_2wk comb_child_breastfeeding comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk comb_child_diarr_day comb_child_diarr_wk comb_child_diarr_2wk comb_child_stool_24h comb_child_stool_yest comb_child_stool_wk comb_child_stool_2wk comb_child_blood_day comb_child_blood_wk comb_child_blood_2wk comb_child_cuts_day comb_child_cuts_wk comb_child_cuts_2wk comb_anti_child_wk comb_anti_child_last comb_med_seek_care_comb comb_med_diarrhea_comb comb_translator_comb comb_hh_prsnt_comb
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 | `var' == -99 
+replace `var' = -98  if `var' == 98 
+replace `var' = -77 if `var' == 77
+}
 
 
 ********************************************************************************
@@ -1134,9 +1231,27 @@ drop if unique_id == "40202113033"
 *****************************************************************/
 ********************************************************************************
 
+//unique_id	C_hhmember_name
+20101113016	Tejaswini guru
+//unique_id	C_hhmember_name
+20101113016	Tapaswini guru
+unique_id	C_hhmember_name
+40101111012	999
+
+//resart from row 2990
+
+
 
 use "${Intermediate}Endline_roster_merged_census_New_final.dta", clear
 //need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
+
+//generating a combined name variable using both census, RV, new entries 
+clonevar C_hhmember_name = comb_name_from_earlier_hh
+replace C_hhmember_name  =  comb_namefromearlier if C_hhmember_name  == ""
+
+//checking if unique identifier is still intact
+isid unique_id C_hhmember_name
+sort unique_id
 
 /*---------------------------------------------------------------------------
 Manual corrections 
@@ -1148,6 +1263,39 @@ replace comb_name_from_earlier_hh = "Pauni Jilakar" if comb_name_from_earlier_hh
 replace comb_name_from_earlier_hh = "Raja Jilakar" if comb_name_from_earlier_hh == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
 
 replace comb_name_from_earlier_hh = "Sabitri Jilakar" if comb_name_from_earlier_hh == "Sabitri Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+/*---------------------------------------------------------------------------
+Outliers  
+-----------------------------------------------------------------------------*/
+
+ds  comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+}
+ds comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
+foreach var of varlist `r(varlist)'{
+summarize `var' if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var'), detail
+gen o`var' = 0
+replace o`var' = 1 if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
+graph box `var' if `var' != 999 & `var' != 888 & `var' != 666
+graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero values in the current variable.
+    if r(N) == 0 {   //Checks if the count of non-zero values is zero.
+        drop o`var'
+    }
+}
+
+//no concerning outliers found
+drop o* 
+
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+
+label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
+4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
+ 
+label values comb_resp_avail_comb comb_resp_avail_comb_ex
 
 
 
