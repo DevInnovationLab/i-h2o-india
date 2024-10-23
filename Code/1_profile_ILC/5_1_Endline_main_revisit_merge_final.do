@@ -116,6 +116,17 @@ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_chil
 //specify what long is here and specify the unit 
  * RV_ID 23 (The dataset below contains enteris for combined child enteries i.e. the nams in the preload) 
  use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup.dta", clear
+  
+ //generating unique_id 
+ *sorting child names alphabetically
+ sort comb_child_u5_name_label 
+ gen UID_1 = _n
+ 
+  //checking if child name is unique for every key 
+ bysort key comb_child_u5_name_label : gen dup_key = cond(_N==1,0,_n)
+count if dup_key > 0 
+tab dup_key
+drop dup_key
 
 RV_key_creation //we have already defined this function above 
 
@@ -162,6 +173,20 @@ merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_c
 keep if _merge == 3
 drop _merge
 
+//checking for duplicate child names at the same UID 
+//WAY 2
+bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+br unique_id comb_child_comb_name_label dup_UID if dup_UID != 0
+
+
+//concatnating unique_id with UID_1 to generate a unique identifier for children
+tostring UID_1, replace
+gen IN_unique_id = unique_id + UID_1
+isid IN_unique_id  //this is our unique_id variable for child level dataset 
 
 //Now sometimes you don't need unavailable entries for analysis so we can just keep relevant variables.  So, if you don't wnat to use unavailable cases in analysis feel free to keep only the available ones by using this variable 
 * Respondent available for an interview 
