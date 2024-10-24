@@ -19,12 +19,11 @@ set seed 758235657 // Just in case
 /***************************************************************HH LEVEL ENDLINE REVISIT DATA 
 ***************************************************************/
 
-*do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
+*This dataset gets created in the file: "\GitHub\i-h2o-india\Code\1_profile_ILC\Label\import_India_ILC_Endline_Census_Revisit.do"
 
-use "${DataPre}1_9_Endline_revisit_final.dta", clear
+use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_revisit_final_WIDE.dta", clear
 
-
-
+//use "${DataPre}1_9_Endline_revisit_final.dta", clear  //we should not be using this as this is the old version
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID

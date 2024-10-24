@@ -13,6 +13,11 @@
 ****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
 Individual dataset types : Child, women, census roster, new roster 
 Wide dataset: Household level 
+*******Files that were run to get these datasets - 
+"GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do" to create indiviudual main endline census datasets 
+"GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2_revisit.do" to create individual revisit endline census datasets 
+"GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do" to get HH level clean main endline census dataset 
+"GitHub\i-h2o-india\Code\1_profile_ILC\1_9_A_Endline_Revisit_cleaning.do" to get HH level clean revisit endline census dataset
 *=========================================================================*/
 
 
@@ -100,7 +105,11 @@ By now you would know, what does N_ mean. These are new entries from endline rev
 	
 Conclusion: That is why you see two prefix in the revisit form: comb_ and N_ 
 */
- 
+
+/*****************************************************
+Why are we creating dated versions of the dataset?
+******************************************************/
+//we are using data versions of the dataset like you will see a suffix 24oct24 at the end because it will make sure that in case datasets are updated in the future our unique ID process geenration isn't affected. Since unique IDs for individual datasets are being created using raw datasets if they get updated the UID assignment also chnages so to retain consistency we have created these dated versions. There is no do file that creates these datasets. These are just manually created by creating a copy of main raw dataset and then writing suffix of date at the end  
  
  //////////////////////////////////////////////////////////////////////////////
 **objective of the next steps
@@ -115,7 +124,7 @@ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_chil
 
 //specify what long is here and specify the unit 
  * RV_ID 23 (The dataset below contains enteris for combined child enteries i.e. the nams in the preload) 
- use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup.dta", clear
+ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_child_followup_24oct24.dta", clear
   
  //generating unique_id 
  *sorting child names alphabetically
@@ -173,16 +182,6 @@ merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_c
 keep if _merge == 3
 drop _merge
 
-//checking for duplicate child names at the same UID 
-//WAY 2
-bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
-count if dup_HHID > 0 
-tab dup_HHID
-// WAY 1 
-bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
-br unique_id comb_child_comb_name_label dup_UID if dup_UID != 0
-
-
 //concatnating unique_id with UID_1 to generate a unique identifier for children
 tostring UID_1, replace
 gen IN_unique_id = unique_id + UID_1
@@ -238,6 +237,7 @@ cap drop _merge
 //please note that there are two caregiver name variables- one is this comb_child_comb_caregiver_label and other one is comb_main_caregiver_label. The only difference between the two is for revisit survey we wanted to capture who is the caregiver answering questions for the child currently and there was also a preloaded variable (comb_main_caregiver_label) guiding enum that this is the caregiver we found in the main endline census so they should make sure they talk to the same person but in case they are not able to they can talk to a different caregiver but record their name and the variable for this was (comb_child_comb_caregiver_label) that is why comb_main_caregiver_label (in revisit survey) and comb_child_comb_caregiver_label (main endline survey) are literally the same thing becaus ethey are actual caregiver of the children. (I will rename this while combing the datasets but for comparsion purpose we need to rename them here)
 rename comb_main_caregiver_label Vcomb_child_comb_caregiver_label
 rename comb_child_caregiver_present Vcomb_child_caregiver_present
+rename IN_unique_id VIN_unique_id //renaming this to check if correct UIDs are being preserved 
 cap drop dup_HHID
 //WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
@@ -248,7 +248,7 @@ bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)
 br comb_child_comb_name_label dup_UID if dup_UID != 0
 
 drop dup_UID 
-//we haven't dound any duplicates in the child dataset 
+//we haven't found any duplicates in the child dataset 
 
 save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
 
@@ -260,7 +260,12 @@ Creating a combined child dataset from main endline census
 **********************************************************************************************/
  
  * ID 23
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_followup_24oct24.dta", clear
+
+ //generating unique_id 
+ *sorting child names alphabetically
+ sort cen_child_u5_name_label
+ gen UID_1 = _n
 tab cen_child_caregiver_present
 tab cen_child_act_age
 
@@ -281,10 +286,12 @@ drop if comb_child_comb_name_label == ""
 save "${DataTemp}temp.dta", replace
 
 * ID 24
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_child_followup_24oct24.dta", clear
+ //generating unique_id 
+ *sorting child names alphabetically
+ sort n_child_u5_name_label
+ gen UID_1 = _n
 M_key_creation
-
-
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
     local newname = subinstr("`var'", "n_", "comb_", 1)
@@ -314,6 +321,12 @@ rename R_E_key  key
 //we should not touch the original village variable
 clonevar Village = R_E_village_name_str
 
+//concatnating unique_id with UID_1 to generate a unique identifier for children
+tostring UID_1, replace
+gen IN_unique_id = unique_id + UID_1
+isid IN_unique_id  //this is our unique_id variable for child level dataset 
+
+
 * Village
 //replace Village="Bhujabala" if Village=="Bhujbal"
 * Gopi Kankubadi: 30701 (Is this T or C is this Kolnara? Is this panchayatta?)
@@ -331,7 +344,7 @@ cap drop dup_HHID
 save "${DataTemp}U5_Child_23_24_part1.dta", replace
 
 use "${DataTemp}U5_Child_23_24_part1.dta", clear
-//checking if this combinarion is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
+//checking if this combination is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
 //WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
@@ -371,7 +384,7 @@ I dropped the entries where comb_child_caregiver_present == .  was empty because
 
 //merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison as explained earlier 
 cap drop _merge
-merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label  ) 
+merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label VIN_unique_id ) 
 
 //we can just browse and check fi there is any unique ID and child combination where main caregiver doens't matches because these are the preloaded names so they should all match. After doing this you will find that there are 0 mismatches 😁
 br comb_child_comb_name_label comb_child_caregiver_present comb_child_comb_caregiver_label Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present if comb_child_comb_caregiver_label != Vcomb_child_comb_caregiver_label & _merge == 3
@@ -432,7 +445,7 @@ tab dup_HHID
 Lets drop variables with V prefix because we just created them for comparsion purpose. I have already renamed caregiver label so fret not!
 There doens't seem to be any extra variables that need renaming so lets move on
 */
-drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present
+drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present VIN_unique_id 
 
 //br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
 cap drop _merge
@@ -477,7 +490,7 @@ Our goal is to merge these 3 datasets and create a combined roster dataset
 
 * ID 26 (N=322) All new household members in the main endline census 
 
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-N_HH_member_names_loop_24oct24.dta", clear
 ///This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do"
 
 M_key_creation 
@@ -493,7 +506,7 @@ foreach var of varlist n_* {
     rename `var' `newname'
 }
 rename key R_E_key
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction) 
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction R_E_village_name_str) 
 
 //there are around 16 keys that don't match with cleaned endline census data and that is because these are practise entries observations from endline census so in the long dataset unless we manually drop it it would still be present so we should just keep _mereg == 3
 keep if _merge == 3
@@ -528,7 +541,7 @@ save "${Intermediate}Endline_New_member_roster_dataset_final.dta", replace
 * ID 25
 //census roster in the main endline census dataset 
 ///This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2.do"
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-survey_start-consented-Cen_HH_member_names_loop_24oct24.dta", clear
 M_key_creation 
 drop if name_from_earlier_hh == ""
 ds hh_index name_from_earlier_hh
@@ -542,7 +555,7 @@ foreach var of varlist cen_* {
     rename `var' `newname'
 }
 rename key R_E_key
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction )
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing(unique_id R_E_instruction R_E_village_name_str  )
 
 //296 entries that are just in master are all the practise entreis 
 keep if _merge == 3
@@ -615,7 +628,7 @@ This dataset is created in the "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparat
 
 
 */
-use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop.dta", clear
+use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-WASH_applicable_start-survey_start-consented-Cen_HH_member_names_loop_24oct24.dta", clear
 RV_key_creation
 drop if name_from_earlier_hh == ""
 
@@ -635,7 +648,7 @@ gen C_entry_type = "RV"
 rename key R_E_key
 //firstly merging it with endline HH level dataset to get which HH were done
 
-merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_instruction)
+merge m:1 R_E_key using "${DataFinal}1_9_Endline_revisit_final_cleaned.dta", keepusing(unique_id R_E_instruction R_E_village_name_str )
 
 //using entries are 99 because using has a lot more entries as compared to the census roster as only selective housheolds were asked this quetsion so we need not worry if this ain't a perfect merge 
 
@@ -713,11 +726,10 @@ CREATING A COMBINED ROSTER FOR NEW MEMBERS AND CENSUS MEMBERS
 
 ************************************************************************************/
 use "${Intermediate}Endline_census_roster_merged_dataset_final.dta", clear
-
 append using "${Intermediate}Endline_New_member_roster_dataset_final.dta"
-
+clonevar Village = R_E_village_name_str 
+merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 save "${Intermediate}Endline_roster_merged_census_New_final.dta", replace
-
 
 
 /*************************************************************************************************************************************************************************************
@@ -732,7 +744,11 @@ WOMEN LEVEL DATASETS MERGE BETWEEN MAIN ENDLINE AND REVISIT
 
 * ID 21
 //census women data from main endline census 
- use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup.dta", clear
+ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_CBW_followup_24oct24.dta", clear
+  //generating unique_id 
+ *sorting women names alphabetically
+sort cen_name_cbw_woman_earlier
+gen UID_1 = _n
 M_key_creation 
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -788,13 +804,23 @@ Here you will see that index number of _Pinky is 1 that means her index number i
 */
 replace comb_name_comb_woman_earlier  = "_Pinky Kandagari" if comb_name_comb_woman_earlier == "Pinky Kandagari" & unique_id == "30202109013"   & comb_preg_index == "1"
 gen C_entry_type = "BC" 
+
+//concatnating unique_id with UID_1 to generate a unique identifier for women
+tostring UID_1, replace
+gen IN_unique_id = unique_id + UID_1
+isid IN_unique_id  //this is our unique_id variable for women level dataset 
+
 save "${DataTemp}temp1.dta", replace
 
 
  //using new women data from main endline census 
  * ID 22
 //new women
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-N_CBW_followup_24oct24.dta", clear
+  //generating unique_id 
+ *sorting women names alphabetically
+sort n_name_cbw_woman_earlier
+gen UID_1 = _n
 M_key_creation
 // List all variables starting with "n_"
 foreach var of varlist n_* {
@@ -846,7 +872,10 @@ br unique_id comb_name_comb_woman_earlier if dup_HHID > 0
 
 	 
 gen C_entry_type = "N" 
- 
+//concatnating unique_id with UID_1 to generate a unique identifier for women
+tostring UID_1, replace
+gen IN_unique_id = unique_id + UID_1
+isid IN_unique_id  //this is our unique_id variable for women level dataset 
 save "${DataTemp}temp2.dta", replace
 
 use "${DataTemp}temp1.dta", clear
@@ -869,7 +898,9 @@ save "${Intermediate}CBW_merge_Endline_census.dta", replace
   
  
  //women data from endline revisit survey (only comb section) 
- use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_CBW_followup.dta", clear
+ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-comb_CBW_followup_24oct24.dta", clear
+ sort comb_name_cbw_woman_earlier
+gen UID_1 = _n
 RV_key_creation
 
 foreach var of varlist *_cbw* {
@@ -915,7 +946,10 @@ clonevar Vcomb_resp_avail_comb = comb_resp_avail_comb
 foreach i in parent_key key_original R_E_key key2 key3{
 rename `i' Revisit_`i'
 }
-
+//concatnating unique_id with UID_1 to generate a unique identifier for women
+tostring UID_1, replace
+gen IN_unique_id = unique_id + UID_1
+isid IN_unique_id  //this is our unique_id variable for women level dataset 
  save "${Intermediate}comb_women_endline_revisit.dta", replace
  
 
@@ -953,6 +987,9 @@ bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
+clonevar Village = R_E_village_name_str 
+merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
+
 save "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", replace 
 
 
@@ -976,7 +1013,7 @@ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-comb_start_survey_nonull-c
 * ID 19 and 20: Mortality info
  ---------------------------------------------------------------------------*/
  * ID 19
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-Cen_start_survey_nonull-Cen_start_survey_CBW-Cen_CBW_yes_consent-Cen_start_5_years_pregnant-Cen_child_died_repeat_24oct24.dta", clear
 M_key_creation 
 foreach var of varlist cen_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -992,7 +1029,7 @@ gen C_entry_type = "BC"
 save "${DataTemp}temp.dta", replace
 
 * ID 20
-use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat.dta", clear
+use "${DataRaw}1_8_Endline/1_8_Endline_Census-N_CBW_start_eligible-N_start_survey_CBW-N_CBW_yes_consent-N_start_5_years_pregnant-N_child_died_repeat_24oct24.dta", clear
 M_key_creation 
 foreach var of varlist n_* {
     // Generate the new variable name by replacing 'old' with 'new'
@@ -1051,6 +1088,8 @@ drop if unique_id== "40301110002" & R_E_key == "uuid:b9836516-0c12-4043-92e9-36d
 replace comb_fath_child = "Muna himirika" if unique_id == "50401117009" & R_E_key == "uuid:66fe3583-0e49-481a-98da-31393275ceca" 
 replace comb_gen_child = 1 if unique_id == "50401117009" & R_E_key == "uuid:66fe3583-0e49-481a-98da-31393275ceca" 
 
+clonevar Village = R_E_village_name_str 
+merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
@@ -1073,6 +1112,7 @@ rename  key R_E_key
 *Duplicates check 
 //the only unqiue identifier in the child dataset is these two variables 
 isid unique_id comb_child_comb_name_label
+isid IN_unique_id
 
 /*---------------------------------------------------------------------------
 Dropping IDs
@@ -1106,6 +1146,22 @@ replace comb_child_breastfed_num = 1  if comb_child_breastfed_num == 2 & unique_
 //correcting breastfeeidng error. The child is still being breastfed and in such cases enum have to write 888 but enum was not able to in this case so she entered 365 days but this needs to be changed to 888 (Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/112) 
 replace comb_child_breastfed_num = 888 if comb_child_comb_name_label == "Gurucharan wataka" & unique_id == "50401105012" & R_E_key == "uuid:e3e7c93c-6623-450d-8f26-1d3ecc6abd72" 
 replace comb_child_breastfed_days = . if comb_child_breastfed_days == 365 & comb_child_comb_name_label == "Gurucharan wataka" & unique_id == "50401105012" & R_E_key == "uuid:e3e7c93c-6623-450d-8f26-1d3ecc6abd72" 
+
+/*correcting the village names for the UID (Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/138) 
+We found 2 UIDs for which the village name were inter-changed so that's why we need to make the manual replacements for it across all the datasets*/
+*replacing bhujbal with tandipur for this ID
+replace R_E_village_name_str = "Tandipur"  if  R_E_village_name_str ==  "Bhujbal" & unique_id == "30501119006"
+replace Village = "Tandipur"  if Village == "Bhujbal" & unique_id == "30501119006"
+replace village = 30301  if village == 30501 & unique_id == "30501119006"
+*replacing  tandipur with bhujbal for this ID
+replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" & unique_id == "30301119027"
+replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
+replace village = 30501 if village == 30301 & unique_id == "30301119027"
+
+/*Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/126
+For the variable - comb_med_symp_comb_13 we will find a lot of missing values because Diarrhea was added as an option in the question "What was the symptom, or what was the reason for medical care?" in the health Expenditure module much later. Change was implemented on 4th May 2024 so surveyors started seeing Diarrhea as a separate option from 4th May 2024 onwards*/
+//Doing manual replacements for Diarrhea-
+replace comb_med_symp_comb_13 = 1 if comb_med_symp_oth_comb == "Diarrhoea" | comb_med_symp_oth_comb == "Diarrher" | comb_med_symp_oth_comb == "Diarrhea,bomiting." | comb_med_symp_oth_comb == "Diarrhea"
 
 /*---------------------------------------------------------------------------
 Outliers  
@@ -1161,7 +1217,6 @@ foreach var of varlist _all {
     }
 }
 
-
 ********************************************************************************
   /*****************************************************************
  2. CLEANING COMBINED CBW/WOMEN DATASET 
@@ -1192,6 +1247,23 @@ replace  comb_preg_rch_id = "12100128602" if comb_preg_rch_id == "121001286020" 
 
 //Jena pidika (Github issue link - https://github.com/DevInnovationLab/i-h2o-india/issues/112)
 replace  comb_preg_rch_id = "12100128603" if comb_preg_rch_id == "121001286030" & unique_id == "50501119004" & comb_name_comb_woman_earlier == "Jena pidika" 
+
+
+/*correcting the village names for the UID (Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/138) 
+We found 2 UIDs for which the village name were inter-changed so that's why we need to make the manual replacements for it across all the datasets*/
+*replacing bhujbal with tandipur for this ID
+replace R_E_village_name_str = "Tandipur"  if  R_E_village_name_str ==  "Bhujbal" & unique_id == "30501119006"
+replace Village = "Tandipur"  if Village == "Bhujbal" & unique_id == "30501119006"
+replace village = 30301  if village == 30501 & unique_id == "30501119006"
+*replacing  tandipur with bhujbal for this ID
+replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" & unique_id == "30301119027"
+replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
+replace village = 30501 if village == 30301 & unique_id == "30301119027"
+
+/*Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/126
+For the variable - comb_med_symp_comb_13 we will find a lot of missing values because Diarrhea was added as an option in the question "What was the symptom, or what was the reason for medical care?" in the health Expenditure module much later. Change was implemented on 4th May 2024 so surveyors started seeing Diarrhea as a separate option from 4th May 2024 onwards*/
+//Doing manual replacements for Diarrhea-
+replace comb_med_symp_comb_13 = 1 if comb_med_symp_oth_comb == "Dairia" | comb_med_symp_oth_comb == "Dairria" 
 
 /*---------------------------------------------------------------------------
 Dropping IDs
@@ -1249,7 +1321,6 @@ replace `var' = -98  if `var' == 98
 replace `var' = -77 if `var' == 77
 }
 
-
 ********************************************************************************
   /*****************************************************************
  2. CLEANING COMBINED ROSTER DATASET 
@@ -1264,8 +1335,6 @@ unique_id	C_hhmember_name
 40101111012	999
 
 //resart from row 2990
-
-
 
 use "${Intermediate}Endline_roster_merged_census_New_final.dta", clear
 //need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
@@ -1288,6 +1357,17 @@ replace comb_name_from_earlier_hh = "Pauni Jilakar" if comb_name_from_earlier_hh
 replace comb_name_from_earlier_hh = "Raja Jilakar" if comb_name_from_earlier_hh == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
 
 replace comb_name_from_earlier_hh = "Sabitri Jilakar" if comb_name_from_earlier_hh == "Sabitri Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+/*correcting the village names for the UID (Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/138) 
+We found 2 UIDs for which the village name were inter-changed so that's why we need to make the manual replacements for it across all the datasets*/
+*replacing bhujbal with tandipur for this ID
+replace R_E_village_name_str = "Tandipur"  if  R_E_village_name_str ==  "Bhujbal" & unique_id == "30501119006"
+replace Village = "Tandipur"  if Village == "Bhujbal" & unique_id == "30501119006"
+replace village = 30301  if village == 30501 & unique_id == "30501119006"
+*replacing  tandipur with bhujbal for this ID
+replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" & unique_id == "30301119027"
+replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
+replace village = 30501 if village == 30301 & unique_id == "30301119027"
 
 /*---------------------------------------------------------------------------
 Outliers  
@@ -1312,16 +1392,6 @@ quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero v
 
 //no concerning outliers found
 drop o* 
-
-/*---------------------------------------------------------------------------
-Labeling important categories
------------------------------------------------------------------------------*/
-
-label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2 "Respondent has left the house permanently" 3	"This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" ///
-4 "This is my 1st re-visit: (2nd visit) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)" 5	"This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)" 6 "This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)"  7 "Respondent died or is no longer a member of the HH" 8 "Respondent no longer falls in the criteria (15-49 years)" 9	"Respondent is a visitor and is not available right now" -98 "Refused to answer" -77 "Other"  
- 
-label values comb_resp_avail_comb comb_resp_avail_comb_ex
-
 
 
 /*************************************************************************************************************************************************************************************

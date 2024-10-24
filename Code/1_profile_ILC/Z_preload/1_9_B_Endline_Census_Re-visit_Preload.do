@@ -1288,13 +1288,15 @@ merge 1:1 UniqueID using "C:\Users\Archi Gupta\Box\Data\99_temp\1_8_Endline_XXX_
 
 /***************************************************************MERGING SUBMITTED ENDLINE REVISIT DATA WITH PRELOAD TO SEE HOW MANY ENTRIES HAVE COME 
 ***************************************************************/
+
+* Please note that all the cleaning operations are performed in the file for household level revisit data is performed here:  "\GitHub\i-h2o-india\Code\1_profile_ILC\1_9_A_Endline_Revisit_cleaning.do"
 clear
-set maxvar 30000
+set maxvar 32000
 
-do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
+*do "${Do_lab}import_India_ILC_Endline_Census_Revisit.do"
 
 
-use "${DataPre}1_9_Endline_revisit_final.dta", clear
+use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_revisit_final_WIDE.dta", clear
 
 
 

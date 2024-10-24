@@ -19,7 +19,6 @@ set mem 100m
 *	changes to data in your local .dta file (such changes can be
 *	overwritten with each new import).
 local overwrite_old_data 0
-
 * initialize form-specific parameters
 local csvfile "Endline Census.csv"
 local dtafile  "${DataRaw}1_8_Endline/1_8_Endline_Census.dta"
