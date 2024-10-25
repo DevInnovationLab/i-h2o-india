@@ -142,6 +142,9 @@ idexx_r4 <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned.c
 idexx_r5 <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned_R2.csv"))
 
 
+idexx_r6 <- read_csv(paste0(user_path(),"/3_final/idexx_monthly_master_cleaned_R3.csv"))
+
+
 #Need to load in the R4-R6 data in the monsoon and clean in this form. Do not want to use the other script for this cleaning
 #Need to copy/paste other sections and then combine new datasets so it can be easily run in the manuscript code
 
@@ -205,7 +208,7 @@ labelmaker <- function(x){
 ###--------------------Baseline Data Cleaning------------------------------#####
 
 
-###GENERAL DATA CLEANING##################################################
+###GENERAL DATA CLEANING#
 #Filtering out test data from training, based on village IDs
 unique(bl$R_FU_unique_id_1)
 bl <- bl%>%
@@ -492,7 +495,7 @@ write_csv(abr, paste0(user_path(),"/3_final/BL_idexx_ABR_master_cleaned.csv"))
 ###-----------------------Round 1 data cleaning--------------------####
 
 
-###GENERAL DATA CLEANING##################################################
+###GENERAL DATA CLEANING#
 #Filtering out test data from training, based on village IDs
 unique(r1$R_FU1_unique_id_1)
 r1 <- r1%>%
@@ -578,7 +581,7 @@ r1$tc_tap_avg <- round(r1$tc_tap_avg, digits = 3)
 #Will update more later
 idexx_r1 <- idx
 
-#PREPARING IDEXX DATA##########################################################
+#PREPARING IDEXX DATA#
 #Pivoting dataset to be longer for pairing IDEXX data to sample IDs
 r1_for_idexx <- r1%>%
   pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
@@ -713,7 +716,7 @@ write_csv(idexx_r1,paste0(user_path(),"/3_final/R1_idexx_master_cleaned.csv"))
 
 ###--------------Round 2 data cleaning----------------------------------#####
 
-###GENERAL DATA CLEANING##################################################
+###GENERAL DATA CLEANING#
 #Filtering out test data from training, based on village IDs
 unique(r2$R_FU2_unique_id_1)
 r2 <- r2%>%
@@ -806,7 +809,7 @@ r2$tc_tap_avg <- round(r2$tc_tap_avg, digits = 3)
 
 
 
-#PREPARING IDEXX DATA##########################################################
+#PREPARING IDEXX DATA#
 #Renaming variables
 idexx_r2 <- idexx_r2%>%
   mutate(village_ID = as.character(village))%>%
@@ -955,7 +958,7 @@ write_csv(idexx_r2,paste0(user_path(),"/3_final/R2_idexx_master_cleaned.csv"))
 ###-------------------------Round 3 data cleaning------------------------#####
 
 
-###GENERAL DATA CLEANING##################################################
+#GENERAL DATA CLEANING#
 #Filtering out test data from training, based on village IDs
 unique(r3$R_FU3_unique_id_1)
 r3 <- r3%>%
@@ -1031,7 +1034,7 @@ r3$tc_tap_avg <- round(r3$tc_tap_avg, digits = 3)
 #
 
 
-#PREPARING IDEXX DATA##########################################################
+#PREPARING IDEXX DATA#
 #Adding village name column
 village_ID <- village_details%>%
   dplyr::select(village_name, village_ID, assignment)
@@ -1226,6 +1229,22 @@ idexx_r4 <- idexx_r4%>%
 idexx_r5 <- idexx_r5%>%
   mutate(panchayat_village = `Panchat village`)
 
+###-------------------------Round 6 data cleaning------------------------#####
+
+#Renaming panchayat variable
+idexx_r6 <- idexx_r6%>%
+  mutate(panchayat_village = `Panchat village`)
+
+
+#Selecting out ABR data
+abr_r6 <- idexx_r6%>%
+  filter(ABR == 1)
+
+#Removing ABR data from regular data
+idexx_r6 <- idexx_r6%>%
+  filter(ABR == 0)
+
+
 
 
 #COMBINING DATASETS --------------------------------------------------------
@@ -1280,6 +1299,14 @@ idexx_r5_comb <- idexx_r5%>%
   mutate(data_round = "R5")%>%
   mutate(pooled_round = "FU")
 
+idexx_r6_comb <- idexx_r6%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, ec_risk, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "R6")%>%
+  mutate(pooled_round = "FU")
+
 #Combining ABR datasets
 abr_comb <- abr%>%
   dplyr::select(assignment, unique_id, village, block, panchayat_village, 
@@ -1297,10 +1324,19 @@ abr_r3_comb <- abr_r3%>%
   mutate(data_round = "R3")%>%
   mutate(pooled_round = "FU")
 
-#combining
-idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb, idexx_r4_comb, idexx_r5_comb)
+abr_r6_comb <- abr_r6%>%
+  dplyr::select(assignment, unique_id, village, block, panchayat_village, 
+                sample_ID, bag_ID_tap, bag_ID_stored, sample_type, cf_mpn, ec_mpn,
+                cf_95hi, cf_95lo, ec_95hi, ec_95lo,
+                cf_pa_binary, ec_pa_binary, cf_pa, ec_pa, cf_log, ec_log, fc_tap_avg, fc_stored_avg)%>%  
+  mutate(data_round = "R6")%>%
+  mutate(pooled_round = "FU")
 
-abr_comb <- rbind(abr_comb, abr_r3_comb)
+
+#combining
+idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb, idexx_r4_comb, idexx_r5_comb, idexx_r6_comb)
+
+abr_comb <- rbind(abr_comb, abr_r3_comb, abr_r6_comb)
 
 
 #Writing/updating final file

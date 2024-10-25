@@ -1301,7 +1301,7 @@ p_ec_cl_3 <- idexx_cl_comb%>%
                      limits = c(0, 105),
                      expand = c(0,0)
                      )+
-  scale_x_date(
+  scale_x_date(limits = c(ymd("2023-10-06"), ymd("2024-10-08")),
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
@@ -1318,7 +1318,7 @@ p_ec_cl_3 <- idexx_cl_comb%>%
 
 p_ec_cl_3
 
-ggsave(filename = "manuscript_ecoli_time_series_v1.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
+ggsave(filename = "manuscript_ecoli_time_series_v3.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
 
 
 
@@ -1330,37 +1330,40 @@ p_ec_cl_4 <- idexx_cl_comb%>%
   ggplot() + 
    geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
                  width = 2, color = "black") + #Does not include robust standard errors for village clustering
-  geom_point(aes(x = test_week, y = cl_presence), color = "black", size = 3)+
+  geom_point(aes(x = test_week, y = cl_presence, fill = assignment), size = 3)+
   #geom_path(aes(x = test_week, y = cl_presence), color = "#FF474C")+ #Geom path makes the plot cluttered
   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
-  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
-            nudge_x = -25, color = "#FF474C")+
+  # geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
+  #           nudge_x = -25, color = "#FF474C")+
   scale_y_continuous(
                      limits = c(0, 105),
                      expand = c(0,0)
                      )+
-  scale_x_date(
+  scale_x_date(limits = c(ymd("2023-10-06"), ymd("2024-10-08")),
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
   labs(x = "Date", 
-       y = '% of tap samples positive for free chlorine (> 0.1 mg/L)',
-       fill = "Assignment",
+       y = '% of tap samples positive for chlorine (>0.1 mg/L)',
+       color = "Assignment",
        title = "",
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        plot.title = element_text(size = 2))
 
 
 p_ec_cl_4
 
-ggsave(filename = "manuscript_ecoli_chlorine_time_series_v2.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
+ggsave(filename = "manuscript_chlorine_time_series_v3.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
 
+#Combining in patchwork so the scales are correct
+p_ec_cl <- p_ec_cl_3 / p_ec_cl_4
+p_ec_cl
 
-
-
+ggsave(filename = "manuscript_e_coli_chlorine_time_series_v4.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
 
 
 
@@ -2127,8 +2130,7 @@ print(el_forestplot)
 idexx_abr_poisson <- idexx_abr_poisson%>%
   filter(model_name != "cf_tap")%>%
   filter(model_name != "cf_stored")%>%
-  filter(model_name != "ec_tap")%>%
-  mutate(model_name = ifelse(model_name == "ec_stored","Presence Antibiotic Resistant E. coli in Stored Water", NA))%>%
+  mutate(model_name = ifelse(model_name == "ec_stored","Presence Antibiotic Resistant E. coli in Stored Water", "Presence Antibiotic Resistant E. coli in Tap Water"))%>%
   select(!(sample_type))
 
 
@@ -2173,8 +2175,8 @@ el_forestplot <- el_models_forestplot%>%
   forestplot(labeltext = c(model_name, estimate, p_value, N),
              title = "Intervention Effect on Key Water Use and Quality Outcomes",
              caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
-             clip = c(0, 2),
-             xticks = c(0, 0.5, 1, 1.5, 2),
+             clip = c(0, 1.5),
+             xticks = c(0, 0.5, 1, 1.5),
              fn.ci_norm = fpDrawCircleCI,
              vertices = TRUE,
              xlog = FALSE,
@@ -2185,7 +2187,7 @@ el_forestplot <- el_models_forestplot%>%
              boxsize = 0.2
              )%>%
   fp_add_lines(h_3 = gpar(lty = 1), 
-               h_14 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+               h_15 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
   fp_set_style(box = "black",
                line = "black",
                summary = "black",

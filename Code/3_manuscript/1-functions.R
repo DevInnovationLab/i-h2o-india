@@ -248,7 +248,7 @@ round_stats <- function(idexx_data){
                                             ifelse(data_round == "R2", "2024-03-25",
                                                    ifelse(data_round == "R3", "2024-04-15",
                                                           ifelse(data_round == "R4", "2024-08-03",
-                                                                 ifelse(data_round == "R5", "2024-09-10", "2024-09-25")))))))
+                                                                 ifelse(data_round == "R5", "2024-09-10", "2024-10-08")))))))
   tc$data_round_month <- ymd(tc$data_round_month)
   
   
