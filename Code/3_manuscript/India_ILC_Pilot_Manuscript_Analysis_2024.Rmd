@@ -566,6 +566,16 @@ tc_stats_bl <- pooled_stats(idexx)
 
 tc_stats_round <- round_stats(idexx_tab)
 
+#Calculating desc stats by village
+# tc_stats_village <- idexx_tab%>%
+#   group_by(village)%>%
+#   summarise("Number of Samples" = n(),
+#       "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
+#       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
+#       "SD E. coli" = sd(ec_pa_binary)
+#       )
+#   
+# mean(tc_stats_village$`% Positive for E. coli`)
 
 
 #Creating figure of baseline IDEXX results
