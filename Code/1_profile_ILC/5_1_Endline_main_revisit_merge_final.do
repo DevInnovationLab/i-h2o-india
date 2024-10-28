@@ -136,6 +136,7 @@ use "${DataRaw}1_9_Endline_Revisit/1_9_Endline_Census-Household_available-N_chil
 count if dup_key > 0 
 tab dup_key
 drop dup_key
+*JL: What exactly is getting dropped above? How many duplicate cases? Or is it 0? 
 
 RV_key_creation //we have already defined this function above 
 
@@ -265,7 +266,8 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_foll
  //generating unique_id 
  *sorting child names alphabetically
  sort cen_child_u5_name_label
- gen UID_1 = _n
+ gen UID_1 = _n 
+ * JL: What is happening above here? Need more comments?
 tab cen_child_caregiver_present
 tab cen_child_act_age
 
@@ -322,6 +324,7 @@ rename R_E_key  key
 clonevar Village = R_E_village_name_str
 
 //concatnating unique_id with UID_1 to generate a unique identifier for children
+* JL: What is the unique ID format for pairing the children? Can you type out an example here?
 tostring UID_1, replace
 gen IN_unique_id = unique_id + UID_1
 isid IN_unique_id  //this is our unique_id variable for child level dataset 
@@ -1819,7 +1822,8 @@ replace comb_child_comb_name_label = common_u5_names2 if common_u5_names2 != ""
 *** Manual corrections
 *Dropping observations 
 //the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
-drop if unique_id=="30501107052"   
+drop if unique_id=="30501107052" 
+*JL: We may want to keep this observation depending on the context. If she was staying there a long time and knows the   
 
 
 //dropping the obs as it was submitted before the start date of the survey. This is a baseline census ID 
