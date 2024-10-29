@@ -60,6 +60,10 @@ user_path <- function() {
   else if (user == "jerem"){
     path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
   } 
+  else if (user == "uchicago") { 
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -84,6 +88,10 @@ github_path <- function() {
   else if (user == "jerem") {
     github = "C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC"
   } 
+  else if (user == "uchicago") {
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
+  
   else {
     warning("No path found for current user (", user, ")")
     github = getwd()
@@ -316,9 +324,15 @@ bl_idexx <- bl%>%
   pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
 
 #Noting duplicate samples
-idexx <- idexx%>%
-  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-  replace_na(duplicate, value = 0)
+#NB to JL--> Changing code to tag duplicates as this section of code broke down while running
+#idexx <- idexx%>%
+#  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
+#  replace_na(duplicate, value = 0)
+
+idexx <- idexx %>%
+  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
+  mutate(duplicate = replace_na(duplicate, 0))
+
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
@@ -587,9 +601,14 @@ r1_for_idexx <- r1%>%
   pivot_longer(cols = c(sample_ID_stored, sample_ID_tap), values_to = "sample_ID", names_to = "sample_type")
 
 #Noting duplicate samples
-idexx_r1 <- idexx_r1%>%
-  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
-  replace_na(duplicate, value = 0)
+#idexx_r1 <- idexx_r1%>%
+#  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0))%>%
+#  replace_na(duplicate, value = 0)
+
+idexx_r1 <- idexx_r1 %>%
+  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
+  mutate(duplicate = replace_na(duplicate, 0))
+
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r1 <- idexx_r1%>%
@@ -598,10 +617,17 @@ idexx_r1 <- idexx_r1%>%
   filter(duplicate < 1)
 
 #Noting borehole water sample and dropping it
-idexx_r1 <- idexx_r1%>%
-  mutate(solar_water = ifelse((sample_ID == 20258), 1, 0))%>% #Sample ID for stored water from private borewell
-  replace_na(solar_water, value = 0)%>%
-  filter(solar_water == 0)
+#NB to JL -> My code returned an error here to adding a differnet line of code to implement this
+#idexx_r1 <- idexx_r1%>%
+#  mutate(solar_water = ifelse((sample_ID == 20258), 1, 0))%>% #Sample ID for stored water from private borewell
+#  replace_na(solar_water, value = 0)%>%
+#  filter(solar_water == 0)
+
+idexx_r1 <- idexx_r1 %>%
+  mutate(solar_water = ifelse(sample_ID == 20258, 1, 0)) %>%  #Sample ID for stored water from private borewell
+  mutate(solar_water = replace_na(solar_water, 0)) %>%
+  filter(solar_water == 0)  
+
 
 #Checking IDs which do not match between survey data and lab data
 #this is where baseline samples are dropped from the idx dataset
@@ -822,26 +848,44 @@ r2_for_idexx <- r2%>%
 
 
 #Noting duplicate samples
-idexx_r2 <- idexx_r2%>%
- mutate(duplicate = ifelse(end_comments == "DUPLICATE", 1, 0))%>%
- replace_na(duplicate, value = 0)
+#idexx_r2 <- idexx_r2%>%
+# mutate(duplicate = ifelse(end_comments == "DUPLICATE", 1, 0))%>%
+# replace_na(duplicate, value = 0)
+idexx_r2 <- idexx_r2 %>%
+  mutate(duplicate = ifelse(end_comments == "DUPLICATE", 1, 0)) %>%  
+  mutate(duplicate = replace_na(duplicate, 0))  # Replace NAs with 0
 
-#Noting lab blank and field blanks
-idexx_r2 <- idexx_r2%>%
-  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
-                               end_comments == "Lab blank" |
-                               end_comments == "This is LAB BLANK results" |
-                               end_comments == "Tray count reviewed by PRASHANT KUMAR PANDA and This is LAB BLANK")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(lab_blank, value = 0)
 
-idexx_r2 <- idexx_r2%>%
-  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
-                                 end_comments == "Field blank" |
-                                 end_comments == "This is FIELD BLANK")
-                              & sample_ID == 0, 1, 0))%>%
-  replace_na(field_blank, value = 0)
+#Noting lab blank and field blanks (NB to JL-> Editing the code slightly as it returned an error)
+#idexx_r2 <- idexx_r2%>%
+#  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
+#                               end_comments == "Lab blank" |
+#                               end_comments == "This is LAB BLANK results" |
+#                               end_comments == "Tray count reviewed by PRASHANT KUMAR PANDA and This is LAB BLANK")
+#                            & sample_ID == 0, 1, 0))%>%
+#  replace_na(lab_blank, value = 0)
 
+#idexx_r2 <- idexx_r2%>%
+#  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+#                                 end_comments == "Field blank" |
+#                                 end_comments == "This is FIELD BLANK")
+#                              & sample_ID == 0, 1, 0))%>%
+#  replace_na(field_blank, value = 0)
+
+idexx_r2 <- idexx_r2 %>%
+  mutate(lab_blank = ifelse(
+    (end_comments %in% c("Lab Blank", "Lab blank", 
+                         "This is LAB BLANK results", 
+                         "Tray count reviewed by PRASHANT KUMAR PANDA and This is LAB BLANK")) & sample_ID == 0,
+    1,
+    0  # Default is zero 
+  ),
+  field_blank = ifelse(
+    (end_comments %in% c("Field Blank", "Field blank", 
+                         "This is FIELD BLANK")) & sample_ID == 0,
+    1,
+    0  
+  ))
 
 
 
@@ -1063,27 +1107,53 @@ idexx_r3 <- idexx_r3%>%
 
 
 #Noting lab blank and field blanks
-idexx_r3 <- idexx_r3%>%
-  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
-                               end_comments == "Lab blank" |
-                               end_comments == "This is LAB BLANK results" |
-                               sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(lab_blank, value = 0)
+#idexx_r3 <- idexx_r3%>%
+#  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
+#                               end_comments == "Lab blank" |
+#                               end_comments == "This is LAB BLANK results" |
+#                               sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
+#                            & sample_ID == 0, 1, 0))%>%
+#  replace_na(lab_blank, value = 0)
 
-idexx_r3 <- idexx_r3%>%
-  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
-                                 end_comments == "Field blank" |
-                                 end_comments == "This is FIELD BLANK" |
-                                 sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
-                              & sample_ID == 0, 1, 0))%>%
-  replace_na(field_blank, value = 0)
+idexx_r3 <- idexx_r3 %>%
+  mutate(lab_blank = ifelse(
+    (end_comments %in% c("Lab Blank", "Lab blank", 
+                         "This is LAB BLANK results") | 
+       sample_type == "Blank") & sample_ID == 0, 
+    1, 
+    0  
+  ))
+
+#idexx_r3 <- idexx_r3%>%
+#  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+#                                 end_comments == "Field blank" |
+#                                 end_comments == "This is FIELD BLANK" |
+#                                 sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
+#                              & sample_ID == 0, 1, 0))%>%
+#  replace_na(field_blank, value = 0)
+
+idexx_r3 <- idexx_r3 %>%
+  mutate(field_blank = ifelse(
+    (end_comments %in% c("Field Blank", "Field blank", 
+                         "This is FIELD BLANK") | 
+       sample_type == "Blank") & sample_ID == 0, 
+    1, 
+    0  
+  ))
 
 #Noting solar tank water
-idexx_r3 <- idexx_r3%>%
-  mutate(solar_water = ifelse((end_comments == "Solar water" | 
-                                 end_comments == "Solar Tank Water"), 1, 0))%>%
-  replace_na(solar_water, value = 0)
+#idexx_r3 <- idexx_r3%>%
+#  mutate(solar_water = ifelse((end_comments == "Solar water" | 
+#                                 end_comments == "Solar Tank Water"), 1, 0))%>%
+#  replace_na(solar_water, value = 0)
+
+idexx_r3 <- idexx_r3 %>%
+  mutate(solar_water = ifelse(
+    end_comments %in% c("Solar water", "Solar Tank Water"), 
+    1, 
+    0  
+  ))
+
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r3 <- idexx_r3%>%

@@ -162,7 +162,8 @@ bys `i': gen `i'_Unique=_N
 capture export excel R_FU2_sample_ID_tap unique_id_num using "${pilot}Data_quality_R2.xlsx" if R_FU2_sample_ID_tap_Unique!=1, sheet("Dup_sample_ID_tap") firstrow(var) cell(A1) sheetreplace
 
 * Akito->Astha This code I added should be removed, but please properly ensure that the unique ID is unique at the end of the code. 
-duplicates drop unique_id_num, force
+*NB: No duplicates present so commenting out the code 
+// duplicates drop unique_id_num, force
 
 * Create a variable for cases when Water Quality test didn't happen
 save "${DataFinal}1_6_Followup_R2_cleaned.dta", replace

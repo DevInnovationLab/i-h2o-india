@@ -704,11 +704,12 @@ idexx <- idexx%>%
 idexx <- idexx %>%
   mutate(ABR = ifelse(end_comments == "ABR", 1, 0))
 
-# Manually correcting stray values - data entry error: coded an ABR sample as non-ABR sample 
+# Manually correcting stray values - data entry error: coded an ABR sample as non-ABR sample or Lab blank
 idexx <- idexx %>%
   mutate(ABR = case_when(
     end_comments == "Na" & endtime.x == "27-Sep-2024 10:48:54" & sample_ID == "10490" & unique_bag_id == "91047" ~ 1,  # Case 1
     end_comments == "Na" & endtime.x == "08-Oct-2024 09:25:54" & sample_ID == "20551" & unique_bag_id == "91104" ~ 1,  # Case 2
+    end_comments == "LAB BLANK" & endtime.x =="22-Oct-2024 08:55:51" & sample_ID == "10581" & unique_bag_id == "91160" ~ 1, # Case 3
     TRUE ~ ABR  # Retain original value if none of the conditions are met
   ))
 

@@ -305,6 +305,11 @@ mon <- mon%>%
 mon_full <- mon_full%>%
   rename(village_ID = "village_name")
 
+#Manual Correction (GitHub issue #95): Correcting the entries of chlorine readings for one obs
+mon <- mon %>%
+  mutate(first_nearest_tap_fc = ifelse(SubmissionDate == "10-Feb-2024 11:06:10" & village_ID == "50501", 0.80, first_nearest_tap_fc))
+
+
 #Pairing village information
 mon$village_ID <- as.character(mon$village_ID)
 mon <- left_join(mon, village_details, by = "village_ID")
