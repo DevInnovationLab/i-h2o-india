@@ -51,7 +51,7 @@ format   unique_id_num %15.0gc
 	 generate C_starthour = hh(R_Cen_starttime) 
 	 gen C_startmin= mm(R_Cen_starttime)
 
-	gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
+	//gen diff_minutes = clockdiff(R_Cen_starttime, R_Cen_endtime, "minute")
 	
 
     gen R_Cen_yr_num = year(dofc(R_Cen_starttime))
@@ -231,7 +231,9 @@ save `dups_part2', replace
 
 
 //Using sequential numbers starting from 500 for remaining duplicate ID cases because we wouldn't encounter so many pregnant women/children U5 in a village
+
 use `dups', clear
+
 keep if C_dup_tag>1 & R_Cen_consent!=1
 bys unique_id :gen C_seq=_n
 replace R_Cen_hh_code= R_Cen_hh_code+ C_seq + 500
@@ -339,7 +341,9 @@ replace sec_jjm_use=1 if R_Cen_a13_water_source_sec_1==1 & R_Cen_a12_water_sourc
 tab     sec_jjm_use
 
 save "${DataFinal}1_1_Census_cleaned.dta", replace
-*use "${DataPre}1_1_Census_cleaned.dta", clear
+//Refer to this github issue for more details- https://github.com/DevInnovationLab/i-h2o-india/issues/172
+//please note that we are creating two versions of thsi dataset because data pre was used for all the endline census preload generation and data pre is also being used in other files so it will be very time taking to update this to final directory everywhere that is why we rae creating one for the final directory and other or the pre directory so that pre ones can be called in other do files 
+save "${DataPre}1_1_Census_cleaned.dta", replace 
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
 
 ** Drop ID information

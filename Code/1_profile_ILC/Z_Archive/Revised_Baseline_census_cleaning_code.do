@@ -18,7 +18,7 @@ putpdf text  ("Descriptive statistics for ILC Pilot")
 putpdf paragraph, font("Courier")
 *=========================== PROGRAM END ==============================================*
 
-clear all               
+/*clear all               
 set seed 758235657 // Just in case
 
 
@@ -130,7 +130,7 @@ R_Cen_sectiond_dur_end R_Cen_sectione_dur_end R_Cen_sectionf_dur_end R_Cen_secti
 
 
 //5. Cleaning the names of pregnant women in the data
-local i = 1
+/*local i = 1
 local pregwoman R_Cen_pregwoman_1 R_Cen_pregwoman_2 R_Cen_pregwoman_3 R_Cen_pregwoman_4 R_Cen_pregwoman_5 ///
  R_Cen_pregwoman_6 R_Cen_pregwoman_7 R_Cen_pregwoman_8 R_Cen_pregwoman_9 R_Cen_pregwoman_10 R_Cen_pregwoman_11 ///
  R_Cen_pregwoman_12 R_Cen_pregwoman_13 R_Cen_pregwoman_14 R_Cen_pregwoman_15 R_Cen_pregwoman_16 R_Cen_pregwoman_17 
@@ -326,6 +326,7 @@ drop if _merge==1
 	gen month_day= day_of_month + " " + month + " " + "2023"
 */
 
+stop 
 save "${DataPre}1_1_Census_cleaned.dta", replace
 *use "${DataPre}1_1_Census_cleaned.dta", clear
 savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
@@ -402,3 +403,4 @@ egen enum_tag = tag(R_Cen_enum_name)
 egen total_enums = total(enum_tag)
 gen total_avg_enum_pro = round(daily_avg/total_enums, .01)
 tabdisp R_Cen_enum_name, c(days_worked total_surveys_done_enum daily_avg_enum) format(%9.2f) center
+*/

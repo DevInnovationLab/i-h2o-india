@@ -432,6 +432,20 @@ We are renaming the two varaibles below because this variable in endline revisit
 rename comb_child_comb_caregiver_label RV_comb_child_caregiver_label
 rename comb_main_caregiver_label  comb_child_comb_caregiver_label
 
+/*Why the steps below? 
+In the endline revisit, prefix comb signifies that it contains both census or new entries from main endline census, so we also need to know whatever comb variables we have in our revisit dataset how many are census entries and how many are new entries from the main endline census. For that purpose, we need to do a 1:1 merge between revisit and main dataset to get what each entry belongs to 
+*/
+//renaming this temporarily because this is a common var in main and revisit dataset so to do one on one comparsion they need to have different names 
+rename C_entry_type RV_C_entry_type
+//C_entry_type gives the categorisation of whther that entry was a Census or new entry 
+merge 1:1 unique_id comb_child_comb_name_label  using"${DataTemp}U5_Child_23_24_part1.dta" , keepusing(unique_id comb_child_comb_name_label C_entry_type) 
+keep if _merge == 3
+//creating another variable that signifies the breakdown of revisit entries like whether they were new or census from the main endline census 
+clonevar C_RV_entry_type = C_entry_type 
+//dropping this as we are done comparing
+drop C_entry_type 
+//renaming it again to make the variable consistent after we are done wit manual comaprison
+rename RV_C_entry_type C_entry_type
 //we will use the following dataset for append 
 save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp.dta", replace
 restore
@@ -683,7 +697,8 @@ clonevar V_R_E_instruction  = R_E_instruction
 foreach i in parent_key key_original R_E_key key2 key3{
 rename `i' Revisit_`i'
 }
-
+//we also want to know what kind of revisit value it is, since in this case these are census entries from the preload we will just replace the values with BC 
+gen C_RV_entry_type = "BC" 
 save "${DataTemp}temp3.dta",  replace
 
 
@@ -711,6 +726,7 @@ merge 1:1 unique_id  comb_name_from_earlier_hh   using "${DataTemp}temp3.dta", k
 
 The reason there are 0 matches is because this is a conditional section which means this section gets asked to the main respondent only when main respondent is available to answer this. So, in the temp0 dataset which is the main endline roster dataset it had only those entries where main respondent was available because in the cases where main respondent wasn't available there would be an empty entry that would be generated which we have already dropped ( check drop if name_from_earlier_hh == "") and the same logic applies for the revisit dataset for that reason when we merge these two datasets we get 0 matches so we don't need to worry as exactly this should happen.  To, the merged dataset has the entries where unavailable cases in main census were available and availabile cases from the main endline census 
 
+IMP- In this case master dataset is only main census roster and not appended version of new main roster and main census roster because new roster only has those entries where the main respondent was available so if main respondent isn't even available then this value won't be generated that is why there would be 0 match between the two because they cannot have common values since new roster dataset only contains available entries and revisit wasn't done for such cases 
 Conclusion: No drop is required 
 */
 restore
@@ -1675,7 +1691,6 @@ replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ 
 save "${Intermediate}Baseline_Census_Roster_Individual_level.dta", replace
 
 
-
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 9
@@ -1688,23 +1703,22 @@ SECTION 9
 /*---------------------------------------------------------------------------
 Women level dataset 
 -----------------------------------------------------------------------------*/
+
 //baseline
 use "${Intermediate}Baseline_Census_CBW_Individual_level.dta", clear
-keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49
+keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49  & R_Cen_a4_hhmember_gender_
 clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_
 //merging it with endline dataset
 merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta"
 
-*** Manual corrections
-*Dropping observations 
-//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
-drop if unique_id=="30501107052"
 
-//dropping the obs as it was submitted before the start date of the survey 
-drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+30501-117-007
 
 
 30501117007   Sahila patra
+unique_id	R_Cen_eligible_women_pre_
+20201108027	Sailabala Patra
+
 use "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", clear
 
 
