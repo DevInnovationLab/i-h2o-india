@@ -1097,7 +1097,6 @@ merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_c
 save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 
 
-
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 5
@@ -1291,12 +1290,15 @@ For the variable - comb_med_symp_comb_13 we will find a lot of missing values be
 //Doing manual replacements for Diarrhea-
 replace comb_med_symp_comb_13 = 1 if comb_med_symp_oth_comb == "Dairia" | comb_med_symp_oth_comb == "Dairria" 
 
+
+
 /*---------------------------------------------------------------------------
 Dropping IDs
 -----------------------------------------------------------------------------*/
 
 **Link of the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/139. This is a mid survey refusal so whatever data has been entered after WASH section is not applicable and needs to be dropped 
 drop if unique_id == "40202113033"
+
 
 /*---------------------------------------------------------------------------
 Outliers  
@@ -1579,6 +1581,7 @@ order unique_id R_Cen_pregwoman_ R_Cen_namefromearlier_ //we are keeping non-pre
 bysort  unique_id R_Cen_namefromearlier_ : gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id 
 br unique_id R_Cen_namefromearlier_ reshape R_Cen_a6_hhmember_age_ R_Cen_a7_pregnant_ dup_UID if dup_UID != 0
+tab dup_UID
 //MANUAL CORRECTIONS 
 /*
 Case of Pinky- 
@@ -1612,11 +1615,23 @@ keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearli
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(reshape)
+reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(reshape)
 drop if R_Cen_namefromearlier_ == ""
 keep if R_Cen_a6_hhmember_age_ < 6  //keeping only U5 or 5 years of child in the dataset 
 drop if R_Cen_u5child_ == ""   //dropping ineligible entries 
-order unique_id R_Cen_u5child_
+order unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_
+//finding perfect unique identifiers
+// WAY 1 
+bysort  unique_id R_Cen_u5child_ : gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID
+//WAY 2 (Doing manual checks )
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+br unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_ if dup_HHID > 0
+sort unique_id 
+//all child names are unique 
 save "${Intermediate}Baseline_Census_U5_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
@@ -1631,6 +1646,32 @@ isid unique_id
 //wide to long
 reshape long R_Cen_namenumber_ R_Cen_a3_hhmember_name_ R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_  R_Cen_a5_relation_oth_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_  , i(unique_id) j(reshape)
 drop if R_Cen_namefromearlier_ == ""
+//finding perfect unique identifiers
+// WAY 1 
+bysort  unique_id R_Cen_a3_hhmember_name_ : gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id 
+tab dup_UID
+br unique_id reshape R_Cen_a6_hhmember_age_ R_Cen_a3_hhmember_name_ if  dup_UID > 0
+//WAY 2 (Doing manual checks )
+bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+br unique_id  R_Cen_a3_hhmember_name_ if  dup_HHID > 0
+//MANUAL CORRECTIONS 
+/*
+Case of Pinky- 
+Please note that for Pinky we need to make sure that the replacement is coherent with the endline replacement so if you take a look at endline manual replacements you will see that index of the woman was 1 that means she was first to appear in the roster so since those are preloaded names taken from baseline census. In baseline too, Pinky with index 1 would be same as Pinky with index 1 in endline so here the index no. is shown by reshape variable that is why reshape == 1 is used as a condition fo replacement 
+
+Case of Priya-
+Please note that for Priya we need to make sure that the replacement is coherent with the endline replacement so if you take a look at endline manual replacements you will see that index of the two Priyas were respectively 1 and 8 and in endline we made chnages to the Priya with index 8 that is she was the 8th to appear on the roster since this is a preloaded variable the index of Priya is going to be same in baseline census too and here reshape variable shows that index that is why we are using this for manual replacement 
+*/
+
+*2 Duplicates found. Please note that this was also flagged earlier 
+replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ == "Pinky Kandagari" & unique_id == "30202109013" &  reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+
+replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  reshape == 8
+
+
 save "${Intermediate}Baseline_Census_Roster_Individual_level.dta", replace
 
 
@@ -1647,20 +1688,27 @@ SECTION 9
 /*---------------------------------------------------------------------------
 Women level dataset 
 -----------------------------------------------------------------------------*/
+//baseline
+use "${Intermediate}Baseline_Census_CBW_Individual_level.dta", clear
+keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49
+clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_
+//merging it with endline dataset
+merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta"
 
-//endline 
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+
+30501117007   Sahila patra
 use "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", clear
-save "${Intermediate}Baseline_Census_CBW_Individual_level.dta", replace
 
 
-
-
-
-
-
-
-
-
+use "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", clear
 
 
 /*************************************************************************************************************************************************************************************
