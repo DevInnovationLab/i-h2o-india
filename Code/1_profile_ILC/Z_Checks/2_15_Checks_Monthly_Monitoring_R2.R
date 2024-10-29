@@ -1060,30 +1060,30 @@ idexx_desc_stats <- stargazer(idexx_desc_stats, summary=FALSE,
 #-------------------Chlorine Desc Stats ---------------------------------------
 
 #Selecting key chlorine variables
-filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc, assignment )
+filtered <- ms_consent %>% select(fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg, assignment )
 View(filtered)
-filtered <- ms_consent %>% select(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc, assignment)
+filtered <- ms_consent %>% select(fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg, assignment)
 
 # Convert to long format, ensuring assignment is retained
 long_dataset <- filtered %>%
   pivot_longer(
-    cols = c(stored_water_fc, tap_water_fc, stored_water_tc, tap_water_tc),
+    cols = c(fc_stored_avg, fc_tap_avg, tc_stored_avg, tc_tap_avg),
     names_to = "sample",
     values_to = "chlorine_conc"
   )%>%
   mutate(
     sample_type = case_when(
-      sample == "stored_water_fc" ~ "Stored",
-      sample == "tap_water_fc" ~ "Tap",
-      sample == "stored_water_tc" ~ "Stored",
-      sample == "tap_water_tc" ~ "Tap")
+      sample == "fc_stored_avg" ~ "Stored",
+      sample == "fc_tap_avg" ~ "Tap",
+      sample == "tc_stored_avg" ~ "Stored",
+      sample == "tc_tap_avg" ~ "Tap")
   )%>%
   mutate(
     chlorine_test = case_when(
-      sample == "stored_water_fc" ~ "FC",
-      sample == "tap_water_fc" ~ "FC",
-      sample == "stored_water_tc" ~ "TC",
-      sample == "tap_water_tc" ~ "TC")
+      sample == "fc_stored_avg" ~ "FC",
+      sample == "fc_tap_avg" ~ "FC",
+      sample == "tc_stored_avg" ~ "TC",
+      sample == "tc_tap_avg" ~ "TC")
   )%>%
   select(assignment, sample, sample_type, chlorine_test, chlorine_conc)
 
