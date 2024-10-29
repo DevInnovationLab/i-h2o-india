@@ -102,7 +102,7 @@ gen FU3_duration_min = FU3_locatehh_dur_min + FU3_consent_dur_min + FU3_secA_dur
 	4 Manual correction in data
 ------------------------------------------------------------------------------*/
 
-* Correcting the issue of incorrect sample IDs for stored water
+   * Correcting the issue of incorrect sample IDs for stored water
  
 
  * Correcting the issue of incorrect sample IDs for tap/running water
@@ -165,7 +165,8 @@ bys `i': gen `i'_Unique=_N
 capture export excel R_FU3_sample_ID_tap unique_id_num using "${pilot}Data_quality_R3.xlsx" if R_FU3_sample_ID_tap_Unique!=1, sheet("Dup_sample_ID_tap") firstrow(var) cell(A1) sheetreplace
 
 * Akito->Astha This code I added should be removed, but please properly ensure that the unique ID is unique at the end of the code. 
-duplicates drop unique_id_num, force
+* NB: No duplicates present so commenting out the code 
+//duplicates drop unique_id_num, force
 
 * Create a variable for cases when Water Quality test didn't happen
 save "${DataFinal}1_7_Followup_R3_cleaned.dta", replace

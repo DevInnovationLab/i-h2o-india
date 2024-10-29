@@ -60,6 +60,7 @@ rename R_FU_wq_chlorine_storedtc R_FU_tc_stored
 	 gen FU_starthour = hh(R_FU_starttime) 
 	 gen FU_startmin= mm(R_FU_starttime)
   
+
 /*------------------------------------------------------------------------------
 	3 Keep relevant entries (2.1 aaa)
 ------------------------------------------------------------------------------*/
@@ -100,12 +101,14 @@ gen FU_duration_min = FU_locatehh_dur_min + FU_consent_dur_min + FU_secA_dur_min
 	4 Manual correction in data - need to discuss with Akito and Jeremy
 ------------------------------------------------------------------------------*/
 
-* Correcting the issue of incorrect sample IDs for stored water
+   
+ * Correcting the issue of incorrect sample IDs for stored water
  
- replace R_FU_sample_ID_stored = 20299 if unique_id_num == 50501115026 
- replace R_FU_sample_ID_stored = 20300 if unique_id_num == 50501119004 
- replace R_FU_sample_ID_stored = 20297 if unique_id_num == 50501104011 
- replace R_FU_sample_ID_stored = 20298 if unique_id_num == 50501115027
+  replace R_FU_sample_ID_stored = 20299 if unique_id_num == 50501115026 
+  replace R_FU_sample_ID_stored = 20300 if unique_id_num == 50501119004 
+  replace R_FU_sample_ID_stored = 20297 if unique_id_num == 50501104011 
+  replace R_FU_sample_ID_stored = 20298 if unique_id_num == 50501115027
+  replace R_FU_sample_ID_stored = 20290 if unique_id_num == 50301106013 //case of duplication (GitHub issue #54)
  
 
  * Correcting the issue of incorrect sample IDs for tap/running water
@@ -195,7 +198,8 @@ bys `i': gen `i'_Unique=_N
 capture export excel R_FU_sample_ID_tap unique_id_num using "${pilot}Data_quality.xlsx" if R_FU_sample_ID_tap_Unique!=1, sheet("Dup_sample_ID_tap") firstrow(var) cell(A1) sheetreplace
 
 * Akito->Astha This code I added should be removed, but please properly ensure that the unique ID is unique at the end of the code. 
-duplicates drop unique_id_num, force
+* Niharika --> UID is unique, so commenting out below code
+// duplicates drop unique_id_num, force
 
 * Create a variable for cases when Water Quality test didn't happen
 save "${DataFinal}1_2_Followup_cleaned.dta", replace

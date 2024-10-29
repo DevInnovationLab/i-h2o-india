@@ -102,6 +102,7 @@ gen FU1_duration_min = FU1_locatehh_dur_min + FU1_consent_dur_min + FU1_secA_dur
 	4 Manual correction in data - need to discuss with Akito and Jeremy
 ------------------------------------------------------------------------------*/
 
+   
 * Correcting the issue of incorrect sample IDs for stored water
  
 
@@ -165,7 +166,8 @@ bys `i': gen `i'_Unique=_N
 capture export excel R_FU1_sample_ID_tap unique_id_num using "${pilot}Data_quality_R1.xlsx" if R_FU1_sample_ID_tap_Unique!=1, sheet("Dup_sample_ID_tap") firstrow(var) cell(A1) sheetreplace
 
 * Akito->Astha This code I added should be removed, but please properly ensure that the unique ID is unique at the end of the code. 
-duplicates drop unique_id_num, force
+* Niharika --> UID is unique, so commenting out below code
+// duplicates drop unique_id_num, force 
 
 * Create a variable for cases when Water Quality test didn't happen
 save "${DataFinal}1_5_Followup_R1_cleaned.dta", replace
