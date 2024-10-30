@@ -194,7 +194,7 @@ isid IN_unique_id  //this is our unique_id variable for child level dataset
 */
 
 //wohoo we have got our combined revisit child dataset
-save "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", replace   
+save "${Intermediate}1_9_Endline_Revisit_U5_Child_23_24.dta", replace   
 
 
 
@@ -231,7 +231,7 @@ That is the reason we are good to drop this entry from the main child dataset. W
 
 */
 *****************************************************************************************************************************************************
-use "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", clear   
+use "${Intermediate}1_9_Endline_Revisit_U5_Child_23_24.dta", clear   
 cap drop _merge
 /*//we must rename these variables because these variables are present in the main endline census child level dataset too so we need these 2 variables for verification and . V prefix stands for verification here. */
 
@@ -251,7 +251,7 @@ br comb_child_comb_name_label dup_UID if dup_UID != 0
 drop dup_UID 
 //we haven't found any duplicates in the child dataset 
 
-save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
+save "${DataTemp}1_9_Endline_Revisit_U5_Child_23_24_temp1.dta", replace
 
 
 /*******************************************************************************************
@@ -344,9 +344,11 @@ drop if comb_child_comb_name_label == ""
 
 cap drop dup_HHID
 
-save "${DataTemp}U5_Child_23_24_part1.dta", replace
+save "${Intermediate}1_8_Endline_U5_Child_23_24.dta", replace
+/*This dataset has to be renamed everywhere especially in the files that Akito and Archi's files used  
+save "${DataTemp}U5_Child_23_24_part1.dta", replace*/
 
-use "${DataTemp}U5_Child_23_24_part1.dta", clear
+use "${Intermediate}1_8_Endline_U5_Child_23_24.dta", clear
 //checking if this combination is unique or not. If its not, then we won't be able to perform 1:1 merge. Please note that we can't perform this 1:1 merge over keys because they are different in both the datasets 
 //WAY 2
 bysort unique_id comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
@@ -387,7 +389,7 @@ I dropped the entries where comb_child_caregiver_present == .  was empty because
 
 //merging the main child level dataset with the endline level child dataset on UID and child name. I am retaining some of the variables from using dataset for comparison as explained earlier 
 cap drop _merge
-merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label VIN_unique_id ) 
+merge 1:1 unique_id comb_child_comb_name_label  using "${DataTemp}1_9_Endline_Revisit_U5_Child_23_24_temp1.dta", keepusing(unique_id comb_child_comb_name_label Vcomb_child_caregiver_present Vcomb_child_comb_caregiver_label VIN_unique_id ) 
 
 //we can just browse and check fi there is any unique ID and child combination where main caregiver doens't matches because these are the preloaded names so they should all match. After doing this you will find that there are 0 mismatches 😁
 br comb_child_comb_name_label comb_child_caregiver_present comb_child_comb_caregiver_label Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present if comb_child_comb_caregiver_label != Vcomb_child_comb_caregiver_label & _merge == 3
@@ -417,7 +419,7 @@ drop if to_drop == 1
 //we are importing endline child level dataset again to now prepare it for the actual append with the main child dataset so we would need to retain the keys of using child revisit dataset and give it diff prefix so here I am giving the prefix Revisit to the keys to differentiate from the main endline census keys 
 preserve
 //please note that we are using intermediate dataset here because we want variable names to be same if we are appending
-use "${Intermediate}1_2_Endline_Revisit_U5_Child_23_24.dta", clear  
+use "${Intermediate}1_9_Endline_Revisit_U5_Child_23_24.dta", clear  
 drop if comb_child_comb_name_label == ""
 //we are keeping only these observations here where comb_child_caregiver_present == 1 because these are the only entries that have been droppped from main endline child dataset. If we don't drop it we will have the problems of duplicates
 keep if comb_child_caregiver_present == 1
@@ -438,7 +440,7 @@ In the endline revisit, prefix comb signifies that it contains both census or ne
 //renaming this temporarily because this is a common var in main and revisit dataset so to do one on one comparsion they need to have different names 
 rename C_entry_type RV_C_entry_type
 //C_entry_type gives the categorisation of whther that entry was a Census or new entry 
-merge 1:1 unique_id comb_child_comb_name_label  using"${DataTemp}U5_Child_23_24_part1.dta" , keepusing(unique_id comb_child_comb_name_label C_entry_type) 
+merge 1:1 unique_id comb_child_comb_name_label  using "${Intermediate}1_8_Endline_U5_Child_23_24.dta" , keepusing(unique_id comb_child_comb_name_label C_entry_type) 
 keep if _merge == 3
 //creating another variable that signifies the breakdown of revisit entries like whether they were new or census from the main endline census 
 clonevar C_RV_entry_type = C_entry_type 
@@ -447,10 +449,10 @@ drop C_entry_type
 //renaming it again to make the variable consistent after we are done wit manual comaprison
 rename RV_C_entry_type C_entry_type
 //we will use the following dataset for append 
-save "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp.dta", replace
+save "${DataTemp}1_9_Endline_Revisit_U5_Child_23_24_temp.dta", replace
 restore
 
-append using "${DataTemp}1_2_Endline_Revisit_U5_Child_23_24_temp.dta"
+append using "${DataTemp}1_9_Endline_Revisit_U5_Child_23_24_temp.dta"
 
 //checking for duplicates UID and child name wise. It is imp that there are no duplicates. This shows the append was successul. You will also see the number of observations hasn't changed
 cap drop dup_HHID
@@ -467,9 +469,10 @@ drop Vcomb_child_comb_caregiver_label Vcomb_child_caregiver_present VIN_unique_i
 //br unique_id comb_child_comb_name_label comb_main_caregiver_label comb_child_caregiver_present comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month comb_child_breastfed_days comb_child_care_dia_day if unique_id == "30301109053"
 cap drop _merge
 drop if comb_child_caregiver_present == .
-save "${Intermediate}Endline_Child_level_merged_dataset_final.dta", replace 
+save "${Intermediate}1_10_Endline_Child_level_merged_dataset_final.dta", replace 
 
-
+//unique_id	comb_child_comb_name_label
+//40202113033	111 Simadri Manbik
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -549,7 +552,7 @@ tab dup_HHID
 
 save "${DataTemp}temp2.dta", replace
 
-save "${Intermediate}Endline_New_member_roster_dataset_final.dta", replace 
+save "${Intermediate}1_8_Endline_New_member_roster_dataset_final.dta", replace 
 
 ********************************************************************************************************************************
 
@@ -736,7 +739,7 @@ append using "${DataTemp}temp3.dta"
 
 drop V_R_E_instruction  //this was created only for verification purposes so can drop this 
 
-save "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace 
+save "${Intermediate}1_10_Endline_census_roster_merged_dataset_final.dta", replace 
 
 
 /***********************************************************************************
@@ -744,11 +747,11 @@ save "${Intermediate}Endline_census_roster_merged_dataset_final.dta", replace
 CREATING A COMBINED ROSTER FOR NEW MEMBERS AND CENSUS MEMBERS 
 
 ************************************************************************************/
-use "${Intermediate}Endline_census_roster_merged_dataset_final.dta", clear
-append using "${Intermediate}Endline_New_member_roster_dataset_final.dta"
+use "${Intermediate}1_10_Endline_census_roster_merged_dataset_final.dta", clear
+append using "${Intermediate}1_8_Endline_New_member_roster_dataset_final.dta"
 clonevar Village = R_E_village_name_str 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
-save "${Intermediate}Endline_roster_merged_census_New_final.dta", replace
+save "${Intermediate}1_10_Endline_roster_merged_census_New_final.dta", replace
 
 
 /*************************************************************************************************************************************************************************************
@@ -908,7 +911,7 @@ bysort unique_id comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
 tab dup_HHID
 
-save "${Intermediate}CBW_merge_Endline_census.dta", replace
+save "${Intermediate}1_8_Endline_census_CBW_merge.dta", replace
 
  
 
@@ -969,7 +972,7 @@ rename `i' Revisit_`i'
 tostring UID_1, replace
 gen IN_unique_id = unique_id + UID_1
 isid IN_unique_id  //this is our unique_id variable for women level dataset 
- save "${Intermediate}comb_women_endline_revisit.dta", replace
+ save "${Intermediate}1_9_endline_revisit_CBW_merge.dta", replace
  
 
 
@@ -979,9 +982,9 @@ DOING THE MERGE WITH CENSUS WOMEN
 
 *************************************************************/
 //importing combined women data from endline main census 
-use "${Intermediate}CBW_merge_Endline_census.dta", clear
+use "${Intermediate}1_8_Endline_census_CBW_merge.dta", clear
 cap drop _merge
-merge 1:1 unique_id comb_name_comb_woman_earlier using "${Intermediate}comb_women_endline_revisit.dta", keepusing(unique_id Vcomb_resp_avail_comb) 
+merge 1:1 unique_id comb_name_comb_woman_earlier using "${Intermediate}1_9_endline_revisit_CBW_merge.dta", keepusing(unique_id Vcomb_resp_avail_comb) 
 
 //finding the entries where entry from main endline census women dataset is unavailable and the similar entry is available in revisit data 
 br unique_id comb_preg_index comb_name_comb_woman_earlier comb_resp_avail_comb Vcomb_resp_avail_comb _merge if _merge == 3 & Vcomb_resp_avail_comb == 1
@@ -993,7 +996,7 @@ replace to_drop = 1 if _merge == 3 & Vcomb_resp_avail_comb == 1 & comb_resp_avai
 drop if to_drop == 1
 
 preserve 
-use "${Intermediate}comb_women_endline_revisit.dta", clear
+use "${Intermediate}1_9_endline_revisit_CBW_merge.dta", clear
 drop if comb_resp_avail_comb != 1
 drop Vcomb_resp_avail_comb
 save "${DataTemp}comb_women_endline_revisit_t.dta", replace
@@ -1009,7 +1012,7 @@ tab dup_HHID
 clonevar Village = R_E_village_name_str 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 
-save "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", replace 
+save "${Intermediate}1_10_Endline_CBW_level_merged_dataset_final.dta", replace 
 
 
 /*************************************************************************************************************************************************************************************
@@ -1110,8 +1113,11 @@ replace comb_gen_child = 1 if unique_id == "50401117009" & R_E_key == "uuid:66fe
 clonevar Village = R_E_village_name_str 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 
-save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
+save "${DataFinal}1_10_Endline_Mortality_19_20.dta", replace
 
+/*save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
+change the name of this dataset in Akito' s and Archi's files
+*/
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1125,7 +1131,8 @@ SECTION 5
 *****************************************************************/
 ********************************************************************************
 
-use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
+
+use "${Intermediate}1_10_Endline_Child_level_merged_dataset_final.dta", clear
 rename  key R_E_key 
 *Duplicates check 
 //the only unqiue identifier in the child dataset is these two variables 
@@ -1254,7 +1261,7 @@ rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
 rename R_E_IN_unique_id IN_unique_id
-save "${Intermediate}Endline_Child_level_merged_dataset_final_cleaned.dta", replace
+save "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", replace  //Cl notifies clean here 
 
 ********************************************************************************
   /*****************************************************************
@@ -1262,8 +1269,7 @@ save "${Intermediate}Endline_Child_level_merged_dataset_final_cleaned.dta", repl
 *****************************************************************/
 ********************************************************************************
 
-
-use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear 
+use "${Intermediate}1_10_Endline_CBW_level_merged_dataset_final.dta", clear 
 isid unique_id comb_name_comb_woman_earlier
 isid IN_unique_id
 
@@ -1386,7 +1392,7 @@ rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
 rename R_E_IN_unique_id IN_unique_id
-save "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", replace
+save "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta", replace
 
 
 ********************************************************************************
@@ -1395,7 +1401,8 @@ save "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", replac
 *****************************************************************/
 ********************************************************************************
 
-use "${Intermediate}Endline_roster_merged_census_New_final.dta", clear
+
+use "${Intermediate}1_10_Endline_roster_merged_census_New_final.dta", clear
 //need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
 
 //generating a combined name variable using both census, RV, new entries 
@@ -1479,7 +1486,7 @@ foreach var of varlist `r(varlist)'{
 rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
-save "${Intermediate}Endline_roster_merged_census_New_final_cleaned.dta", replace
+save "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", replace
 
 
 
@@ -1494,17 +1501,17 @@ SECTION 6
  COMBINING ALL INDIVIDUAL DATASETS 
 *****************************************************************/
 
-use "${Intermediate}Endline_Child_level_merged_dataset_final_cleaned.dta", clear
+use "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", clear
 gen C_dataset_type = "Child"
-append using "${Intermediate}Endline_roster_merged_census_New_final_cleaned.dta"
+append using "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta"
 replace C_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
-append using "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta"
+append using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
 replace C_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
 order C_dataset_type 
 
-save "${DataFinal}Master_Individual_data_endline_census_cleaned.dta", replace
+save "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", replace
 
 
 /*************************************************************************************************************************************************************************************
@@ -1518,7 +1525,7 @@ SECTION 7
 *****************************************************************/
 
 //Creating consented child dataset for analysis 
-use "${DataFinal}Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
 keep if C_dataset_type  == "Child" 
 ds // list all variables
 foreach var of varlist * {
@@ -1530,10 +1537,10 @@ foreach var of varlist * {
     }
 }
 keep if R_E_comb_child_caregiver_present == 1
-save "${DataFinal}Child_consented_individual_endline_census.dta", replace
+save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
-use "${DataFinal}Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
 keep if C_dataset_type  == "CBW" 
 ds // list all variables
 foreach var of varlist * {
@@ -1546,11 +1553,11 @@ foreach var of varlist * {
 }
 keep if R_E_comb_resp_avail_comb == 1 //keeping only available and consented ones 
 cap drop Vcomb_resp_avail_comb
-save "${DataFinal}CBW_consented_individual_endline_census.dta", replace
+save "${DataFinal}1_11_Endline_Census_CBW_consented_individual.dta", replace
 
 
 //creating consented roster dataset for analysis 
-use "${DataFinal}Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
 keep if C_dataset_type  == "Roster" 
 ds // list all variables
 foreach var of varlist * {
@@ -1563,7 +1570,7 @@ foreach var of varlist * {
 }
 keep if R_E_instruction == 1 //keeping only available and consented ones 
 cap drop Vcomb_resp_avail_comb
-save "${DataFinal}Roster_consented_individual_endline_census.dta", replace
+save "${DataFinal}1_11_Endline_Census_Roster_consented_individual.dta", replace
 
 
 /*************************************************************************************************************************************************************************************
@@ -1580,7 +1587,7 @@ SECTION 8
 Women level dataset
 -----------------------------------------------------------------------------*/
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
-use "${DataFinal}Baseline_Census_HH_clean_consented.dta", clear
+use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
 //creating women dataset first 
 keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_*  R_Cen_pregnant_followup_count R_Cen_pregnant_index_* R_Cen_get_pregnant_status_* R_Cen_pregwoman_* R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* 
 
@@ -1619,13 +1626,13 @@ tab dup_HHID
 sort unique_id 
 br unique_id R_Cen_namefromearlier_  if dup_HHID > 0 
 //restart from row 222
-save "${Intermediate}Baseline_Census_CBW_Individual_level.dta", replace
+save "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
 Child level dataset
 -----------------------------------------------------------------------------*/
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
-use "${DataFinal}Baseline_Census_HH_clean_consented.dta", clear
+use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
 keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_child_index_* R_Cen_get_u5_status_* R_Cen_u5child_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_* R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_a32_child_blood_2week_* 
 
 isid unique_id
@@ -1648,13 +1655,13 @@ tab dup_HHID
 br unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_ if dup_HHID > 0
 sort unique_id 
 //all child names are unique 
-save "${Intermediate}Baseline_Census_U5_Individual_level.dta", replace
+save "${Intermediate}1_1_Baseline_Census_U5_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
 Roster level dataset
 -----------------------------------------------------------------------------*/
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
-use "${DataFinal}Baseline_Census_HH_clean_consented.dta", clear
+use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
 keep unique_id R_Cen_village_str R_Cen_resp_available R_Cen_instruction R_Cen_a1_resp_name R_Cen_hhmember_count R_Cen_namenumber_* R_Cen_a3_hhmember_name_* R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a5_hhmember_relation_* R_Cen_a5_relation_oth_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12
 
 isid unique_id
@@ -1687,10 +1694,9 @@ replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ 
 
 replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  reshape == 8
 
+save "${Intermediate}1_1_Baseline_Census_Roster_Individual_level.dta", replace
 
-save "${Intermediate}Baseline_Census_Roster_Individual_level.dta", replace
-
-
+stoppp
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 9
@@ -1705,11 +1711,11 @@ Women level dataset
 -----------------------------------------------------------------------------*/
 
 //baseline
-use "${Intermediate}Baseline_Census_CBW_Individual_level.dta", clear
+use "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", clear
 keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49  & R_Cen_a4_hhmember_gender_
 clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_
 //merging it with endline dataset
-merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta"
+merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
 
 
 30501-117-007
@@ -1906,7 +1912,6 @@ tab Cen_Type
 
 
 save "${DataFinal}Endline_HH_level_merged_dataset_final_part2.dta", replace
-
 
 
 
