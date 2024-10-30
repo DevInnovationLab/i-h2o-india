@@ -1837,6 +1837,6 @@ save "${DataFinal}0_Master_HHLevel_final.dta", replace
 ********************************************************************************
 * To run the FU data creation do file, run the following code 
 // do "${Do_pilot}3_X_FU_Data_Creation.do"
-merge 1:1 unique_id using "${Intermediate}Followup_clean_intermediate_wide.dta", gen (Merge_FU_Census)
+merge 1:1 unique_id using "${DataFinal}Followup_clean_wide.dta", gen (Merge_FU_Census)
 //499 obs matched
-save "${DataFinal}Master_HHLevel_FU_Census_final.dta", replace 
+save "${DataFinal}0_Master_HHLevel_FU_Census_final.dta", replace 

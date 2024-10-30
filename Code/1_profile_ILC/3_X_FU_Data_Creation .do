@@ -1434,54 +1434,57 @@ save "${Intermediate}Followup_clean_intermediate_long.dta", replace
 ********************************************************************************
 *** Changes to the cleaned IDEXX datasets
 ********************************************************************************
+//IDEXX testing done for 2 samples in 4 out of 10 HHs survyed in each village (total villages: 20): Sample size should be 160 for IDEXX per round 
 
-// *** IDEXX dataset 
-// * Loading the dataset 
-// clear
-// insheet using "${DataFinal}POOLED_idexx_master_cleaned.csv", clear
-//
+*** IDEXX dataset 
+* Loading the dataset 
+clear
+insheet using "${DataFinal}POOLED_idexx_master_cleaned.csv", clear
+//1121 obs
+
 // * Dropping observations 
-// drop if data_round=="R4" | data_round=="R5" //dropping monsoon rounds (other than FU rounds)
-// //641 obs left (296 obs dropped)
+drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
+//480 obs dropped, 641 obs left 
+
+* Generating new variable :String version of UID variable
+gen unique_id_str=unique_id
+tostring unique_id_str, replace format(%17.0g)
+rename unique_id unique_id_num
+rename unique_id_str unique_id 
 //
-// * Generating new variable :String version of UID variable
-// gen unique_id_str=unique_id
-// tostring unique_id_str, replace format(%17.0g)
-// renam unique_id unique_id_num
-// rename unique_id_str unique_id 
-//
-// * Generating new variable to identify the round and dropping existing variable
-// gen Round=""
-// replace Round="R_FU_" if data_round=="BL"
-// replace Round="R_FU1_" if data_round=="R1"
-// replace Round="R_FU2_" if data_round=="R2"
-// replace Round="R_FU3_" if data_round=="R3"
-// //160 observations per round and 161 in FU1
-// drop data_round pooled_round
-//
-// * Reshaping the data to ensure all observations for one HH are there in one row within the same round 
-// //dropping vars not required
-// drop  village block panchayat_village unique_id_num
-//
-// //Create a counter for the duplicates (2 obs per HH in one round)
-// bysort unique_id Round: gen hh_id = _n
-//
-// * Now reshape the dataset
-// reshape wide assignment sample_id bag_id_tap bag_id_stored sample_type cf_mpn ec_mpn cf_95hi cf_95lo ec_95hi ec_95lo cf_pa_binary ec_pa_binary cf_pa ec_pa cf_log ec_log ec_risk fc_tap_avg fc_stored_avg, i(unique_id Round) j( hh_id)  
-//
-// * Save the dataset
-// save "${Intermediate}IDEXX_Intermediate_FUrounds.dta", replace 
-//
-//
+* Generating new variable to identify the round and dropping existing variable
+gen Round=""
+replace Round="R_FU_" if data_round=="BL"
+replace Round="R_FU1_" if data_round=="R1"
+replace Round="R_FU2_" if data_round=="R2"
+replace Round="R_FU3_" if data_round=="R3"
+//160 observations per round and 161 in FU1
+
+* Reshaping the data to ensure all observations for one HH are there in one row within the same round 
+//dropping vars not required
+drop  village block panchayat_village /*unique_id_num*/
+
+
+//Create a counter for the duplicates (2 obs per HH in one round)
+bysort unique_id_num Round: gen hh_id = _n
+
+* Now reshape the dataset
+reshape wide assignment sample_id bag_id_tap bag_id_stored sample_type cf_mpn ec_mpn cf_95hi cf_95lo ec_95hi ec_95lo cf_pa_binary ec_pa_binary cf_pa ec_pa cf_log ec_log ec_risk fc_tap_avg fc_stored_avg, i(unique_id_num Round) j( hh_id)  
+
+* Save the dataset
+save "${Intermediate}IDEXX_Intermediate_FUrounds.dta", replace 
+
 // // *** ABR dataset 
 // // clear
 // // insheet using "${DataFinal}POOLED_idexx_ABR_master_cleaned.csv", clear
 //
-// ********************************************************************************
-// *** Merging the FU data with IDEXX data
-// ********************************************************************************
-//
-// merge 1:1 unique_id Round using "${Intermediate}Followup_clean_intermediate_long.dta", gen(Merge_IDEXX_FU) 
+********************************************************************************
+*** Merging the FU data with IDEXX data
+********************************************************************************
+
+use "${Intermediate}Followup_clean_intermediate_long.dta", clear 
+merge 1:1  Round unique_id_num using "${Intermediate}IDEXX_Intermediate_FUrounds.dta", gen(Merge_IDEXX_FU) 
+
 
 ********************************************************************************
 *** Saving individual FU round datasets
@@ -1638,5 +1641,5 @@ isid unique_id
 drop R_FU3_deviceid R_FU2_deviceid R_FU2_devicephonenum R_FU1_deviceid R_FU1_devicephonenum R_FU_deviceid Merge_FU3_FU2 Merge_FU3_FU2_FU1 Merge_FU3_FU2_FU1_BL_HH
 
 *** Saving the cleaned dataset for Follow up surveys 
-save "${Intermediate}Followup_clean_intermediate_wide.dta", replace 
+save "${DataFinal}Followup_clean_wide.dta", replace 
 
