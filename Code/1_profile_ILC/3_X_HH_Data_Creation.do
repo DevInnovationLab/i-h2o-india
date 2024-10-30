@@ -35,14 +35,14 @@
 *** Using Women level dataset to get the pregnancy status variable for Endline
 ********************************************************************************
 clear 
-use  "${DataFinal}Endline_CBW_level_merged_dataset_final.dta", clear //includes revisit data
+use  "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta", clear //includes revisit data
 gen R_E_key_final= R_E_key
-replace R_E_key_final= Revisit_R_E_key if R_E_key_final==""
+replace R_E_key_final= R_E_Revisit_key if R_E_key_final==""
 preserve 
-keep comb_preg_status R_E_key Revisit_R_E_key R_E_key_final unique_id
+keep R_E_comb_preg_status R_E_key R_E_Revisit_key R_E_key_final unique_id
 bys unique_id: gen Num=_n
-drop R_E_key Revisit_R_E_key R_E_key_final
-reshape wide  comb_preg_status , i(unique_id) j(Num)
+drop R_E_key R_E_Revisit_key R_E_key_final
+reshape wide  R_E_comb_preg_status , i(unique_id) j(Num)
 save "${DataTemp}Endline_Preg_status_wide.dta", replace
 restore 
 
@@ -50,20 +50,22 @@ restore
 *** Using Child level dataset to get number of children in each HH for endline
 ********************************************************************************
 clear
-use "${DataTemp}U5_Child_Endline_Census.dta", clear
-drop if comb_child_comb_name_label== ""
-keep comb_child_comb_name_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence comb_child_comb_caregiver_label unique_id Cen_Type
+use  "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", clear
+drop if R_E_comb_child_comb_name_label== ""
+keep R_E_comb_child_comb_name_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_caregiver_present R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence R_E_comb_child_comb_care_label unique_id R_E_Cen_Type
 
-split comb_child_comb_name_label, generate(common_u5_names) parse("111")
-replace comb_child_comb_name_label = common_u5_names2 if common_u5_names2 != ""
+*Archi - This step can be skipped because in the updated dataset there are no such cases of prefix 111 
+/*split R_E_comb_child_comb_name_label, generate(common_u5_names) parse("111")
+replace R_E_comb_child_comb_name_label = common_u5_names2 if common_u5_names2 != ""*/
 
 gen total_U5_kids = 1
 bys unique_id: gen Num=_n
-drop common_u5_names1 common_u5_names2
+//drop common_u5_names1 common_u5_names2
 
-rename comb_child_comb_name_label U5_Child_label
-rename comb_child_comb_caregiver_label U5_caregiver_label
-reshape wide U5_Child_label comb_combchild_status comb_combchild_index comb_child_caregiver_present comb_child_care_pres_oth comb_child_caregiver_name comb_child_residence U5_caregiver_label Cen_Type, i(unique_id) j(Num)
+rename R_E_comb_child_comb_name_label U5_Child_label
+rename R_E_comb_child_comb_care_label U5_caregiver_label
+rename  R_E_comb_child_caregiver_present  R_E_comb_child_care_pres
+reshape wide U5_Child_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_care_pres R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence U5_caregiver_label R_E_Cen_Type, i(unique_id) j(Num)
 // drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
 save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
 
@@ -71,7 +73,7 @@ save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
 *** Using new member roster data for age, count & gender of new members 
 ********************************************************************************
 clear 
-use "${DataFinal}Endline_New_member_roster_dataset_final", clear 
+use "${Intermediate}1_8_Endline_New_member_roster_dataset_final.dta", clear 
 preserve 
 keep comb_hhmember_gender comb_hhmember_age unique_id R_E_key
 bysort R_E_key: gen num=_n
@@ -1294,7 +1296,7 @@ label var C_E_n_U5children "Total number of U5 children: Endline"
 
 * Number of pregnant women
 // Generating variable for total no of pregnant women in Endline 
-egen C_E_total_pregnant= rowtotal(comb_preg_status*)
+egen C_E_total_pregnant= rowtotal(R_E_comb_preg_status*)
 label var C_E_total_pregnant "Total number of Pregnant women in Endline"
 	
 	
@@ -1403,7 +1405,7 @@ label var C_E_n_members_below12 "Total HH members below 12 years: Endline"
 
  
 *** Number of U5 kids in baseline 
-ds Cen_Type*
+ds R_E_Cen_Type*
 foreach var of varlist `r(varlist)'{
 clonevar Cl_`var' = `var'
 }
@@ -1414,14 +1416,14 @@ foreach var of varlist `r(varlist)'{
 replace `var' = 1 if `var' == 4
 replace `var' = 0 if `var' == 5
 }
-egen C_Cen_u5_kids_total = rowtotal(Cl_Cen_Type*)
+egen C_Cen_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
 
 *** Number of U5 kids in Endline
 //dropping temporary variables 
 drop Cl_*
 drop temp_group
 
-ds Cen_Type*
+ds R_E_Cen_Type*
 foreach var of varlist `r(varlist)'{
 clonevar Cl_`var' = `var'
 }
@@ -1432,7 +1434,7 @@ foreach var of varlist `r(varlist)'{
 replace `var' = 1 if `var' == 5
 replace `var' = 0 if `var' == 4
 }
-egen C_E_u5_kids_total = rowtotal(Cl_Cen_Type*)
+egen C_E_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
 
 *** Number of HHs with U5 kids in Baseline  
 gen C_Cen_HH_level_U5 = .
@@ -1793,7 +1795,7 @@ label values R_E_water_source_prim R_E_water_source_prim
 
 preserve
 drop R_E_*
-save "${DataFinal}Baseline_Census_HH_clean_consented.dta", replace
+save "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", replace
 restore
 
 ********************************************************************************
@@ -1801,13 +1803,13 @@ restore
 ********************************************************************************
 
 *** Dropping the PII (HHmember names and phone numbers)
-drop R_Cen_a3_hhmember_name_7 R_Cen_a3_hhmember_name_8 R_Cen_a3_hhmember_name_9 R_Cen_a3_hhmember_name_6 R_Cen_a3_hhmember_name_5 R_Cen_a3_hhmember_name_4 R_Cen_a3_hhmember_name_10 R_Cen_a3_hhmember_name_11 R_Cen_a3_hhmember_name_17 R_Cen_a3_hhmember_name_16 R_Cen_a3_hhmember_name_12 R_Cen_a3_hhmember_name_3 R_Cen_a3_hhmember_name_2 R_Cen_a3_hhmember_name_15 R_Cen_a3_hhmember_name_13 R_Cen_a3_hhmember_name_1 R_Cen_a3_hhmember_name_14 R_Cen_a39_phone_name_2 R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_num_2 R_Cen_u5mother_name_9 R_Cen_u5mother_name_8 R_Cen_u5mother_name_4 R_Cen_u5mother_name_3 R_Cen_u5mother_name_15 R_Cen_u5mother_name_11 R_Cen_u5mother_name_12 R_Cen_u5mother_name_1 R_Cen_u5mother_name_7 R_Cen_u5mother_name_17 R_Cen_u5mother_name_14 R_Cen_u5mother_name_16 R_Cen_u5mother_name_2 R_Cen_u5mother_name_13 R_Cen_u5mother_name_5 R_Cen_u5mother_name_6 R_Cen_u5mother_name_10 R_E_cen_resp_name R_E_cen_resp_label R_E_cen_resp_name_oth R_Cen_namenumber_1 R_Cen_namefromearlier_1 R_Cen_namenumber_2 R_Cen_namefromearlier_2 R_Cen_namenumber_3 R_Cen_namefromearlier_3 R_Cen_namenumber_4 R_Cen_namefromearlier_4 R_Cen_namenumber_5 R_Cen_namefromearlier_5 R_E_comb_hhmember_name7 R_Cen_namefromearlier_5 R_E_comb_hhmember_name6 R_E_comb_hhmember_name5 R_E_comb_hhmember_name4 R_E_comb_hhmember_name3 R_E_comb_hhmember_name2 R_E_comb_hhmember_name1 R_Cen_namenumber_6 R_Cen_namefromearlier_6 R_Cen_namenumber_7 R_Cen_namefromearlier_7 R_Cen_namenumber_8 R_Cen_namefromearlier_8 R_Cen_namenumber_9 R_Cen_namefromearlier_9 R_Cen_namenumber_10 R_Cen_namefromearlier_10 R_Cen_namenumber_11 R_Cen_namefromearlier_11 R_Cen_namenumber_12 R_Cen_namefromearlier_12 R_Cen_namenumber_13 R_Cen_namefromearlier_13 R_Cen_namenumber_14 R_Cen_namefromearlier_14 R_Cen_namenumber_15 R_Cen_namefromearlier_15 R_Cen_namenumber_16 R_Cen_namefromearlier_16 R_Cen_namenumber_17 R_Cen_namefromearlier_17 R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 R_E_n_fam_name1 R_E_n_fam_name2 R_E_n_fam_name3 R_E_n_fam_name4 R_E_n_fam_name5 R_E_n_fam_name6 R_E_n_fam_name7 R_E_n_fam_name8 R_E_n_fam_name9 R_E_n_fam_name10 R_E_n_fam_name11 R_E_n_fam_name12 R_E_n_fam_name13 R_E_n_fam_name14 R_E_n_fam_name15 R_E_n_fam_name16 R_E_n_fam_name17 R_E_n_fam_name18 R_E_n_fam_name19 R_E_n_fam_name20 comb_child_caregiver_name1 comb_child_caregiver_name2 comb_child_caregiver_name3 comb_child_caregiver_name4 comb_child_caregiver_name5 comb_child_caregiver_name6 comb_child_caregiver_name7 comb_child_caregiver_name8 R_Cen_a1_resp_name R_Cen_a11_oldmale_name R_Cen_address U5_Child_label* U5_caregiver_label* resident_bapujinagar
+drop R_Cen_a3_hhmember_name_7 R_Cen_a3_hhmember_name_8 R_Cen_a3_hhmember_name_9 R_Cen_a3_hhmember_name_6 R_Cen_a3_hhmember_name_5 R_Cen_a3_hhmember_name_4 R_Cen_a3_hhmember_name_10 R_Cen_a3_hhmember_name_11 R_Cen_a3_hhmember_name_17 R_Cen_a3_hhmember_name_16 R_Cen_a3_hhmember_name_12 R_Cen_a3_hhmember_name_3 R_Cen_a3_hhmember_name_2 R_Cen_a3_hhmember_name_15 R_Cen_a3_hhmember_name_13 R_Cen_a3_hhmember_name_1 R_Cen_a3_hhmember_name_14 R_Cen_a39_phone_name_2 R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_num_2 R_Cen_u5mother_name_9 R_Cen_u5mother_name_8 R_Cen_u5mother_name_4 R_Cen_u5mother_name_3 R_Cen_u5mother_name_15 R_Cen_u5mother_name_11 R_Cen_u5mother_name_12 R_Cen_u5mother_name_1 R_Cen_u5mother_name_7 R_Cen_u5mother_name_17 R_Cen_u5mother_name_14 R_Cen_u5mother_name_16 R_Cen_u5mother_name_2 R_Cen_u5mother_name_13 R_Cen_u5mother_name_5 R_Cen_u5mother_name_6 R_Cen_u5mother_name_10 R_E_cen_resp_name R_E_cen_resp_label R_E_cen_resp_name_oth R_Cen_namenumber_1 R_Cen_namefromearlier_1 R_Cen_namenumber_2 R_Cen_namefromearlier_2 R_Cen_namenumber_3 R_Cen_namefromearlier_3 R_Cen_namenumber_4 R_Cen_namefromearlier_4 R_Cen_namenumber_5 R_Cen_namefromearlier_5 R_E_comb_hhmember_name7 R_Cen_namefromearlier_5 R_E_comb_hhmember_name6 R_E_comb_hhmember_name5 R_E_comb_hhmember_name4 R_E_comb_hhmember_name3 R_E_comb_hhmember_name2 R_E_comb_hhmember_name1 R_Cen_namenumber_6 R_Cen_namefromearlier_6 R_Cen_namenumber_7 R_Cen_namefromearlier_7 R_Cen_namenumber_8 R_Cen_namefromearlier_8 R_Cen_namenumber_9 R_Cen_namefromearlier_9 R_Cen_namenumber_10 R_Cen_namefromearlier_10 R_Cen_namenumber_11 R_Cen_namefromearlier_11 R_Cen_namenumber_12 R_Cen_namefromearlier_12 R_Cen_namenumber_13 R_Cen_namefromearlier_13 R_Cen_namenumber_14 R_Cen_namefromearlier_14 R_Cen_namenumber_15 R_Cen_namefromearlier_15 R_Cen_namenumber_16 R_Cen_namefromearlier_16 R_Cen_namenumber_17 R_Cen_namefromearlier_17 R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 R_E_n_fam_name1 R_E_n_fam_name2 R_E_n_fam_name3 R_E_n_fam_name4 R_E_n_fam_name5 R_E_n_fam_name6 R_E_n_fam_name7 R_E_n_fam_name8 R_E_n_fam_name9 R_E_n_fam_name10 R_E_n_fam_name11 R_E_n_fam_name12 R_E_n_fam_name13 R_E_n_fam_name14 R_E_n_fam_name15 R_E_n_fam_name16 R_E_n_fam_name17 R_E_n_fam_name18 R_E_n_fam_name19 R_E_n_fam_name20 R_E_comb_child_caregiver_name1 R_E_comb_child_caregiver_name2 R_E_comb_child_caregiver_name3 R_E_comb_child_caregiver_name4 R_E_comb_child_caregiver_name5 R_Cen_a1_resp_name R_Cen_a11_oldmale_name R_Cen_address U5_Child_label* U5_caregiver_label* resident_bapujinagar
 
 *** Dropping individual level variables 
-drop  R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_*  R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_E_cen_med_seek_all_* R_E_setofn_med_seek_lp_all R_E_n_med_seek_lp_all_count R_E_n_med_seek_all_* R_E_n_med_seek_all R_Cen_a4_hhmember_gender_* comb_hhmember_gender* R_Cen_a5_hhmember_relation_* R_Cen_a6_hhmember_age_* R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_Cen_a5_relation_oth_*  R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_a6_age_confirm2_* R_Cen_correct_age_* R_Cen_unit_age_* R_Cen_a6_dob_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_2week_* R_Cen_child_index_* R_Cen_get_pregnant_status_* R_Cen_pregnant_index_* R_Cen_pregwoman_* R_Cen_hh_member_names_count comb_hhmember_age* comb_combchild_index* comb_combchild_status*  comb_child_caregiver_present* comb_child_care_pres_oth* comb_child_residence*  
+drop  R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_*  R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_E_cen_med_seek_all_* R_E_setofn_med_seek_lp_all R_E_n_med_seek_lp_all_count R_E_n_med_seek_all_* R_E_n_med_seek_all R_Cen_a4_hhmember_gender_* comb_hhmember_gender* R_Cen_a5_hhmember_relation_* R_Cen_a6_hhmember_age_* R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_Cen_a5_relation_oth_*  R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_a6_age_confirm2_* R_Cen_correct_age_* R_Cen_unit_age_* R_Cen_a6_dob_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_2week_* R_Cen_child_index_* R_Cen_get_pregnant_status_* R_Cen_pregnant_index_* R_Cen_pregwoman_* R_Cen_hh_member_names_count comb_hhmember_age* R_E_comb_combchild_index* R_E_comb_combchild_status*  R_E_comb_child_care_pres* R_E_comb_child_care_pres_oth* R_E_comb_child_residence*  
 
 *** Dropping temporary variables created for cleaning the datatset 
-drop  R_E_num_treat_resp R_E_treat_resp_list_count R_E_setoftreat_resp_list R_E_treat_resp_labels  C_E_selected_index C_E_selected_index_treat C_Cen_U5child_* C_E_n_U5child_* Cen_Type* Cl_Cen_Type*  comb_preg_status* C_Cen_U5child_* C_E_n_U5child_* C_Cen_female_15to49_* C_E_n_female_15to49_* C_Cen_noncri_members_* C_E_n_noncri_members_* C_Cen_female_above12_* C_E_n_female_above12_* C_Cen_male_above12_* C_E_n_male_above12_* Cl_Cen_Type* total_U5_kids
+drop  R_E_num_treat_resp R_E_treat_resp_list_count R_E_setoftreat_resp_list R_E_treat_resp_labels  C_E_selected_index C_E_selected_index_treat C_Cen_U5child_* C_E_n_U5child_* R_E_Cen_Type* Cl_R_E_Cen_Type*  R_E_comb_preg_status* C_Cen_U5child_* C_E_n_U5child_* C_Cen_female_15to49_* C_E_n_female_15to49_* C_Cen_noncri_members_* C_E_n_noncri_members_* C_Cen_female_above12_* C_E_n_female_above12_* C_Cen_male_above12_* C_E_n_male_above12_* Cl_R_E_Cen_Type* total_U5_kids
 
 *** Dropping other calculate field variables and ones not required for ananlysis 
 drop R_Cen_primary_water_label R_E_secondary_water_label R_E_water_sec_labels R_E_people_prim_labels R_E_secondary_main_water_label water_sec_value1 water_sec_value2 R_E_num_people_prim 
