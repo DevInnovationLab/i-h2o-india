@@ -18,6 +18,14 @@ Wide dataset: Household level
 "GitHub\i-h2o-india\Code\1_profile_ILC\0_Preparation_V2_revisit.do" to create individual revisit endline census datasets 
 "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do" to get HH level clean main endline census dataset 
 "GitHub\i-h2o-india\Code\1_profile_ILC\1_9_A_Endline_Revisit_cleaning.do" to get HH level clean revisit endline census dataset
+
+Dataset prefix Explanation- 
+1_8_ : Main endline census 
+1_9_ : Revisit endline census 
+1_10_ : Merged main and revisit endline census data
+1_10_Cl_ : Cleaned Merged main and revisit endline census data
+1_11_ : Clean and consented Merged main and revisit endline census data
+1_1_ : Baseline census data 
 *=========================================================================*/
 
 
@@ -999,6 +1007,20 @@ preserve
 use "${Intermediate}1_9_endline_revisit_CBW_merge.dta", clear
 drop if comb_resp_avail_comb != 1
 drop Vcomb_resp_avail_comb
+/*Why the steps below? 
+In the endline revisit, prefix comb signifies that it contains both census or new entries from main endline census, so we also need to know whatever comb variables we have in our revisit dataset how many are census entries and how many are new entries from the main endline census. For that purpose, we need to do a 1:1 merge between revisit and main dataset to get what each entry belongs to 
+*/
+//renaming this temporarily because this is a common var in main and revisit dataset so to do one on one comparsion they need to have different names 
+rename C_entry_type RV_C_entry_type
+//C_entry_type gives the categorisation of whther that entry was a Census or new entry 
+merge 1:1 unique_id comb_name_comb_woman_earlier   using "${Intermediate}1_8_Endline_census_CBW_merge.dta" , keepusing(unique_id comb_name_comb_woman_earlier  C_entry_type) 
+keep if _merge == 3
+//creating another variable that signifies the breakdown of revisit entries like whether they were new or census from the main endline census 
+clonevar C_RV_entry_type = C_entry_type 
+//dropping this as we are done comparing
+drop C_entry_type 
+//renaming it again to make the variable consistent after we are done wit manual comaprison
+rename RV_C_entry_type C_entry_type
 save "${DataTemp}comb_women_endline_revisit_t.dta", replace
 restore
 
@@ -1230,6 +1252,10 @@ label define comb_child_caregiver_present_x 1 "Respondent available for an inter
  
 label values comb_child_caregiver_present comb_child_caregiver_present_x
 
+//variables labeling
+label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
+label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
+
 /*---------------------------------------------------------------------------
 Missing values
 -----------------------------------------------------------------------------*/
@@ -1361,6 +1387,11 @@ label define comb_resp_avail_comb_ex 1 "Respondent available for an interview" 2
  
 label values comb_resp_avail_comb comb_resp_avail_comb_ex
 
+//variables labeling
+label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
+label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
+
+
 /*---------------------------------------------------------------------------
 Checking consistency of codes for Don't know, others etc
 -----------------------------------------------------------------------------*/
@@ -1472,6 +1503,10 @@ replace `var' = -98  if `var' == 98
 replace `var' = -77 if `var' == 77
 }
 
+//variables labeling
+label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
+label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
+label variable C_hhmember_name "Combined names of the new or census children" 
 
 /*---------------------------------------------------------------------------
 Renaming Variables
@@ -1486,6 +1521,8 @@ foreach var of varlist `r(varlist)'{
 rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
+
+
 save "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", replace
 
 
@@ -1502,15 +1539,15 @@ SECTION 6
 *****************************************************************/
 
 use "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", clear
-gen C_dataset_type = "Child"
+gen R_E_C_dataset_type = "Child"
 append using "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta"
-replace C_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
+replace R_E_C_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
 append using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
-replace C_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
+replace R_E_C_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
-order C_dataset_type 
-
+order R_E_C_dataset_type 
+label variable R_E_C_dataset_type "Type of Individual dataset"
 save "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", replace
 
 
@@ -1526,7 +1563,7 @@ SECTION 7
 
 //Creating consented child dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if C_dataset_type  == "Child" 
+keep if R_E_C_dataset_type  == "Child" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1541,7 +1578,7 @@ save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if C_dataset_type  == "CBW" 
+keep if R_E_C_dataset_type  == "CBW" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1558,7 +1595,7 @@ save "${DataFinal}1_11_Endline_Census_CBW_consented_individual.dta", replace
 
 //creating consented roster dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if C_dataset_type  == "Roster" 
+keep if R_E_C_dataset_type  == "Roster" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1594,7 +1631,7 @@ keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearli
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_  R_Cen_a6_hhmember_age_  R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_  R_Cen_pregnant_index_ R_Cen_get_pregnant_status_ R_Cen_pregwoman_ R_Cen_a21_wom_cuts_day_ R_Cen_a21_wom_cuts_week_ R_Cen_a21_wom_cuts_2week_ R_Cen_a22_wom_vomit_day_ R_Cen_a22_wom_vomit_week_ R_Cen_a22_wom_vomit_2week_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_wom_diarr_num_week_ R_Cen_wom_diarr_num_2weeks_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a26_wom_blood_day_ R_Cen_a26_wom_blood_week_ R_Cen_a26_wom_blood_2week_ , i(unique_id) j(reshape)
+reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_  R_Cen_a6_hhmember_age_  R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_  R_Cen_pregnant_index_ R_Cen_get_pregnant_status_ R_Cen_pregwoman_ R_Cen_a21_wom_cuts_day_ R_Cen_a21_wom_cuts_week_ R_Cen_a21_wom_cuts_2week_ R_Cen_a22_wom_vomit_day_ R_Cen_a22_wom_vomit_week_ R_Cen_a22_wom_vomit_2week_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_wom_diarr_num_week_ R_Cen_wom_diarr_num_2weeks_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a26_wom_blood_day_ R_Cen_a26_wom_blood_week_ R_Cen_a26_wom_blood_2week_ , i(unique_id) j(R_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
 keep if R_Cen_a4_hhmember_gender_ == 2  //keepi ng only women in the dataset
 order unique_id R_Cen_pregwoman_ R_Cen_namefromearlier_ //we are keeping non-pregnant women too to maintain consistency because the endline women dataset have all the women from 15-49 years including non-pregnant ones 
@@ -1603,7 +1640,7 @@ order unique_id R_Cen_pregwoman_ R_Cen_namefromearlier_ //we are keeping non-pre
 // WAY 1 
 bysort  unique_id R_Cen_namefromearlier_ : gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id 
-br unique_id R_Cen_namefromearlier_ reshape R_Cen_a6_hhmember_age_ R_Cen_a7_pregnant_ dup_UID if dup_UID != 0
+br unique_id R_Cen_namefromearlier_ R_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a7_pregnant_ dup_UID if dup_UID != 0
 tab dup_UID
 //MANUAL CORRECTIONS 
 /*
@@ -1615,9 +1652,9 @@ Please note that for Priya we need to make sure that the replacement is coherent
 */
 
 *2 Duplicates found. Please note that this was also flagged earlier 
-replace R_Cen_namefromearlier_  = "_Pinky Kandagari" if R_Cen_namefromearlier_ == "Pinky Kandagari" & unique_id == "30202109013" &  reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+replace R_Cen_namefromearlier_  = "_Pinky Kandagari" if R_Cen_namefromearlier_ == "Pinky Kandagari" & unique_id == "30202109013" &  R_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
 
-replace R_Cen_namefromearlier_  = "_Priya Koushalya" if R_Cen_namefromearlier_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  reshape == 8
+replace R_Cen_namefromearlier_  = "_Priya Koushalya" if R_Cen_namefromearlier_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  R_Cen_reshape == 8
 
 //WAY 2 (Doing manual checks )
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
@@ -1625,7 +1662,13 @@ count if dup_HHID > 0
 tab dup_HHID
 sort unique_id 
 br unique_id R_Cen_namefromearlier_  if dup_HHID > 0 
-//restart from row 222
+drop dup_UID dup_HHID
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
+label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
+
 save "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
@@ -1638,7 +1681,7 @@ keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearli
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(reshape)
+reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(R_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
 keep if R_Cen_a6_hhmember_age_ < 6  //keeping only U5 or 5 years of child in the dataset 
 drop if R_Cen_u5child_ == ""   //dropping ineligible entries 
@@ -1655,6 +1698,13 @@ tab dup_HHID
 br unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_ if dup_HHID > 0
 sort unique_id 
 //all child names are unique 
+drop dup_UID dup_HHID
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
+label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
+
 save "${Intermediate}1_1_Baseline_Census_U5_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
@@ -1667,14 +1717,14 @@ keep unique_id R_Cen_village_str R_Cen_resp_available R_Cen_instruction R_Cen_a1
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namenumber_ R_Cen_a3_hhmember_name_ R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_  R_Cen_a5_relation_oth_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_  , i(unique_id) j(reshape)
+reshape long R_Cen_namenumber_ R_Cen_a3_hhmember_name_ R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_  R_Cen_a5_relation_oth_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_  , i(unique_id) j(R_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
 //finding perfect unique identifiers
 // WAY 1 
 bysort  unique_id R_Cen_a3_hhmember_name_ : gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id 
 tab dup_UID
-br unique_id reshape R_Cen_a6_hhmember_age_ R_Cen_a3_hhmember_name_ if  dup_UID > 0
+br unique_id R_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a3_hhmember_name_ if  dup_UID > 0
 //WAY 2 (Doing manual checks )
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
@@ -1690,13 +1740,19 @@ Please note that for Priya we need to make sure that the replacement is coherent
 */
 
 *2 Duplicates found. Please note that this was also flagged earlier 
-replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ == "Pinky Kandagari" & unique_id == "30202109013" &  reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ == "Pinky Kandagari" & unique_id == "30202109013" &  R_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
 
-replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  reshape == 8
+replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  R_Cen_reshape == 8
+
+drop dup_UID dup_HHID
+/*---------------------------------------------------------------------------
+Labeling important categories
+-----------------------------------------------------------------------------*/
+label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
+label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
 
 save "${Intermediate}1_1_Baseline_Census_Roster_Individual_level.dta", replace
 
-stoppp
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 9
@@ -1709,16 +1765,43 @@ SECTION 9
 /*---------------------------------------------------------------------------
 Women level dataset 
 -----------------------------------------------------------------------------*/
-
 //baseline
 use "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", clear
-keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49  & R_Cen_a4_hhmember_gender_
+keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49  
 clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_
 //merging it with endline dataset
 merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
+br R_E_comb_name_comb_woman_earlier R_E_C_entry_type R_E_C_RV_entry_type R_E_comb_resp_avail_comb unique_id if _merge == 2
+/*
+Imp note: There are around 5 cases where 
+*/
+
+//generating a variable for irrelevant entries
+gen C_irrelevant = .
+replace C_irrelevant = 1 if  (R_Cen_a6_hhmember_age_  <  15 | R_Cen_a6_hhmember_age_  > 49)  & _merge == 1
+
+br R_Cen_namefromearlier_ R_Cen_a6_hhmember_age_ R_Cen_a4_hhmember_gender_ C_irrelevant  _merge if _merge == 1
+
+tab C_irrelevant , m
 
 
-30501-117-007
+/*
+------------------------------------------
+Reasons for mismatch in the merge
+------------------------------------------
+1. 83 using entries : These are all the new entries recorded in endline census that is why they are not present in baseline census. You can browse R_E_C_entry_type R_E_C_RV_entry_type if _merge == 2 to verify this. 
+2. 
+
+*/
+
+R_E_comb_name_comb_woman_earlier	R_E_C_entry_type	R_E_C_RV_entry_type	unique_id
+Suranti Sabara	BC		20201108055
+Amarabati Pradhan	BC		20201110019
+Krishnabeni Patra	BC		20201110035
+R_E_comb_name_comb_woman_earlier	R_E_C_entry_type	R_E_C_RV_entry_type	unique_id
+Jhansirani Mandangi	BC		30602106057
+Jhiama Kadraka	BC		30602106063
+
 
 
 30501117007   Sahila patra
