@@ -19,6 +19,9 @@ Wide dataset: Household level
 "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning.do" to get HH level clean main endline census dataset 
 "GitHub\i-h2o-india\Code\1_profile_ILC\1_9_A_Endline_Revisit_cleaning.do" to get HH level clean revisit endline census dataset
 
+****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
+
+
 Dataset prefix Explanation- 
 1_8_ : Main endline census 
 1_9_ : Revisit endline census 
@@ -26,6 +29,7 @@ Dataset prefix Explanation-
 1_10_Cl_ : Cleaned Merged main and revisit endline census data
 1_11_ : Clean and consented Merged main and revisit endline census data
 1_1_ : Baseline census data 
+1_12_Cl_ : Combined baseline and endline cleaned dataset
 *=========================================================================*/
 
 
@@ -1147,13 +1151,125 @@ SECTION 5
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
 
+
 ********************************************************************************
   /*****************************************************************
- 1. CLEANING COMBINED CHILD DATASET FIRST 
+ 1. CLEANING COMBINED ROSTER DATASET 
 *****************************************************************/
 ********************************************************************************
 
 
+use "${Intermediate}1_10_Endline_roster_merged_census_New_final.dta", clear
+//need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
+
+
+/*---------------------------------------------------------------------------
+Manual corrections 
+-----------------------------------------------------------------------------*/
+
+//replacing names with correct surnames - replacing Jilaka with Jilakar. Also chnage this in the baseline census data - Check with Niharika 
+replace comb_name_from_earlier_hh = "Pauni Jilakar" if comb_name_from_earlier_hh == "Pauni Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_name_from_earlier_hh = "Raja Jilakar" if comb_name_from_earlier_hh == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_name_from_earlier_hh = "Sabitri Jilakar" if comb_name_from_earlier_hh == "Sabitri Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+replace comb_name_from_earlier_hh = "Mangu Jilakar" if comb_name_from_earlier_hh == "Mangu Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
+
+
+/*correcting the village names for the UID (Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/138) 
+We found 2 UIDs for which the village name were inter-changed so that's why we need to make the manual replacements for it across all the datasets*/
+*replacing bhujbal with tandipur for this ID
+replace R_E_village_name_str = "Tandipur"  if  R_E_village_name_str ==  "Bhujbal" & unique_id == "30501119006"
+replace Village = "Tandipur"  if Village == "Bhujbal" & unique_id == "30501119006"
+replace village = 30301  if village == 30501 & unique_id == "30501119006"
+*replacing  tandipur with bhujbal for this ID
+replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" & unique_id == "30301119027"
+replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
+replace village = 30501 if village == 30301 & unique_id == "30301119027"
+
+//generating a combined name variable using both census, RV, new entries 
+clonevar C_hhmember_name = comb_name_from_earlier_hh
+replace C_hhmember_name  =  comb_namefromearlier if C_hhmember_name  == ""
+
+br R_E_village_name_str unique_id R_E_enum_name_label C_hhmember_name comb_hhmember_age if unique_id == "40101111012" //need to get the correct name of the woman here as one of the memebers is written as 999 
+
+//checking if unique identifier is still intact
+isid unique_id C_hhmember_name
+sort unique_id
+
+/*---------------------------------------------------------------------------
+Outliers  
+-----------------------------------------------------------------------------*/
+
+ds  comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+}
+ds comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
+foreach var of varlist `r(varlist)'{
+summarize `var' if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var'), detail
+gen o`var' = 0
+replace o`var' = 1 if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
+//graph box `var' if `var' != 999 & `var' != 888 & `var' != 666
+//graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero values in the current variable.
+    if r(N) == 0 {   //Checks if the count of non-zero values is zero.
+        drop o`var'
+    }
+}
+
+//no concerning outliers found
+drop o* 
+
+
+/*---------------------------------------------------------------------------
+Checking consistency of codes for Don't know, others etc
+-----------------------------------------------------------------------------*/
+ds, has (type numeric)
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 | `var' == -99 
+replace `var' = -98  if `var' == 98 
+replace `var' = -77 if `var' == 77
+}
+
+//variables labeling
+label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
+label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
+label variable C_hhmember_name "Combined names of the new or census children" 
+
+/*---------------------------------------------------------------------------
+Renaming Variables
+-----------------------------------------------------------------------------*/
+//giving R_E prefix to all the variables that don't have it already
+renpfix R_E_
+rename Revisit_R_E_key Revisit_key
+//renaming certain variables because they are too long 
+rename setofcen_hh_member_names_loop  setofcen_hh_mem_names_loop 
+ds
+foreach var of varlist `r(varlist)'{
+rename `var' R_E_`var'
+}
+rename R_E_unique_id  unique_id
+
+
+//Making naming of new generated variables consistent across endline individual and HH level dataset
+rename R_E_C_entry_type C_E_entry_type
+rename R_E_C_RV_entry_type C_E_RV_entry_type
+rename R_E_C_hhmember_name C_E_hhmember_name
+drop    R_E_dup_UID R_E_dup_HHID R_E_dup_HHID R_E__merge R_E_comb_type //dropping unecessary variables that were created for temporary calcs
+
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available R_E_instruction) nogen  keep(1 3)
+
+save "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", replace
+
+
+
+********************************************************************************
+  /*****************************************************************
+2. CLEANING COMBINED CHILD DATASET FIRST 
+*****************************************************************/
+********************************************************************************
 use "${Intermediate}1_10_Endline_Child_level_merged_dataset_final.dta", clear
 rename  key R_E_key 
 *Duplicates check 
@@ -1222,8 +1338,8 @@ foreach var of varlist `r(varlist)'{
 summarize `var' if `var' != 888 & `var' != 999 & !missing(`var'), detail
 gen o`var' = 0
 replace o`var' = 1 if `var' != 888 & `var' != 999 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
-graph box `var' if `var' != 999 & `var' != 888
-graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+//graph box `var' if `var' != 999 & `var' != 888
+//graph export "${Figure}endline_outliers_`var'.png", as(png) replace
 quietly count if `var' != 0  //Counts the number of non-zero values in the current variable.
     if r(N) == 0 {   //Checks if the count of non-zero values is zero.
         drop o`var'
@@ -1287,11 +1403,24 @@ rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
 rename R_E_IN_unique_id IN_unique_id
+
+//Making naming of new generated variables consistent across endline individual and HH level dataset
+rename R_E_C_entry_type C_E_entry_type
+rename R_E_C_RV_entry_type C_E_RV_entry_type
+drop R_E_dup_HHID R_E_dup_UID R_E_to_drop R_E_Cen_Type R_E_comb_type   R_E_UID_1 //dropping unecessary variables that were created for temporary calcs
+
+/*---------------------------------------------------------------------------
+Getting important variables for analysis from other datasets
+-----------------------------------------------------------------------------*/
+rename R_E_comb_child_comb_name_label C_E_hhmember_name  //renaming this variable so that merge can be done easily 
+merge 1:1 unique_id C_E_hhmember_name using "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", keepusing (unique_id C_E_hhmember_name R_E_comb_hhmember_age R_E_comb_hhmember_gender) gen (match) keep (1 3)
+rename C_E_hhmember_name R_E_comb_child_comb_name_label //reverting it to its original name 
+drop match
 save "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", replace  //Cl notifies clean here 
 
 ********************************************************************************
   /*****************************************************************
- 2. CLEANING COMBINED CBW/WOMEN DATASET 
+ 3. CLEANING COMBINED CBW/WOMEN DATASET 
 *****************************************************************/
 ********************************************************************************
 
@@ -1340,6 +1469,46 @@ replace comb_med_symp_comb_13 = 1 if comb_med_symp_oth_comb == "Dairia" | comb_m
 
 
 
+
+*******************************************************************************************
+//correcting names with 111- prefix to match with their baseline names
+********************************************************************************************
+/* Head to github for a detailed explanation for why 111 prefix was used- https://github.com/DevInnovationLab/i-h2o-india/issues/116 
+
+Brief Explanation of Why "111" Was Used:
+1. Incorrect Age/Gender Recording: In the baseline survey, some respondents' ages or genders were recorded incorrectly. This resulted in their being marked ineligible for certain sections, such as the women and child sections.
+2. Re-entry in New Roster: To correct this, enumerators re-entered these respondents in a new roster with their accurate ages and genders. This allowed them to participate in the appropriate sections for which they were actually eligible.
+3. Name Consistency Across Datasets: To ensure consistency in names between the baseline and endline women’s datasets, we need to replace these re-entered names with their original baseline names. This adjustment is crucial for a perfect merge between the two datasets.
+4. Manual Name Replacements: As a result, we are making manual replacements in the names to achieve a consistent, accurate merge.
+
+In summary, "111" was used as a placeholder to manage these manual replacements and ensure accurate matching across baseline and endline datasets.
+unique_id	        R_E_comb_name_comb_woman_earlier  baseline_names
+10101108026	111 Radharani Misal                                  Radharani Misal
+30301104006	111(Ambi praska)                                       Ambi Praska
+30501111018	111 Monisha korsolibansha                      Monisha korsolibansa
+30501111021	111padma sunabansa                                Padma sunabansa
+40301113007	111 manjusha Sabar                                   Manjusa sabara
+40301113016	111 Triveni gouda                                       Tribeni gouda
+50201115043	111Palai bidika                                             Palai Bidika
+50301105008	111-sunadei praska                                      Sundei Praska
+*/
+
+//splitting 111 from their names 
+split comb_name_comb_woman_earlier, generate(women_with_111_names) parse("111")
+//doing manual corrections in name to match it with baseline
+sort comb_name_comb_woman_earlier
+replace comb_name_comb_woman_earlier = "Monisha korsolibansa" if unique_id == "30501111018" &    comb_name_comb_woman_earlier == "111 Monisha korsolibansha"
+replace comb_name_comb_woman_earlier = "Radharani Misal" if unique_id == "10101108026" &    comb_name_comb_woman_earlier == "111 Radharani Misal"
+replace comb_name_comb_woman_earlier = "Tribeni gouda" if unique_id == "40301113016" &    comb_name_comb_woman_earlier == "111 Triveni gouda"
+replace comb_name_comb_woman_earlier = "Manjusa sabara" if unique_id == "40301113007" &    comb_name_comb_woman_earlier == "111 manjusha Sabar"
+replace comb_name_comb_woman_earlier = "Ambi Praska" if unique_id == "30301104006" &    comb_name_comb_woman_earlier == "111(Ambi praska)"
+replace comb_name_comb_woman_earlier = "Sundei Praska" if unique_id == "50301105008" &    comb_name_comb_woman_earlier == "111-sunadei praska"
+replace comb_name_comb_woman_earlier = "Palai Bidika" if unique_id == "50201115043" &    comb_name_comb_woman_earlier == "111Palai bidika"
+replace comb_name_comb_woman_earlier = "Padma sunabansa" if unique_id == "30501111021" &    comb_name_comb_woman_earlier == "111padma sunabansa"
+
+drop women_with_111_names1
+rename women_with_111_names2  C_re_entered_women_names
+
 /*---------------------------------------------------------------------------
 Dropping IDs
 -----------------------------------------------------------------------------*/
@@ -1365,8 +1534,8 @@ foreach var of varlist `r(varlist)'{
 summarize `var' if `var' != 888 & `var' != 999 & !missing(`var'), detail
 gen o`var' = 0
 replace o`var' = 1 if `var' != 888 & `var' != 999 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
-graph box `var' if `var' != 999 & `var' != 888
-graph export "${Figure}endline_outliers_`var'.png", as(png) replace
+//graph box `var' if `var' != 999 & `var' != 888
+//graph export "${Figure}endline_outliers_`var'.png", as(png) replace
 quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero values in the current variable.
     if r(N) == 0 {   //Checks if the count of non-zero values is zero.
         drop o`var'
@@ -1390,6 +1559,7 @@ label values comb_resp_avail_comb comb_resp_avail_comb_ex
 //variables labeling
 label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
 label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
+label variable C_re_entered_women_names "Women that were included in the new roster because they were found to be eligible" 
 
 
 /*---------------------------------------------------------------------------
@@ -1423,108 +1593,24 @@ rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
 rename R_E_IN_unique_id IN_unique_id
+
+
+
+//Making naming of new generated variables consistent across endline individual and HH level dataset
+rename R_E_C_entry_type C_E_entry_type
+rename R_E_C_RV_entry_type C_E_RV_entry_type
+rename R_E_C_re_entered_women_names C_E_re_entered_women_names
+drop R_E_dup_HHID R_E_dup_UID R_E_Vcomb_resp_avail_comb R_E_to_drop R_E_comb_type R_E__merge  R_E_UID_1  //dropping unecessary variables that were created for temporary calcs
+
+/*---------------------------------------------------------------------------
+Getting important variables for analysis from other datasets
+-----------------------------------------------------------------------------*/
+rename R_E_comb_name_comb_woman_earlier C_E_hhmember_name  //renaming this variable so that merge can be done easily 
+merge 1:1 unique_id C_E_hhmember_name using "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", keepusing (unique_id C_E_hhmember_name R_E_comb_hhmember_age R_E_comb_hhmember_gender) gen (match) keep(1 3) 
+rename C_E_hhmember_name R_E_comb_name_comb_woman_earlier //reverting it to its original name 
+drop match
+
 save "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta", replace
-
-
-********************************************************************************
-  /*****************************************************************
- 2. CLEANING COMBINED ROSTER DATASET 
-*****************************************************************/
-********************************************************************************
-
-
-use "${Intermediate}1_10_Endline_roster_merged_census_New_final.dta", clear
-//need to verify if the mid refusal needs to be dropped for the rsoter dataset because we do have applicable data for roster
-
-//generating a combined name variable using both census, RV, new entries 
-clonevar C_hhmember_name = comb_name_from_earlier_hh
-replace C_hhmember_name  =  comb_namefromearlier if C_hhmember_name  == ""
-
-br R_E_village_name_str unique_id R_E_enum_name_label C_hhmember_name comb_hhmember_age if unique_id == "40101111012" //need to get the correct name of the woman here as one of the memebers is written as 999 
-
-//checking if unique identifier is still intact
-isid unique_id C_hhmember_name
-sort unique_id
-
-/*---------------------------------------------------------------------------
-Manual corrections 
------------------------------------------------------------------------------*/
-
-//replacing names with correct surnames - replacing Jilaka with Jilakar. Also chnage this in the baseline census data - Check with Niharika 
-replace comb_name_from_earlier_hh = "Pauni Jilakar" if comb_name_from_earlier_hh == "Pauni Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
-
-replace comb_name_from_earlier_hh = "Raja Jilakar" if comb_name_from_earlier_hh == "Raja Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
-
-replace comb_name_from_earlier_hh = "Sabitri Jilakar" if comb_name_from_earlier_hh == "Sabitri Jilaka" & unique_id == "30602107007" & R_E_key == "uuid:490f0142-4473-4073-8e32-9afd5ffe2e36" 
-
-/*correcting the village names for the UID (Link to the Github issue- https://github.com/DevInnovationLab/i-h2o-india/issues/138) 
-We found 2 UIDs for which the village name were inter-changed so that's why we need to make the manual replacements for it across all the datasets*/
-*replacing bhujbal with tandipur for this ID
-replace R_E_village_name_str = "Tandipur"  if  R_E_village_name_str ==  "Bhujbal" & unique_id == "30501119006"
-replace Village = "Tandipur"  if Village == "Bhujbal" & unique_id == "30501119006"
-replace village = 30301  if village == 30501 & unique_id == "30501119006"
-*replacing  tandipur with bhujbal for this ID
-replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" & unique_id == "30301119027"
-replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
-replace village = 30501 if village == 30301 & unique_id == "30301119027"
-
-/*---------------------------------------------------------------------------
-Outliers  
------------------------------------------------------------------------------*/
-
-ds  comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
-foreach var of varlist `r(varlist)'{
-destring `var', replace
-}
-ds comb_days_num_residence comb_hhmember_age comb_unit_age_months comb_unit_age_days
-foreach var of varlist `r(varlist)'{
-summarize `var' if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var'), detail
-gen o`var' = 0
-replace o`var' = 1 if `var' != 888 & `var' != 999 & `var' != 666 & !missing(`var') & abs(`var' - r(mean)) > 3*r(sd)
-graph box `var' if `var' != 999 & `var' != 888 & `var' != 666
-graph export "${Figure}endline_outliers_`var'.png", as(png) replace
-quietly count if `var' != 0 & !missing(`var')  //Counts the number of non-zero values in the current variable.
-    if r(N) == 0 {   //Checks if the count of non-zero values is zero.
-        drop o`var'
-    }
-}
-
-//no concerning outliers found
-drop o* 
-
-
-/*---------------------------------------------------------------------------
-Checking consistency of codes for Don't know, others etc
------------------------------------------------------------------------------*/
-ds, has (type numeric)
-foreach var of varlist `r(varlist)'{
-replace `var' = 999 if `var' == 99 | `var' == -99 
-replace `var' = -98  if `var' == 98 
-replace `var' = -77 if `var' == 77
-}
-
-//variables labeling
-label variable C_entry_type "Does observation belong to baseline census or was a new entry recorded in endline census?"
-label variable C_RV_entry_type "What type of revisit entry is it for eg. comb type variables in revisit were both preloaded from main endline census so does the combined entry belong to New or baseline census?"
-label variable C_hhmember_name "Combined names of the new or census children" 
-
-/*---------------------------------------------------------------------------
-Renaming Variables
------------------------------------------------------------------------------*/
-//giving R_E prefix to all the variables that don't have it already
-renpfix R_E_
-rename Revisit_R_E_key Revisit_key
-//renaming certain variables because they are too long 
-rename setofcen_hh_member_names_loop  setofcen_hh_mem_names_loop 
-ds
-foreach var of varlist `r(varlist)'{
-rename `var' R_E_`var'
-}
-rename R_E_unique_id  unique_id
-
-
-save "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta", replace
-
 
 
 /*************************************************************************************************************************************************************************************
@@ -1539,15 +1625,15 @@ SECTION 6
 *****************************************************************/
 
 use "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", clear
-gen R_E_C_dataset_type = "Child"
+gen C_E_dataset_type = "Child"
 append using "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta"
-replace R_E_C_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
+replace C_E_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
 append using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
-replace R_E_C_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
+replace C_E_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
-order R_E_C_dataset_type 
-label variable R_E_C_dataset_type "Type of Individual dataset"
+order C_E_dataset_type 
+label variable C_E_dataset_type "Type of Individual dataset"
 save "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", replace
 
 
@@ -1563,7 +1649,7 @@ SECTION 7
 
 //Creating consented child dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if R_E_C_dataset_type  == "Child" 
+keep if C_E_dataset_type  == "Child" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1578,7 +1664,7 @@ save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if R_E_C_dataset_type  == "CBW" 
+keep if C_E_dataset_type  == "CBW" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1595,7 +1681,7 @@ save "${DataFinal}1_11_Endline_Census_CBW_consented_individual.dta", replace
 
 //creating consented roster dataset for analysis 
 use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
-keep if R_E_C_dataset_type  == "Roster" 
+keep if C_E_dataset_type  == "Roster" 
 ds // list all variables
 foreach var of varlist * {
     // Calculate the number of non-missing values for the variable
@@ -1626,12 +1712,12 @@ Women level dataset
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
 use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
 //creating women dataset first 
-keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_*  R_Cen_pregnant_followup_count R_Cen_pregnant_index_* R_Cen_get_pregnant_status_* R_Cen_pregwoman_* R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* 
+keep unique_id R_Cen_key R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_*  R_Cen_pregnant_followup_count R_Cen_pregnant_index_* R_Cen_get_pregnant_status_* R_Cen_pregwoman_* R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* 
 
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_  R_Cen_a6_hhmember_age_  R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_  R_Cen_pregnant_index_ R_Cen_get_pregnant_status_ R_Cen_pregwoman_ R_Cen_a21_wom_cuts_day_ R_Cen_a21_wom_cuts_week_ R_Cen_a21_wom_cuts_2week_ R_Cen_a22_wom_vomit_day_ R_Cen_a22_wom_vomit_week_ R_Cen_a22_wom_vomit_2week_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_wom_diarr_num_week_ R_Cen_wom_diarr_num_2weeks_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a26_wom_blood_day_ R_Cen_a26_wom_blood_week_ R_Cen_a26_wom_blood_2week_ , i(unique_id) j(R_Cen_reshape)
+reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_  R_Cen_a6_hhmember_age_  R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_  R_Cen_pregnant_index_ R_Cen_get_pregnant_status_ R_Cen_pregwoman_ R_Cen_a21_wom_cuts_day_ R_Cen_a21_wom_cuts_week_ R_Cen_a21_wom_cuts_2week_ R_Cen_a22_wom_vomit_day_ R_Cen_a22_wom_vomit_week_ R_Cen_a22_wom_vomit_2week_ R_Cen_a23_wom_diarr_day_ R_Cen_a23_wom_diarr_week_ R_Cen_a23_wom_diarr_2week_ R_Cen_wom_diarr_num_week_ R_Cen_wom_diarr_num_2weeks_ R_Cen_a25_wom_stool_24h_ R_Cen_a25_wom_stool_yest_ R_Cen_a25_wom_stool_week_ R_Cen_a25_wom_stool_2week_ R_Cen_a26_wom_blood_day_ R_Cen_a26_wom_blood_week_ R_Cen_a26_wom_blood_2week_ , i(unique_id) j(C_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
 keep if R_Cen_a4_hhmember_gender_ == 2  //keepi ng only women in the dataset
 order unique_id R_Cen_pregwoman_ R_Cen_namefromearlier_ //we are keeping non-pregnant women too to maintain consistency because the endline women dataset have all the women from 15-49 years including non-pregnant ones 
@@ -1640,7 +1726,7 @@ order unique_id R_Cen_pregwoman_ R_Cen_namefromearlier_ //we are keeping non-pre
 // WAY 1 
 bysort  unique_id R_Cen_namefromearlier_ : gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id 
-br unique_id R_Cen_namefromearlier_ R_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a7_pregnant_ dup_UID if dup_UID != 0
+br unique_id R_Cen_namefromearlier_  C_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a7_pregnant_ dup_UID if dup_UID != 0
 tab dup_UID
 //MANUAL CORRECTIONS 
 /*
@@ -1652,9 +1738,14 @@ Please note that for Priya we need to make sure that the replacement is coherent
 */
 
 *2 Duplicates found. Please note that this was also flagged earlier 
-replace R_Cen_namefromearlier_  = "_Pinky Kandagari" if R_Cen_namefromearlier_ == "Pinky Kandagari" & unique_id == "30202109013" &  R_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+replace R_Cen_namefromearlier_  = "_Pinky Kandagari" if R_Cen_namefromearlier_ == "Pinky Kandagari" & unique_id == "30202109013" &  C_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
 
-replace R_Cen_namefromearlier_  = "_Priya Koushalya" if R_Cen_namefromearlier_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  R_Cen_reshape == 8
+replace R_Cen_namefromearlier_  = "_Priya Koushalya" if R_Cen_namefromearlier_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  C_Cen_reshape == 8
+
+//replacing names with correct surnames - replacing Jilaka with Jilakar. We found the correct surname in endline census. So, the replacement has already been made in the endline data 
+replace R_Cen_namefromearlier_ = "Pauni Jilakar" if R_Cen_namefromearlier_ == "Pauni Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_ = "Sabitri Jilakar" if R_Cen_namefromearlier_ == "Sabitri Jilaka" & unique_id == "30602107007" 
+
 
 //WAY 2 (Doing manual checks )
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
@@ -1663,12 +1754,14 @@ tab dup_HHID
 sort unique_id 
 br unique_id R_Cen_namefromearlier_  if dup_HHID > 0 
 drop dup_UID dup_HHID
-/*---------------------------------------------------------------------------
-Labeling important categories
------------------------------------------------------------------------------*/
+**Labeling important categories
 label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
 label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
 
+**we are creating two datasets because one is going to contain all entries because it is going to help us in matching it with the endline women dataset to see if there are any names that are matching but shouldn't be. 
+save "${DataTemp}1_1_Baseline_Census_CBW_Individual_level_for_merge.dta", replace
+//keeping only women in the dataset for any analysis for baseline
+keep if R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ >= 49 & R_Cen_a4_hhmember_gender_ == 2
 save "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
@@ -1676,16 +1769,23 @@ Child level dataset
 -----------------------------------------------------------------------------*/
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
 use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
-keep unique_id R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_child_index_* R_Cen_get_u5_status_* R_Cen_u5child_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_* R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_a32_child_blood_2week_* 
+keep unique_id R_Cen_key  R_Cen_village_str R_Cen_hh_member_names_count R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_child_index_* R_Cen_get_u5_status_* R_Cen_u5child_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_* R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_a32_child_blood_2week_* 
 
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(R_Cen_reshape)
+reshape long R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_child_index_ R_Cen_get_u5_status_ R_Cen_u5child_ R_Cen_child_caregiver_present_ R_Cen_child_breastfeeding_ R_Cen_child_breastfed_num_ R_Cen_a27_child_cuts_day_ R_Cen_a27_child_cuts_week_ R_Cen_a27_child_cuts_2week_ R_Cen_a28_child_vomit_day_ R_Cen_a28_child_vomit_week_ R_Cen_a28_child_vomit_2week_ R_Cen_a29_child_diarr_day_ R_Cen_a29_child_diarr_week_ R_Cen_a29_child_diarr_2week_ R_Cen_child_diarr_week_num_ R_Cen_child_diarr_2week_num_ R_Cen_a30_child_diarr_freq_ R_Cen_a31_child_stool_24h_ R_Cen_a31_child_stool_yest_ R_Cen_a31_child_stool_week_ R_Cen_a31_child_stool_2week_ R_Cen_a32_child_blood_day_ R_Cen_a32_child_blood_week_ R_Cen_a32_child_blood_2week_  , i(unique_id) j(C_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
-keep if R_Cen_a6_hhmember_age_ < 6  //keeping only U5 or 5 years of child in the dataset 
 drop if R_Cen_u5child_ == ""   //dropping ineligible entries 
 order unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_
+
+***manual corrections****
+//replacing names with correct surnames - replacing Jilaka with Jilakar. We found the correct surname in endline census. So, the replacement has already been made in the endline data 
+replace R_Cen_u5child_= "Pauni Jilakar" if R_Cen_u5child_ == "Pauni Jilaka" & unique_id == "30602107007" 
+replace R_Cen_u5child_ = "Raja Jilakar" if R_Cen_u5child_ == "Raja Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_= "Pauni Jilakar" if R_Cen_namefromearlier_ == "Pauni Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_ = "Raja Jilakar" if R_Cen_namefromearlier_ == "Raja Jilaka" & unique_id == "30602107007" 
+
 //finding perfect unique identifiers
 // WAY 1 
 bysort  unique_id R_Cen_u5child_ : gen dup_UID = cond(_N ==1,0,_n)	
@@ -1699,12 +1799,14 @@ br unique_id R_Cen_u5child_ R_Cen_a6_hhmember_age_ R_Cen_namefromearlier_ if dup
 sort unique_id 
 //all child names are unique 
 drop dup_UID dup_HHID
-/*---------------------------------------------------------------------------
-Labeling important categories
------------------------------------------------------------------------------*/
+**Labeling important categories
 label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
 label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
 
+**we are creating two datasets because one is going to contain all entries because it is going to help us in matching it with the endline children dataset to see if there are any names that are matching but shouldn't be. 
+save "${DataTemp}1_1_Baseline_Census_U5_Individual_level_for_merge.dta", replace
+//keeping only U5 child in the dataset for any analysis for baseline
+keep if R_Cen_a6_hhmember_age_ < 5  //keeping only U5 child in the dataset 
 save "${Intermediate}1_1_Baseline_Census_U5_Individual_level.dta", replace
 
 /*---------------------------------------------------------------------------
@@ -1712,19 +1814,19 @@ Roster level dataset
 -----------------------------------------------------------------------------*/
 *This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Final_Data_Creation.do"
 use "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", clear
-keep unique_id R_Cen_village_str R_Cen_resp_available R_Cen_instruction R_Cen_a1_resp_name R_Cen_hhmember_count R_Cen_namenumber_* R_Cen_a3_hhmember_name_* R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a5_hhmember_relation_* R_Cen_a5_relation_oth_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12
+keep unique_id  R_Cen_key R_Cen_village_str R_Cen_resp_available R_Cen_instruction R_Cen_a1_resp_name R_Cen_hhmember_count R_Cen_namenumber_* R_Cen_a3_hhmember_name_* R_Cen_namefromearlier_* R_Cen_a4_hhmember_gender_* R_Cen_a5_hhmember_relation_* R_Cen_a5_relation_oth_* R_Cen_a6_hhmember_age_* R_Cen_a6_age_confirm2_* R_Cen_a6_dob_* R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_unit_age_* R_Cen_correct_age_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_u5mother_name_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_Cen_female_above12 R_Cen_num_femaleabove12 R_Cen_adults_hh_above12 R_Cen_num_adultsabove12 R_Cen_children_below12 R_Cen_num_childbelow12
 
 isid unique_id
 
 //wide to long
-reshape long R_Cen_namenumber_ R_Cen_a3_hhmember_name_ R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_  R_Cen_a5_relation_oth_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_  , i(unique_id) j(R_Cen_reshape)
+reshape long R_Cen_namenumber_ R_Cen_a3_hhmember_name_ R_Cen_namefromearlier_ R_Cen_a4_hhmember_gender_ R_Cen_a5_hhmember_relation_  R_Cen_a5_relation_oth_ R_Cen_a6_hhmember_age_ R_Cen_a6_age_confirm2_ R_Cen_a6_dob_ R_Cen_a5_autoage_ R_Cen_a6_u1age_ R_Cen_unit_age_ R_Cen_correct_age_ R_Cen_a7_pregnant_ R_Cen_a7_pregnant_month_ R_Cen_a7_pregnant_hh_ R_Cen_a7_pregnant_leave_ R_Cen_a8_u5mother_ R_Cen_u5mother_name_ R_Cen_a9_school_ R_Cen_a9_school_level_ R_Cen_a9_school_current_ R_Cen_a9_read_write_  , i(unique_id) j(C_Cen_reshape)
 drop if R_Cen_namefromearlier_ == ""
 //finding perfect unique identifiers
 // WAY 1 
 bysort  unique_id R_Cen_a3_hhmember_name_ : gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id 
 tab dup_UID
-br unique_id R_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a3_hhmember_name_ if  dup_UID > 0
+br unique_id C_Cen_reshape R_Cen_a6_hhmember_age_ R_Cen_a3_hhmember_name_ if  dup_UID > 0
 //WAY 2 (Doing manual checks )
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
 count if dup_HHID > 0 
@@ -1740,14 +1842,26 @@ Please note that for Priya we need to make sure that the replacement is coherent
 */
 
 *2 Duplicates found. Please note that this was also flagged earlier 
-replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ == "Pinky Kandagari" & unique_id == "30202109013" &  R_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+replace R_Cen_a3_hhmember_name_ = "_Pinky Kandagari" if R_Cen_a3_hhmember_name_ == "Pinky Kandagari" & unique_id == "30202109013" &  C_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
 
-replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  R_Cen_reshape == 8
+replace R_Cen_a3_hhmember_name_ = "_Priya Koushalya" if R_Cen_a3_hhmember_name_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  C_Cen_reshape == 8
+//also cleaning in the other variable
+replace R_Cen_namefromearlier_ = "_Pinky Kandagari" if R_Cen_namefromearlier_ == "Pinky Kandagari" & unique_id == "30202109013" &  C_Cen_reshape == 1 & R_Cen_a6_hhmember_age_ == 22 
+replace R_Cen_namefromearlier_ = "_Priya Koushalya" if R_Cen_namefromearlier_ == "Priya Koushalya" & unique_id == "30602105049" & R_Cen_a6_hhmember_age_ ==12   &  C_Cen_reshape == 8
+
+
+//replacing names with correct surnames - replacing Jilaka with Jilakar. We found the correct surname in endline census. So, the replacement has already been made in the endline data 
+replace R_Cen_a3_hhmember_name_= "Pauni Jilakar" if R_Cen_a3_hhmember_name_ == "Pauni Jilaka" & unique_id == "30602107007" 
+replace R_Cen_a3_hhmember_name_= "Raja Jilakar" if R_Cen_a3_hhmember_name_ == "Raja Jilaka" & unique_id == "30602107007" 
+replace R_Cen_a3_hhmember_name_= "Mangu Jilakar" if R_Cen_a3_hhmember_name_ == "Mangu Jilaka" & unique_id == "30602107007" 
+replace R_Cen_a3_hhmember_name_= "Sabitri Jilakar" if R_Cen_a3_hhmember_name_ == "Sabitri Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_= "Pauni Jilakar" if R_Cen_namefromearlier_ == "Pauni Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_ = "Raja Jilakar" if R_Cen_namefromearlier_ == "Raja Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_= "Mangu Jilakar" if R_Cen_namefromearlier_ == "Mangu Jilaka" & unique_id == "30602107007" 
+replace R_Cen_namefromearlier_ = "Sabitri Jilakar" if R_Cen_namefromearlier_ == "Sabitri Jilaka" & unique_id == "30602107007" 
 
 drop dup_UID dup_HHID
-/*---------------------------------------------------------------------------
-Labeling important categories
------------------------------------------------------------------------------*/
+**Labeling important categories
 label define R_Cen_a4_hhmember_gender_x 1 "Male" 2 "Female" 3 "Other" -98 "Refused"  
 label values R_Cen_a4_hhmember_gender_ R_Cen_a4_hhmember_gender_x
 
@@ -1760,58 +1874,512 @@ SECTION 9
 *************************************************************************************************************************************************************************************/
 
   /******************************************************************************
- Merging baseline census individual datasets with endline individual datasets 
+Merging baseline census individual datasets with endline individual datasets 
 ******************************************************************************/
-/*---------------------------------------------------------------------------
-Women level dataset 
------------------------------------------------------------------------------*/
+
+/***************************************************************************************
+-----------------------------------------------------------------------------------------
+ Section 9.1- Women level dataset 
+ ---------------------------------------------------------------------------------------
+****************************************************************************************/
 //baseline
-use "${Intermediate}1_1_Baseline_Census_CBW_Individual_level.dta", clear
-keep if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49  
-clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_
+use "${DataTemp}1_1_Baseline_Census_CBW_Individual_level_for_merge.dta", clear
+clonevar R_E_comb_name_comb_woman_earlier = R_Cen_namefromearlier_  //cloning it so that can find a common variable for merge
 //merging it with endline dataset
 merge 1:1 unique_id R_E_comb_name_comb_woman_earlier using "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta"
-br R_E_comb_name_comb_woman_earlier R_E_C_entry_type R_E_C_RV_entry_type R_E_comb_resp_avail_comb unique_id if _merge == 2
+br R_E_comb_name_comb_woman_earlier C_E_entry_type C_E_RV_entry_type R_E_comb_resp_avail_comb unique_id if _merge == 2
 /*
-Imp note: There are around 5 cases where 
+Important Note:
+
+There are approximately 5 cases in this merge where women were found to be ineligible when approached during the endline census. Here’s the breakdown:
+1. Reason for No Match: These women are only present in the endline dataset because they were determined ineligible at endline, and thus no match exists for them in earlier data.
+2. Presence in Endline Preload: Initially, these women were included in the endline preload, which is why their names appeared in the endline records.
+3. Age Correction: Their actual ages were corrected in the 3_X_HH_Data_Creation file, reflecting their true age.
+4. Effect of Age Condition: After applying the age condition—keep if R_Cen_a6_hhmember_age_ >= 15 & R_Cen_a6_hhmember_age_ <= 49—these women no longer appear in the dataset because they fall outside this age range.
+In summary, these cases are found only in the endline dataset due to ineligibility and age adjustments, which removed them from the final merged dataset.
+
+Names of these women are as follows: 
+R_E_comb_name_comb_woman_earlier
+Suranti Sabara
+Amarabati Pradhan
+Krishnabeni Patra
+R_E_comb_name_comb_woman_earlier
+Jhansirani Mandangi
+Jhiama Kadraka
 */
 
-//generating a variable for irrelevant entries
-gen C_irrelevant = .
-replace C_irrelevant = 1 if  (R_Cen_a6_hhmember_age_  <  15 | R_Cen_a6_hhmember_age_  > 49)  & _merge == 1
+//generating a variable for entries from baseline which do not not belong in the eligible category (by eligible I mean- a woman of age between 15 to 49 years inclusive). This is only for entries belonging to the baseline census dataset 
+gen irrelevant = .
+replace irrelevant = 1 if  (R_Cen_a6_hhmember_age_  <  15 | R_Cen_a6_hhmember_age_  > 49)  & _merge == 1 
+//separating those entries where woman was eligible but still her name is not being shown in the endline i.e. _merge == 1 only present in master (baseline census)
+replace irrelevant  = 0 if R_Cen_a6_hhmember_age_  >=  15 & R_Cen_a6_hhmember_age_  <= 49 &  R_Cen_a4_hhmember_gender_ == 2 &  _merge == 1 
 
-br R_Cen_namefromearlier_ R_Cen_a6_hhmember_age_ R_Cen_a4_hhmember_gender_ C_irrelevant  _merge if _merge == 1
+br unique_id R_E_comb_name_comb_woman_earlier R_Cen_a6_hhmember_age_ R_Cen_a4_hhmember_gender_ irrelevant if _merge == 1 & irrelevant  == 0
+/*
+*****************************************************************************
+Why are some eligible women names absent from endline census?
+*******************************************************************************
+there are around 46 observations where the woman is eligible from baseline but her name is  not present in endline. We need to investigate if this because these households were unavailable during endline census. 
 
-tab C_irrelevant , m
+unique_id	R_E_comb_name_comb_woman_earlier	R_Cen_a6_hhmember_age_	R_Cen_a4_hhmember_gender_	C_irrelevant
+10101108015	Chinuma Kadraka	23	Female	0
+20201110016	Debasmita Gamanga	30	Female	0
+20201113045	Ranjita cham	28	Female	0
+20201113081	Archita ganta	20	Female	0
+20201113081	Gitanjali satpati	43	Female	0
+30202109011	Relo Hikaka	40	Female	0
+30202109011	Runi Hikaka	19	Female	0
+30202109011	Srimati Hikaka	16	Female	0
+30301109002	Anusaya Senapati	35	Female	0
+30301109002	Jina Sahu	35	Female	0
+30301119062	Meghamala Mohanti	33	Female	0
+30501107054	Gudia Pardi	26	Female	0
+30501117006	Pushpa sutar	42	Female	0
+30501117006	Sonali altur sultar	25	Female	0
+30602106023	Chuchitra Palaka	46	Female	0
+30602106023	Sarita Bag	22	Female	0
+30602106030	Rambha Hial	20	Female	0
+30602117014	Mini pidika	17	Female	0
+30602117014	Ranjita Himirika	30	Female	0
+30602117035	Sumitra Heprika	30	Female	0
+30602119007	Basanti bebhar	30	Female	0
+30701112022	Malati Mahanandia	23	Female	0
+40101111033	Aika lalita	20	Female	0
+40101111033	Renuka Aika	35	Female	0
+40202108012	Pinki Das	34	Female	0
+40202108012	Sandhyarani Das	26	Female	0
+40202113033	Ladi saipriya	25	Female	0
+40202113041	Sunita ori chety	22	Female	0
+40202113041	Vobani sety	24	Female	0
+40301108014	Bobita Sabara	33	Female	0
+40301113002	Hiramani sabara	25	Female	0
+40401111028	Anita Mohapatra	27	Female	0
+40401113001	Ratna sabara	35	Female	0
+50101119006	Rukmani katabansa	40	Female	0
+50201104009	Ambika Bidika	27	Female	0
+50201109035	Gayatri Wataka	20	Female	0
+50201109035	Uma Wataka	18	Female	0
+50301106014	Jati Bidika	17	Female	0
+50301106014	Malati Bidika	35	Female	0
+50301106014	Oni Bidika	20	Female	0
+50301106014	Sabi Bidika	20	Female	0
+50301106014	Wano Bidika	27	Female	0
+50301117034	Priyanka Kumari	26	Female	0
+50401106054	Dhanamani Saraka	35	Female	0
+50401106054	Renuka Saraka	20	Female	0
+50501115015	Jayanti Pidika	22	Female	0 */
+
+//getting availability status of the household for these IDs from the endline housheold survey  data 
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available) gen(match) keep(1 3)
+//after doing the verification from browse we see that all these entries were not merged because these households were unavailable during endline
+br unique_id R_E_comb_name_comb_woman_earlier R_Cen_a6_hhmember_age_ R_Cen_a4_hhmember_gender_ irrelevant  R_E_resp_available if _merge == 1 & irrelevant  == 0 
+
+/*
+-----------------------------------------------------------------------------------------
+Reasons for mismatch in the merge between women baseline census and endline census
+------------------------------------------------------------------------------------------
+1. Using entries- 75 : These are all the new entries recorded in endline census that is why they are not present in baseline census. You can browse C_E_entry_type C_E_RV_entry_type if _merge == 2 to verify this. 
+2. Master entries- 1407: Out of these 1407 entries, 46 entries are those where women were eligible and they were visited in endline but the household was locked as can be seen by browsing the variable R_E_resp_available. Out of 1407, 1361 observations are those that are non-eligible entries that is they don't follow these 3 conditions- age>= 15 & age<= 49 & gender == female. So, we can drop these 1361 entries
+3. 
+*/
+drop if _merge == 1 & irrelevant  == 1  //dropping the entries from baseline census which are non-eligible for women section
+tab _merge 
+
+/*
+-----------------------------------------------------------------------------------------
+Finding duplicates
+------------------------------------------------------------------------------------------*/
+//WAY 2
+bysort unique_id R_E_comb_name_comb_woman_earlier : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id
+br unique_id R_E_comb_name_comb_woman_earlier dup_UID if dup_UID != 0
+/*-----------------------------------------------------------------------------------------
+Creating a combined variable 
+------------------------------------------------------------------------------------------*/
+**creating combined name variable 
+gen C_women_names = R_E_comb_name_comb_woman_earlier
+label variable C_women_names "Combined names of endline and baseline women"
+**creating combined age variable 
+gen C_women_age =  R_E_comb_hhmember_age
+replace C_women_age =  R_Cen_a6_hhmember_age_ if  C_women_age == .
+*8combined gendre variable 
+gen C_women_gender = R_E_comb_hhmember_gender
+replace C_women_gender = R_Cen_a4_hhmember_gender_ if C_women_gender == .
+/*-----------------------------------------------------------------------------------------
+Dropping unecesary variables 
+------------------------------------------------------------------------------------------*/
+drop _merge irrelevant dup_HHID dup_UID match
+
+save "${DataFinal}1_12_Cl_Census_Baseline_Endline_CBW.dta", replace
+
+
+/*POINTS TO DISCUSS WITH AKITO AND JEREMY
+1. Should we also create UID for women from baseline dataset who we were unable to visit in endline ? We can't use raw dataset for that purpose 
+2. Ask Niharika to re-run her file - 3_X_HH_data creation
+3. chnage the name of one resp from 999 to actual name
+*/
+
+
+/***************************************************************************************
+-----------------------------------------------------------------------------------------
+ Section 9.2- Child level dataset 
+ ---------------------------------------------------------------------------------------
+****************************************************************************************/
+use "${DataTemp}1_1_Baseline_Census_U5_Individual_level_for_merge.dta", clear
+clonevar R_E_comb_child_comb_name_label =  R_Cen_namefromearlier_ //cloning it so that can find a common variable for merge
+//merging it with endline dataset
+merge 1:1 unique_id R_E_comb_child_comb_name_label using "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta"
+br unique_id R_Cen_namefromearlier_ R_Cen_a6_hhmember_age_ if _merge == 1
+/*
+*****************************************************************************
+Why are some eligible child names from baseline that are absent from endline census?
+*******************************************************************************
+There are around 32 entries from baseline where child is eligible but the name isn't matcing with endline so we need to check if this is because if the house was unavailable to visit in the endline becaus ethat is the only reaosn why these child names could be absent from endline data. This can be brosed to get such entries- br unique_id R_Cen_namefromearlier_ R_Cen_a6_hhmember_age_ if _merge == 1
+
+unique_id	R_Cen_namefromearlier_	R_Cen_a6_hhmember_age_
+10101108015	Krishna Kadraka	1
+10101108015	Tukuna Kadraka	3
+20201110016	Anjana kingal	3
+20201113045	Arpana kumar chhinchani	0
+20201113081	Alsha satpati	1
+30301109002	Ganesh Senapati	0
+30301119062	Pratik kumar Mohanti	3
+30501107054	Ritika Pardi	2
+30501107054	Sibanya Pardi	4
+30501117006	Janbi sutar	3
+30501117006	Veeren sutar	4
+30602106023	Dinesh Bag	0
+30602106030	Jabesh Hial	0
+30602117014	Madhusmita Himirika	4
+30602117035	Chinmahi Ulaka	1
+30602119007	Ithan nayak	2
+30701112022	Naitik Mahanandia	3
+40202108012	Rutvik Das	3
+40202113033	Simadri harshini	4
+40202113041	Akhil sety	3
+40202113041	Gitika ori chety	1
+40301108014	Bhomesh Sabara	4
+40301108014	Bikash Sabara	1
+40301113002	Donesh sabara	1
+40401111028	Tanushree Mishra	3
+40401113001	Bobby sabara	3
+50201104009	Hasni Das	3
+50301106014	Kabya Bidika	3
+50301106014	Lasita Bidika	3
+50301117034	Baiswabi kumari	4
+50401106054	Tanuja Saraka	1
+50501115015	Kasturi Pidika	1
+*/
+
+//getting availability status of the household for these IDs from the endline housheold survey  data 
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available) gen(match) keep(1 3)
+br unique_id R_Cen_namefromearlier_ R_Cen_a6_hhmember_age_ R_E_resp_available if _merge == 1
+//after verification we find that all these 32 cases are those where the housheold was unavailable during endline so as a result these children names aren't present in the endline child dataset
+
+/*-----------------------------------------------------------------------------------------
+Reasons for mismatch in the merge between women baseline census and endline census
+------------------------------------------------------------------------------------------
+1. Using- 125 entries (endline): These are all the entries of new children found in endline survey that is why they aren't present in the baseline dataset. This can be verified by- br unique_id R_E_comb_child_comb_name_label C_E_entry_type C_E_RV_entry_type if _merge == 2
+2. Master- 32 entries(baseline): These are all entries that are only present in baseline becasue in endline these housheolds were not availabl. This has been verified above*/
+
+/*
+-----------------------------------------------------------------------------------------
+Finding duplicates
+------------------------------------------------------------------------------------------*/
+//WAY 2
+bysort unique_id R_E_comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id
+br unique_id R_E_comb_child_comb_name_label dup_UID if dup_UID != 0
+/*-----------------------------------------------------------------------------------------
+Creating a combined variable 
+------------------------------------------------------------------------------------------*/
+**creating combined name variable 
+gen C_U5_names = R_E_comb_child_comb_name_label
+label variable C_U5_names "Combined names of endline and baseline U5 Children"
+**creating combined age variable 
+gen C_U5_child_age =  R_E_comb_hhmember_age
+replace C_U5_child_age =  R_Cen_a6_hhmember_age_ if  C_U5_child_age == .
+**combined variable for gender of the kid 
+gen C_U5_child_gender = R_E_comb_hhmember_gender
+replace  C_U5_child_gender = R_Cen_a4_hhmember_gender_ if  C_U5_child_gender == .
+/*-----------------------------------------------------------------------------------------
+Dropping unecesary variables 
+------------------------------------------------------------------------------------------*/
+drop _merge dup_HHID dup_UID match
+save "${DataFinal}1_12_Cl_Census_Baseline_Endline_U5_Child.dta", replace
+
+
+
+
+/***************************************************************************************
+-----------------------------------------------------------------------------------------
+ Section 9.3- Roster level dataset 
+ ---------------------------------------------------------------------------------------
+****************************************************************************************/
+use "${Intermediate}1_1_Baseline_Census_Roster_Individual_level.dta", clear
+rename R_Cen_namefromearlier_  C_E_hhmember_name
+merge 1:1 unique_id C_E_hhmember_name using  "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta"
+br C_E_hhmember_name C_E_entry_type C_E_RV_entry_type if _merge == 2
+br unique_id R_Cen_a3_hhmember_name_ if _merge == 1
+/*
+*****************************************************************************
+Why are some household member names from baseline that are absent from endline census?
+*******************************************************************************
+There are 167 names that are only present in master i.e. baseline so we need to check if this is because these houseolds were unavailable in endline as that is the only reason these entries could be missing from roster dataset
+unique_id	R_Cen_a3_hhmember_name_
+10101108015	Chinuma Kadraka
+10101108015	Himat Kadraka
+10101108015	Krishna Kadraka
+10101108015	Palabi Kadraka
+10101108015	Tukuna Kadraka
+10101113002	Arabinda behera
+10101113002	Pramila behera
+10101113002	Punyabati behera
+10101113002	Purandar nayak
+10101113002	Sahadeva nayak
+10101113002	Tirupati behera
+10101113031	Arati behera
+10101113031	Bisekha behera
+10101113031	Dhanbith behera
+10101113031	Dukha behera
+10101113031	Minati behera
+20201108047	Amai Sabara
+20201108047	Dhanush Sabara
+20201108047	Kundira Sabara
+20201108047	Taleng Sabara
+20201108047	Washa Sabara
+20201110016	Anjana kingal
+20201110016	Debasmita Gamanga
+20201110016	Rajukishore Kingal
+20201113045	Akshay Kumar chhinchani
+20201113045	Arpana kumar chhinchani
+20201113045	Ranjita cham
+20201113081	Alsha satpati
+20201113081	Archita ganta
+20201113081	Gitanjali satpati
+20201113081	Shontash satpati
+30202109011	Bishnu Hikaka
+30202109011	Ramasingh Hikaka
+30202109011	Relo Hikaka
+30202109011	Runi Hikaka
+30202109011	Srikrishna Hikaka
+30202109011	Srimati Hikaka
+30301109002	Anusaya Senapati
+30301109002	Chinmayee Sahu
+30301109002	Ganesh Senapati
+30301109002	Jina Sahu
+30301109002	Murari Sahu
+30301109002	Tankesh Sahu
+30301109002	Uttam Sahu
+30301119062	Babyasachi Mohanti
+30301119062	Brahmani Mohanti
+30301119062	Meghamala Mohanti
+30301119062	Pradipta Mohanti
+30301119062	Pratik kumar Mohanti
+30301119062	Sukanta chandra Mohanti
+30301119063	Asharani chaudhari
+30301119063	Bhanubati Senapati
+30301119063	Damodara senapati
+30301119063	Divyansh Senapati
+30301119063	Ishant senapati
+30301119063	Manoj senapati
+30501107054	Gudia Pardi
+30501107054	Khana Pardi
+30501107054	Ritika Pardi
+30501107054	Sibanya Pardi
+30501107054	Silu Pardi
+30501117006	Janbi sutar
+30501117006	Pushpa sutar
+30501117006	Sonali altur sultar
+30501117006	Suresh sultar
+30501117006	Veeren sutar
+30602106023	Chuchitra Palaka
+30602106023	Dinesh Bag
+30602106023	Nakula Palaka
+30602106023	Sarita Bag
+30602106030	Jabesh Hial
+30602106030	Jalandhar Hial
+30602106030	Rambha Hial
+30602117014	Madhusmita Himirika
+30602117014	Mini pidika
+30602117014	Pramod Himirika
+30602117014	Ranjita Himirika
+30602117035	Biswanath Ulaka
+30602117035	Chinmahi Ulaka
+30602117035	Sumitra Heprika
+30602117035	Tushar ranjan Ulaka
+30602119007	Basanti bebhar
+30602119007	Ithan nayak
+30701101005	Babita mahanandia
+30701112022	Malati Mahanandia
+30701112022	Naitik Mahanandia
+30701112022	Sushanta Mahanandia
+40101111033	Aika lalita
+40101111033	Dhabaleswar Aika
+40101111033	Purushottam aika
+40101111033	Renuka Aika
+40101111033	Sadananda Aika
+40202108012	Bhagirathi Das
+40202108012	Chnmayee Panda
+40202108012	Pinki Das
+40202108012	Pramad kumar Das
+40202108012	Rutvik Das
+40202108012	Sandhyarani Das
+40202113041	Akhil sety
+40202113041	Balakrishna sety
+40202113041	Gitika ori chety
+40202113041	Pramila sabara
+40202113041	Prasanta sety
+40202113041	Srikanta ori chety
+40202113041	Sunita ori chety
+40202113041	Sushanta ori sety
+40202113041	Vobani sety
+40301108014	Bhomesh Sabara
+40301108014	Bikash Sabara
+40301108014	Bobita Sabara
+40301108014	Khirod Kumar Sabara
+40301113002	Donesh sabara
+40301113002	Gobardhana sabara
+40301113002	Hiramani sabara
+40401111028	Anita Mohapatra
+40401111028	Pramila Mohapatra
+40401111028	Santunu Mishra
+40401111028	Tanushree Mishra
+40401113001	Bobby sabara
+40401113001	Jagannatha sabara
+40401113001	Joty sabara
+40401113001	Ratna sabara
+50101115006	Jamuna Nagabansha
+50101115006	Nilama Nagabansha
+50101115006	Pankaj Nagabansha
+50101115006	Pradee Pati Nagabansha
+50101115006	Prafulla Nagabansha
+50101115006	Punalu Nagabansha
+50201104009	Ambika Bidika
+50201104009	Apala Narshima Das
+50201104009	Hasni Das
+50201104009	Manani Das
+50201104009	Ram Das
+50201109035	Aruna Wataka
+50201109035	Gayatri Wataka
+50201109035	Kami Wataka
+50201109035	Prafulla Wataka
+50201109035	Sonu Wataka
+50201109035	Uma Wataka
+50301106014	Bino  Bidika
+50301106014	Jati Bidika
+50301106014	Kabya Bidika
+50301106014	Lasita Bidika
+50301106014	Malati Bidika
+50301106014	Nilai Bidika
+50301106014	Oni Bidika
+50301106014	Sabi Bidika
+50301106014	Santosh Bidika
+50301106014	Sidhu Bidika
+50301106014	Somit Bidika
+50301106014	Wano Bidika
+50301117034	Baiswabi kumari
+50301117034	Priyanka Kumari
+50401106047	Amit Miniaka
+50401106047	Baisi Miniaka
+50401106047	Basudev Miniaka
+50401106047	Niharika Miniaka
+50401106047	Nile Miniaka
+50401106047	Singari Miniaka
+50401106054	Dhanamani Saraka
+50401106054	Kausili Saraka
+50401106054	Renuka Saraka
+50401106054	Tanuja Saraka
+50501115015	Gundu Pidika
+50501115015	Jayanti Pidika
+50501115015	Kasturi Pidika
+50501115015	Saami Pidika */
+
+//getting availability status of the household for these IDs from the endline housheold survey  data 
+drop R_E_instruction  R_E_resp_available //dropping this temporarily to get the status again
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available R_E_instruction) gen(match) keep(1 3)
+br unique_id R_Cen_a3_hhmember_name_ R_E_resp_available R_E_instruction if _merge == 1
+br unique_id R_Cen_a3_hhmember_name_ R_E_resp_available R_E_instruction if _merge == 1 & R_E_resp_available == 1 &  R_E_instruction == 1
+
+/*-----------------------------------------------------------------------------------------
+Reasons for mismatch in the merge between women baseline census and endline census
+------------------------------------------------------------------------------------------
+######################
+1. Master 167 entries (baseline): 
+#######################
+Out of 167 entries, 166 are cases where the target respondent was unavailable, resulting in the roster section not being administered. However, the household was available, allowing other sections (like child and women sections) to proceed with their respective respondents.
+
+To verify, please refer to these specific variables:
+
+R_E_resp_available: Indicates household availability.
+R_E_instruction: Indicates target respondent availability.
+When _merge == 1, you’ll find that in these 166 entries, the target respondent was consistently unavailable.
+******************************************************************************************
+Summary of one Issue out of 167 : Missing Data for Household Member Babita Mahanandia from endline census roster
+******************************************************************************************
+Upon verification, we identified an issue involving one household member, Babita Mahanandia (UID: 30701101005). Her information was not fully recorded in the census roster due to the following:
+1. Preload Issue: Her name was not present in the preload data.
+2. Surveyor Oversight: The surveyor did not report this discrepancy, resulting in missed information for two specific questions in the census roster.
+////Missed Questions/////
+                  Question 1: "Since September 2023, how many days has ${name_from_earlier_HH}  spent away from residence ?" (var name- R_E_comb_days_num_residence)
+                  Question 2: "Is ${name_from_earlier_HH} still a member of this household, as per the definition?" (var name- R_E_comb_still_a_member)
+While Babita’s name appears elsewhere in the survey, it is critical to flag this entry because it is the only instance (out of 167 entries) where:
+     a. The household and target respondent were both available for the survey.
+     b. These two census-related questions were not asked.
+3. Impact: This omission creates a mismatch between endline and baseline data for Babita Mahanandia.
+######################
+2. Using 305 entries (endline): 
+#######################
+If you browse this: br C_E_hhmember_name C_E_entry_type C_E_RV_entry_type if _merge == 2
+, you will know that all these 305 entries are the new members added in the endline that is why there is no match between this and baseline 
+*/
+
+br C_E_hhmember_name if _merge == 2 & C_E_entry_type == "N"
+sort C_E_hhmember_name
+
+C_E_hhmember_name
+111 Monisha korsolibansha
+111 Radharani Misal
+111 Simadri Manbik
+111 Suranti sabara
+111 Triveni gouda
+111 krishnabeni Patra
+111 manjusha Sabar
+111(Ambi praska)
+111-Ranbir sabar
+111-sunadei praska
+111Palai bidika
+111amarabati pradhana
+111jhansirani mandangi
+111jhiama kadraka
+111padma sunabansa
 
 
 /*
-------------------------------------------
-Reasons for mismatch in the merge
-------------------------------------------
-1. 83 using entries : These are all the new entries recorded in endline census that is why they are not present in baseline census. You can browse R_E_C_entry_type R_E_C_RV_entry_type if _merge == 2 to verify this. 
-2. 
-
-*/
-
-R_E_comb_name_comb_woman_earlier	R_E_C_entry_type	R_E_C_RV_entry_type	unique_id
-Suranti Sabara	BC		20201108055
-Amarabati Pradhan	BC		20201110019
-Krishnabeni Patra	BC		20201110035
-R_E_comb_name_comb_woman_earlier	R_E_C_entry_type	R_E_C_RV_entry_type	unique_id
-Jhansirani Mandangi	BC		30602106057
-Jhiama Kadraka	BC		30602106063
+-----------------------------------------------------------------------------------------
+Finding duplicates
+------------------------------------------------------------------------------------------*/
+//WAY 2
+bysort unique_id C_E_hhmember_name : gen dup_HHID = cond(_N==1,0,_n)
+count if dup_HHID > 0 
+tab dup_HHID
+// WAY 1 
+bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
+sort unique_id
+br unique_id C_E_hhmember_name dup_UID if dup_UID != 0
 
 
 
-30501117007   Sahila patra
-unique_id	R_Cen_eligible_women_pre_
-20201108027	Sailabala Patra
-
-use "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", clear
 
 
-use "${Intermediate}Endline_CBW_level_merged_dataset_final_cleaned.dta", clear
 
 
 /*************************************************************************************************************************************************************************************
