@@ -259,7 +259,7 @@ replace R_Cen_a6_hhmember_age_5=R_E_n_fam_age1 if unique_id=="40301113007" //age
 
 *other cases where age was incorrectly mentioned in baseline
 replace R_Cen_a6_hhmember_age_1=R_E_n_fam_age1 if unique_id=="50301105008" //age mentioned as 50 in Baseline and 43 in Endline
-replace R_Cen_a6_hhmember_age_1=R_E_n_fam_age2 if unique_id=="40202113033" //age mentioned as 12 in Baseline and 1 in Endline
+replace R_Cen_a6_hhmember_age_8=R_E_n_fam_age2 if unique_id=="40202113033" //age mentioned as 12 in Baseline and 1 in Endline
 replace R_Cen_a6_hhmember_age_5=R_E_n_fam_age1 if unique_id=="50201115043" //age mentioned as 30 in baseline and 39 in endline 
 replace R_Cen_a6_hhmember_age_3=R_E_n_fam_age1 if unique_id=="20201108055" //age mentioned as 40 in baseline and 67 in endline 
 replace R_Cen_a6_hhmember_age_4=R_E_n_fam_age1 if unique_id=="20201110019" //age mentioned as 45 in baseline and 52 in endline 

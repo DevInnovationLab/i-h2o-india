@@ -27,9 +27,11 @@ Dataset prefix Explanation-
 1_9_ : Revisit endline census 
 1_10_ : Merged main and revisit endline census data
 1_10_Cl_ : Cleaned Merged main and revisit endline census data
+0_10_Master_Cl : Master combined endline individual datasets
 1_11_ : Clean and consented Merged main and revisit endline census data
 1_1_ : Baseline census data 
 1_12_Cl_ : Combined baseline and endline cleaned dataset
+0_12_Master_Cl : Master combined baseline-endline individual level dataset
 *=========================================================================*/
 
 
@@ -1188,11 +1190,13 @@ replace R_E_village_name_str = "Bhujbal" if  R_E_village_name_str == "Tandipur" 
 replace Village = "Bhujbal" if Village == "Tandipur"  & unique_id == "30301119027"
 replace village = 30501 if village == 30301 & unique_id == "30301119027"
 
+br R_E_village_name_str unique_id R_E_enum_name_label comb_hhmember_age comb_name_from_earlier_hh comb_namefromearlier  if unique_id == "40101111012" //need to get the correct name of the woman here as one of the memebers is written as 999 
+//after verification we found that here 999 respondent name is Sabitri kadraka so this needs to be replaced everywhere including baseline census 
+replace comb_name_from_earlier_hh = "Sabitri kadraka" if comb_name_from_earlier_hh == "999" & unique_id == "40101111012"
+
 //generating a combined name variable using both census, RV, new entries 
 clonevar C_hhmember_name = comb_name_from_earlier_hh
 replace C_hhmember_name  =  comb_namefromearlier if C_hhmember_name  == ""
-
-br R_E_village_name_str unique_id R_E_enum_name_label C_hhmember_name comb_hhmember_age if unique_id == "40101111012" //need to get the correct name of the woman here as one of the memebers is written as 999 
 
 //checking if unique identifier is still intact
 isid unique_id C_hhmember_name
@@ -1634,8 +1638,7 @@ replace C_E_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
 order C_E_dataset_type 
 label variable C_E_dataset_type "Type of Individual dataset"
-save "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", replace
-
+save "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", replace //Cl means cleaned
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1648,7 +1651,7 @@ SECTION 7
 *****************************************************************/
 
 //Creating consented child dataset for analysis 
-use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "Child" 
 ds // list all variables
 foreach var of varlist * {
@@ -1663,7 +1666,7 @@ keep if R_E_comb_child_caregiver_present == 1
 save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
-use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "CBW" 
 ds // list all variables
 foreach var of varlist * {
@@ -1680,7 +1683,7 @@ save "${DataFinal}1_11_Endline_Census_CBW_consented_individual.dta", replace
 
 
 //creating consented roster dataset for analysis 
-use "${DataFinal}0_Master_Individual_data_endline_census_cleaned.dta", clear
+use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "Roster" 
 ds // list all variables
 foreach var of varlist * {
@@ -1746,6 +1749,8 @@ replace R_Cen_namefromearlier_  = "_Priya Koushalya" if R_Cen_namefromearlier_ =
 replace R_Cen_namefromearlier_ = "Pauni Jilakar" if R_Cen_namefromearlier_ == "Pauni Jilaka" & unique_id == "30602107007" 
 replace R_Cen_namefromearlier_ = "Sabitri Jilakar" if R_Cen_namefromearlier_ == "Sabitri Jilaka" & unique_id == "30602107007" 
 
+//after verification we found that here 999 respondent name is Sabitri kadraka so this needs to be replaced everywhere including baseline census. The respondent during baseline was daughetr-in-law and in some cultures it is not allowed to take mother-in-law's name that is why there was 999 here but we verified this during endline and found it to be Sabitri kadraka  
+replace R_Cen_namefromearlier_  = "Sabitri kadraka" if R_Cen_namefromearlier_  == "999" & unique_id == "40101111012"
 
 //WAY 2 (Doing manual checks )
 bysort unique_id : gen dup_HHID = cond(_N==1,0,_n)
@@ -1859,6 +1864,10 @@ replace R_Cen_namefromearlier_= "Pauni Jilakar" if R_Cen_namefromearlier_ == "Pa
 replace R_Cen_namefromearlier_ = "Raja Jilakar" if R_Cen_namefromearlier_ == "Raja Jilaka" & unique_id == "30602107007" 
 replace R_Cen_namefromearlier_= "Mangu Jilakar" if R_Cen_namefromearlier_ == "Mangu Jilaka" & unique_id == "30602107007" 
 replace R_Cen_namefromearlier_ = "Sabitri Jilakar" if R_Cen_namefromearlier_ == "Sabitri Jilaka" & unique_id == "30602107007" 
+
+//after verification we found that here 999 respondent name is Sabitri kadraka so this needs to be replaced everywhere including baseline census. The respondent during baseline was daughetr-in-law and in some cultures it is not allowed to take mother-in-law's name that is why there was 999 here but we verified this during endline and found it to be Sabitri kadraka  
+replace R_Cen_namefromearlier_  = "Sabitri kadraka" if R_Cen_namefromearlier_  == "999" & unique_id == "40101111012"
+replace R_Cen_a3_hhmember_name_ = "Sabitri kadraka" if  R_Cen_a3_hhmember_name_  == "999" & unique_id == "40101111012"
 
 drop dup_UID dup_HHID
 **Labeling important categories
@@ -2017,12 +2026,6 @@ drop _merge irrelevant dup_HHID dup_UID match
 save "${DataFinal}1_12_Cl_Census_Baseline_Endline_CBW.dta", replace
 
 
-/*POINTS TO DISCUSS WITH AKITO AND JEREMY
-1. Should we also create UID for women from baseline dataset who we were unable to visit in endline ? We can't use raw dataset for that purpose 
-2. Ask Niharika to re-run her file - 3_X_HH_data creation
-3. chnage the name of one resp from 999 to actual name
-*/
-
 
 /***************************************************************************************
 -----------------------------------------------------------------------------------------
@@ -2118,14 +2121,13 @@ save "${DataFinal}1_12_Cl_Census_Baseline_Endline_U5_Child.dta", replace
 
 
 
-
 /***************************************************************************************
 -----------------------------------------------------------------------------------------
  Section 9.3- Roster level dataset 
  ---------------------------------------------------------------------------------------
 ****************************************************************************************/
 use "${Intermediate}1_1_Baseline_Census_Roster_Individual_level.dta", clear
-rename R_Cen_namefromearlier_  C_E_hhmember_name
+clonevar  C_E_hhmember_name = R_Cen_namefromearlier_
 merge 1:1 unique_id C_E_hhmember_name using  "${Intermediate}1_10_Cl_Endline_roster_merged_census_New_final_cleaned.dta"
 br C_E_hhmember_name C_E_entry_type C_E_RV_entry_type if _merge == 2
 br unique_id R_Cen_a3_hhmember_name_ if _merge == 1
@@ -2339,32 +2341,60 @@ While Babita’s name appears elsewhere in the survey, it is critical to flag th
 2. Using 305 entries (endline): 
 #######################
 If you browse this: br C_E_hhmember_name C_E_entry_type C_E_RV_entry_type if _merge == 2
-, you will know that all these 305 entries are the new members added in the endline that is why there is no match between this and baseline 
+, you will know that all these 305 entries are the new members added in the endline that is why there is no match between this and baseline. Bt out of these 15 entries are those which are actually duplicates so we need to treat these. These duplicates can be recognized with the prefix 111 
 */
 
-br C_E_hhmember_name if _merge == 2 & C_E_entry_type == "N"
+***********************************************************************************************
+//Treating the entries where 111 prefix is there from only using merge dataset (endline) (_merge == 2)
+***********************************************************************************************
+**IMPORTANT NOTE: Out of these 305 entries, there are around 15 entries which have prefix 111 as explained previously these are the repeated entries from baseline census and they were entered to get their correct gender and age. So, the command below will help in identifying what exactly are these entries
+br unique_id C_E_hhmember_name if _merge == 2 & C_E_entry_type == "N"
 sort C_E_hhmember_name
 
-C_E_hhmember_name
-111 Monisha korsolibansha
-111 Radharani Misal
-111 Simadri Manbik
-111 Suranti sabara
-111 Triveni gouda
-111 krishnabeni Patra
-111 manjusha Sabar
-111(Ambi praska)
-111-Ranbir sabar
-111-sunadei praska
-111Palai bidika
-111amarabati pradhana
-111jhansirani mandangi
-111jhiama kadraka
-111padma sunabansa
+*STEP 1----------->>>>> generating a variable to browse the IDs and do manual checks to see if their ages and genders have been correctly replaced in th file 3_X_HH_Data_Creation do-file
+gen check = .
+
+* Define the list of unique IDs where checks are required
+local id_list unique_id "10101108026" "20201108055" "20201110019" "20201110035" "20201111076" "30301104006" "30501111018" "30501111021" "30602106057" "30602106063" "40202113033" "40301113007" "40301113016" "50201115043" "50301105008"
+* Loop through each ID in the list and make the necessary changes to your variable
+foreach id in `id_list' {
+    replace check = 1 if unique_id == "`id'"
+}
+sort  unique_id
+br  unique_id C_E_hhmember_name R_Cen_namefromearlier_  R_Cen_a6_hhmember_age_ R_Cen_a4_hhmember_gender_ R_E_comb_hhmember_age R_E_comb_hhmember_gender if check == 1   //after doing the verification we find that all the replacements are correctly made 
 
 
-/*
------------------------------------------------------------------------------------------
+*STEP 2----------->>>>> Removing Duplicate Entries (only prefix 111 entries)
+
+/****explanation of the approach******
+---------------------------------------------
+Since all entries have been correctly updated in the 3_X_HH_Data_Creation file, we can safely drop certain endline entries to avoid duplicates. This can be verified in step 1. Here’s the approach:
+
+###Duplicate Handling: For example, if a household member named Simadri Manbik had an incorrect age of 12 in the baseline, but their age was corrected to 1 in the endline, the enumerator was asked to re-enter this information in the new roster with a prefix "111" in the name. As a result, Simadri Manbik now appears both in the new roster (corrected entry) and in the census roster (endline census roster).
+
+###Endline Census Questions: During endline, two specific census questions were asked for household members:
+a) R_E_comb_still_a_member: Confirming if the person is still a household member.
+b) R_E_comb_days_num_residence: Checking the number of days the member has been away since September 2023.
+
+###Duplication Issue: Since Manbik appears twice in the endline dataset (once in the census roster and once in the new roster), one of these entries may remain unmatched when merging with baseline data, causing duplication.
+
+###Resolution: As all age and gender updates are now correctly reflected in the baseline census file, we can drop the new roster entries with the "111" prefix to prevent duplication. This ensures data consistency without duplicate entries.
+*/
+ 
+//Define the list of unique IDs where drops are required
+local id_list unique_id "10101108026" "20201108055" "20201110019" "20201110035" "20201111076" "30301104006" "30501111018" "30501111021" "30602106057" "30602106063" "40202113033" "40301113007" "40301113016" "50201115043" "50301105008"
+
+//splitting 111 from it so that we can target specific IDs
+split  C_E_hhmember_name, generate(to_be_dropped) parse("111")
+
+//Loop through each ID in the list and make the necessary changes to your variable
+foreach id in `id_list' {
+	drop if to_be_dropped2 != "" 
+//we have used to_be_dropped2 here instead of to_be_dropped1 because split happens like this: 111-Simadri Manbik ---> ""   "Simadri Manbik" so to_be_dropped1 is empty and to_be_dropped2 contains the actual name
+}
+br C_E_hhmember_name C_E_entry_type C_E_RV_entry_type if _merge == 2
+
+/*-----------------------------------------------------------------------------------------
 Finding duplicates
 ------------------------------------------------------------------------------------------*/
 //WAY 2
@@ -2374,17 +2404,68 @@ tab dup_HHID
 // WAY 1 
 bysort  unique_id: gen dup_UID = cond(_N ==1,0,_n)	
 sort unique_id
-br unique_id C_E_hhmember_name dup_UID if dup_UID != 0
+br unique_id C_E_hhmember_name dup_UID _merge C_E_entry_type if dup_UID != 0
+//no duplicates found 
 
+/*-----------------------------------------------------------------------------------------
+Creating a combined variable 
+------------------------------------------------------------------------------------------*/
+**creating combined name variable 
+gen C_roster_names = C_E_hhmember_name
+label variable C_roster_names "Combined names of endline and baseline Roster members"
+**creating combined age variable 
+gen C_roster_age =  R_E_comb_hhmember_age
+replace C_roster_age =  R_Cen_a6_hhmember_age_ if  C_roster_age == .
+label variable C_roster_age "Combined ages of endline and baseline Roster members"
+**combined variable for gender 
+gen C_roster_gender = R_E_comb_hhmember_gender
+replace  C_roster_gender = R_Cen_a4_hhmember_gender_ if  C_roster_gender == .
+label variable C_roster_gender "Combined gender of endline and baseline Roster members"
 
-
-
+/*-----------------------------------------------------------------------------------------
+Dropping unecesary variables 
+------------------------------------------------------------------------------------------*/
+drop match check to_be_dropped1 to_be_dropped2 dup_HHID dup_UID _merge
+save "${DataFinal}1_12_Cl_Census_Baseline_Endline_Roster.dta", replace
 
 
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SECTION 10
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*************************************************************************************************************************************************************************************/
+
+
+  /*****************************************************************
+ COMBINING ALL BASELINE AND ENDLINE MERGED INDIVIDUAL DATASETS 
+*****************************************************************/
+
+use "${DataFinal}1_12_Cl_Census_Baseline_Endline_U5_Child.dta", clear
+gen C_dataset_type = "Child"
+append using "${DataFinal}1_12_Cl_Census_Baseline_Endline_Roster.dta"
+replace C_dataset_type = "Roster" if  C_roster_names != ""
+append using "${DataFinal}1_12_Cl_Census_Baseline_Endline_CBW.dta"
+replace C_dataset_type = "CBW" if  C_women_names != ""
+
+//Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
+order C_dataset_type 
+label variable C_dataset_type "Type of  combined baseline-endline Individual dataset"
+save "${DataFinal}0_12_Master_Cl_Individual_data_baseline_endline_census.dta", replace
+
+
+
+/*POINTS TO DISCUSS WITH AKITO AND JEREMY
+1. Should we also create UID for women from baseline dataset who we were unable to visit in endline ? We can't use raw dataset for that purpose 
+2. Ask Niharika to re-run her file - 3_X_HH_data creation
+3. chnage the name of one resp from 999 to actual name
+4. mention about 111 cases that I am dropping this only from merged roster data
+*/
+
+
+/*************************************************************************************************************************************************************************************
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SECTION 11
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
   
@@ -2581,6 +2662,10 @@ assign in the raw dataset itself */
 
 
 
+** The case that was corrected in Niharika's do file 
+/*unique_id	C_E_hhmember_name	R_Cen_namefromearlier_	R_Cen_a6_hhmember_age_	R_Cen_a4_hhmember_gender_	R_E_comb_hhmember_age	R_E_comb_hhmember_gender
+40202113033	Simadri manbik	Simadri manbik	12	Male		
+40202113033	111 Simadri Manbik				1	Male*/
 
 
 
