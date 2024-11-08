@@ -70,7 +70,7 @@ rayagada <- shp_file_2%>%
 
 #Removing duplicate variables
 cen <- cen%>%
-  dplyr::select(!c(submissiondate, starttime, endtime))
+  dplyr::select(!c(R_Cen_submissiondate, R_Cen_starttime, R_Cen_endtime))
 
 #Changing variable names
 cen <- cen%>%
@@ -105,8 +105,8 @@ cen <- cen%>%
 
 
 #create a date variable
-cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S")
-cen$date <- as_date(cen$datetime) 
+#cen$datetime <- strptime(cen$starttime, format = "%Y-%m-%d %H:%M:%S") #Broke code after Archi cleaning
+cen$date <- as_date(cen$cen_date) 
 
 
 
@@ -1194,6 +1194,148 @@ r3 <- r3%>%
   ))
 
 
+# ------------------------Follow Up R4 Data Cleaning --------------------------------
+
+#Renamed control vs treatment assignment
+r4$assignment <- factor(r4$assignment)%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
+r4 <- r4%>%
+  rename(sample_ID_tap = "tap_sample_id")%>%
+  rename(sample_ID_stored = "stored_sample_id")%>%
+  rename(village = "village_name")%>%
+  rename(panchayat_village = `Panchat village`)
+
+
+#
+#Adding presence/absence variable
+r4 <- r4%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
+
+
+#Adding presence/absence variable
+r4 <- r4%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
+
+
+
+# ------------------------Follow Up R5 Data Cleaning --------------------------------
+
+#Renamed control vs treatment assignment
+r5$assignment <- factor(r5$assignment)%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
+r5 <- r5%>%
+  rename(sample_ID_tap = "tap_sample_id")%>%
+  rename(sample_ID_stored = "stored_sample_id")%>%
+  rename(village = "village_name")%>%
+  rename(panchayat_village = `Panchat village`)
+
+
+#
+#Adding presence/absence variable
+r5 <- r5%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
+
+
+#Adding presence/absence variable
+r5 <- r5%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
+
+
+# ------------------------Follow Up R6 Data Cleaning --------------------------------
+
+
+#Renamed control vs treatment assignment
+r6$assignment <- factor(r6$assignment)%>%
+  fct_recode("Control" = "C",
+             "Treatment" = "T")
+
+
+r6 <- r6%>%
+  rename(sample_ID_tap = "tap_sample_id")%>%
+  rename(sample_ID_stored = "stored_sample_id")%>%
+  rename(village = "village_name")%>%
+  rename(panchayat_village = `Panchat village`)
+
+
+#
+#Adding presence/absence variable
+r6 <- r6%>%
+  mutate(fc_tap_pa = case_when(
+    fc_tap_avg >= 0.10 ~ "Presence",
+    fc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_tap_pa = case_when(
+    tc_tap_avg >= 0.10 ~ "Presence",
+    tc_tap_avg < 0.10 ~ 'Absence'))%>%
+  mutate(fc_stored_pa = case_when(
+    fc_stored_avg >= 0.10 ~ "Presence",
+    fc_stored_avg < 0.10 ~ 'Absence'))%>%
+  mutate(tc_stored_pa = case_when(
+    tc_stored_avg >= 0.10 ~ "Presence",
+    tc_stored_avg < 0.10 ~ 'Absence'))
+
+
+#Adding presence/absence variable
+r6 <- r6%>%
+  mutate(fc_tap_binary = case_when(
+    fc_tap_avg >= 0.10 ~ 1,
+    fc_tap_avg < 0.10 ~ 0))%>%
+  mutate(tc_tap_binary = case_when(
+    tc_tap_avg >= 0.10 ~ 1,
+    tc_tap_avg < 0.10 ~ 0))%>%
+  mutate(fc_stored_binary = case_when(
+    fc_stored_avg >= 0.10 ~ 1,
+    fc_stored_avg < 0.10 ~ 0))%>%
+  mutate(tc_stored_binary = case_when(
+    tc_stored_avg >= 0.10 ~ 1,
+    tc_stored_avg < 0.10 ~ 0))
 
 #------------------------Combining HH Survey Data----------------------------
 
@@ -1240,8 +1382,69 @@ r3_tab <- r3%>%
                 stored_bag_source, available_jjm)%>%
   mutate(data_round = "R3")
 
+r4_tab <- r4%>%
+  filter(is.na(consent) == FALSE)%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                )%>%
+  mutate(data_round = "R4")%>%
+  mutate(prim_source = NA,
+         prim_source_jjm = NA,
+         sec_source = NA,
+         jjm_drinking = NA,
+         stored_water_time = NA,
+         water_treat_binary = NA,
+         tap_trust_binary = NA,
+         tap_taste_binary = NA,
+         tap_future_binary = NA,
+         stored_bag_source = NA,
+         available_jjm = NA)
+
+r5_tab <- r5%>%
+  filter(is.na(consent) == FALSE)%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+  )%>%
+  mutate(data_round = "R5")%>%
+  mutate(prim_source = NA,
+         prim_source_jjm = NA,
+         sec_source = NA,
+         jjm_drinking = NA,
+         stored_water_time = NA,
+         water_treat_binary = NA,
+         tap_trust_binary = NA,
+         tap_taste_binary = NA,
+         tap_future_binary = NA,
+         stored_bag_source = NA,
+         available_jjm = NA)
+
+r6_tab <- r6%>%
+  filter(is.na(consent) == FALSE)%>%
+  dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
+                village, village_code, block, panchayat_village,
+                fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+  )%>%
+  mutate(data_round = "R6")%>%
+  mutate(prim_source = NA,
+         prim_source_jjm = NA,
+         sec_source = NA,
+         jjm_drinking = NA,
+         stored_water_time = NA,
+         water_treat_binary = NA,
+         tap_trust_binary = NA,
+         tap_taste_binary = NA,
+         tap_future_binary = NA,
+         stored_bag_source = NA,
+         available_jjm = NA)
+
+
 #Combining Datasets
-all_rounds <- rbind(bl_tab, r1_tab, r2_tab, r3_tab)
+all_rounds <- rbind(bl_tab, r1_tab, r2_tab, r3_tab, r4_tab, r5_tab, r6_tab)
 
 
 

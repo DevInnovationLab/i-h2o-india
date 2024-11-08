@@ -100,6 +100,19 @@ r2 <- read_stata(paste0(user_path(),"/3_final/1_6_followup_R2_cleaned.dta"))
 #Round 3 survey
 r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
 
+#Round 4 survey
+r4 <- read_csv(paste0(user_path(),"/3_final/1_10_monthly_follow_up_cleaned.csv"))
+
+#Round 5 survey
+r5 <- read_csv(paste0(user_path(),"/3_final/1_10_monthly_follow_up_cleaned_R2.csv"))
+
+#Round 6 survey
+r6 <- read_csv(paste0(user_path(),"/3_final/1_10_monthly_follow_up_cleaned_R3.csv"))
+
+
+#All rounds
+r_all <- read_stata(paste0(user_path(),"/3_final/0_Master_HHLevel_FU_Census_final.dta"))
+
 #Chlorine Monitoring Survey
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
@@ -946,6 +959,9 @@ fu_rounds <- all_rounds%>%
   filter(data_round != "BL")#%>%
   #filter(available_jjm == "Both stored and running water are from JJM") #Removing chlorine data that are not from JJM source
 
+fu_rounds <- all_rounds%>%
+  filter(data_round != "BL")%>%
+  filter(village != "Karnapadu")
 
 #Making desc stat table for summarizing chlorine results from followup
 
@@ -994,7 +1010,7 @@ fu_rounds <- all_rounds%>%
 #Making desc stat table for summarizing chlorine results from followup
 #Summarizing presence absence results after removing non-JJM samples
 desc_stats_tap <- fu_rounds%>%
-  group_by(assignment)%>%
+  group_by(assignment, data_round)%>%
   summarise(
     "Number of Samples" = n(),
     "Tap - Free Chlorine Presence" = mean(fc_tap_binary, na.rm = TRUE),
@@ -1013,7 +1029,7 @@ kbl(desc_stats_tap)%>%
 
 
 desc_stats_stored <- fu_rounds%>%
-  group_by(assignment)%>%
+  group_by(assignment, data_round)%>%
   summarise(
     "Number of Samples" = n(),
     "Stored - Free Chlorine Presence" = mean(fc_stored_binary, na.rm = TRUE),
@@ -1029,9 +1045,14 @@ kbl(desc_stats_stored)%>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
 
+desc_stats_cl <- left_join(desc_stats_tap, desc_stats_stored, by = c("assignment", "data_round"))
 
-
-
+kbl(desc_stats_cl)%>%
+  kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 12)) %>%
+  row_spec(0, bold = TRUE, color = "black", background = "white") %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "75px")
 
 #Comparing Chlorine Concentrations to E. coli contamination--------------
 
