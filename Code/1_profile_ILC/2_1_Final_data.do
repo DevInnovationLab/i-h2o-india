@@ -15,7 +15,7 @@
 * This is the final data where it contains all the census and follow up variable
 * N=HH with the Census consented
 
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 
 *****************
@@ -276,7 +276,7 @@ foreach x of local duration3  {
 	label var R_Cen_sectionH_duration "Concluding section duration"
 
 * Save final data in STATA/R
-save "${DataFinal}Final_HH_Odisha.dta", replace
+save "${Intermediate}Baseline_FU0_merged.dta", replace
 keep if R_Cen_consent==1
   
 * Temporal treatment status
@@ -285,7 +285,7 @@ merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_c
 drop if _merge==2
 drop _merge
 rename village R_Cen_village_name
-save "${DataFinal}Final_HH_Odisha_consented_Full.dta", replace
+save "${Intermediate}Baseline_FU0_merged_consented.dta", replace
 
 /* Village shape file with geo code
 use "${Data_map}phdb.dta",clear
@@ -308,7 +308,7 @@ save "${Data_map}Village_geo.dta", replace
 *********************************
 * Household data for google map *
 *********************************
-use "${DataFinal}Final_HH_Odisha.dta", clear
+use "${Intermediate}Baseline_FU0_merged.dta", clear
 drop if R_Cen_village_name==88888
 keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude R_Cen_village_name
 keep if R_Cen_a40_gps_latitude!=.
@@ -325,11 +325,11 @@ export excel using "${DataPre}Google_map.xlsx", sheet("Sheet1", replace) firstro
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
-use  "${DataPre}1_1_Census_cleaned.dta", clear
+use  "${DataFinal}1_1_Census_cleaned.dta", clear
 * replace R_Cen_village_name=60101 if R_Cen_village_name==20101
 replace R_Cen_village_name=50601 if R_Cen_village_name==30101
 gen     C_Census=1
-merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+merge 1:1 unique_id using "${Intermediate}Baseline_FU0_merged_consented.dta", gen(Merge_consented) ///
           keepusing(unique_id Merge_C_F R_FU_consent R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_survey_time R_Cen_a12_ws_prim Treat_V)
 recode Merge_C_F 1=0 3=1
 
@@ -415,7 +415,7 @@ cap program drop start_from_clean_file_Census
 program define   start_from_clean_file_Census
   * Open clean file
 
-  use                       "${DataFinal}Final_HH_Odisha_consented_Full.dta", clear
+  use                       "${Intermediate}Baseline_FU0_merged_consented.dta", clear
   drop if R_Cen_village_name==88888
   *drop if R_Cen_village_name== 50601 | R_Cen_village_name== 30601
   

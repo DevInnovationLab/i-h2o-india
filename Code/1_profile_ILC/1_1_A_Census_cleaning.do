@@ -343,8 +343,8 @@ tab     sec_jjm_use
 save "${DataFinal}1_1_Census_cleaned.dta", replace
 //Refer to this github issue for more details- https://github.com/DevInnovationLab/i-h2o-india/issues/172
 //please note that we are creating two versions of thsi dataset because data pre was used for all the endline census preload generation and data pre is also being used in other files so it will be very time taking to update this to final directory everywhere that is why we rae creating one for the final directory and other or the pre directory so that pre ones can be called in other do files 
-save "${DataPre}1_1_Census_cleaned.dta", replace 
-savesome using "${DataPre}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
+// save "${DataPre}1_1_Census_cleaned.dta", replace 
+savesome using "${DataFinal}1_1_Census_cleaned_consented.dta" if R_Cen_consent==1, replace
 
 ** Drop ID information
 

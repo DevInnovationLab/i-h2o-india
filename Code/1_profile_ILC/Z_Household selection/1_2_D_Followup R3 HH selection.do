@@ -45,7 +45,7 @@ end
 *****************************************
 * Step 1: Cleaning and sample selection *
 *****************************************
-use "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 //1. Put the village code of the village for randomization. Use villages one by one
 
 levelsof R_Cen_village_name
@@ -111,7 +111,7 @@ use "${DataPre}Selected_`value'_5 Apr 2024.dta", clear
 save "${DataPre}Selected_HHs_HH survey_water_testing_R3.dta", replace
 
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use   "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
 merge 1:1 unique_id using "${DataPre}Selected_HHs_HH survey_water_testing_R3.dta", keep(master matched) gen(Merge_WS)
 
@@ -184,7 +184,7 @@ use "${DataPre}Selected_`i'_5 Apr 2024.dta", clear
 tempfile vill_`i'
 save `vill_`i'', replace
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use   "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 merge 1:1 unique_id using `vill_`i'', keep(master matched) gen(Merge_WS)
 
 drop if Merge_WS==1

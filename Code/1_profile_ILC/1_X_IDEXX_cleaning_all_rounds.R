@@ -128,13 +128,13 @@ github_path <- function() {
 #----------------------------Dataset loading----------------------------#####
 #from Box
 
-bl <- read_stata(paste0(user_path(),"/3_final/1_2_Followup_cleaned.dta"))
+bl <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_2_Followup.dta"))
 
-r1 <- read_stata(paste0(user_path(),"/3_final/1_5_followup_R1_cleaned.dta"))
+r1 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_5_followup_R1.dta"))
 
-r2 <- read_stata(paste0(user_path(),"/3_final/1_6_followup_R2_cleaned.dta"))
+r2 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_6_followup_R2.dta"))
 
-r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
+r3 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_7_followup_R3.dta"))
 
 idx <- read_xlsx(paste0(user_path(),"/5_lab data/idexx/raw/_India ILC_IDEXX_data_MASTER.xlsx"))
 

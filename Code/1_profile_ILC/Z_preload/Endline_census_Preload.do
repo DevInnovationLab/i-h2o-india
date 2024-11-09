@@ -23,7 +23,7 @@ clear
 cap program drop start_from_clean_file_Population
 program define   start_from_clean_file_Population
   * Open clean file
-use  "${DataPre}1_1_Census_cleaned.dta", clear
+use  "${DataFinal}1_1_Census_cleaned.dta", clear
 drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
 *Archi to Akito- Badaalubadi and hathikambha are extra/replacement villages and we are not using them anything. They are just backups that is why dropping them 
 gen     C_Census=1

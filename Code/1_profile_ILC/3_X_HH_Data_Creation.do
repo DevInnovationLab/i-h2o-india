@@ -9,14 +9,13 @@
 	- "${DataFinal}Endline_CBW_level_merged_dataset_final.dta"
 	- "${DataTemp}U5_Child_Endline_Census.dta"
 	- "${DataFinal}Endline_New_member_roster_dataset_final"
-	- "${DataFinal}0_Master_HHLevel.dta" //HH Level dataset Created in "3_X_Final_Data_Creation.do"
-	- "${Intermediate}Followup_clean_intermediate_wide.dta" //FU dataset Created in 3_X_FU_Data_Creation.do 
+	- "${Intermediate}0_Master_HHLevel.dta" //HH Level dataset Created in "3_X_Final_Data_Creation.do"
+	- "${Final}1_13_Followup_clean_wide.dta" //FU dataset Created in 3_X_FU_Data_Creation.do 
 ****** Output data : 
-	- "${DataFinal}0_Master_HHLevel_final.dta"
-	- "${DataFinal}Master_HHLevel_FU_Census_final.dta"
+	- "${DataFinal}0_Master_HHLevel.dta"
+	- "${DataFinal}0_Master_HHLevel_FU_Census.dta"
 	
 ****** Do file to run before this do file
-	- 3_X_Final_Data_Creation.do
 	- 3_X_FU_Data_Creation 
 
 ****** Language: English
@@ -29,6 +28,133 @@
 2. village (village_name)
 3. village_id
 */
+
+//making changes to the storage type of the variables in the endline dataset
+use "${Intermediate}1_10_Endline_HH_level_merged_dataset.dta", clear  //Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/8_Intermediate Datasets/1_10_Endline_HH_level_merged_dataset.dta
+destring unique_id_num Treat_V, replace
+save "${Intermediate}1_10_Endline_HH_level_merged_dataset.dta", replace 
+
+ /*--------------------------------------------
+    Section A: HH level data
+ --------------------------------------------*/  
+ 
+ //baseline data
+cap program drop start_from_clean_BL_final
+program define   start_from_clean_BL_final
+  * Open clean file
+ * baseline clean
+use  "${DataFinal}1_1_Census_cleaned.dta", clear
+drop if R_Cen_village_str  == "Badaalubadi" | R_Cen_village_str  == "Hatikhamba"
+gen     C_Census=1
+* There are 3,848 households: 915 sample goes to the:  (Original dataset)
+// merge 1:1 unique_id using "${DataFinal}Final_HH_Odisha_consented_Full.dta", gen(Merge_consented) ///
+//           keepusing(unique_id   R_FU_consent Merge_C_F R_Cen_survey_time R_Cen_survey_duration R_Cen_intro_duration R_Cen_consent_duration R_Cen_sectionB_duration R_Cen_sectionC_duration R_Cen_sectionD_duration R_Cen_sectionE_duration R_Cen_sectionF_duration R_Cen_sectionG_duration R_Cen_sectionH_duration R_Cen_a12_ws_prim Treat_V)
+// recode Merge_C_F 1=0 3=1
+
+label var C_Screened  "Screened"
+	label variable R_Cen_consent "Census consent"
+// 	label variable R_FU_consent "HH survey consent"
+	label var Non_R_Cen_consent "Refused"
+	label var C_HH_not_available "Respondent not available"
+	
+end
+
+//Remove HHIDs with differences between census and HH survey
+start_from_clean_BL_final
+//why do we drop this?
+*drop if unique_id=="40201113010" | unique_id=="50401105039" | unique_id=="50402106019" | unique_id=="50402106007"
+
+tempfile new
+save `new', replace
+
+************************************************************************
+* Step 2: Classifying households for Mortality survey based on Scenarios *
+************************************************************************
+
+// Create scenarios 
+keep if C_Screened == 1
+drop if R_Cen_a1_resp_name == "" 
+list if unique_id == ""
+isid unique_id
+
+///////////////////////////////////////////////////////////////
+/***************************************************************
+PERFORMING THE MAIN MERGE WITH THE ENDLINE DATASET FOR HH LEVEL IDs
+****************************************************************/
+////////////////////////////////////////////////////////////////
+// * 40 household were not followed in the endline
+// * Endline_HH_level_merged_dataset_final
+// merge 1:1 unique_id using  "${DataFinal}1_8_Endline_Census_cleaned_consented", gen(Merge_Baseline_Endline)
+// * keep if Merge_Baseline_Endline==3
+// * drop Merge_Baseline_Endline
+
+** changing the storage type of variables to be able to merge 
+tostring C_starthour C_startmin, replace 
+
+ 
+merge 1:1 unique_id using  "${Intermediate}1_10_Endline_HH_level_merged_dataset.dta", gen(Merge_Baseline_Endline)
+
+
+*** Relabelling the variables
+//the following variables were not properly labelled through surveycto do file : all variables have the same labels and value labels; changing it below (lines 694 to 718: import_india_ilc_pilot_census.do)
+
+*Whether HH members have attended school 
+	capture{
+		foreach rgvar of varlist R_Cen_a9_school_* {
+			label variable `rgvar' "A9) Has \${namefromearlier} ever attended school?"
+			note `rgvar': "A9) Has \${namefromearlier} ever attended school?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+*Highest level of schooling of HH members
+    capture{
+		foreach rgvar of varlist R_Cen_a9_school_level_* {
+			label drop `rgvar' //dropping the value labels assigned in line 83 before relabelling 
+			label variable `rgvar' "A9.1) What is the highest level of schooling that \${namefromearlier} has comple"
+			note `rgvar': "A9.1) What is the highest level of schooling that \${namefromearlier} has completed?"
+			label define `rgvar' 1 "Incomplete pre-school (pre-primary or Anganwadi schooling)" 2 "Completed pre-school (pre-primary or Anganwadi schooling)" 3 "Incomplete primary (1st-8th grade not completed)" 4 "Complete primary (1st-8th grade completed)" 5 "Incomplete secondary (9th-12th grade not completed)" 6 "Complete secondary (9th-12th grade not completed)" 7 "Post-secondary (completed education after 12th grade, eg. BA, BSc etc.)" -98 "Refused" 999 "Don't know"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+*Whether HH members currently attend school
+	capture {
+		foreach rgvar of varlist R_Cen_a9_school_current_* {
+			label drop `rgvar' //dropping the value labels assigned in line 83 before relabelling
+			label variable `rgvar' "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
+			note `rgvar': "A9.2) Is \${namefromearlier} currently going to school/anganwaadi center?"
+			label define `rgvar' 1 "Yes" 0 "No" -99 "Don't know" -98 "Refused to answer"
+			label values `rgvar' `rgvar'
+		}
+	}
+
+
+*** Recoding the variables 
+*Relation with the HH member
+replace R_Cen_a5_hhmember_relation_1=1 if unique_id=="30301109034" //selected the relation with HH member as "Wife/Husband" although respondent herself was the HH member in question
+
+* Age of the HH member
+replace R_Cen_a6_hhmember_age_2=. if unique_id=="40201111025" //the age of the HH member is coded as 99 as the respondent didn't know the age; replacing it with missing value
+
+*** Manual corrections
+*Dropping observations 
+//the following respondent is not a member of HH for which she was the main respondent (main respondent is the sister in law of the target respondent and does not stay in the same HH)
+drop if unique_id=="30501107052"
+
+//dropping the obs as it was submitted before the start date of the survey 
+drop if unique_id=="10101101001" //need to move it to the do file where the endline dataset is generated
+
+drop R_E_r_cen_*
+* Village info is not complete. Deleting the redundant info
+destring village BlockCode Panchatvillage , replace
+replace village=R_Cen_village_name if village==.
+drop R_Cen_village_name R_Cen_block_name Treat_V
+merge m:1 village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V Panchatvillage BlockCode) keep(1 3) nogen
+
+save "${Intermediate}0_Master_HHLevel.dta", replace
+
 
 
 ********************************************************************************
@@ -86,7 +212,7 @@ restore
 *** Merging and loading the dataset
 ********************************************************************************
 clear 
-use "${DataFinal}0_Master_HHLevel.dta", clear
+use "${Intermediate}0_Master_HHLevel.dta", clear
 merge 1:1 unique_id using "${DataTemp}U5_Child_Endline_Census_for_merge.dta",  gen(merge_num_child)
 //879 obs matched (35 out of 36 unmatched obs: ; 1 extra obs is empty obs for UID 30501107052 which was dropped in Master HH level data, dropping that below in line 83)
 
@@ -1831,7 +1957,7 @@ rename survey_issues C_survey_issues
 ********************************************************************************
 *** Saving the cleaned HH Level dataset
 ********************************************************************************
-save "${DataFinal}0_Master_HHLevel_final.dta", replace
+save "${DataFinal}0_Master_HHLevel.dta", replace
 
 
 ********************************************************************************
@@ -1839,6 +1965,6 @@ save "${DataFinal}0_Master_HHLevel_final.dta", replace
 ********************************************************************************
 * To run the FU data creation do file, run the following code 
 // do "${Do_pilot}3_X_FU_Data_Creation.do"
-merge 1:1 unique_id using "${DataFinal}Followup_clean_wide.dta", gen (Merge_FU_Census)
+merge 1:1 unique_id using "${DataFinal}1_13_Followup_clean_wide.dta", gen (Merge_FU_Census)
 //499 obs matched
-save "${DataFinal}0_Master_HHLevel_FU_Census_final.dta", replace 
+save "${DataFinal}0_Master_HHLevel_FU_Census.dta", replace 

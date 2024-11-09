@@ -169,4 +169,4 @@ capture export excel R_FU3_sample_ID_tap unique_id_num using "${pilot}Data_quali
 //duplicates drop unique_id_num, force
 
 * Create a variable for cases when Water Quality test didn't happen
-save "${DataFinal}1_7_Followup_R3_cleaned.dta", replace
+save "${Intermediate}1_7_Followup_R3.dta", replace
