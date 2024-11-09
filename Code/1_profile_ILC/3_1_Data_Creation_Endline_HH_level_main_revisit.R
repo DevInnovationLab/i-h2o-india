@@ -200,6 +200,39 @@ Final_path <- function() {
 knitr::opts_knit$set(root.dir = Final_path())
 
 
+
+Intermediate <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+  user <- Sys.info()["user"]
+  
+  if (user == "asthavohra") { 
+    path = "/Users/asthavohra/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  } 
+  else if (user=="akitokamei"){
+    path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
+  } 
+  else if (user == "Archi Gupta"){
+    path = "C:/Users/Archi Gupta/Box/Data/8_Intermediate Datasets/" 
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  
+  stopifnot(file.exists(path))
+  return(path)
+}
+
+# set working directory
+knitr::opts_knit$set(root.dir = Intermediate())
+
+
+
+
+
 #------------------------ Load the data ----------------------------------------#
 
 
@@ -402,7 +435,7 @@ View(subset_df)
 View(final_df)
 
 # Save the final_df dataset to the specified directory as a .dta file
-output_path <- file.path(Final_path(), "Endline_HH_level_merged_dataset_final.dta")
+output_path <- file.path(Intermediate(), "1_10_Endline_HH_level_merged_dataset.dta")
 write_dta(final_df, output_path)
 
 

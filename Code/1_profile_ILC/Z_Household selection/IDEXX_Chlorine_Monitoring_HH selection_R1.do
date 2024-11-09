@@ -44,7 +44,7 @@ end
 *****************************************
 * Step 1: Cleaning and sample selection *
 *****************************************
-use "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 //1. Put the village code of the village for randomization. Use villages one by one
 
 levelsof R_Cen_village_name
@@ -110,7 +110,7 @@ use "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_`value'_IDEXX_
 save "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_HHs_IDEXX_chlorine_testing.dta", replace
 
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use   "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 * Merge_WS==1 means they do not drink water from the JJM tap
 merge 1:1 unique_id using "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_HHs_IDEXX_chlorine_testing.dta", keep(master matched) gen(Merge_WS)
 
@@ -185,7 +185,7 @@ append using "${DataPre}IDEXX_Chlorine_Monitoring_Monthly_Preload\Selected_`i'_I
 
 save "${DataTemp}Appended-IDEXX_village_HH.dta", replace
 
-use   "${DataPre}1_1_Census_cleaned_consented.dta", clear
+use   "${DataFinal}1_1_Census_cleaned_consented.dta", clear
 merge 1:1 unique_id using "${DataTemp}Appended-IDEXX_village_HH.dta"
 
 

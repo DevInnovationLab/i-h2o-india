@@ -301,7 +301,7 @@ use "${DataRaw}1_8_Endline/1_8_Endline_Census-Household_available-Cen_child_foll
  //generating unique_id 
  *sorting child names alphabetically
  sort cen_child_u5_name_label
- gen UID_1 = _n 
+ gen UID_1 = _n  //function that gives serial numbers  //use the same digits for the number of serial number 
  * JL: What is happening above here? Need more comments?
 tab cen_child_caregiver_present
 tab cen_child_act_age
@@ -2067,10 +2067,101 @@ replace C_women_age =  R_Cen_a6_hhmember_age_ if  C_women_age == .
 *8combined gendre variable 
 gen C_women_gender = R_E_comb_hhmember_gender
 replace C_women_gender = R_Cen_a4_hhmember_gender_ if C_women_gender == .
+
+/*-----------------------------------------------------------------------------------------
+Renaming variables for consistency 
+------------------------------------------------------------------------------------------*/
+//Note: Our preferance would be to rename baseline variable to make it similar to endline variable because endline ones have been used elsewhere for analysis.
+
+**name of the eligible women (15-49 years)
+rename R_Cen_namefromearlier_  R_Cen_comb_name_comb_CBW_earlier
+rename R_E_comb_name_comb_woman_earlier R_E_comb_name_comb_CBW_earlier   //we also had to rename endline one here because just renaming baseline was exceeding stata limit so to make them both consistent we renamed both
+
+**Pregnancy status
+rename  R_Cen_get_pregnant_status_  R_Cen_comb_preg_status  //renaming the variable for baseline 
+
+**renaming bruises and cuts variables 
+rename R_Cen_a21_wom_cuts_day_  R_Cen_comb_wom_cuts_day
+rename R_Cen_a21_wom_cuts_week_  R_Cen_comb_wom_cuts_wk
+rename R_Cen_a21_wom_cuts_2week_  R_Cen_comb_wom_cuts_2wk
+
+**renaming vomit variables 
+rename R_Cen_a22_wom_vomit_day_  R_Cen_comb_wom_vomit_day
+rename R_Cen_a22_wom_vomit_week_  R_Cen_comb_wom_vomit_wk
+rename R_Cen_a22_wom_vomit_2week_  R_Cen_comb_wom_vomit_2wk
+
+**renaming diarrhea variables
+rename R_Cen_a23_wom_diarr_day_  R_Cen_comb_wom_diarr_day
+rename R_Cen_a23_wom_diarr_week_   R_Cen_comb_wom_diarr_wk 
+rename R_Cen_a23_wom_diarr_2week_  R_Cen_comb_wom_diarr_2wk
+rename R_Cen_wom_diarr_num_week_  R_Cen_comb_wom_diarr_num_wk
+rename R_Cen_wom_diarr_num_2weeks_ R_Cen_comb_wom_diarr_num_2wks 
+
+**renaming stool variables 
+rename  R_Cen_a25_wom_stool_24h_  R_Cen_comb_wom_stool_24h
+rename R_Cen_a25_wom_stool_yest_   R_Cen_comb_wom_stool_yest
+rename R_Cen_a25_wom_stool_week_  R_Cen_comb_wom_stool_wk
+rename R_Cen_a25_wom_stool_2week_  R_Cen_comb_wom_stool_2wk
+
+ **renaming blood variables 
+ rename R_Cen_a26_wom_blood_day_   R_Cen_comb_wom_blood_day
+ rename R_Cen_a26_wom_blood_week_  R_Cen_comb_wom_blood_wk
+ rename R_Cen_a26_wom_blood_2week_  R_Cen_comb_wom_blood_2wk
+ 
+ **renaming village variables
+rename R_Cen_village_str  R_Cen_village_name_str
+rename R_E_village R_E_village_code
+
+**renaming age and gender variables 
+rename  R_Cen_a4_hhmember_gender_  R_Cen_comb_hhmember_gender
+rename R_Cen_a6_hhmember_age_  R_Cen_comb_hhmember_age
+
+**renaming pregnancy variables
+rename R_Cen_a7_pregnant_month_  R_Cen_comb_preg_month
+rename R_Cen_a7_pregnant_hh_  R_Cen_comb_preg_residence
+rename  R_Cen_a7_pregnant_leave_  R_Cen_comb_preg_stay
+ 
+  /*-----------------------------------------------------------------------------------------
+Labeling variables for consistency 
+------------------------------------------------------------------------------------------*/
+label var R_Cen_pregwoman_ "Women pregnant at the time of the survey"
+label var R_Cen_comb_name_comb_CBW_earlier "Eligible women between the age 15-49 years" 
+label var R_E_comb_name_comb_CBW_earlier "Eligible women between the age 15-49 years" 
+label var R_Cen_comb_preg_status "Women pregnant at the time of the survey"
+label var R_Cen_comb_preg_month "Which month of woman's pregnancy is this?"
+label var R_Cen_comb_preg_residence "Is this woman's usual residence?"
+label var R_Cen_comb_preg_stay "How long is woman planning to stay here?"
+
+  /*-----------------------------------------------------------------------------------------
+Recategorising answer choices for better comparison
+------------------------------------------------------------------------------------------*/
+**recoding -99 or 99 to 999; 98 to -98; 77 to -77; No- 0 and Yes - 1
+
+//Treating categorical variables 
+ds R_Cen_comb_wom_cuts_day R_Cen_comb_wom_cuts_wk R_Cen_comb_wom_cuts_2wk R_E_comb_wom_cuts_day R_E_comb_wom_cuts_wk R_E_comb_wom_cuts_2wk R_Cen_comb_wom_vomit_day R_Cen_comb_wom_vomit_wk R_Cen_comb_wom_vomit_2wk R_E_comb_wom_vomit_day R_E_comb_wom_vomit_wk R_E_comb_wom_vomit_2wk  R_Cen_comb_wom_diarr_day R_Cen_comb_wom_diarr_wk  R_Cen_comb_wom_diarr_2wk  R_E_comb_wom_diarr_day R_E_comb_wom_diarr_wk R_E_comb_wom_diarr_2wk R_Cen_comb_wom_stool_24h R_Cen_comb_wom_stool_yest R_Cen_comb_wom_stool_wk R_Cen_comb_wom_stool_2wk R_E_comb_wom_stool_24h R_E_comb_wom_stool_yest R_E_comb_wom_stool_wk R_E_comb_wom_stool_2wk R_Cen_comb_wom_blood_day R_Cen_comb_wom_blood_wk R_Cen_comb_wom_blood_2wk R_E_comb_wom_blood_day R_E_comb_wom_blood_wk R_E_comb_wom_blood_2wk R_Cen_a7_pregnant_  R_Cen_comb_preg_residence 
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 |  `var' == -99
+replace `var' = -98 if `var' == 98 
+replace `var' = -77 if `var' == 77
+**defining label for options
+label define `var'_x 1 "Yes" 0 "No" 999 "Don't know" -98 "Refused to answer" -77 "Other"
+label values `var' `var'_x
+}
+
+//Treating numeric variables 
+ds R_Cen_comb_wom_diarr_num_wk R_Cen_comb_wom_diarr_num_2wks  R_E_comb_wom_diarr_num_wk R_E_comb_wom_diarr_num_2wks R_Cen_comb_hhmember_age  R_Cen_hh_member_names_count  R_Cen_comb_preg_month R_Cen_comb_preg_stay
+foreach var of varlist `r(varlist)'{
+destring `var', replace
+replace `var' = 999 if `var' == 99 |  `var' == -99
+replace `var' = -98 if `var' == 98 
+replace `var' = -77 if `var' == 77
+}
+
 /*-----------------------------------------------------------------------------------------
 Dropping unecesary variables 
 ------------------------------------------------------------------------------------------*/
-drop _merge irrelevant dup_HHID dup_UID match
+drop _merge irrelevant dup_HHID dup_UID match R_Cen_hh_member_names_count R_E_Village
 
 save "${DataFinal}1_12_Cl_Census_Baseline_Endline_CBW.dta", replace
 
@@ -2163,9 +2254,102 @@ replace C_U5_child_age =  R_Cen_a6_hhmember_age_ if  C_U5_child_age == .
 gen C_U5_child_gender = R_E_comb_hhmember_gender
 replace  C_U5_child_gender = R_Cen_a4_hhmember_gender_ if  C_U5_child_gender == .
 /*-----------------------------------------------------------------------------------------
+Renaming variables for consistency 
+------------------------------------------------------------------------------------------*/
+//Note: Our preferance would be to rename baseline variable to make it similar to endline variable because endline ones have been used elsewhere for analysis.
+
+**child name variable 
+rename R_Cen_namefromearlier_  R_Cen_comb_child_comb_name_label  //there is one more child name variable - R_Cen_u5child_  they are exactly the same 
+
+**renaming age and gender variables 
+rename  R_Cen_a4_hhmember_gender_  R_Cen_comb_hhmember_gender
+rename R_Cen_a6_hhmember_age_  R_Cen_comb_hhmember_age
+
+**renaming index and status
+rename R_Cen_child_index_   R_Cen_comb_combchild_index
+rename R_Cen_get_u5_status_  R_Cen_comb_combchild_status
+
+**renaming availability variable 
+rename R_Cen_child_caregiver_present_ R_Cen_comb_child_careg_present
+rename R_E_comb_child_caregiver_present R_E_comb_child_careg_present
+
+**renaming breatsfeeding variables
+rename R_Cen_child_breastfeeding_ R_Cen_comb_child_breastfeeding
+rename R_Cen_child_breastfed_num_ R_Cen_comb_child_breastfed_num
+
+**renaming cuts and bruises variables 
+rename R_Cen_a27_child_cuts_day_   R_Cen_comb_child_cuts_day
+rename  R_Cen_a27_child_cuts_week_  R_Cen_comb_child_cuts_wk
+rename  R_Cen_a27_child_cuts_2week_  R_Cen_comb_child_cuts_2wk
+
+**renaming vomitting variables 
+rename  R_Cen_a28_child_vomit_day_   R_Cen_comb_child_vomit_day
+rename  R_Cen_a28_child_vomit_week_  R_Cen_comb_child_vomit_wk
+rename  R_Cen_a28_child_vomit_2week_  R_Cen_comb_child_vomit_2wk
+
+**renaming diarrhea variables 
+rename R_Cen_a29_child_diarr_day_  R_Cen_comb_child_care_dia_day
+rename  R_Cen_a29_child_diarr_week_  R_Cen_comb_child_care_dia_wk
+rename  R_Cen_a29_child_diarr_2week_  R_Cen_comb_child_care_dia_2wk
+rename  R_Cen_child_diarr_week_num_   R_Cen_comb_child_diarr_wk_num
+rename R_Cen_child_diarr_2week_num_   R_Cen_comb_child_diarr_2wk_num
+rename R_Cen_a30_child_diarr_freq_  R_Cen_comb_child_diarr_freq
+
+**renaming stool variables 
+rename R_Cen_a31_child_stool_24h_  R_Cen_comb_child_stool_24h
+rename  R_Cen_a31_child_stool_yest_  R_Cen_comb_child_stool_yest
+rename  R_Cen_a31_child_stool_week_  R_Cen_comb_child_stool_wk
+rename R_Cen_a31_child_stool_2week_ R_Cen_comb_child_stool_2wk
+
+**renaming blood variables 
+rename R_Cen_a32_child_blood_day_  R_Cen_comb_child_blood_day
+rename R_Cen_a32_child_blood_week_  R_Cen_comb_child_blood_wk
+rename R_Cen_a32_child_blood_2week_  R_Cen_comb_child_blood_2wk
+
+ **renaming village variables
+rename R_Cen_village_str  R_Cen_village_name_str
+rename R_E_village R_E_village_code
+
+**renaming caregiver name 
+rename R_Cen_u5mother_name_  R_Cen_comb_child_comb_care_label
+
+  /*-----------------------------------------------------------------------------------------
+Recategorising answer choices for better comparison
+------------------------------------------------------------------------------------------*/
+**recoding -99 or 99 to 999; 98 to -98; 77 to -77; No- 0 and Yes - 1
+
+//Treating categorical variables 
+ds R_Cen_comb_child_breastfeeding R_E_comb_child_breastfeeding R_Cen_comb_child_cuts_day R_Cen_comb_child_cuts_wk R_Cen_comb_child_cuts_2wk R_E_comb_child_cuts_day R_E_comb_child_cuts_wk R_E_comb_child_cuts_2wk R_Cen_comb_child_vomit_day R_Cen_comb_child_vomit_wk R_Cen_comb_child_vomit_2wk R_E_comb_child_vomit_day R_E_comb_child_vomit_wk R_E_comb_child_vomit_2wk R_Cen_comb_child_care_dia_day R_Cen_comb_child_care_dia_wk R_Cen_comb_child_care_dia_2wk R_E_comb_child_care_dia_day R_E_comb_child_care_dia_wk R_E_comb_child_care_dia_2wk R_E_comb_child_diarr_day R_E_comb_child_diarr_wk R_E_comb_child_diarr_2wk R_Cen_comb_child_stool_24h R_Cen_comb_child_stool_yest R_Cen_comb_child_stool_wk R_Cen_comb_child_stool_2wk R_Cen_comb_child_blood_day R_Cen_comb_child_blood_wk R_Cen_comb_child_blood_2wk R_E_comb_child_stool_24h R_E_comb_child_stool_yest R_E_comb_child_stool_wk R_E_comb_child_stool_2wk R_E_comb_child_blood_day R_E_comb_child_blood_wk R_E_comb_child_blood_2wk
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 |  `var' == -99
+replace `var' = -98 if `var' == 98 
+replace `var' = -77 if `var' == 77
+**defining label for options
+label define `var'_x 1 "Yes" 0 "No" 999 "Don't know" -98 "Refused to answer" -77 "Other"
+label values `var' `var'_x
+}
+
+//treating numerical variables now 
+ds R_Cen_comb_hhmember_age R_Cen_hh_member_names_count R_Cen_comb_child_breastfed_num 
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 |  `var' == -99
+replace `var' = -98 if `var' == 98 
+replace `var' = -77 if `var' == 77
+}
+ 
+//Here 888 represents - Child is still being breastfed (mother's milk) but we are replacing 888 with 889 because 888 was also used as a code for permanent filter in WASH section so to avoid any confusion, I am replacing 888 with 889 for this option 
+replace R_Cen_comb_child_breastfed_num  = 889 if R_Cen_comb_child_breastfed_num == 888 
+replace R_E_comb_child_breastfed_num = 889 if  R_E_comb_child_breastfed_num == 888
+**we are only re-labeling this because in baseline, this variable was an integer and in endline this is a categorical variable. 
+label define R_E_comb_child_breastfed_num_x 1 "Months" 2 "Days" 889 "Child is still being breastfed (mother's milk)" 999 "Don't know"
+label values R_E_comb_child_breastfed_num  R_E_comb_child_breastfed_num_x
+
+
+/*-----------------------------------------------------------------------------------------
 Dropping unecesary variables 
 ------------------------------------------------------------------------------------------*/
-drop _merge dup_HHID dup_UID match
+drop _merge dup_HHID dup_UID match R_Cen_hh_member_names_count R_E_Village
 save "${DataFinal}1_12_Cl_Census_Baseline_Endline_U5_Child.dta", replace
 
 
@@ -2356,7 +2540,7 @@ unique_id	R_Cen_a3_hhmember_name_
 
 //getting availability status of the household for these IDs from the endline housheold survey  data 
 drop R_E_instruction  R_E_resp_available //dropping this temporarily to get the status again
-merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available R_E_instruction) gen(match) keep(1 3)
+merge m:1 unique_id using "${DataFinal}1_8_Endline_Census_cleaned.dta", keepusing( R_E_resp_available R_E_instruction R_E_cen_resp_label ) gen(match) keep(1 3)
 br unique_id R_Cen_a3_hhmember_name_ R_E_resp_available R_E_instruction if _merge == 1
 br unique_id R_Cen_a3_hhmember_name_ R_E_resp_available R_E_instruction if _merge == 1 & R_E_resp_available == 1 &  R_E_instruction == 1
 
@@ -2472,11 +2656,90 @@ replace  C_roster_gender = R_Cen_a4_hhmember_gender_ if  C_roster_gender == .
 label variable C_roster_gender "Combined gender of endline and baseline Roster members"
 
 /*-----------------------------------------------------------------------------------------
+Renaming variables for consistency 
+------------------------------------------------------------------------------------------*/
+//Note: Our preferance would be to rename baseline variable to make it similar to endline variable because endline ones have been used elsewhere for analysis.
+
+**renaming target resp name 
+rename R_Cen_a1_resp_name R_Cen_cen_resp_label 
+
+**renaming household roster vars
+rename  R_Cen_namenumber_  R_Cen_comb_hh_index
+rename R_Cen_namefromearlier_   R_Cen_comb_name_from_earlier_hh
+rename R_Cen_a4_hhmember_gender_  R_Cen_comb_hhmember_gender
+rename R_Cen_a5_hhmember_relation_  R_Cen_comb_hhmember_relation
+rename R_Cen_a5_relation_oth_   R_Cen_comb_relation_oth
+rename R_Cen_a6_hhmember_age_   R_Cen_comb_hhmember_age
+//age variable of U1 kid is tricky because in baseline the pattern was slightly different than endline. In baseline, we would ask- Age of the child then whether it is in months or days but in endline we would first ask enum if she is telling the age in months or days and then we wiuld record ages in the respective age and months variables 
+rename  R_E_comb_u1age  R_E_unit_age_  //renaming this to match baseline pattern because that is easier to understand. In endline it was different only because it was easy to detect outliers in that pattern. We are renaming it to make it equivalent to unit variable in baseline 
+rename  R_Cen_a6_u1age_ R_Cen_comb_u1age   
+rename  R_Cen_a8_u5mother_  R_Cen_comb_u5mother
+rename R_Cen_u5mother_name_  R_Cen_comb_u5mother_name
+rename R_Cen_a6_dob_   R_Cen_comb_dob_concat
+  
+ **renaming school variables 
+rename  R_Cen_a9_school_  R_Cen_comb_school
+rename  R_Cen_a9_school_level_   R_Cen_comb_school_level
+rename  R_Cen_a9_school_current_  R_Cen_comb_school_current
+rename  R_Cen_a9_read_write_ R_Cen_comb_read_write
+
+ **renaming village variables
+rename R_Cen_village_str  R_Cen_village_name_str
+rename R_E_village R_E_village_code
+
+**renaming pregnancy variables
+rename R_Cen_a7_pregnant_month_  R_Cen_comb_preg_month
+rename R_Cen_a7_pregnant_hh_  R_Cen_comb_preg_residence
+rename  R_Cen_a7_pregnant_leave_  R_Cen_comb_preg_stay
+
+
+  /*-----------------------------------------------------------------------------------------
+Recategorising answer choices for better comparison
+------------------------------------------------------------------------------------------*/
+**recoding -99 or 99 to 999; 98 to -98; 77 to -77; No- 0 and Yes - 1
+
+clonevar C_E_comb_hhmember_relation = R_E_comb_hhmember_relation
+replace C_E_comb_hhmember_relation = -77 if  C_E_comb_hhmember_relation == 13
+
+//creating a recoded variable for age. Creating anew coded variables of U1 age to match baseline pattern. This should be used for analysis  
+clonevar  C_E_comb_u1age  = R_E_comb_unit_age_months 
+replace  C_E_comb_u1age = R_E_comb_unit_age_days if  C_E_comb_u1age == .
+
+
+//Treating categorical variables 
+/*ds R_Cen_comb_child_breastfeeding R_E_comb_child_breastfeeding R_Cen_comb_child_cuts_day R_Cen_comb_child_cuts_wk R_Cen_comb_child_cuts_2wk R_E_comb_child_cuts_day R_E_comb_child_cuts_wk R_E_comb_child_cuts_2wk R_Cen_comb_child_vomit_day R_Cen_comb_child_vomit_wk R_Cen_comb_child_vomit_2wk R_E_comb_child_vomit_day R_E_comb_child_vomit_wk R_E_comb_child_vomit_2wk R_Cen_comb_child_care_dia_day R_Cen_comb_child_care_dia_wk R_Cen_comb_child_care_dia_2wk R_E_comb_child_care_dia_day R_E_comb_child_care_dia_wk R_E_comb_child_care_dia_2wk R_E_comb_child_diarr_day R_E_comb_child_diarr_wk R_E_comb_child_diarr_2wk R_Cen_comb_child_stool_24h R_Cen_comb_child_stool_yest R_Cen_comb_child_stool_wk R_Cen_comb_child_stool_2wk R_Cen_comb_child_blood_day R_Cen_comb_child_blood_wk R_Cen_comb_child_blood_2wk R_E_comb_child_stool_24h R_E_comb_child_stool_yest R_E_comb_child_stool_wk R_E_comb_child_stool_2wk R_E_comb_child_blood_day R_E_comb_child_blood_wk R_E_comb_child_blood_2wk
+
+foreach var of varlist `r(varlist)'{
+replace `var' = 999 if `var' == 99 |  `var' == -99
+replace `var' = -98 if `var' == 98 
+replace `var' = -77 if `var' == 77
+**defining label for options
+label define `var'_x 1 "Yes" 0 "No" 999 "Don't know" -98 "Refused to answer" -77 "Other"
+label values `var' `var'_x
+} */
+
+  /*-----------------------------------------------------------------------------------------
+Labeling variables for consistency 
+------------------------------------------------------------------------------------------*/
+label var R_E_comb_dob_concat "Date of birth"
+label var R_Cen_comb_u1age  "How old is Under 1 year old child in months/days?"
+label var C_E_comb_u1age  "How old is Under 1 year old child in months/days?"
+label var  R_Cen_comb_u5mother  "A8) Does the mother/ primary caregiver of ${namefromearlier} live in this household currently?"
+label var  R_E_Treat_V "Treatment status of the village"
+label var R_E_comb_autoage "Age automatically calculated from date of birth of the child"
+label var R_Cen_comb_preg_month "Which month of woman's pregnancy is this?"
+label var R_Cen_comb_preg_residence "Is this woman's usual residence?"
+label var R_Cen_comb_preg_stay "How long is woman planning to stay here?"
+ 
+
+order C_E_comb_u1age R_E_unit_age_, after(R_E_comb_hhmember_age)  //these are teh final age variables for U1 years child 
+
+
+/*-----------------------------------------------------------------------------------------
 Dropping unecesary variables 
 ------------------------------------------------------------------------------------------*/
-drop match check to_be_dropped1 to_be_dropped2 dup_HHID dup_UID _merge
+drop match check to_be_dropped1 to_be_dropped2 dup_HHID dup_UID _merge R_E_comb_unit_age_months R_E_comb_unit_age_days R_E_comb_cbw_age R_E_comb_all_age R_E_comb_age_confirm2 R_E_comb_year  R_E_comb_current_year R_E_comb_current_month  R_E_comb_age_years R_E_comb_age_months  R_E_comb_age_years_final R_E_comb_age_months_final  R_E_comb_year_dob_correction
 save "${DataFinal}1_12_Cl_Census_Baseline_Endline_Roster.dta", replace
-
 
 
 /*************************************************************************************************************************************************************************************
@@ -2503,13 +2766,33 @@ label variable C_dataset_type "Type of  combined baseline-endline Individual dat
 save "${DataFinal}0_12_Master_Cl_Individual_data_baseline_endline_census.dta", replace
 
 
-
 /*POINTS TO DISCUSS WITH AKITO AND JEREMY
 1. Should we also create UID for women from baseline dataset who we were unable to visit in endline ? We can't use raw dataset for that purpose 
 2. Ask Niharika to re-run her file - 3_X_HH_data creation
 3. chnage the name of one resp from 999 to actual name
 4. mention about 111 cases that I am dropping this only from merged roster data
+5. Ask Niharika to chnage permanent filter code from 888 to something else as 888 is being used for if the child is being still breatsfed 
+**how to treat this variable- Is the caregiver/mother of  ${Cen_child_u5_name_label} available ? (options have been changed signitificantly) 
+7 use a dated version later also for baseline census 
+8 //not able to understand how to recode these variables- R_Cen_resp_available R_Cen_instruction R_E_resp_available R_E_instruction
+
+
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*************************************************************************************************************************************************************************************
