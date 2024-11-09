@@ -27,11 +27,11 @@ Dataset prefix Explanation-
 1_9_ : Revisit endline census 
 1_10_ : Merged main and revisit endline census data
 1_10_Cl_ : Cleaned Merged main and revisit endline census data
-0_10_Master_Cl : Master combined endline individual datasets
+0_Master_10_ : Master combined endline individual datasets
 1_11_ : Clean and consented Merged main and revisit endline census data
 1_1_ : Baseline census data 
 1_12_Cl_ : Combined baseline and endline cleaned dataset
-0_12_Master_Cl : Master combined baseline-endline individual level dataset
+0_Master_12_ : Master combined baseline-endline individual level dataset
 *=========================================================================*/
 
 
@@ -1687,7 +1687,7 @@ replace C_E_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
 order C_E_dataset_type 
 label variable C_E_dataset_type "Type of Individual dataset"
-save "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", replace //Cl means cleaned
+save "${DataFinal}0_Master_10_Individual_data_endline_census.dta", replace //Cl means cleaned
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1700,7 +1700,7 @@ SECTION 7
 *****************************************************************/
 
 //Creating consented child dataset for analysis 
-use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
+use "${DataFinal}0_Master_10_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "Child" 
 ds // list all variables
 foreach var of varlist * {
@@ -1715,7 +1715,7 @@ keep if R_E_comb_child_caregiver_present == 1
 save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
-use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
+use "${DataFinal}0_Master_10_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "CBW" 
 ds // list all variables
 foreach var of varlist * {
@@ -1732,7 +1732,7 @@ save "${DataFinal}1_11_Endline_Census_CBW_consented_individual.dta", replace
 
 
 //creating consented roster dataset for analysis 
-use "${DataFinal}0_10_Master_Cl_Individual_data_endline_census.dta", clear
+use "${DataFinal}0_Master_10_Individual_data_endline_census.dta", clear
 keep if C_E_dataset_type  == "Roster" 
 ds // list all variables
 foreach var of varlist * {
@@ -2763,7 +2763,7 @@ replace C_dataset_type = "CBW" if  C_women_names != ""
 //Please tabulate this variable: C_dataset_type  to get the breakdown of each type of dataset present in this master dataset 
 order C_dataset_type 
 label variable C_dataset_type "Type of  combined baseline-endline Individual dataset"
-save "${DataFinal}0_12_Master_Cl_Individual_data_baseline_endline_census.dta", replace
+save "${DataFinal}0_Master_12_Individual_data_baseline_endline_census.dta", replace
 
 
 /*POINTS TO DISCUSS WITH AKITO AND JEREMY
