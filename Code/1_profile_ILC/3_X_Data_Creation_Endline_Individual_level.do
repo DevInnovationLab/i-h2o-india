@@ -1190,7 +1190,7 @@ replace comb_gen_child = 1 if unique_id == "50401117009" & R_E_key == "uuid:66fe
 clonevar Village = R_E_village_name_str 
 merge m:1 Village using "${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta", keepusing(Treat_V village Panchatvillage BlockCode) keep(1 3)
 
-save "${DataFinal}1_10_Endline_Mortality_19_20.dta", replace
+save "${DataFinal}1_10_Endline_Mortality_final_cleaned.dta", replace  
 
 /*save "${DataFinal}1_1_Endline_Mortality_19_20.dta", replace
 change the name of this dataset in Akito' s and Archi's files
