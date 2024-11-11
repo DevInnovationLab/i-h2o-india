@@ -247,8 +247,8 @@ stargazer(df.progress, summary=F, title= "Overall Progress: Baseline HH Survey",
 #create a date variable
 df.temp$date <- format(as.Date(df.temp$R_FU_starttime, "%b %d, %Y"), "%Y-%m-%d")
 
-output_path <- file.path(Final_path(), "Endline_HH_level_merged_dataset_final.dta")
-write_dta(final_df, output_path)
+#output_path <- file.path(Final_path(), "Endline_HH_level_merged_dataset_final.dta")
+#write_dta(final_df, output_path)
 
 
 #------------------------ Distribution of surveys by dates & villages ----------------------------------------#
