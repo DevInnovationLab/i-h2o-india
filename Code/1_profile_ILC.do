@@ -85,7 +85,7 @@ FOR THIS TEMPLATE TO WORK CORRECTLY, EDIT THE FILE PATHS IN SECTION 2 TO MATCH Y
 	    global DataTemp  "${pilot}99_temp/"
 		global external  "/Users/uchicago/Library/CloudStorage/Box-Box/India ILC_Survey External/"
 		global DataFinal "${pilot}3_final/"
-		global Intermediate "${pilot}8_Intermediate_Datasets/"
+		global Intermediate "${pilot}8_Intermediate Datasets/"
 	}
 		
 
