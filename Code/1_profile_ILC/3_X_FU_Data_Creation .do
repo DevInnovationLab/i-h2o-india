@@ -1437,7 +1437,7 @@ clear
 insheet using "${DataFinal}POOLED_idexx_master_cleaned.csv", clear
 //1121 obs
 
-// * Dropping observations 
+* Dropping observations 
 drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
 //480 obs dropped, 641 obs left 
 
@@ -1469,10 +1469,53 @@ reshape wide assignment sample_id bag_id_tap bag_id_stored sample_type cf_mpn ec
 * Save the dataset
 save "${Intermediate}1_13_IDEXX_FUrounds.dta", replace 
 
-// // *** ABR dataset 
-// // clear
-// // insheet using "${DataFinal}POOLED_idexx_ABR_master_cleaned.csv", clear
-//
+
+*** ABR dataset 
+clear
+insheet using "${DataFinal}POOLED_idexx_ABR_master_cleaned.csv", clear
+//365 total obs
+
+* Dropping observations 
+drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
+//122 obs dropped, 243 obs left 
+
+* Generating new variable :String version of UID variable
+gen unique_id_str=unique_id
+tostring unique_id_str, replace format(%17.0g)
+rename unique_id unique_id_num
+rename unique_id_str unique_id 
+
+* Generating new variable to identify the round and dropping existing variable
+gen Round=""
+replace Round="R_FU_" if data_round=="BL"
+replace Round="R_FU1_" if data_round=="R1"
+replace Round="R_FU2_" if data_round=="R2"
+replace Round="R_FU3_" if data_round=="R3"
+//145 observations in FU R3 and 98 in FU R1
+
+* Reshaping the data to ensure all observations for one HH are there in one row within the same round 
+//dropping vars not required
+drop  village block panchayat_village /*unique_id_num*/
+
+//Create a counter for the duplicates (2 obs per HH in one round)
+bysort unique_id_num Round: gen hh_id = _n
+
+* Now reshape the dataset
+reshape wide sample_id bag_id_tap bag_id_stored sample_type cf_mpn ec_mpn cf_95hi cf_95lo ec_95hi ec_95lo cf_pa_binary ec_pa_binary cf_pa ec_pa cf_log ec_log fc_tap_avg fc_stored_avg , i(unique_id_num Round) j( hh_id)  
+
+* Changing the storage type
+replace cf_log1="999" if  cf_log1=="-Inf" //if the cf_mpn value is 0 or cf_log value is undefined, replacing it with 999: a placeholder
+replace cf_log2="999" if  cf_log2=="-Inf" //if the cf_mpn value is 0 or cf_log value is undefined, replacing it with 999: a placeholder
+destring cf_log1 cf_log2, replace 
+
+replace ec_log1="999" if  ec_log1=="-Inf" //if the ec_mpn value is 0 or ec_log value is undefined, replacing it with 999: a placeholder
+replace ec_log2="999" if  ec_log2=="-Inf" //if the ec_mpn value is 0 or ec_log value is undefined, replacing it with 999: a placeholder
+destring ec_log1 ec_log2, replace 
+
+
+* Save the dataset
+save "${Intermediate}1_13_IDEXX_ABR_FUrounds.dta", replace 
+
 ********************************************************************************
 *** Merging the FU data with IDEXX data
 ********************************************************************************
@@ -1480,6 +1523,11 @@ save "${Intermediate}1_13_IDEXX_FUrounds.dta", replace
 use "${Intermediate}1_13_Followup_clean_long.dta", clear 
 merge 1:1  Round unique_id_num using "${Intermediate}1_13_IDEXX_FUrounds.dta", gen(Merge_IDEXX_FU) 
 
+//* Changing the storage type for consistency 
+//replace ec_95hi2=="" if ec_95hi2=="NA" //if values are equal to NA, replacing with a placeholder: xx
+//destring ec_95hi2 ec_95hi1, replace 
+
+// merge 1:1  Round unique_id_num using "${Intermediate}1_13_IDEXX_ABR_FUrounds.dta", gen(Merge_ABR_FU) 
 
 ********************************************************************************
 *** Saving individual FU round datasets
@@ -1509,7 +1557,7 @@ drop R_FU_subscriberid R_FU_simid R_FU_devicephonenum R_FU_info_update R_FU_reas
 //Renaming variables for consistency with Endline dataset
 rename R_FU_C_water_supply_freq C_FU_water_supply_freq
 rename R_FU_survey_issues C_survey_issues 
-save "${DataFinal}1_2_BL_HH_clean_final.dta", replace 
+save "${DataFinal}1_2_FU_clean_final.dta", replace 
 restore
 
 
@@ -1627,13 +1675,13 @@ use "${DataFinal}1_7_FU_R3_clean_final.dta", clear
 *** Merging the dataset 
 merge 1:1 unique_id using  "${DataFinal}1_6_FU_R2_clean_final.dta", gen (Merge_FU3_FU2)
 merge 1:1 unique_id using  "${DataFinal}1_5_FU_R1_clean_final.dta", gen (Merge_FU3_FU2_FU1)
-merge 1:1 unique_id using  "${DataFinal}1_2_BL_HH_clean_final.dta", gen (Merge_FU3_FU2_FU1_BL_HH)
+merge 1:1 unique_id using  "${DataFinal}1_2_FU_clean_final.dta", gen (Merge_FU3_FU2_FU1_FU)
 //total 499 unique obs 
 
 isid unique_id 
 
 *** Dropping varieables not required for analysis 
-drop R_FU3_deviceid R_FU2_deviceid R_FU2_devicephonenum R_FU1_deviceid R_FU1_devicephonenum R_FU_deviceid Merge_FU3_FU2 Merge_FU3_FU2_FU1 Merge_FU3_FU2_FU1_BL_HH
+drop R_FU3_deviceid R_FU2_deviceid R_FU2_devicephonenum R_FU1_deviceid R_FU1_devicephonenum R_FU_deviceid Merge_FU3_FU2 Merge_FU3_FU2_FU1 Merge_FU3_FU2_FU1_FU
 
 *** Saving the cleaned dataset for Follow up surveys 
 save "${DataFinal}1_13_Followup_clean_wide.dta", replace 
