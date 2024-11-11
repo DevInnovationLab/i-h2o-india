@@ -10,6 +10,9 @@
 #install.packages("remotes")
 # Attempt using devtools package
 #install.packages("devtools")
+#install.packages("bit64")
+
+
 
 #please note that starpolishr pacakge isn't available on CRAN so it has to be installed from github using rmeotes pacakage 
 #install.packages("remotes")
@@ -33,6 +36,7 @@ library(Hmisc)
 library(ggplot2)
 library(labelled)
 library(starpolishr)
+library(bit64)
 #library(xtable)
 
 #------------------------ setting user path ----------------------------------------#
@@ -434,6 +438,14 @@ View(subset_df)
 
 View(final_df)
 
+
+# Specify columns by name
+final_df[, c("Treat_V", "unique_id_num")] <- lapply(final_df[, c("Treat_V", "unique_id_num")], as.numeric)
+
+
+# Convert using sprintf()
+final_df$unique_id_num <- sprintf("%.0f", final_df$unique_id_num)
+
 # Save the final_df dataset to the specified directory as a .dta file
 output_path <- file.path(Intermediate(), "1_10_Endline_HH_level_merged_dataset.dta")
 write_dta(final_df, output_path)
@@ -444,247 +456,6 @@ write_dta(final_df, output_path)
 
 
 STOP 
-
-
-
-
-
-
-
-
-
-
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-#>   ESTRA CHECKS THAT CAN BE IGNORED 
-#>
-#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-#---------------------------------------------------------------
-#CHILD LEVEL DATASET MERGE 
-#---------------------------------------------------------------
-
-df.child.main <- read_stata(paste0(temp_path(),"U5_Child_23_24_part1.dta"))
-View(df.child.main)
-
-#removing _merge var
-df.child.main$`_merge` <- NULL
-
-#removing R_E prefix
-#names(df.main) <- gsub("^R_E_", "", names(df.main))
-
-
-
-# Apply as.character to all columns in df.main
-df.child.main <- data.frame(lapply(df.child.main, as.character), stringsAsFactors = FALSE)
-
-# Display the structure of the modified data frame to confirm the changes
-str(df.child.main)
-
-
-
-# Sort df.child.main by comb_child_comb_name_label alphabetically
-df.child.main <- df.child.main %>% arrange(comb_child_comb_name_label)
-
-# View the sorted dataset
-View(df.child.main)
-
-names(df.child.main)
-df.child.main <- subset(df.child.main, comb_child_caregiver_present == 3 | comb_child_caregiver_present == 4 | comb_child_caregiver_present == 5 | comb_child_caregiver_present == 6 )
-
-View(df.child.main)
-
-df.child.revisit <- read_stata(paste0(temp_path(),"1_2_Endline_Revisit_U5_Child_23_24_part1.dta"))
-View(df.child.revisit)
-
-
-# Apply as.character to all columns in df.child.revisit
-df.child.revisit <- data.frame(lapply(df.child.revisit, as.character), stringsAsFactors = FALSE)
-
-#removing _merge var
-df.child.revisit$`_merge` <- NULL
-
-names(df.child.revisit)
-
-# Sort df.child.main by comb_child_comb_name_label alphabetically
-df.child.revisit <- df.child.revisit %>% arrange(comb_child_comb_name_label)
-
-
-#df.child.revisit <- subset(df.child.revisit, comb_child_caregiver_present == 1)
-
-
-# Full join on unique_id
-merged_df <- full_join(df.child.main, df.child.revisit, by = "unique_id", suffix = c("_main", "_revisit"))
-
-names(merged_df)
-View(merged_df)
-
-# Ensure child names are aligned correctly within each unique_id
-merged_df <- merged_df %>%
-  group_by(unique_id) %>%
-  arrange(comb_child_comb_name_label_main, comb_child_comb_name_label_revisit, .by_group = TRUE) %>%
-  ungroup()
-
-View(merged_df)
-
-
-subset <- merged_df %>% select (unique_id, comb_child_comb_name_label_main, comb_child_comb_name_label_revisit, comb_child_caregiver_name_main, comb_child_caregiver_name_revisit )
-View(subset)
-
-flagged_df <- data.frame(unique_id = subset$unique_id)
-
-View(flagged_df)
-# Check for duplicates and handle if necessary
-duplicates <- merged_df[duplicated(merged_df$unique_id), ]
-if (nrow(duplicates) > 0) {
-  cat("There are duplicated unique_ids in the merged dataset.\n")
-  # Handle duplicates if necessary (e.g., by aggregation, removing duplicates, etc.)
-}
-
-# Get common columns
-common_cols <- intersect(names(df.child.main), names(df.child.revisit))
-common_cols <- setdiff(common_cols, "unique_id")
-
-print(common_cols)
-
-#also print different col names
-
-# Extract column names from both datasets
-main_cols <- names(df.child.main)
-revisit_cols <- names(df.child.revisit)
-
-# Identify columns that are present in one dataset but not the other
-unique_to_main <- setdiff(main_cols, revisit_cols)
-unique_to_revisit <- setdiff(revisit_cols, main_cols)
-
-# Print the non-matching column names
-cat("Columns unique to df.child.main:\n")
-print(unique_to_main)
-
-cat("\nColumns unique to df.child.revisit.f:\n")
-print(unique_to_revisit)
-
-
-# Initialize a data frame to store flags and comparisons
-flagged_df <- data.frame(unique_id = merged_df$unique_id)
-
-# Iterate through common columns to flag discrepancies and store values
-for (col in common_cols) {
-  flag_col <- paste0("flag_", col)
-  main_col <- paste0(col, "_main")
-  revisit_col <- paste0(col, "_revisit")
-  
-  flagged_df[[flag_col]] <- ifelse(!is.na(merged_df[[main_col]]) & merged_df[[main_col]] != "" & 
-                                     !is.na(merged_df[[revisit_col]]) & merged_df[[revisit_col]] != "" & 
-                                     merged_df[[main_col]] != merged_df[[revisit_col]],
-                                   1, 0)
-  
-  # Add columns for values from df.main and df.revisit.f where flag is 1
-  flagged_df[[paste0(col, "_main_value")]] <- ifelse(flagged_df[[flag_col]] == 1, merged_df[[main_col]], NA)
-  flagged_df[[paste0(col, "_revisit_value")]] <- ifelse(flagged_df[[flag_col]] == 1, merged_df[[revisit_col]], NA)
-}
-
-# Filter rows to keep only those where any flag is 1
-flagged_df <- flagged_df[rowSums(flagged_df[ , grepl("^flag_", names(flagged_df))]) > 0, ]
-
-# Remove flag columns where all values are 0
-flagged_df <- flagged_df %>% select_if(function(col) !all(is.na(col) | col == 0))
-
-# View the flagged dataframe
-View(flagged_df)
-names(flagged_df)
-
-#We see here that names are inter changed 
-
-#After comparing everything we found no flags 
-
-#---------------------------------------------------------------
-#REPLACING EMPTY STRINGS WITH NA VALUES 
-#---------------------------------------------------------------
-
-df.child.main <- read_stata(paste0(Final_path(),"1_1_Endline_U5_Child_23_24.dta"))
-View(df.child.main)
-
-#removing _merge var
-df.child.main$`_merge` <- NULL
-
-#removing R_E prefix
-#names(df.main) <- gsub("^R_E_", "", names(df.main))
-
-# Apply as.character to all columns in df.main
-df.child.main <- data.frame(lapply(df.child.main, as.character), stringsAsFactors = FALSE)
-
-# Display the structure of the modified data frame to confirm the changes
-str(df.child.main)
-
-
-df.child.revisit <- read_stata(paste0(Final_path(),"1_2_Endline_Revisit_U5_Child_23_24.dta"))
-View(df.child.revisit)
-
-
-# Apply as.character to all columns in df.child.revisit
-df.child.revisit <- data.frame(lapply(df.child.revisit, as.character), stringsAsFactors = FALSE)
-
-#removing _merge var
-df.child.revisit$`_merge` <- NULL
-
-
-# Function to replace empty strings with NA
-replace_empty_with_na <- function(df) {
-  df[df == ""] <- NA
-  return(df)
-}
-
-
-# Apply the function to both datasets
-df.child.main <- replace_empty_with_na(df.child.main)
-df.child.revisit <- replace_empty_with_na(df.child.revisit)
-
-# Check the result
-str(df.child.main)
-str(df.child.revisit)
-
-#---------------------------------------------------------------
-#DOING THE FINAL REPLACEMENT IN THE MAIN ENDLINE XXX DATASET 
-#---------------------------------------------------------------
-
-# Identify common columns, excluding 'unique_id'
-common_cols <- intersect(names(df.child.main), names(df.child.revisit))
-common_cols <- setdiff(common_cols, "unique_id")
-
-# Match indices
-matched_indices <- match(df.child.main$unique_id, df.child.revisit$unique_id)
-valid_indices <- !is.na(matched_indices)
-
-View(matched_indices)
-
-
-# Update df.main with matched and common variables from df.revisit.f
-for (col in common_cols) {
-  revisit_values <- df.child.revisit[[col]][matched_indices[valid_indices]]
-  df.child.main[[col]][valid_indices] <- revisit_values
-}
-
-
-# Merge additional columns from df.revisit.f that are not in df.main
-additional_cols <- setdiff(names(df.child.revisit), names(df.child.main))
-additional_data <-df.child.revisit %>% select(unique_id, all_of(additional_cols))
-
-final_df <- left_join(df.child.main, additional_data, by = "unique_id")
-
-# View the final merged dataset
-View(final_df)
-
-
-names(final_df)
-
-
-#putting this as a check 
-
-# Create a subset dataset with the specified variables
-#subset_df <- final_df %>% select(unique_id, R_E_water_source_prim, R_E_resp_available, R_E_instruction, R_E_n_new_members, R_E_n_hhmember_count, R_E_wash_applicable, R_E_Revisit_key)
-
-# View the subset dataset
-#View(subset_df)
 
 
 

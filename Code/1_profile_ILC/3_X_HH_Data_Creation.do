@@ -32,6 +32,7 @@
 //making changes to the storage type of the variables in the endline dataset
 use "${Intermediate}1_10_Endline_HH_level_merged_dataset.dta", clear  //Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/8_Intermediate Datasets/1_10_Endline_HH_level_merged_dataset.dta
 destring unique_id_num Treat_V, replace
+format unique_id_num %20.0g
 save "${Intermediate}1_10_Endline_HH_level_merged_dataset.dta", replace 
 
  /*--------------------------------------------
@@ -161,7 +162,7 @@ save "${Intermediate}0_Master_HHLevel.dta", replace
 *** Using Women level dataset to get the pregnancy status variable for Endline
 ********************************************************************************
 clear 
-use  "${Intermediate}1_10_Cl_Endline_CBW_level_merged_dataset_final_cleaned.dta", clear //includes revisit data
+use  "${Intermediate}1_10_Endline_final_CBW_level_merged_dataset_cleaned.dta", clear //includes revisit data
 gen R_E_key_final= R_E_key
 replace R_E_key_final= R_E_Revisit_key if R_E_key_final==""
 preserve 
@@ -176,9 +177,12 @@ restore
 *** Using Child level dataset to get number of children in each HH for endline
 ********************************************************************************
 clear
-use  "${Intermediate}1_10_Cl_Endline_Child_level_merged_dataset_final_cleaned.dta", clear
+use  "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", clear
 drop if R_E_comb_child_comb_name_label== ""
-keep R_E_comb_child_comb_name_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_caregiver_present R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence R_E_comb_child_comb_care_label unique_id R_E_Cen_Type
+keep R_E_comb_child_comb_name_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_caregiver_present R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence R_E_comb_child_comb_care_label unique_id C_E_entry_type 
+
+//Archi: the variable R_E_Cen_Type is replaced with C_E_entry_type 
+
 
 *Archi - This step can be skipped because in the updated dataset there are no such cases of prefix 111 
 /*split R_E_comb_child_comb_name_label, generate(common_u5_names) parse("111")
@@ -191,7 +195,7 @@ bys unique_id: gen Num=_n
 rename R_E_comb_child_comb_name_label U5_Child_label
 rename R_E_comb_child_comb_care_label U5_caregiver_label
 rename  R_E_comb_child_caregiver_present  R_E_comb_child_care_pres
-reshape wide U5_Child_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_care_pres R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence U5_caregiver_label R_E_Cen_Type, i(unique_id) j(Num)
+reshape wide U5_Child_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_care_pres R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence U5_caregiver_label C_E_entry_type, i(unique_id) j(Num)
 // drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
 save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
 
@@ -199,13 +203,17 @@ save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
 *** Using new member roster data for age, count & gender of new members 
 ********************************************************************************
 clear 
-use "${Intermediate}1_8_Endline_New_member_roster_dataset_final.dta", clear 
+use "${Intermediate}1_10_Endline_final_roster_merged_census_New_cleaned.dta", clear 
 preserve 
-keep comb_hhmember_gender comb_hhmember_age unique_id R_E_key
+gen keep_N = .   //creating a variable to keep only new roster members
+replace keep_N = 1 if C_E_entry_type == "N" | C_E_RV_entry_type == "N" 
+keep if keep_N == 1
+keep  R_E_comb_hhmember_gender R_E_comb_hhmember_age unique_id R_E_key
 bysort R_E_key: gen num=_n
-reshape wide comb_hhmember_gender comb_hhmember_age, i(R_E_key) j(num)
+reshape wide R_E_comb_hhmember_gender R_E_comb_hhmember_age, i(R_E_key) j(num)
 save "${DataTemp}Endline_New_member_gender_wide.dta", replace
 restore 
+
 
 
 ********************************************************************************
@@ -220,10 +228,13 @@ merge 1:1 unique_id using "${DataTemp}U5_Child_Endline_Census_for_merge.dta",  g
 merge 1:1 unique_id using "${DataTemp}Endline_Preg_status_wide.dta", gen(merge_preg_status)
 //885 obs matched (30 unmatched obs: resp not available; 1 matched obs is for UID 30501107052 which was dropped in the Master HH level data, dropping that below in line 83)
 
-
+//Archi- these are empty variables 
+//Niharika to approve this 
+drop R_E_comb_hhmember_gender1 R_E_comb_hhmember_gender2 R_E_comb_hhmember_gender3 R_E_comb_hhmember_gender4 R_E_comb_hhmember_gender5 R_E_comb_hhmember_gender6 R_E_comb_hhmember_gender7 R_E_comb_hhmember_age1 R_E_comb_hhmember_age2 R_E_comb_hhmember_age3 R_E_comb_hhmember_age4 R_E_comb_hhmember_age5 R_E_comb_hhmember_age6 R_E_comb_hhmember_age7
 merge 1:1 unique_id using "${DataTemp}Endline_New_member_gender_wide.dta", gen(merge_newmem_gender)
 //201 obs matched (1 matched obs is for UID 30501107052 which was dropped in the Master HH level data, dropping that below in line 83)
-drop R_E_comb_hhmember_gender* R_E_comb_hhmember_age* //dropping empty variables for gender of new roster members (the variables already presnet in Endline dataset are empty and had to include these variables from the NEw member roster dtaaset - CHECK WITH ARCHI WHY THESE WERE EMPTY)
+//drop R_E_comb_hhmember_gender* R_E_comb_hhmember_age* //dropping empty variables for gender of new roster members (the variables already presnet in Endline dataset are empty and had to include these variables from the NEw member roster dtaaset - CHECK WITH ARCHI WHY THESE WERE EMPTY)
+//Archi- dropped this earlier and replaced with correct ones 
 
 
 *** Dropping observations
@@ -403,12 +414,12 @@ replace R_Cen_a4_hhmember_gender_4=2 if unique_id=="30301104006" //gender mentio
 
 *Changing the values of variables storing information gender and age of new memebers for these observations to missing (given their details have been changed in the baseline variables, chnaging the new member roster variables to missing would avoid double counting of these members)
 //replacing the age variable in new member roster with information on new members in endline census and endline revisit
-replace comb_hhmember_age1=. if unique_id=="50301105008" | unique_id=="50201115043" | unique_id=="20201108055" | unique_id=="20201110019" | unique_id=="20201110035" | unique_id=="30501111018" | unique_id=="30501111021" | unique_id=="30602106057" | unique_id=="30602106063" | unique_id=="40301113016" 
-replace comb_hhmember_age2=. if unique_id=="40202113033" | unique_id=="30301104006" 
+replace R_E_comb_hhmember_age1=. if unique_id=="50301105008" | unique_id=="50201115043" | unique_id=="20201108055" | unique_id=="20201110019" | unique_id=="20201110035" | unique_id=="30501111018" | unique_id=="30501111021" | unique_id=="30602106057" | unique_id=="30602106063" | unique_id=="40301113016" 
+replace R_E_comb_hhmember_age2=. if unique_id=="40202113033" | unique_id=="30301104006" 
 
 //replacing the gender variable in new member roster with information on new members in endline census and endline revisit
-replace comb_hhmember_gender1=. if unique_id=="50201115043" 
-replace comb_hhmember_gender2=. if unique_id=="30301104006" 
+replace R_E_comb_hhmember_gender1=. if unique_id=="50201115043" 
+replace R_E_comb_hhmember_gender2=. if unique_id=="30301104006" 
 
 //replacing the age variable in new member roster with information on new members in endline census only
 replace R_E_n_fam_age1=. if unique_id=="50301105008" | unique_id=="50201115043" | unique_id=="20201108055" | unique_id=="20201110019" | unique_id=="20201110035" | unique_id=="30501111018" | unique_id=="30501111021" | unique_id=="30602106057" | unique_id=="30602106063" | unique_id=="40301113016" 
@@ -1358,7 +1369,7 @@ rename R_Cen_a40_gps_longitude R_Cen_gps_longitude
 rename R_Cen_a10_hhhead R_Cen_hhhead
 rename R_Cen_a10_hhhead_gender R_Cen_hhhead_gender
 rename R_Cen_a11_oldmale R_Cen_oldmale
-rename R_Cen_a12_ws_prim R_Cen_ws_prim 
+//rename R_Cen_a12_ws_prim R_Cen_ws_prim 
 rename R_Cen_a15_water_sec_freq_oth R_Cen_water_sec_freq_oth
 rename R_Cen_a16_treat_freq_oth R_Cen_water_treat_freq_oth
 rename R_Cen_a16_stored_treat_freq R_Cen_stored_treat_freq
@@ -1392,7 +1403,7 @@ rename R_E_treat_freq_oth R_E_water_treat_freq_oth
 //GitHub Issue #121: Surveycto calculate fields capturing the number of members in different age groups might not reflect actual numbers, generating new variables 
 *** Creating a variable for total number of HH members (Baseline census, Endline new members - recorded in both census and revisit)
 * Creating a variable for number of new members in endline - census and roster
-egen C_E_n_hhmember_count= rownonmiss(comb_hhmember_age1 comb_hhmember_age2 comb_hhmember_age3 comb_hhmember_age4 comb_hhmember_age5 comb_hhmember_age6 comb_hhmember_age7) //counting non missing values of age to get number of new members
+egen C_E_n_hhmember_count= rownonmiss(R_E_comb_hhmember_age1 R_E_comb_hhmember_age2 R_E_comb_hhmember_age3 R_E_comb_hhmember_age4 R_E_comb_hhmember_age5 R_E_comb_hhmember_age6 R_E_comb_hhmember_age7) //counting non missing values of age to get number of new members
 * Combined variable for Number of HH members (both Baseline and new members in Endline)
 egen C_total_hhmembers=rowtotal(R_Cen_hhmember_count C_E_n_hhmember_count) 
 //labelling the variables
@@ -1407,7 +1418,7 @@ forvalues i=1/17 { //loop for all family members in Baseline Census
 	gen C_Cen_U5child_`i' =1 if R_Cen_a6_hhmember_age_`i'<5 
 }
 forvalues i=1/7 { //loop for all new members in Endline Census
-	gen C_E_n_U5child_`i'=1 if  comb_hhmember_age`i'<5
+	gen C_E_n_U5child_`i'=1 if  R_E_comb_hhmember_age`i'<5
 }
 //Generating variable for total no of U5 children in Baseline and Endline
 egen C_total_U5children= rowtotal(C_Cen_U5child_* C_E_n_U5child_*)
@@ -1453,7 +1464,7 @@ forvalues i=1/17{ //loop for all HH members in Baseline
 }
 //Generating binary variable if HH member is neither CBW nor U5: New members in Endline 
 forvalues i=1/7{ //loop for all HH members in New roster in endline 
-	gen C_E_n_noncri_members_`i'=1 if (comb_hhmember_age`i'>=5 & comb_hhmember_gender`i'==1) | (comb_hhmember_age`i'>49 & comb_hhmember_gender`i'==2) | (comb_hhmember_age`i'>=5 & comb_hhmember_age`i'<15 & comb_hhmember_gender`i'==2)
+	gen C_E_n_noncri_members_`i'=1 if (R_E_comb_hhmember_age`i'>=5 & R_E_comb_hhmember_gender`i'==1) | (R_E_comb_hhmember_age`i'>49 & R_E_comb_hhmember_gender`i'==2) | (R_E_comb_hhmember_age`i'>=5 & R_E_comb_hhmember_age`i'<15 & R_E_comb_hhmember_gender`i'==2)
 }
 //Generating vairable for total no of non criteria/Other members in Baseline and Endline
 egen C_total_noncri_members=rowtotal(C_Cen_noncri_members_* C_E_n_noncri_members_*)
@@ -1473,7 +1484,7 @@ forvalues i=1/17 { //loop for all family members in Baseline Census
 }
 //Generating new binary variable if the new member in Endline is a female above 12 years 
 forvalues i=1/7 { //loop for all family members in New roster of endline 
-	gen C_E_n_female_above12_`i'=1 if comb_hhmember_age`i'>12 & comb_hhmember_gender`i'==2
+	gen C_E_n_female_above12_`i'=1 if R_E_comb_hhmember_age`i'>12 & R_E_comb_hhmember_gender`i'==2
 }
 //Generating variable for total no of females above 12 yrs in Baseline and Endline
 egen C_total_female_above12= rowtotal(C_Cen_female_above12_* C_E_n_female_above12_*)
@@ -1493,7 +1504,7 @@ forvalues i=1/17 { //loop for all family members in Baseline Census
 }
 //Generating new binary variable if the new member in Endline is a male above 12 years 
 forvalues i=1/7 { //loop for all family members in New roster of endline 
-	gen C_E_n_male_above12_`i'=1 if comb_hhmember_age`i'>12 & comb_hhmember_gender`i'==1
+	gen C_E_n_male_above12_`i'=1 if R_E_comb_hhmember_age`i'>12 &  R_E_comb_hhmember_gender`i'==1
 }
 //Generating variable for total no of males above 12 yrs in Baseline and Endline
 egen C_total_male_above12= rowtotal(C_Cen_male_above12_* C_E_n_male_above12_*)
@@ -1530,50 +1541,50 @@ gen C_E_n_members_below12= C_E_n_hhmember_count-C_E_n_members_above12
 label var C_E_n_members_below12 "Total HH members below 12 years: Endline"
 
  
-*** Number of U5 kids in baseline 
-ds R_E_Cen_Type*
-foreach var of varlist `r(varlist)'{
-clonevar Cl_`var' = `var'
-}
-egen temp_group = group(unique_id)
-
-ds Cl_*
-foreach var of varlist `r(varlist)'{
-replace `var' = 1 if `var' == 4
-replace `var' = 0 if `var' == 5
-}
-egen C_Cen_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
-
-*** Number of U5 kids in Endline
-//dropping temporary variables 
-drop Cl_*
-drop temp_group
-
-ds R_E_Cen_Type*
-foreach var of varlist `r(varlist)'{
-clonevar Cl_`var' = `var'
-}
-egen temp_group = group(unique_id)
-
-ds Cl_*
-foreach var of varlist `r(varlist)'{
-replace `var' = 1 if `var' == 5
-replace `var' = 0 if `var' == 4
-}
-egen C_E_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
-
-*** Number of HHs with U5 kids in Baseline  
-gen C_Cen_HH_level_U5 = .
-replace C_Cen_HH_level_U5 = 1 if C_Cen_u5_kids_total != 0
-label var C_Cen_HH_level_U5 "Number of HHs with U5 children: Baseline"
-
-*** Number of HHs with U5 kids in Endline  
-gen C_E_HH_level_U5 = .
-replace C_E_HH_level_U5 = 1 if C_E_u5_kids_total != 0
-//given all Baseline U5 kids were included in Endline sample, replacing Endline var with 1 in case Baseline var is 1
-replace C_E_HH_level_U5 = 1 if C_Cen_HH_level_U5 == 1
-label var C_E_HH_level_U5 "Number of HHs with U5 children: Endline"
-
+// *** Number of U5 kids in baseline 
+// ds R_E_Cen_Type*
+// foreach var of varlist `r(varlist)'{
+// clonevar Cl_`var' = `var'
+// }
+// egen temp_group = group(unique_id)
+//
+// ds Cl_*
+// foreach var of varlist `r(varlist)'{
+// replace `var' = 1 if `var' == 4
+// replace `var' = 0 if `var' == 5
+// }
+// egen C_Cen_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
+//
+// *** Number of U5 kids in Endline
+// //dropping temporary variables 
+// drop Cl_*
+// drop temp_group
+//
+// ds R_E_Cen_Type*
+// foreach var of varlist `r(varlist)'{
+// clonevar Cl_`var' = `var'
+// }
+// egen temp_group = group(unique_id)
+//
+// ds Cl_*
+// foreach var of varlist `r(varlist)'{
+// replace `var' = 1 if `var' == 5
+// replace `var' = 0 if `var' == 4
+// }
+// egen C_E_u5_kids_total = rowtotal(Cl_R_E_Cen_Type*)
+//
+// *** Number of HHs with U5 kids in Baseline  
+// gen C_Cen_HH_level_U5 = .
+// replace C_Cen_HH_level_U5 = 1 if C_Cen_u5_kids_total != 0
+// label var C_Cen_HH_level_U5 "Number of HHs with U5 children: Baseline"
+//
+// *** Number of HHs with U5 kids in Endline  
+// gen C_E_HH_level_U5 = .
+// replace C_E_HH_level_U5 = 1 if C_E_u5_kids_total != 0
+// //given all Baseline U5 kids were included in Endline sample, replacing Endline var with 1 in case Baseline var is 1
+// replace C_E_HH_level_U5 = 1 if C_Cen_HH_level_U5 == 1
+// label var C_E_HH_level_U5 "Number of HHs with U5 children: Endline"
+//
 
 
 *** Index of the HH Head (to ascertain which HH member is the head)
@@ -1682,13 +1693,13 @@ replace C_E_primcollector_gender = R_E_cen_fam_gender`i' if C_E_selected_index==
 }
 
 // For new members (selected_index: max value is 23)
-replace C_E_primcollector_age = comb_hhmember_age1 if C_E_selected_index==21
-replace C_E_primcollector_age = comb_hhmember_age2 if C_E_selected_index==22
-replace C_E_primcollector_age = comb_hhmember_age3 if C_E_selected_index==23
+replace C_E_primcollector_age = R_E_comb_hhmember_age1 if C_E_selected_index==21
+replace C_E_primcollector_age = R_E_comb_hhmember_age2 if C_E_selected_index==22
+replace C_E_primcollector_age = R_E_comb_hhmember_age3 if C_E_selected_index==23
 
-replace C_E_primcollector_gender = comb_hhmember_gender1 if C_E_selected_index==21 
-replace C_E_primcollector_gender = comb_hhmember_gender2 if C_E_selected_index==22 
-replace C_E_primcollector_gender = comb_hhmember_gender3 if C_E_selected_index==23 
+replace C_E_primcollector_gender = R_E_comb_hhmember_gender1 if C_E_selected_index==21 
+replace C_E_primcollector_gender = R_E_comb_hhmember_gender2 if C_E_selected_index==22 
+replace C_E_primcollector_gender = R_E_comb_hhmember_gender3 if C_E_selected_index==23 
 
 ** Generating variables to store the Age and gender of the person actually responsible for treating water(Stored in "R_E_treat_primresp")
 * Split the R_E_treat_resp string into separate variables
@@ -1721,13 +1732,13 @@ replace C_E_primtreat_gender = R_E_cen_fam_gender`i' if C_E_selected_index_treat
 }
 
 // For new members (selected_index_treat: max value is 23)
-replace C_E_primtreat_age = comb_hhmember_age1 if C_E_selected_index_treat==21
-replace C_E_primtreat_age = comb_hhmember_age2 if C_E_selected_index_treat==22
-replace C_E_primtreat_age = comb_hhmember_age3 if C_E_selected_index_treat==23
+replace C_E_primtreat_age = R_E_comb_hhmember_age1 if C_E_selected_index_treat==21
+replace C_E_primtreat_age = R_E_comb_hhmember_age2 if C_E_selected_index_treat==22
+replace C_E_primtreat_age = R_E_comb_hhmember_age3 if C_E_selected_index_treat==23
 
-replace C_E_primtreat_gender = comb_hhmember_gender1 if C_E_selected_index_treat==21 
-replace C_E_primtreat_gender = comb_hhmember_gender2 if C_E_selected_index_treat==22 
-replace C_E_primtreat_gender = comb_hhmember_gender3 if C_E_selected_index_treat==23 
+replace C_E_primtreat_gender = R_E_comb_hhmember_gender1 if C_E_selected_index_treat==21 
+replace C_E_primtreat_gender = R_E_comb_hhmember_gender2 if C_E_selected_index_treat==22 
+replace C_E_primtreat_gender = R_E_comb_hhmember_gender3 if C_E_selected_index_treat==23 
 // replace treat_gender=0 if treats_water==0 //hh does not treat water 
 
 
@@ -1805,8 +1816,8 @@ label var C_Cen_asset_index "Asset Index (total of 26 assets)"
 label var C_Cen_respondent_age "Age of the Respondent"
 label var C_Cen_hh_head_index "Household Head's index"
 label var C_Cen_hh_head_age "Age of the HH Head"
-label var C_E_u5_kids_total "Number of U5 kids in Endline"
-label var C_Cen_u5_kids_total "Number of U5 kids in Baseline"
+//label var C_E_u5_kids_total "Number of U5 kids in Endline"
+//label var C_Cen_u5_kids_total "Number of U5 kids in Baseline"
 
 label var C_E_primtreat_gender "Gender of person responsible for treating water"
 label define C_E_primtreat_gender 1 "Male" 2 "Female" 0 "HH Does not treat water"
@@ -1932,15 +1943,15 @@ restore
 drop R_Cen_a3_hhmember_name_7 R_Cen_a3_hhmember_name_8 R_Cen_a3_hhmember_name_9 R_Cen_a3_hhmember_name_6 R_Cen_a3_hhmember_name_5 R_Cen_a3_hhmember_name_4 R_Cen_a3_hhmember_name_10 R_Cen_a3_hhmember_name_11 R_Cen_a3_hhmember_name_17 R_Cen_a3_hhmember_name_16 R_Cen_a3_hhmember_name_12 R_Cen_a3_hhmember_name_3 R_Cen_a3_hhmember_name_2 R_Cen_a3_hhmember_name_15 R_Cen_a3_hhmember_name_13 R_Cen_a3_hhmember_name_1 R_Cen_a3_hhmember_name_14 R_Cen_a39_phone_name_2 R_Cen_a39_phone_name_1 R_Cen_a39_phone_num_1 R_Cen_a39_phone_num_2 R_Cen_u5mother_name_9 R_Cen_u5mother_name_8 R_Cen_u5mother_name_4 R_Cen_u5mother_name_3 R_Cen_u5mother_name_15 R_Cen_u5mother_name_11 R_Cen_u5mother_name_12 R_Cen_u5mother_name_1 R_Cen_u5mother_name_7 R_Cen_u5mother_name_17 R_Cen_u5mother_name_14 R_Cen_u5mother_name_16 R_Cen_u5mother_name_2 R_Cen_u5mother_name_13 R_Cen_u5mother_name_5 R_Cen_u5mother_name_6 R_Cen_u5mother_name_10 R_E_cen_resp_name R_E_cen_resp_label R_E_cen_resp_name_oth R_Cen_namenumber_1 R_Cen_namefromearlier_1 R_Cen_namenumber_2 R_Cen_namefromearlier_2 R_Cen_namenumber_3 R_Cen_namefromearlier_3 R_Cen_namenumber_4 R_Cen_namefromearlier_4 R_Cen_namenumber_5 R_Cen_namefromearlier_5 R_E_comb_hhmember_name7 R_Cen_namefromearlier_5 R_E_comb_hhmember_name6 R_E_comb_hhmember_name5 R_E_comb_hhmember_name4 R_E_comb_hhmember_name3 R_E_comb_hhmember_name2 R_E_comb_hhmember_name1 R_Cen_namenumber_6 R_Cen_namefromearlier_6 R_Cen_namenumber_7 R_Cen_namefromearlier_7 R_Cen_namenumber_8 R_Cen_namefromearlier_8 R_Cen_namenumber_9 R_Cen_namefromearlier_9 R_Cen_namenumber_10 R_Cen_namefromearlier_10 R_Cen_namenumber_11 R_Cen_namefromearlier_11 R_Cen_namenumber_12 R_Cen_namefromearlier_12 R_Cen_namenumber_13 R_Cen_namefromearlier_13 R_Cen_namenumber_14 R_Cen_namefromearlier_14 R_Cen_namenumber_15 R_Cen_namefromearlier_15 R_Cen_namenumber_16 R_Cen_namefromearlier_16 R_Cen_namenumber_17 R_Cen_namefromearlier_17 R_Cen_fam_name1 R_Cen_fam_name2 R_Cen_fam_name3 R_Cen_fam_name4 R_Cen_fam_name5 R_Cen_fam_name6 R_Cen_fam_name7 R_Cen_fam_name8 R_Cen_fam_name9 R_Cen_fam_name10 R_Cen_fam_name11 R_Cen_fam_name12 R_Cen_fam_name13 R_Cen_fam_name14 R_Cen_fam_name15 R_Cen_fam_name16 R_Cen_fam_name17 R_Cen_fam_name18 R_Cen_fam_name19 R_Cen_fam_name20 R_E_n_fam_name1 R_E_n_fam_name2 R_E_n_fam_name3 R_E_n_fam_name4 R_E_n_fam_name5 R_E_n_fam_name6 R_E_n_fam_name7 R_E_n_fam_name8 R_E_n_fam_name9 R_E_n_fam_name10 R_E_n_fam_name11 R_E_n_fam_name12 R_E_n_fam_name13 R_E_n_fam_name14 R_E_n_fam_name15 R_E_n_fam_name16 R_E_n_fam_name17 R_E_n_fam_name18 R_E_n_fam_name19 R_E_n_fam_name20 R_E_comb_child_caregiver_name1 R_E_comb_child_caregiver_name2 R_E_comb_child_caregiver_name3 R_E_comb_child_caregiver_name4 R_E_comb_child_caregiver_name5 R_Cen_a1_resp_name R_Cen_a11_oldmale_name R_Cen_address U5_Child_label* U5_caregiver_label* resident_bapujinagar
 
 *** Dropping individual level variables 
-drop  R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_*  R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_E_cen_med_seek_all_* R_E_setofn_med_seek_lp_all R_E_n_med_seek_lp_all_count R_E_n_med_seek_all_* R_E_n_med_seek_all R_Cen_a4_hhmember_gender_* comb_hhmember_gender* R_Cen_a5_hhmember_relation_* R_Cen_a6_hhmember_age_* R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_Cen_a5_relation_oth_*  R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_a6_age_confirm2_* R_Cen_correct_age_* R_Cen_unit_age_* R_Cen_a6_dob_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_2week_* R_Cen_child_index_* R_Cen_get_pregnant_status_* R_Cen_pregnant_index_* R_Cen_pregwoman_* R_Cen_hh_member_names_count comb_hhmember_age* R_E_comb_combchild_index* R_E_comb_combchild_status*  R_E_comb_child_care_pres* R_E_comb_child_care_pres_oth* R_E_comb_child_residence*  
+drop  R_Cen_a21_wom_cuts_day_* R_Cen_a21_wom_cuts_week_* R_Cen_a21_wom_cuts_2week_* R_Cen_a22_wom_vomit_day_* R_Cen_a22_wom_vomit_week_* R_Cen_a22_wom_vomit_2week_* R_Cen_a23_wom_diarr_day_* R_Cen_a23_wom_diarr_week_* R_Cen_a23_wom_diarr_2week_* R_Cen_wom_diarr_num_week_* R_Cen_wom_diarr_num_2weeks_* R_Cen_a25_wom_stool_24h_* R_Cen_a25_wom_stool_yest_* R_Cen_a25_wom_stool_week_* R_Cen_a25_wom_stool_2week_* R_Cen_a26_wom_blood_day_* R_Cen_a27_child_cuts_day_* R_Cen_a27_child_cuts_week_* R_Cen_a27_child_cuts_2week_* R_Cen_a28_child_vomit_day_* R_Cen_a28_child_vomit_week_* R_Cen_a28_child_vomit_2week_* R_Cen_a29_child_diarr_day_* R_Cen_a29_child_diarr_week_* R_Cen_a29_child_diarr_2week_* R_Cen_child_diarr_week_num_*  R_Cen_child_diarr_2week_num_* R_Cen_a30_child_diarr_freq_* R_Cen_a31_child_stool_24h_* R_Cen_a31_child_stool_yest_* R_Cen_a31_child_stool_week_* R_Cen_a32_child_blood_day_* R_Cen_a32_child_blood_week_* R_Cen_child_caregiver_present_* R_Cen_child_breastfeeding_* R_Cen_child_breastfed_num_* R_Cen_a7_pregnant_* R_Cen_a7_pregnant_hh_* R_Cen_a7_pregnant_month_* R_Cen_a7_pregnant_leave_* R_Cen_a8_u5mother_* R_Cen_a9_school_* R_Cen_a9_school_level_* R_Cen_a9_school_current_* R_Cen_a9_read_write_* R_E_cen_med_seek_all_* R_E_setofn_med_seek_lp_all R_E_n_med_seek_lp_all_count R_E_n_med_seek_all_* R_E_n_med_seek_all R_Cen_a4_hhmember_gender_* R_E_comb_hhmember_gender* R_Cen_a5_hhmember_relation_* R_Cen_a6_hhmember_age_* R_E_cen_fam_age* R_E_cen_fam_gender* R_E_n_fam_age* R_Cen_a5_relation_oth_*  R_Cen_a5_autoage_* R_Cen_a6_u1age_* R_Cen_a6_age_confirm2_* R_Cen_correct_age_* R_Cen_unit_age_* R_Cen_a6_dob_* R_Cen_a26_wom_blood_week_* R_Cen_a26_wom_blood_2week_* R_Cen_a31_child_stool_2week_* R_Cen_a32_child_blood_2week_* R_Cen_child_index_* R_Cen_get_pregnant_status_* R_Cen_pregnant_index_* R_Cen_pregwoman_* R_Cen_hh_member_names_count R_E_comb_hhmember_age* R_E_comb_combchild_index* R_E_comb_combchild_status*  R_E_comb_child_care_pres* R_E_comb_child_care_pres_oth* R_E_comb_child_residence*  
 
 *** Dropping temporary variables created for cleaning the datatset 
-drop  R_E_num_treat_resp R_E_treat_resp_list_count R_E_setoftreat_resp_list R_E_treat_resp_labels  C_E_selected_index C_E_selected_index_treat C_Cen_U5child_* C_E_n_U5child_* R_E_Cen_Type* Cl_R_E_Cen_Type*  R_E_comb_preg_status* C_Cen_U5child_* C_E_n_U5child_* C_Cen_female_15to49_* C_E_n_female_15to49_* C_Cen_noncri_members_* C_E_n_noncri_members_* C_Cen_female_above12_* C_E_n_female_above12_* C_Cen_male_above12_* C_E_n_male_above12_* Cl_R_E_Cen_Type* total_U5_kids
+drop  R_E_num_treat_resp R_E_treat_resp_list_count R_E_setoftreat_resp_list R_E_treat_resp_labels  C_E_selected_index C_E_selected_index_treat C_Cen_U5child_* C_E_n_U5child_*    R_E_comb_preg_status* C_Cen_U5child_* C_E_n_U5child_* C_Cen_female_15to49_* C_E_n_female_15to49_* C_Cen_noncri_members_* C_E_n_noncri_members_* C_Cen_female_above12_* C_E_n_female_above12_* C_Cen_male_above12_* C_E_n_male_above12_*  total_U5_kids
 
 *** Dropping other calculate field variables and ones not required for ananlysis 
 drop R_Cen_primary_water_label R_E_secondary_water_label R_E_water_sec_labels R_E_people_prim_labels R_E_secondary_main_water_label water_sec_value1 water_sec_value2 R_E_num_people_prim 
 
-drop R_Cen_landmark R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_saahi_name R_Cen_hamlet_name R_Cen_gp_name R_Cen_district_name R_Cen_survey_duration R_Cen_devicephonenum R_Cen_simid R_Cen_subscriberid R_Cen_deviceid R_Cen_instruction R_Cen_enum_name_label R_Cen_no_consent_reason R_Cen_no_consent_reason_1 R_Cen_no_consent_reason_2 R_Cen_no_consent_reason__77 R_Cen_no_consent_comment R_Cen_no_consent_oth R_Cen_pregnant_followup_count R_Cen_child_followup_count R_Cen_get_u5_status_1 R_Cen_u5child_1 R_Cen_get_u5_status_2 R_Cen_u5child_2 R_Cen_get_u5_status_3 R_Cen_u5child_3 R_Cen_get_u5_status_4 R_Cen_u5child_4 R_Cen_get_u5_status_5 R_Cen_u5child_5 R_Cen_get_u5_status_6 R_Cen_u5child_6 R_Cen_get_u5_status_7 R_Cen_u5child_7 R_Cen_get_u5_status_8 R_Cen_u5child_8 R_Cen_u5child_9 R_Cen_get_u5_status_9 R_Cen_get_u5_status_10 R_Cen_u5child_10 R_Cen_get_u5_status_11 R_Cen_u5child_11 R_Cen_get_u5_status_12 R_Cen_u5child_12 R_Cen_get_u5_status_13 R_Cen_u5child_13 R_Cen_get_u5_status_14 R_Cen_u5child_14 R_Cen_get_u5_status_15 R_Cen_u5child_15 R_Cen_get_u5_status_16 R_Cen_u5child_16 R_Cen_get_u5_status_17 R_Cen_u5child_17 R_Cen_get_u5_status_18 R_Cen_u5child_18 R_Cen_labels R_Cen_survey_accompany_num R_Cen_survey_member_names_count R_Cen_surveynumber_1 R_Cen_survey_member_role_1 R_Cen_survey_member_gender_1 R_Cen_surveynumber_2 R_Cen_survey_member_role_2 R_Cen_survey_member_gender_2 R_Cen_surveynumber_3 R_Cen_survey_member_role_3 R_Cen_survey_member_gender_3 R_Cen_isvalidated R_Cen_meta1instancename unique_id_new unique_id_hyphen R_Cen_ws_prim R_FU_consent Merge_C_F Merge_consented R_E_noteconf1  R_Cen_village_str R_E_village_name_str temp_group    End_date date_string date_only date_final
+drop R_Cen_landmark R_Cen_hh_code R_Cen_hh_repeat_code R_Cen_hh_code_format R_Cen_saahi_name R_Cen_hamlet_name R_Cen_gp_name R_Cen_district_name R_Cen_survey_duration R_Cen_devicephonenum R_Cen_simid R_Cen_subscriberid R_Cen_deviceid R_Cen_instruction R_Cen_enum_name_label R_Cen_no_consent_reason R_Cen_no_consent_reason_1 R_Cen_no_consent_reason_2 R_Cen_no_consent_reason__77 R_Cen_no_consent_comment R_Cen_no_consent_oth R_Cen_pregnant_followup_count R_Cen_child_followup_count R_Cen_get_u5_status_1 R_Cen_u5child_1 R_Cen_get_u5_status_2 R_Cen_u5child_2 R_Cen_get_u5_status_3 R_Cen_u5child_3 R_Cen_get_u5_status_4 R_Cen_u5child_4 R_Cen_get_u5_status_5 R_Cen_u5child_5 R_Cen_get_u5_status_6 R_Cen_u5child_6 R_Cen_get_u5_status_7 R_Cen_u5child_7 R_Cen_get_u5_status_8 R_Cen_u5child_8 R_Cen_u5child_9 R_Cen_get_u5_status_9 R_Cen_get_u5_status_10 R_Cen_u5child_10 R_Cen_get_u5_status_11 R_Cen_u5child_11 R_Cen_get_u5_status_12 R_Cen_u5child_12 R_Cen_get_u5_status_13 R_Cen_u5child_13 R_Cen_get_u5_status_14 R_Cen_u5child_14 R_Cen_get_u5_status_15 R_Cen_u5child_15 R_Cen_get_u5_status_16 R_Cen_u5child_16 R_Cen_get_u5_status_17 R_Cen_u5child_17 R_Cen_get_u5_status_18 R_Cen_u5child_18 R_Cen_labels R_Cen_survey_accompany_num R_Cen_survey_member_names_count R_Cen_surveynumber_1 R_Cen_survey_member_role_1 R_Cen_survey_member_gender_1 R_Cen_surveynumber_2 R_Cen_survey_member_role_2 R_Cen_survey_member_gender_2 R_Cen_surveynumber_3 R_Cen_survey_member_role_3 R_Cen_survey_member_gender_3 R_Cen_isvalidated R_Cen_meta1instancename unique_id_new unique_id_hyphen  R_E_noteconf1  R_Cen_village_str R_E_village_name_str     End_date date_string date_only date_final
 
 
 *** Dropping calculated variables for Endline and BAseline respondents (these variables do not include the revisit data points and new variables have been created that include both revisit and census observations and all manual corrections) and other variables created for revisit form and created to store merge results
