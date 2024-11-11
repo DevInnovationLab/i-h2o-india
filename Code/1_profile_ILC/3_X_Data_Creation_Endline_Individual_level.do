@@ -2158,6 +2158,8 @@ label var R_Cen_comb_preg_status "Women pregnant at the time of the survey"
 label var R_Cen_comb_preg_month "Which month of woman's pregnancy is this?"
 label var R_Cen_comb_preg_residence "Is this woman's usual residence?"
 label var R_Cen_comb_preg_stay "How long is woman planning to stay here?"
+label var C_Cen_reshape "Similar to index/order of the entry in the roster"
+
 
   /*-----------------------------------------------------------------------------------------
 Recategorising answer choices for better comparison
@@ -2291,6 +2293,8 @@ rename R_Cen_namefromearlier_  R_Cen_comb_child_comb_name_label  //there is one 
 **renaming age and gender variables 
 rename  R_Cen_a4_hhmember_gender_  R_Cen_comb_hhmember_gender
 rename R_Cen_a6_hhmember_age_  R_Cen_comb_hhmember_age
+rename  R_Cen_a6_u1age_ R_Cen_comb_u1age   
+//creating a recoded variable for age. Creating anew coded variables of U1 age to match baseline pattern. This should be used for analysis  
 
 **renaming index and status
 rename R_Cen_child_index_   R_Cen_comb_combchild_index
@@ -2371,7 +2375,33 @@ replace R_E_comb_child_breastfed_num = 889 if  R_E_comb_child_breastfed_num == 8
 **we are only re-labeling this because in baseline, this variable was an integer and in endline this is a categorical variable. 
 label define R_E_comb_child_breastfed_num_x 1 "Months" 2 "Days" 889 "Child is still being breastfed (mother's milk)" 999 "Don't know"
 label values R_E_comb_child_breastfed_num  R_E_comb_child_breastfed_num_x
+label var R_Cen_comb_u1age  "How old is Under 1 year old child in months/days?"
+label var C_Cen_reshape "Similar to index/order of the entry in the roster"
 
+/*
+-----------------------------------------
+Imp note on reconcilation of variable 
+------------------------------------------
+For the variable- R_Cen_comb_child_careg_present (baseline) and R_E_comb_child_careg_present (endline)
+
+These 2 variables cannot be recategorised into one category because the endline ones serves a different and more detailed purpose of identifying the specific reasons of why they were unavailable. That iw why I am keeping them as it is. Below is the chnage higlighted in the varibles.
+
+Options changed from Baseline to Endline 
+Options in Baseline Census:
+[1] Yes
+[0] No
+
+Options in Endline Census:
+[1]Respondent available for an interview
+[2]Respondent has left the house permanently
+[3]This is my first visit: The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)
+[4]This is my 1st re-visit: (2nd vis it) The respondent is temporarily unavailable but might be available later (the enumerator will check with the neighbors or ASHA or Anganwaadi worker)
+[5] This is my 2rd re-visit (3rd visit): The revisit within two days is not possible (e.g. all the female respondents who can provide the survey information are not available in the next two days)
+[6] This is my 2rd re-visit (3rd visit): The respondent is temporarily unavailable (Please leave the reasons as you finalize the survey in the later pages)
+[7] U5 died or is no longer a member of the household
+[8] U5 child no longer falls in the criteria (less than 5 years)
+[-98] Refused to answer
+[-77] Other , please specify*/
 
 /*-----------------------------------------------------------------------------------------
 Dropping unecesary variables 
@@ -2757,7 +2787,8 @@ label var R_E_comb_autoage "Age automatically calculated from date of birth of t
 label var R_Cen_comb_preg_month "Which month of woman's pregnancy is this?"
 label var R_Cen_comb_preg_residence "Is this woman's usual residence?"
 label var R_Cen_comb_preg_stay "How long is woman planning to stay here?"
- 
+label var C_Cen_reshape "Similar to index/order of the entry in the roster"
+
 
 order C_E_comb_u1age R_E_unit_age_, after(R_E_comb_hhmember_age)  //these are teh final age variables for U1 years child 
 

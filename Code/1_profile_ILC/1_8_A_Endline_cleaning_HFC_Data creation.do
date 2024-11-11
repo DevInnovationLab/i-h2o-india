@@ -130,8 +130,9 @@ tab Any_seek
 reshape long comb_med_out_home_comb_, i(key key3) j(Num) 
 keep if comb_med_out_home_comb_==1
 
-//refer to file - 5_1_Endline_main_revisit_merge-final to get combined mortality dataset. It is named as -  "${DataFinal}1_1_Endline_Mortality_19_20.dta"
+/*
  
+ The latest version of mortality dataset is created in 3_X_Data_Creation_Endline_Individual_level.do and it is named as:   "${DataFinal}1_10_Endline_Census_Mortality_final_cleaned.dta"  
 /* ---------------------------------------------------------------------------
 * ID 19B and 20B: Child death and birth info
  ---------------------------------------------------------------------------*/
@@ -171,6 +172,7 @@ gen Cen_Type=2
 append using "${DataTemp}temp.dta"
 save "${DataFinal}1_1_Endline_Mortality_19B_20B_part2.dta", replace
 
+*/
 
 
 /* ---------------------------------------------------------------------------
