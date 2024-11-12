@@ -5,12 +5,14 @@
 ****** Created by: DIL
 ****** Used by:  DIL
 ****** Input data : The list of data for analysis
-	* use "${DataTemp}U5_Child_23_24.dta", clear
-	* use "${DataTemp}Medical_expenditure_person_clean.dta", clear
+	* use "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", clear
+	* use "${DataTemp}U5_Child_23_24_clean.dta", clear
+	*use "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", clear
 	* use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 ****** Output data : 
 ****** Language: English
 ****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
+*****Files to run before:  "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Baseline_Endline_Individual_level_Data_Creation.do"
 
 *=========================================================================*
 ** In this do file: 
@@ -20,9 +22,6 @@
     Recreating baseline child level data: 
 	Needed to run if any change happen to the baselind data
 	
-* N=1,123 
-start_from_clean_file_ChildLevel
-save "${DataTemp}Baseline_ChildLevel.dta", replace
   --------------------------------------------*/
    
 /*--------------------------------------------
@@ -33,7 +32,7 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
 
-//TArchi: his dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Baseline_Endline_Individual_level_Data_Creation.do"
+//Archi: This dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Baseline_Endline_Individual_level_Data_Creation.do"
 *If you want any additional variable for analysis which is not present here- Please go and check this file 
 use "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", clear
 missings dropvars, force
