@@ -33,7 +33,7 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
 
-//TArchi: his dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+//TArchi: his dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Baseline_Endline_Individual_level_Data_Creation.do"
 *If you want any additional variable for analysis which is not present here- Please go and check this file 
 use "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", clear
 missings dropvars, force
@@ -313,7 +313,7 @@ eststo clear
 
 
 * Main specification: Combined diarrhea with U2
-* Run this do file to udpate the data - "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+* Run this do file to udpate the data - "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Baseline_Endline_Individual_level_Data_Creation.do"
 * 
 use "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", clear
 /*
