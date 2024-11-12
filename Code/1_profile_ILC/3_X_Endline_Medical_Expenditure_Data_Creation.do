@@ -98,13 +98,13 @@ use "${DataTemp}Medical_expenditure_person.dta", clear
  collapse  (sum) flag, by(key)
  save "${DataTemp}Medical_expenditure_person_HH.dta", replace
 
-use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
+use "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", clear
 split R_E_cen_resp_label, p(" and ")
 keep R_E_r_cen_a1_resp_name R_E_cen_resp_label1
 gen Name_Same=0
 replace Name_Same=1 if R_E_r_cen_a1_resp_name==R_E_cen_resp_label1
 
-use "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", clear
+use "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", clear
 * Available for intervew
 * HH is 392
 foreach var of varlist R_E_* {
@@ -130,8 +130,9 @@ tab Any_seek
 reshape long comb_med_out_home_comb_, i(key key3) j(Num) 
 keep if comb_med_out_home_comb_==1
 
-//refer to file - 5_1_Endline_main_revisit_merge-final to get combined mortality dataset. It is named as -  "${DataFinal}1_1_Endline_Mortality_19_20.dta"
+/*
  
+ The latest version of mortality dataset is created in 3_X_Data_Creation_Endline_Individual_level.do and it is named as:   "${DataFinal}1_10_Endline_Census_Mortality_final_cleaned.dta"  
 /* ---------------------------------------------------------------------------
 * ID 19B and 20B: Child death and birth info
  ---------------------------------------------------------------------------*/
@@ -171,8 +172,15 @@ gen Cen_Type=2
 append using "${DataTemp}temp.dta"
 save "${DataFinal}1_1_Endline_Mortality_19B_20B_part2.dta", replace
 
+*/
 
+*--------------------------------------------------------------------------------------------
+//NOTE
+*Archi: I am commenting the whole code below for Long indivual data from the roster  because the updated versions of this are being created in the do file- "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+*So, please refer to that 
+*--------------------------------------------------------------------------------------------
 
+/*
 /* ---------------------------------------------------------------------------
 * Long indivual data from the roster
  ---------------------------------------------------------------------------*/
@@ -285,7 +293,14 @@ rename key R_E_key
 merge m:1 R_E_key using "${DataPre}1_8_Endline_XXX.dta", keepusing(unique_id R_E_enum_name_label R_E_enum_code) keep(3) nogen
 
 
-save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
+save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace  */
+
+
+*--------------------------------------------------------------------------------------------
+//NOTE
+ //Archi: Commenting the whole command below because the updated versions are being created in  the do file- "\GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+*--------------------------------------------------------------------------------------------
+
 
 * New hosuehold member
 * "${DataTemp}Requested_long_backcheck1.dta"
@@ -295,9 +310,8 @@ save  "${DataTemp}Endline_Long_Indiv_analysis.dta", replace
 /* ---------------------------------------------------------------------------
 * ID 21, 22, 23 and 24: List of U5 and Morbidity for U5 children
  ---------------------------------------------------------------------------*/
- //Archi: Comment for myself - You need to change name of the dataset used in Akito's file and drop entreies where child was unavailable because Akito is using that file for analysis and since we are creating only one version of each dataset we need to make sure whosoever is using that dataset it gets chnaged in their file too 
  
- //PLEASE NOTE THAT THE DATASET  "${DataTemp}U5_Child_23_24_part1.dta" is now being created in 5_1_Endline_main_revisit_merge_final do file. To avoid duplication, I am commenting it out here 
+ 
 
  /*
  * ID 23
@@ -497,7 +511,7 @@ save "${DataTemp}Medical_expenditure_5_11_21_22.dta", replace
 use           "${DataTemp}Medical_expenditure_5_11_21_22.dta", clear
 append using  "${DataTemp}Morbidity_23_24.dta"
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date) keep(3) nogen
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name_label End_date) keep(3) nogen
 rename R_E_key  key
 save "${DataTemp}Medical_expenditure_person.dta", replace
 erase "${DataTemp}Medical_expenditure_5_11_21_22.dta"
@@ -812,7 +826,7 @@ duplicates drop key Cen_Type key3 key6,force
 merge 1:1 key Cen_Type key3 key6 using "${DataTemp}Medical_expenditure_8_10_13_17.dta", gen(Merge_othermed2)
 drop if Merge_othermed2==2
 rename key R_E_key
-merge m:1 R_E_key using "${DataRaw}1_8_Endline/1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
+merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", keepusing(unique_id R_E_enum_name End_date) keep(3) nogen
 rename R_E_key  key
 * N=148: Number of incidnce times Location they seeked care
 

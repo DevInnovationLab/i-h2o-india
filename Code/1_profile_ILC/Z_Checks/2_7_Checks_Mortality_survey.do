@@ -4,8 +4,8 @@ use "${DataFinal}1_1_Mortality_cleaned_consented.dta", clear
 
 *Astha for now please add your directories in PathGraphs and PathTables (I didn't add it because my dropbox and overleaf isn't linked and global paths for table export is happening in dropbox once that's sorted I will add a global dropbox path 
 
-global PathGraphs "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
-global PathTables "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
+//global PathGraphs "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
+//global PathTables "C:\Users\Archi Gupta\Box\Data\99_Archi_things in progress"
 *ssc install texsave
 
 
@@ -58,7 +58,7 @@ forvalues i = 1/12 {
       gen diff_`i' = years_R_mor_a6_dob_`i' - R_mor_a6_hhmember_age_`i'
 }
 
-export excel R_mor_village unique_id_num submission_date R_mor_a6_dob_1 years_R_mor_a6_dob_1 R_mor_a6_hhmember_age_1 R_mor_a6_dob_2 years_R_mor_a6_dob_2 R_mor_a6_hhmember_age_2 R_mor_a6_dob_3 years_R_mor_a6_dob_3 R_mor_a6_hhmember_age_3 R_mor_a6_dob_4 years_R_mor_a6_dob_4 R_mor_a6_hhmember_age_4 R_mor_a6_dob_5 years_R_mor_a6_dob_5 R_mor_a6_hhmember_age_5 R_mor_a6_dob_6 years_R_mor_a6_dob_6 R_mor_a6_hhmember_age_6 R_mor_a6_dob_7 years_R_mor_a6_dob_7 R_mor_a6_hhmember_age_7 R_mor_a6_dob_8 years_R_mor_a6_dob_8 R_mor_a6_hhmember_age_8 R_mor_a6_dob_9 years_R_mor_a6_dob_9 R_mor_a6_hhmember_age_9 R_mor_a6_dob_10 years_R_mor_a6_dob_10 R_mor_a6_hhmember_age_10 R_mor_a6_dob_11 years_R_mor_a6_dob_11 R_mor_a6_hhmember_age_11 R_mor_a6_dob_12 years_R_mor_a6_dob_12 R_mor_a6_hhmember_age_12 using "$PathTables/Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
+export excel R_mor_village unique_id_num submission_date R_mor_a6_dob_1 years_R_mor_a6_dob_1 R_mor_a6_hhmember_age_1 R_mor_a6_dob_2 years_R_mor_a6_dob_2 R_mor_a6_hhmember_age_2 R_mor_a6_dob_3 years_R_mor_a6_dob_3 R_mor_a6_hhmember_age_3 R_mor_a6_dob_4 years_R_mor_a6_dob_4 R_mor_a6_hhmember_age_4 R_mor_a6_dob_5 years_R_mor_a6_dob_5 R_mor_a6_hhmember_age_5 R_mor_a6_dob_6 years_R_mor_a6_dob_6 R_mor_a6_hhmember_age_6 R_mor_a6_dob_7 years_R_mor_a6_dob_7 R_mor_a6_hhmember_age_7 R_mor_a6_dob_8 years_R_mor_a6_dob_8 R_mor_a6_hhmember_age_8 R_mor_a6_dob_9 years_R_mor_a6_dob_9 R_mor_a6_hhmember_age_9 R_mor_a6_dob_10 years_R_mor_a6_dob_10 R_mor_a6_hhmember_age_10 R_mor_a6_dob_11 years_R_mor_a6_dob_11 R_mor_a6_hhmember_age_11 R_mor_a6_dob_12 years_R_mor_a6_dob_12 R_mor_a6_hhmember_age_12 using "${Tables}Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
 
  
 forvalues i = 1/4 {
@@ -66,7 +66,7 @@ forvalues i = 1/4 {
       gen child_diff_years_`i' = child_diff_`i' / 365 
 }
 
-*export excel R_mor_village unique_id_num submission_date R_mor_date_death_1_1 R_mor_date_birth_1_1 child_diff_years_1  using "$PathTables/Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
+*export excel R_mor_village unique_id_num submission_date R_mor_date_death_1_1 R_mor_date_birth_1_1 child_diff_years_1  using "${Table}Ages_tables.xlsx", firstrow(varlabels) sheet(HH_member_age) sheetreplace
 
   
 forvalues i = 1/6 {
@@ -106,7 +106,7 @@ qui bys submission_date: gen daily_total = _N
 graph bar daily_total, over(submission_date, label(labsize(vsmall) angle(45))) ///
 	graphregion(c(white)) xsize(7) ylab(0(20)200, labsize(medsmall) angle(0)) ///
 	ytitle("Daily total surveys") bar(1, fc(eltblue%80))
-	graph export "$PathGraphs/Surveys_per_day.png", replace
+	graph export "${Figure}Surveys_per_day.png", replace
 
 /*--------------------------------------------------------------------------------------------------------------------------------------
                                                       SUB-SECTION 1.2 -  Daily average productivity 
@@ -118,9 +118,9 @@ collapse daily_total daily_avg, by (submission_date)
 label variable daily_total "Total surveys per day"
 label variable daily_avg "Average surveys on all days"
 global Variables1 submission_date daily_total daily_avg
-texsave $Variables1 using "$PathTables/Date_wise_surveys.tex", ///
+texsave $Variables1 using "${Table}Date_wise_surveys.tex", ///
         title("Date wise total surveys per day in comparison with average") replace varlabels frag location(htbp) 
-export excel submission_date daily_total daily_avg using "$PathTables/Mortality_tables.xlsx", firstrow(varlabels) sheet(Date_wise_surveys) sheetreplace
+export excel submission_date daily_total daily_avg using "${Table}Mortality_tables.xlsx", firstrow(varlabels) sheet(Date_wise_surveys) sheetreplace
 restore
 	
 /*--------------------------------------------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ bys R_mor_village submission_date: gen date_wise_village_total = _N
     line date_wise_village_total submission_date, by(R_mor_village) ///
     xtitle("Submission Date", size(small)) ytitle("Date Wise Village Total", size(small)) ///
     xlabel(, angle(45))
-graph export "$PathGraphs\Date_village_wise_total.png", as(png) replace	
+graph export "${Figure}Date_village_wise_total.png", as(png) replace	
 
 
 
@@ -145,9 +145,9 @@ label variable R_mor_village "Village"
 label variable date_wise_village_total "Village wise and date wise total surveys per day"
 label variable daily_avg "Average surveys on all days"
 global Variables2 R_mor_village submission_date date_wise_village_total daily_avg
-texsave $Variables2 using "$PathTables/Village_Date_wise_surveys.tex", ///
+texsave $Variables2 using "${Table}Village_Date_wise_surveys.tex", ///
         title("Village-Date wise total surveys per day in comparison with average") replace varlabels frag location(htbp) 
-export excel R_mor_village submission_date date_wise_village_total daily_avg using "$PathTables/Mortality_tables.xlsx", firstrow(varlabels) sheet(Village_productivity) sheetreplace
+export excel R_mor_village submission_date date_wise_village_total daily_avg using "${Table}Mortality_tables.xlsx", firstrow(varlabels) sheet(Village_productivity) sheetreplace
 restore
 
 /*--------------------------------------------------------------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ tabdisp R_mor_enum_name_f, c(days_worked total_surveys_done_enum daily_avg_enum)
 graph bar daily_avg_enum, over(R_mor_enum_name_f, sort(1) lab(labsize(vsmall) angle(45))) ///
 	graphregion(c(white)) xsize(8) ytitle("Average surveys per day") ///
 	bar(1, fc(ebblue%50) lc(ebblue))
-	graph export "$PathGraphs/average_daily_surveys.png", replace
+	graph export "${Figure}average_daily_surveys.png", replace
 
 preserve
 collapse days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro, by(R_mor_enum_name_f)
@@ -192,9 +192,9 @@ label variable daily_avg_enum "Each enum's daily average productivity"
 label variable days_worked "Total number of days worked by each Enum"
 label variable total_avg_enum_pro "Average productivity per day for all enums"
 global Variables3 R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro
-texsave $Variables3 using "$PathTables/Avg_enum_productivity.tex", ///
+texsave $Variables3 using "${Table}Avg_enum_productivity.tex", ///
         title("Enumerators daily average productivity") replace varlabels frag location(htbp) 
-export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro using "$PathTables/Mortality_tables.xlsx", sheet("Avg_enum_productivity") sheetreplace firstrow(varlabels)
+export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro using "${Table}Mortality_tables.xlsx", sheet("Avg_enum_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -212,7 +212,7 @@ label variable total_surveys_done_enum "Total surveys done by each Enum"
 label variable daily_avg_enum "Each enum's daily average productivity"
 label variable days_worked "Total number of days worked by each Enum"
 label variable total_avg_enum_pro "Average productivity per day for all enums"
-cap export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro using "$PathTables/Mortality_tables.xlsx" if  (daily_avg_enum > ninetyfive_perc | daily_avg_enum < tenth_perc)  & daily_avg_enum != . , sheet("outlier_avg_enum_productivity") sheetreplace firstrow(varlabels)
+cap export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum total_avg_enum_pro using "${Table}Mortality_tables.xlsx" if  (daily_avg_enum > ninetyfive_perc | daily_avg_enum < tenth_perc)  & daily_avg_enum != . , sheet("outlier_avg_enum_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -224,9 +224,9 @@ label variable R_mor_enum_name_f "Enumerators"
 label variable total_avg_enum_pro "Average productivity per day for all enums"
 label variable total_pro_enum_date "Enum each day productivity"
 global Variables4 R_mor_enum_name_f submission_date total_pro_enum_date total_avg_enum_pro
-texsave $Variables4 using "$PathTables/Datewise_enum_productivity.tex", ///
+texsave $Variables4 using "${Table}Datewise_enum_productivity.tex", ///
         title("Enumerators date-wise productivity") replace varlabels frag location(htbp) 
-export excel R_mor_enum_name_f submission_date total_pro_enum_date total_avg_enum_pro using "$PathTables/Mortality_tables.xlsx", sheet("Datewise_enum_productivity") sheetreplace firstrow(varlabels)
+export excel R_mor_enum_name_f submission_date total_pro_enum_date total_avg_enum_pro using "${Table}Mortality_tables.xlsx", sheet("Datewise_enum_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -258,7 +258,7 @@ tabdisp R_mor_enum_name_f, c(days_worked total_surveys_done_enum daily_avg_enum)
 graph bar daily_avg_enum, over(R_mor_enum_name_f, sort(1) lab(labsize(vsmall) angle(45))) ///
 	graphregion(c(white)) xsize(8) ytitle("Average Completed surveys per day") ///
 	bar(1, fc(ebblue%50) lc(ebblue))
-	graph export "$PathGraphs/average_completed_daily_surveys.png", replace
+	graph export "${Figure}average_completed_daily_surveys.png", replace
 collapse days_worked total_surveys_done_enum daily_avg_enum com_total_avg_enum_pro, by(R_mor_enum_name_f)
 label variable R_mor_enum_name_f "Enumerators"
 label variable days_worked "Total number of days worked by each Enum"
@@ -267,9 +267,9 @@ label variable daily_avg_enum "Each enum's daily average productivity for comple
 label variable days_worked "Total number of days worked by each Enum"
 label variable com_total_avg_enum_pro "Average productivity per day for all enums only for completed surveys"
 global Variables5 R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum com_total_avg_enum_pro
-texsave $Variables5 using "$PathTables/Completed_Avg_enum_productivity.tex", ///
+texsave $Variables5 using "${Table}Completed_Avg_enum_productivity.tex", ///
         title("Enumerators daily average productivity only for completed surveys") replace varlabels frag location(htbp) 
-export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum com_total_avg_enum_pro using "$PathTables/Mortality_tables.xlsx", sheet("Completed_Avg_enum_productivity") sheetreplace firstrow(varlabels)
+export excel R_mor_enum_name_f days_worked total_surveys_done_enum daily_avg_enum com_total_avg_enum_pro using "${Table}Mortality_tables.xlsx", sheet("Completed_Avg_enum_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -292,9 +292,9 @@ label variable total_avg_enum_pro "Average productivity per day for all enums fo
 label variable com_total_avg_enum_pro "Average productivity per day for all enums only for completed surveys"
 label variable com_total_pro_enum_date "Enum each day productivity for only completed surveys"
 global Variables6 R_mor_enum_name_f submission_date com_total_pro_enum_date com_total_avg_enum_pro total_avg_enum_pro
-texsave $Variables6 using "$PathTables/Comp_Datewise_enum_productivity.tex", ///
+texsave $Variables6 using "${Table}Comp_Datewise_enum_productivity.tex", ///
         title("Enumerators date-wise productivity only for completed surveys") replace varlabels frag location(htbp) 
-export excel R_mor_enum_name_f submission_date com_total_pro_enum_date com_total_avg_enum_pro total_avg_enum_pro using "$PathTables/Mortality_tables.xlsx", sheet("Comp_Datewise_enum_productivity") sheetreplace firstrow(varlabels)
+export excel R_mor_enum_name_f submission_date com_total_pro_enum_date com_total_avg_enum_pro total_avg_enum_pro using "${Table}Mortality_tables.xlsx", sheet("Comp_Datewise_enum_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -321,9 +321,9 @@ label variable gender_wise_total "Total surveys gender wise"
 label variable gender_daily_avg "Daily avg gender wise"
 label variable enum_gender "Gender wise classification"
 global Variables7 enum_gender days_gender gender_wise_total gender_daily_avg
-texsave $Variables7 using "$PathTables/gender_productivity.tex", ///
+texsave $Variables7 using "${Table}gender_productivity.tex", ///
         title("gender wise productivity") replace varlabels frag location(htbp) 
-export excel enum_gender days_gender gender_wise_total gender_daily_avg using "$PathTables/Mortality_tables.xlsx", sheet("gender_productivity") sheetreplace firstrow(varlabels)
+export excel enum_gender days_gender gender_wise_total gender_daily_avg using "${Table}Mortality_tables.xlsx", sheet("gender_productivity") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -352,14 +352,14 @@ label variable R_mor_resp_available "Resp. availability"
 label define hh 1 "Available HH" 2 "Family left permanently" 6 "Not available after 3rd revisit"
 label values R_mor_resp_available hh 
 br submission_date R_mor_enum_name_f duration_mins avg_dur overall_avg R_mor_resp_available if duration_mins > perc99 | duration_mins < perc5 
-export excel submission_date R_mor_enum_name_f duration_mins avg_dur overall_avg R_mor_resp_available if duration_mins > perc99 | duration_mins < perc5   using "$PathTables/Mortality_tables.xlsx", sheet("duration") sheetreplace firstrow(varlabels)
+export excel submission_date R_mor_enum_name_f duration_mins avg_dur overall_avg R_mor_resp_available if duration_mins > perc99 | duration_mins < perc5   using "${Table}Mortality_tables.xlsx", sheet("duration") sheetreplace firstrow(varlabels)
 
 
 ttest duration_mins, by(enum_gender)
 graph twoway (hist duration_mins if enum_gender == 1, fc(ebblue%50) lc(ebblue)) ///
 	(hist duration_mins if enum_gender == 0, fc(orange_red%50) lc(orange_red) ///
 	graphregion(c(white)) legend(order(1 "Male" 2 "Female")) xsize(6.5))
-	graph export "$PathGraphs/gender_duration.png", replace
+	graph export "${Figure}gender_duration.png", replace
 
 
 /*--------------------------------------------------------------------------------------------------------------------------------------
@@ -381,7 +381,7 @@ ds  R_mor_hh_repeat_code R_mor_a2_hhmember_count R_mor_a6_hhmember_age_* R_mor_a
         gen perc5 = r(p5)
 		qui sum `var', d 
 		gen perc50 = r(p50)
-		cap export excel R_mor_enum_name_f  R_mor_block_name R_mor_block_name R_mor_resp_name `var' if (`var' > perc99 | `var' < perc5) & !missing(`var') using "$PathTables/updated_outliers.xlsx", firstrow(varlabels) sheet(`var') sheetreplace  
+		cap export excel R_mor_enum_name_f  R_mor_block_name R_mor_block_name R_mor_resp_name `var' if (`var' > perc99 | `var' < perc5) & !missing(`var') using "${Table}updated_outliers.xlsx", firstrow(varlabels) sheet(`var') sheetreplace  
 		drop perc99
 		drop perc95
 		drop perc10
@@ -430,7 +430,7 @@ foreach var of varlist `r(varlist)' {
 	gsort dontknows
 	label variable _j "Variable"
 	drop id
-	cap export excel using "$PathTables/responses.xlsx", sheet("Don't knows - num") sheetreplace firstrow(varlabels)
+	cap export excel using "${Table}responses.xlsx", sheet("Don't knows - num") sheetreplace firstrow(varlabels)
 	cap drop mo_* ma_* m9_*
 restore
 	
@@ -464,9 +464,9 @@ foreach var of varlist `r(varlist)' {
 	sum refusals, det
 	label variable _j "Variable"
 	drop id
-	cap export excel using "$PathTables/responses.xlsx" if refusals != ., sheet("Refusals - num") sheetreplace firstrow(varlabels)
+	cap export excel using "${Table}responses.xlsx" if refusals != ., sheet("Refusals - num") sheetreplace firstrow(varlabels)
 global Variables8 _j refusals observations
-texsave $Variables8 using "$PathTables/refusals.tex", ///
+texsave $Variables8 using "${Table}refusals.tex", ///
         title("Refusals") replace varlabels frag location(htbp) 
 restore
 
@@ -501,9 +501,9 @@ foreach var of varlist `r(varlist)' {
 	sum others, det
 	label variable _j "Variable"
 	drop id
-	cap export excel using "$PathTables/responses.xlsx" if others != ., sheet("Others") sheetreplace firstrow(varlabels)
+	cap export excel using "${Table}responses.xlsx" if others != ., sheet("Others") sheetreplace firstrow(varlabels)
 global Variables9 _j others observations
-texsave $Variables9 using "$PathTables/others.tex", ///
+texsave $Variables9 using "${Table}others.tex", ///
         title("% of Others marked in questions") replace varlabels frag location(htbp) 
 
 restore
@@ -520,9 +520,9 @@ list `var' if `var' == 1
 gen _`var' = 1 if `var' == 1
 }
 br _R_mor_reason_yes_jjm__77 R_mor_reason_yes_jjm__77 R_mor_oth_reason_yes_jjm  R_mor_reason_no_jjm__77 _R_mor_reason_no_jjm__77  R_mor_oth_reason_no_jjm if _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1 | _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1
-export excel _R_mor_reason_yes_jjm__77 R_mor_reason_yes_jjm__77 R_mor_oth_reason_yes_jjm  R_mor_reason_no_jjm__77 _R_mor_reason_no_jjm__77  R_mor_oth_reason_no_jjm if _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1 | _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1 using "$PathTables/responses.xlsx", sheet("Multiple_choice_others_specify") sheetreplace firstrow(varlabels)  
+export excel _R_mor_reason_yes_jjm__77 R_mor_reason_yes_jjm__77 R_mor_oth_reason_yes_jjm  R_mor_reason_no_jjm__77 _R_mor_reason_no_jjm__77  R_mor_oth_reason_no_jjm if _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1 | _R_mor_reason_no_jjm__77 == 1 | _R_mor_reason_yes_jjm__77 == 1 using "${Table}responses.xlsx", sheet("Multiple_choice_others_specify") sheetreplace firstrow(varlabels)  
 collapse (sum) _*
-export excel using "$PathTables/responses.xlsx", sheet("Multiple_choice_others") sheetreplace firstrow(varlabels)
+export excel using "${Table}responses.xlsx", sheet("Multiple_choice_others") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -793,7 +793,7 @@ label variable total_minor_preg_all "Total minor pregnant"
 
 
 			
-export excel village R_mor_women_child_bear_count_f total_last5preg_women total_notlast5preg_women total_currently_preg  total_childlivingnum total_notlivingchild total_live_births total_stillborn total_childdiedless24 total_childdiedmore24 total_deaths total_miscarriages visitors perm_5years total_minor_preg total_livebirths_all total_deaths_all total_women_all  total_last5preg_women_all total_notlast5preg_women_all total_stillborn_all total_childlivingnum_all total_notlivingchild_all total_childdiedless24_all total_childdiedmore24_all total_currently_preg_all total_miscarriages_all total_visitors_all  perm_5years_all total_minor_preg_all using "$PathTables/Mortality_quality.xlsx", sheet("last_5_preg") sheetreplace firstrow(varlabels)
+export excel village R_mor_women_child_bear_count_f total_last5preg_women total_notlast5preg_women total_currently_preg  total_childlivingnum total_notlivingchild total_live_births total_stillborn total_childdiedless24 total_childdiedmore24 total_deaths total_miscarriages visitors perm_5years total_minor_preg total_livebirths_all total_deaths_all total_women_all  total_last5preg_women_all total_notlast5preg_women_all total_stillborn_all total_childlivingnum_all total_notlivingchild_all total_childdiedless24_all total_childdiedmore24_all total_currently_preg_all total_miscarriages_all total_visitors_all  perm_5years_all total_minor_preg_all using "${Table}Mortality_quality.xlsx", sheet("last_5_preg") sheetreplace firstrow(varlabels)
 
 
 // Stacked bar chart for births and deaths
@@ -806,7 +806,7 @@ graph bar (sum) total_stillborn total_childdiedless24 total_childdiedmore24 ///
     graphregion(color(white)) ///
     legend(order(1 "Stillborn" 2 "<24 Hours" 3 ">24 Hours" 4 "Total Births" 5 "Total Deaths")) ///
     bar(1, color(blue)) bar(2, color(yellow)) bar(3, color(green)) bar(4, color( lavender)) bar(5, color(pink))
-	graph export "$PathGraphs/child_births_deaths.png", replace
+	graph export "${Figure}child_births_deaths.png", replace
 
 
 	// Grouped bar chart for pregnancies and miscarriages
@@ -819,7 +819,7 @@ graph bar (sum) total_last5preg_women total_notlast5preg_women ///
     graphregion(color(white)) ///
     legend(order(1 "Last 5 Years" 2 "Not Last 5 Years" 3 "Currently Pregnant" 4 "Miscarriages")) ///
     bar(1, color(eltgreen)) bar(2, color(stone)) bar(3, color(green)) bar(4, color(pink))
-	graph export "$PathGraphs/women_pregnancies.png", replace
+	graph export "${Figure}women_pregnancies.png", replace
 	
 **Percentages
 gen perc_pregwomen_last5 = (total_last5preg_women/ R_mor_women_child_bear_count_f)*100
@@ -841,7 +841,7 @@ label variable perc_miscarriage "% of miscarraiges"
 label variable perc_minor "% of minor pregnancies"
 
 
-export excel village perc_pregwomen_last5 perc_stillborn perc_child_less24 perc_child_more24 perc_livingchild perc_notlivingchild perc_miscarriage perc_minor using "$PathTables/Mortality_quality.xlsx", sheet("perc_last_5_preg") sheetreplace firstrow(varlabels)
+export excel village perc_pregwomen_last5 perc_stillborn perc_child_less24 perc_child_more24 perc_livingchild perc_notlivingchild perc_miscarriage perc_minor using "${Table}Mortality_quality.xlsx", sheet("perc_last_5_preg") sheetreplace firstrow(varlabels)
 
 restore
 
@@ -998,7 +998,7 @@ label variable HH_with_currentpreg "Households with any  women who are currently
 label variable HH_with_totalmiscarriages "Households with miscarriages"
 label variable R_mor_women_child_bear_count_f "Total child bearing wommen village wise"
 global Variables11 village total HH_with_eligwomen HH_with_last5preg_women HH_with_currentpreg HH_with_notlast5preg_women HH_with_childliving HH_with_notlivingchild HH_with_stillborn HH_with_childdiedless24 HH_with_childdiedmore24 HH_with_totalmiscarriages
-texsave $Variables11 using "$PathTables/WC_table_HHlevel.tex", ///
+texsave $Variables11 using "${Table}WC_table_HHlevel.tex", ///
         title("Village wise HH level stats for pregnancy and child deaths") replace varlabels frag location(htbp) 
 egen total_households_all = total(total)
 egen total_women_all = total(HH_with_eligwomen)
@@ -1024,7 +1024,7 @@ label variable total_currently_preg_all "Total households with women currently p
 		
 		
 		
-export excel village total R_mor_women_child_bear_count_f HH_with_eligwomen HH_with_last5preg_women HH_with_currentpreg HH_with_notlast5preg_women HH_with_childliving HH_with_notlivingchild HH_with_stillborn HH_with_childdiedless24 HH_with_childdiedmore24 HH_with_totalmiscarriages total_households_all total_women_all total_last5preg_women_all total_notlast5preg_women_all total_stillborn_all total_childlivingnum_all total_notlivingchild_all total_childdiedless24_all total_childdiedmore24_all total_currently_preg_all total_miscarriages_all   using "$PathTables/Mortality_quality.xlsx", sheet("HH_level") sheetreplace firstrow(varlabels)
+export excel village total R_mor_women_child_bear_count_f HH_with_eligwomen HH_with_last5preg_women HH_with_currentpreg HH_with_notlast5preg_women HH_with_childliving HH_with_notlivingchild HH_with_stillborn HH_with_childdiedless24 HH_with_childdiedmore24 HH_with_totalmiscarriages total_households_all total_women_all total_last5preg_women_all total_notlast5preg_women_all total_stillborn_all total_childlivingnum_all total_notlivingchild_all total_childdiedless24_all total_childdiedmore24_all total_currently_preg_all total_miscarriages_all   using "${Table}Mortality_quality.xlsx", sheet("HH_level") sheetreplace firstrow(varlabels)
 
 
 
@@ -1039,7 +1039,7 @@ graph bar (sum) HH_with_eligwomen HH_with_last5preg_women HH_with_currentpreg HH
     bar(7, color(cyan)) bar(8, color(magenta)) bar(9, color(brown)) ///
     legend(size(small)) ///
     scheme(s1color) 
-	graph export "$PathGraphs/HH_women_child.png", replace
+	graph export "${Table}HH_women_child.png", replace
 restore
 
 
@@ -1075,10 +1075,10 @@ label variable notconsented "Available HHs who did not consent for the survey"
 label variable screened_out "Total no. of households which were screened-out in census"
 label variable screened_in "Total no. of households which were screened-in in census"
 global Variables12 village total_H HH_available  HH_locked HH_not_3rdavailable R_mor_consent notconsented  screened_out screened_in 
-texsave $Variables12 using "$PathTables/HH_availability_status.tex", ///
+texsave $Variables12 using "${Table}HH_availability_status.tex", ///
         title("Households Availability status") replace varlabels frag location(htbp) 
 		
-export excel village total_H HH_available  HH_locked HH_not_3rdavailable R_mor_consent notconsented  screened_out screened_in using "$PathTables/Mortality_quality.xlsx", sheet("HH_availability_status") sheetreplace firstrow(varlabels)
+export excel village total_H HH_available  HH_locked HH_not_3rdavailable R_mor_consent notconsented  screened_out screened_in using "${Table}Mortality_quality.xlsx", sheet("HH_availability_status") sheetreplace firstrow(varlabels)
 
 
 ********************************************************************************************************************************************
@@ -1109,9 +1109,9 @@ label variable permenetly_left_perc "% of HHs permanently locked"
 label variable not_avail3rd_perc "% of HHs unavailable after 3rd revisit "
 
 global Variables13 village HH_available_perc HH_unavail_perc consented_perc not_consent_perc  screened_out_perc screened_in_perc 
-texsave $Variables13 using "$PathTables/Perc_HH_availability_status.tex", ///
+texsave $Variables13 using "${Table}Perc_HH_availability_status.tex", ///
         title("Percenatges of Households Availability status") replace varlabels frag location(htbp) 
-export excel village HH_available_perc HH_unavail_perc consented_perc not_consent_perc  screened_out_perc screened_in_perc permenetly_left_perc not_avail3rd_perc  using "$PathTables/Mortality_quality.xlsx", sheet("percentages") sheetreplace firstrow(varlabels)
+export excel village HH_available_perc HH_unavail_perc consented_perc not_consent_perc  screened_out_perc screened_in_perc permenetly_left_perc not_avail3rd_perc  using "${Table}Mortality_quality.xlsx", sheet("percentages") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1215,7 +1215,7 @@ label variable total_resp_3rdrevisit2 "eligible women not unavailable after 3rd 
 label variable total_consent "Consented eligible women"
 label variable total_notconsent "Non-Consented eligible women"
 
-export excel using "$PathTables/Mortality_quality.xlsx", sheet("Resp_wise_unavail") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("Resp_wise_unavail") sheetreplace firstrow(varlabels)
 
 
 // Graph with reduced label and text size
@@ -1231,7 +1231,7 @@ graph bar (sum) total_avail_resp total_resp_permanently_left total_resp_temp_una
     bar(7, color(cyan)) ///
 	graphregion(color(white))
 
-graph export "$PathGraphs/Eligible_women_availability.png", replace
+graph export "${Figure}Eligible_women_availability.png", replace
 
 
 
@@ -1265,7 +1265,7 @@ label variable unavail_2ndrevisit "% of resp. unavailable after 2nd-revisit"
 label variable unavail_3rdrevisit1 "% of resp. unavailable after 3rd-revisit (permamently)"
 label variable unavail_3rdrevisit2 "% of resp. unavailable after 3rd-revisit (within 2 days)"
 label variable not_consent_perc "% of available Eligible women not consented"
-export excel village consented_perc  not_consent_perc Resp_available_perc Resp_unavail_perc  unavail_permamnent unavail_temp unavail_1strevisit unavail_2ndrevisit unavail_3rdrevisit1 unavail_3rdrevisit2 using "$PathTables/Mortality_quality.xlsx", sheet("percentages_eligible women") sheetreplace firstrow(varlabels)
+export excel village consented_perc  not_consent_perc Resp_available_perc Resp_unavail_perc  unavail_permamnent unavail_temp unavail_1strevisit unavail_2ndrevisit unavail_3rdrevisit1 unavail_3rdrevisit2 using "${Table}Mortality_quality.xlsx", sheet("percentages_eligible women") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1283,7 +1283,7 @@ collapse (sum) water, by (village R_mor_a12_water_source_prim )
 drop if R_mor_a12_water_source_prim == .
 egen total_water = sum(water), by(village)
 gen percentage = (water / total_water) * 100
-export excel village R_mor_a12_water_source_prim water total_water percentage  using "$PathTables/Mortality_quality.xlsx", sheet("prim_source") sheetreplace firstrow(varlabels)
+export excel village R_mor_a12_water_source_prim water total_water percentage  using "${Table}Mortality_quality.xlsx", sheet("prim_source") sheetreplace firstrow(varlabels)
 restore
 
 **change in primary source
@@ -1296,7 +1296,7 @@ gen perc = (prev/total_prev)*100
 label variable prev "change in primary source" 
 label variable total_prev "total observations"
 label variable perc "percenatges"
-export excel village R_mor_change_primary_source prev total_prev perc  using "$PathTables/Mortality_quality.xlsx", sheet("prim_prev_source") sheetreplace firstrow(varlabels)
+export excel village R_mor_change_primary_source prev total_prev perc  using "${Table}Mortality_quality.xlsx", sheet("prim_prev_source") sheetreplace firstrow(varlabels)
 restore
 
 *If changed, what was the previous primary and current primary source
@@ -1316,7 +1316,7 @@ label variable n_R_mor_change_reason_prim_2  "Current primary source tastes bett
 label variable Yes_change "Yes,Primary source changed"
 label variable R_mor_a12_water_source_prim "Current primary source"
 label variable R_mor_previous_primary "Previous primary source"
-export excel village Yes_change R_mor_a12_water_source_prim R_mor_previous_primary n_R_mor_change_reason_prim_2  using "$PathTables/Mortality_quality.xlsx", sheet("change_prev_source") sheetreplace firstrow(varlabels)
+export excel village Yes_change R_mor_a12_water_source_prim R_mor_previous_primary n_R_mor_change_reason_prim_2  using "${Table}Mortality_quality.xlsx", sheet("change_prev_source") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1340,7 +1340,7 @@ label variable R_mor_a13_water_source_sec_8 "Private surface well"
 label variable R_mor_a13_water_source_sec_9 "Borewell (electric)"
 label variable R_mor_a13_water_source_sec_10 "HH tap connections exlcude JJM"
 label variable R_mor_a13_water_source_sec__77 "others"
-export excel using "$PathTables/Mortality_quality.xlsx", sheet("sec_source_dist") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("sec_source_dist") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1358,7 +1358,7 @@ label variable R_mor_a13_water_sec_yn "Use secondary source"
 label variable sec "total no. of Yes or No"
 label variable total_water "total observations"
 label variable percentage "percentage"
-export excel village R_mor_a13_water_sec_yn sec total_water percentage  using "$PathTables/Mortality_quality.xlsx", sheet("sec_source") sheetreplace firstrow(varlabels)
+export excel village R_mor_a13_water_sec_yn sec total_water percentage  using "${Table}Mortality_quality.xlsx", sheet("sec_source") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1373,7 +1373,7 @@ label variable R_mor_change_secondary_source "Change in secondary source"
 label variable change_sec "No. of Yes/No" 
 label variable total_sec "total observations"
 label variable perc_sec "percenatges"
-export excel village R_mor_change_secondary_source change_sec total_sec perc_sec using "$PathTables/Mortality_quality.xlsx", sheet("change_sec_source") sheetreplace firstrow(varlabels)
+export excel village R_mor_change_secondary_source change_sec total_sec perc_sec using "${Table}Mortality_quality.xlsx", sheet("change_sec_source") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1389,7 +1389,7 @@ label variable R_mor_change_reason_secondary_1 "current source is not broken and
 label variable Yes_change "Yes,Secondary source changed"
 label variable R_mor_previous_secondary "Gram panchayat/othecommmunity standpipe"
 label variable R_mor_a13_water_source_sec_4 "Manual handpump"
-export excel village R_mor_a13_water_source_sec_4 Yes_change R_mor_previous_secondary R_mor_change_reason_secondary_1 using "$PathTables/Mortality_quality.xlsx", sheet("change_sec_source_reason") sheetreplace firstrow(varlabels)
+export excel village R_mor_a13_water_source_sec_4 Yes_change R_mor_previous_secondary R_mor_change_reason_secondary_1 using "${Table}Mortality_quality.xlsx", sheet("change_sec_source_reason") sheetreplace firstrow(varlabels)
 restore
 
 **JJM tap
@@ -1404,7 +1404,7 @@ label variable jjm "Yes/No total observations"
 label variable R_mor_a18_jjm_drinking "Use JJM for drinking"
 label variable total_H "Total households"
 label variable percentage "percenatges"
-export excel village R_mor_a18_jjm_drinking jjm total_H percentage using "$PathTables/Mortality_quality.xlsx", sheet("JJM") sheetreplace firstrow(varlabels)
+export excel village R_mor_a18_jjm_drinking jjm total_H percentage using "${Table}Mortality_quality.xlsx", sheet("JJM") sheetreplace firstrow(varlabels)
 restore
 
 
@@ -1421,7 +1421,7 @@ label variable R_mor_reason_yes_jjm_7 "JJM is not muddy or smelly"
 label variable R_mor_reason_yes_jjm_8 "JJM is easily accessible"
 label variable R_mor_reason_yes_jjm__77 "Other"
 label variable R_mor_a18_jjm_drinking "Use JJM for drinking"
-export excel using "$PathTables/Mortality_quality.xlsx", sheet("JJM_yesreason") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("JJM_yesreason") sheetreplace firstrow(varlabels)
 graph bar R_mor_reason_yes_jjm_1 R_mor_reason_yes_jjm_2 R_mor_reason_yes_jjm_3 ///
 	R_mor_reason_yes_jjm_4 R_mor_reason_yes_jjm_5 R_mor_reason_yes_jjm_6 ///
 	R_mor_reason_yes_jjm_7 R_mor_reason_yes_jjm_8 R_mor_reason_yes_jjm__77, ///
@@ -1440,7 +1440,7 @@ graph bar R_mor_reason_yes_jjm_1 R_mor_reason_yes_jjm_2 R_mor_reason_yes_jjm_3 /
 	       label(7 "JJM is not muddy or smelly") ///
 	       label(8 "JJM is easily accessible") ///
 	       label(9 "Other"))	
-graph export "$PathGraphs\Reasons_for_using_JJM.png", as(png) replace		   
+graph export "${Figure}Reasons_for_using_JJM.png", as(png) replace		   
 restore
 
 
@@ -1460,7 +1460,7 @@ label variable R_mor_reason_no_jjm_7 "JJM is muddy or smelly"
 label variable R_mor_reason_no_jjm_8 "JJM is not easily accessible"
 label variable R_mor_reason_no_jjm__77 "Other"
 label variable R_mor_a18_jjm_drinking "Use JJM for drinking"
-export excel using "$PathTables/Mortality_quality.xlsx", sheet("JJM_noreason") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("JJM_noreason") sheetreplace firstrow(varlabels)
 restore
 
 

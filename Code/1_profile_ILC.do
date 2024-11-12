@@ -266,6 +266,9 @@ do "${Do_pilot}4_Analysis.do"
 * (5) Mortality data cleaning
 do "${Do_pilot}1_1_D_Mortality_cleaning.do"
 
+*(6) Endline census Individual dataset creation
+do "${code}3_X_Data_Creation_Endline_Individual_level.do"
+
 ********************************
 * Erasing unccessary databases *
 ********************************

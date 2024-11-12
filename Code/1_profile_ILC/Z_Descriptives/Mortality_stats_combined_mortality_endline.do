@@ -323,7 +323,7 @@ so we have to use mortality survey numbers for these 4 villages and append it to
 
 //this dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do" This dataset only contains main endline census data like no revisit observations 
 //IMP NOTE: Please note that there is no need to combine revisit dataset with main endline census data here because there were no child deaths found in revisit as a result long datasets for child death is empty 
-use "${DataFinal}1_1_Endline_Mortality_19_20.dta", clear
+use "${DataFinal}1_10_Endline_Census_Mortality_final_cleaned.dta", clear
 
 
 //we want to find the number of kids that are stillborn and they need to be removed from this data so I am attching this variable with wide endline dataset 
@@ -332,7 +332,7 @@ preserve
 
 //We are using final merged dataset between main endline census and revisit dataset
 //this gets created in the do file - "5_1_Endline_main_revisit_merge_final" 
-use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
+use "${Intermediate}1_10_Endline_final_CBW_level_merged_dataset_cleaned.dta", clear
 
 //we are dropping these entries because they are not applicable for child bearing women  
 drop if comb_resp_avail_comb == .
@@ -361,7 +361,7 @@ save "${DataTemp}Reshaped_wide_CBW_data.dta", replace
 
 
 //merging these two wide datasets 
-use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+use "${Intermediate}Endline_HH_level_merged_dataset.dta", clear 
 
 
 merge 1:1 unique_id using "${DataTemp}Reshaped_wide_CBW_data.dta"
@@ -588,7 +588,7 @@ Objective:
 
 //Archi - This dataset gets created in the R script- "i-h2o-india\Code\1_profile_ILC\3_1_Endline_datasets_merge.R"
 
-use "${DataFinal}Endline_HH_level_merged_dataset_final.dta", clear 
+use "${Intermediate}Endline_HH_level_merged_dataset.dta", clear 
 
 //Archi- Please note that these observations have also been removed in main endline and baseline datasets so we must drop here 
 
@@ -627,7 +627,7 @@ Screened households are those where in baseline census pergnant women or U5 chil
 **************************************************************/
 
 //to find screened IDs
-use  "${DataPre}1_1_Census_cleaned.dta", clear
+use  "${DataFinal}1_1_Census_cleaned.dta", clear
 
  drop if R_Cen_consent != 1
 drop if unique_id=="30501107052"
@@ -702,7 +702,7 @@ drop if R_Cen_u5_child_pre_ == "" //this step makes sure that we are only keepin
  
 preserve
 //this dataset gets created in the file- "GitHub\i-h2o-india\Code\1_profile_ILC\1_8_A_Endline_cleaning_HFC_Data creation.do"
-use "${DataTemp}U5_Child_23_24_part1.dta", clear
+use "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", clear
 drop if comb_child_comb_name_label == ""
 br comb_child_breastfeeding comb_child_breastfed_num comb_child_age unique_id comb_child_comb_name_label  if comb_child_age > 5 & comb_child_age != .
 *TROUBLESHOOTING
@@ -735,7 +735,8 @@ drop match
 
 //importing new member roster to get ages of new child 
 preserve
-use "${Intermediate}Endline_New_member_roster_dataset_final.dta", clear
+use "${Intermediate}1_10_Endline_final_roster_merged_census_New_cleaned.dta", clear
+stop 
 keep if comb_hhmember_age < 5
 keep unique_id comb_hhmember_name comb_hhmember_age 
 rename comb_hhmember_name R_Cen_u5_child_pre_
@@ -879,7 +880,7 @@ OBJECTIVE: In endline census module we have an opion to mark those U5 child from
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${Intermediate}Endline_Child_level_merged_dataset_final.dta", clear
+use "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", clear
 
 
 gen exclude_U5_BL = 0
@@ -935,7 +936,7 @@ Objective: We need to extract variables  for those 4 villages where survey was c
 
 //This directory is personal- You can find the path to this in ILC India directory file 
 
-import excel "${Personal}Mortality_quality.xlsx", sheet("Resp_wise_unavail") firstrow clear
+import excel "${Table}Mortality_quality.xlsx", sheet("Resp_wise_unavail") firstrow clear
 
 rename Totalavailableeligiblewomen total_avail_CBW
 rename EnumeratortofillupVillageN village
@@ -946,7 +947,7 @@ save "${DataTemp}Mortality_4_vill_CBW_avail.dta", replace
 
 
 //this sheet has main mortality numebrs 
-import excel "${Personal}Mortality_quality.xlsx", sheet("last_5_preg") firstrow clear
+import excel "${Table}Mortality_quality.xlsx", sheet("last_5_preg") firstrow clear
 
 
 rename Totalchildbearingwomen Total_CBW
@@ -970,7 +971,7 @@ save "${DataTemp}Mortality_quality_last_5_preg.dta", replace
 
 
 //importing in HH availability infor for mortality survey 
-import excel "${Personal}Mortality_quality.xlsx", sheet("HH_availability_status") firstrow clear
+import excel "${Table}Mortality_quality.xlsx", sheet("HH_availability_status") firstrow clear
 
 keep EnumeratortofillupVillageN Totalhouseholdspresent Totalnoofavailablehousehold
 
@@ -1082,7 +1083,7 @@ OBJECTIVE: In endline census module we have an opion to mark those women from ba
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
+use  "${Intermediate}1_10_Endline_final_CBW_level_merged_dataset_cleaned.dta", clear
 drop if comb_resp_avail_comb == .
 
 
@@ -1120,7 +1121,7 @@ IMPORTING ENDLINE LONG DATASET FOR CHILD BEARING WOMEN
 //this dataset gets created in "i-h2o-india\Code\1_profile_ILC\5_1_Endline_main_revisit_merge_final.do"
 
 //We are using final merged dataset between main endline census and revisit dataset
-use "${Intermediate}Endline_CBW_level_merged_dataset_final.dta", clear
+use  "${Intermediate}1_10_Endline_final_CBW_level_merged_dataset_cleaned.dta", clear
 
 drop if comb_resp_avail_comb == .
 
@@ -1259,7 +1260,7 @@ texsave $Variables using "${Table}Mortality_Numbers_village_wise.tex", ///
 		
 		
 
-export excel using "${Personal}Mortality_quality.xlsx", sheet("aggregate_numbers_village_wise") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("aggregate_numbers_village_wise") sheetreplace firstrow(varlabels)
 
 restore
 
@@ -1379,7 +1380,7 @@ texsave $Variables using "${Table}Mortality_Numbers_all_villages.tex", ///
 
 
 
-export excel using "${Personal}Mortality_quality.xlsx", sheet("aggregate_numbers") sheetreplace firstrow(varlabels)
+export excel using "${Table}Mortality_quality.xlsx", sheet("aggregate_numbers") sheetreplace firstrow(varlabels)
 
 
 restore
