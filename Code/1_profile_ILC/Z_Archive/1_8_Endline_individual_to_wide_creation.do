@@ -10,8 +10,14 @@
 *=========================================================================*
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
+	
 
-clear all               
+/*
+Pupose: This  do file creates an endline census HH level dataset by using multiple indivodual datasets, reshaping them and then combining them into one but as of now we don't need this because we are tackling individual datasets separately and HH level datasets separately. That is the reason, we are commenting out this do file
+*/
+
+
+/*clear all               
 set seed 758235657 // Just in case
 
 cap program drop key_creation
@@ -773,3 +779,5 @@ erase "${DataTemp}Requested_long_backcheck2.dta"
 
 drop R_E_a1_resp_name R_E_a3_hhmember_name_1 R_E_a3_hhmember_name_2 R_E_a3_hhmember_name_3 R_E_a3_hhmember_name_4 R_E_a3_hhmember_name_5 R_E_a3_hhmember_name_6 R_E_a3_hhmember_name_7 R_E_a3_hhmember_name_8 R_E_a3_hhmember_name_9 R_E_a3_hhmember_name_10 R_E_a3_hhmember_name_11 R_E_a3_hhmember_name_12 R_E_namefromearlier_1 R_E_namefromearlier_2 R_E_namefromearlier_3 R_E_namefromearlier_4 R_E_namefromearlier_5 R_E_namefromearlier_6 R_E_namefromearlier_7 R_E_namefromearlier_8 R_E_namefromearlier_9 R_E_namefromearlier_10 R_E_namefromearlier_11 R_E_namefromearlier_12 
 save "${DataDeid}1_1_Endline_cleaned_noid.dta", replace
+
+*/

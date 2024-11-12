@@ -1483,6 +1483,8 @@ rename `var' R_E_`var'
 }
 rename R_E_unique_id  unique_id
 rename R_E_IN_unique_id IN_unique_id
+rename R_E_comb_child_caregiver_present R_E_comb_child_careg_present  //renaming this because this is too long
+
 
 //Making naming of new generated variables consistent across endline individual and HH level dataset
 rename R_E_C_entry_type C_E_entry_type
@@ -1496,7 +1498,13 @@ rename R_E_comb_child_comb_name_label C_E_hhmember_name  //renaming this variabl
 merge 1:1 unique_id C_E_hhmember_name using "${Intermediate}1_10_Endline_final_roster_merged_census_New_cleaned.dta", keepusing (unique_id C_E_hhmember_name R_E_comb_hhmember_age R_E_comb_hhmember_gender) gen (match) keep (1 3)
 rename C_E_hhmember_name R_E_comb_child_comb_name_label //reverting it to its original name 
 drop match
-save "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", replace  //Cl notifies clean here 
+
+//Here 888 represents - Child is still being breastfed (mother's milk) but we are replacing 888 with 889 because 888 was also used as a code for permanent filter in WASH section so to avoid any confusion, I am replacing 888 with 889 for this option 
+replace R_E_comb_child_breastfed_num = 889 if  R_E_comb_child_breastfed_num == 888
+label define R_E_comb_child_breastfed_num_x 1 "Months" 2 "Days" 889 "Child is still being breastfed (mother's milk)" 999 "Don't know"
+label values R_E_comb_child_breastfed_num  R_E_comb_child_breastfed_num_x
+
+save "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", replace  
 
 ********************************************************************************
   /*****************************************************************
@@ -1707,7 +1715,7 @@ SECTION 6
 use "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", clear
 gen C_E_dataset_type = "Child"
 append using "${Intermediate}1_10_Endline_final_roster_merged_census_New_cleaned.dta"
-replace C_E_dataset_type = "Roster" if  R_E_comb_name_from_earlier_hh != "" |  R_E_comb_hhmember_name != ""
+replace C_E_dataset_type = "Roster" if  C_E_hhmember_name != ""
 append using "${Intermediate}1_10_Endline_final_CBW_level_merged_dataset_cleaned.dta"
 replace C_E_dataset_type = "CBW" if  R_E_comb_name_comb_woman_earlier != ""
 
@@ -1738,7 +1746,7 @@ foreach var of varlist * {
         drop `var'
     }
 }
-keep if R_E_comb_child_caregiver_present == 1
+keep if R_E_comb_child_careg_present == 1
 save "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", replace
 
 //creating consented women dataset for analysis 
@@ -2302,7 +2310,6 @@ rename R_Cen_get_u5_status_  R_Cen_comb_combchild_status
 
 **renaming availability variable 
 rename R_Cen_child_caregiver_present_ R_Cen_comb_child_careg_present
-rename R_E_comb_child_caregiver_present R_E_comb_child_careg_present
 
 **renaming breatsfeeding variables
 rename R_Cen_child_breastfeeding_ R_Cen_comb_child_breastfeeding
@@ -2319,9 +2326,9 @@ rename  R_Cen_a28_child_vomit_week_  R_Cen_comb_child_vomit_wk
 rename  R_Cen_a28_child_vomit_2week_  R_Cen_comb_child_vomit_2wk
 
 **renaming diarrhea variables 
-rename R_Cen_a29_child_diarr_day_  R_Cen_comb_child_care_dia_day
-rename  R_Cen_a29_child_diarr_week_  R_Cen_comb_child_care_dia_wk
-rename  R_Cen_a29_child_diarr_2week_  R_Cen_comb_child_care_dia_2wk
+rename R_Cen_a29_child_diarr_day_  R_Cen_comb_child_diarr_day
+rename  R_Cen_a29_child_diarr_week_  R_Cen_comb_child_diarr_wk
+rename  R_Cen_a29_child_diarr_2week_  R_Cen_comb_child_diarr_2wk
 rename  R_Cen_child_diarr_week_num_   R_Cen_comb_child_diarr_wk_num
 rename R_Cen_child_diarr_2week_num_   R_Cen_comb_child_diarr_2wk_num
 rename R_Cen_a30_child_diarr_freq_  R_Cen_comb_child_diarr_freq
@@ -2350,7 +2357,7 @@ Recategorising answer choices for better comparison
 **recoding -99 or 99 to 999; 98 to -98; 77 to -77; No- 0 and Yes - 1
 
 //Treating categorical variables 
-ds R_Cen_comb_child_breastfeeding R_E_comb_child_breastfeeding R_Cen_comb_child_cuts_day R_Cen_comb_child_cuts_wk R_Cen_comb_child_cuts_2wk R_E_comb_child_cuts_day R_E_comb_child_cuts_wk R_E_comb_child_cuts_2wk R_Cen_comb_child_vomit_day R_Cen_comb_child_vomit_wk R_Cen_comb_child_vomit_2wk R_E_comb_child_vomit_day R_E_comb_child_vomit_wk R_E_comb_child_vomit_2wk R_Cen_comb_child_care_dia_day R_Cen_comb_child_care_dia_wk R_Cen_comb_child_care_dia_2wk R_E_comb_child_care_dia_day R_E_comb_child_care_dia_wk R_E_comb_child_care_dia_2wk R_E_comb_child_diarr_day R_E_comb_child_diarr_wk R_E_comb_child_diarr_2wk R_Cen_comb_child_stool_24h R_Cen_comb_child_stool_yest R_Cen_comb_child_stool_wk R_Cen_comb_child_stool_2wk R_Cen_comb_child_blood_day R_Cen_comb_child_blood_wk R_Cen_comb_child_blood_2wk R_E_comb_child_stool_24h R_E_comb_child_stool_yest R_E_comb_child_stool_wk R_E_comb_child_stool_2wk R_E_comb_child_blood_day R_E_comb_child_blood_wk R_E_comb_child_blood_2wk
+ds R_Cen_comb_child_breastfeeding R_E_comb_child_breastfeeding R_Cen_comb_child_cuts_day R_Cen_comb_child_cuts_wk R_Cen_comb_child_cuts_2wk R_E_comb_child_cuts_day R_E_comb_child_cuts_wk R_E_comb_child_cuts_2wk R_Cen_comb_child_vomit_day R_Cen_comb_child_vomit_wk R_Cen_comb_child_vomit_2wk R_E_comb_child_vomit_day R_E_comb_child_vomit_wk R_E_comb_child_vomit_2wk R_Cen_comb_child_diarr_day R_Cen_comb_child_diarr_wk R_Cen_comb_child_diarr_2wk R_E_comb_child_care_dia_day R_E_comb_child_care_dia_wk R_E_comb_child_care_dia_2wk R_E_comb_child_diarr_day R_E_comb_child_diarr_wk R_E_comb_child_diarr_2wk R_Cen_comb_child_stool_24h R_Cen_comb_child_stool_yest R_Cen_comb_child_stool_wk R_Cen_comb_child_stool_2wk R_Cen_comb_child_blood_day R_Cen_comb_child_blood_wk R_Cen_comb_child_blood_2wk R_E_comb_child_stool_24h R_E_comb_child_stool_yest R_E_comb_child_stool_wk R_E_comb_child_stool_2wk R_E_comb_child_blood_day R_E_comb_child_blood_wk R_E_comb_child_blood_2wk
 
 foreach var of varlist `r(varlist)'{
 replace `var' = 999 if `var' == 99 |  `var' == -99
@@ -2368,13 +2375,21 @@ replace `var' = 999 if `var' == 99 |  `var' == -99
 replace `var' = -98 if `var' == 98 
 replace `var' = -77 if `var' == 77
 }
- 
+
+//Breastfeeding question recoding
+ ***************************************
 //Here 888 represents - Child is still being breastfed (mother's milk) but we are replacing 888 with 889 because 888 was also used as a code for permanent filter in WASH section so to avoid any confusion, I am replacing 888 with 889 for this option 
 replace R_Cen_comb_child_breastfed_num  = 889 if R_Cen_comb_child_breastfed_num == 888 
-replace R_E_comb_child_breastfed_num = 889 if  R_E_comb_child_breastfed_num == 888
-**we are only re-labeling this because in baseline, this variable was an integer and in endline this is a categorical variable. 
-label define R_E_comb_child_breastfed_num_x 1 "Months" 2 "Days" 889 "Child is still being breastfed (mother's milk)" 999 "Don't know"
-label values R_E_comb_child_breastfed_num  R_E_comb_child_breastfed_num_x
+*replace R_E_comb_child_breastfed_num = 889 if  R_E_comb_child_breastfed_num == 888   //already replaced above during child data creation
+
+//to create a similar variable to baseline for breastfeeding we need to create a variable containing number of months and Child is still being breastfed (mother's milk) and dont knows
+gen C_E_comb_child_breastfed_num = .
+replace C_E_comb_child_breastfed_num = R_E_comb_child_breastfed_month if R_E_comb_child_breastfed_num == 1
+replace C_E_comb_child_breastfed_num = R_E_comb_child_breastfed_num if R_E_comb_child_breastfed_num == 889
+replace C_E_comb_child_breastfed_num = R_E_comb_child_breastfed_num if R_E_comb_child_breastfed_num == 999
+**Note: The difference between  C_E_comb_child_breastfed_num and R_Cen_comb_child_breastfed_num is that, the endline is a categorical variable provding options in terms of days, months, dont kno, child still breatfed but the baseline was an integer variable only asking questions in months and providing note on doing specific coding of lets say 889 
+label var  C_E_comb_child_breastfed_num   "A45.1) Up to which months was this child exclusively breastfed?  (answer in months): "
+label var  R_Cen_comb_child_breastfed_num   "A45.1) Up to which months was this child exclusively breastfed?  (answer in months): "
 label var R_Cen_comb_u1age  "How old is Under 1 year old child in months/days?"
 label var C_Cen_reshape "Similar to index/order of the entry in the roster"
 
@@ -2404,8 +2419,110 @@ Options in Endline Census:
 [-77] Other , please specify*/
 
 /*-----------------------------------------------------------------------------------------
+Creating variables for analysis 
+------------------------------------------------------------------------------------------*/
+**********************
+*A. Endline
+**********************
+* Creating diarrhea vars
+gen     C_E_diarrhea_prev_child_1day=0
+replace C_E_diarrhea_prev_child_1day=1  if R_E_comb_child_diarr_day  ==1 
+gen     C_E_diarrhea_prev_child_1week=0
+replace C_E_diarrhea_prev_child_1week=1  if (R_E_comb_child_diarr_day ==1 | R_E_comb_child_diarr_wk ==1)
+gen     C_E_diarrhea_prev_child_2weeks=0
+replace C_E_diarrhea_prev_child_2weeks=1 if (R_E_comb_child_diarr_day ==1 | R_E_comb_child_diarr_wk ==1 | R_E_comb_child_diarr_2wk ==1) 
+
+*Using loose & watery stool vars
+gen     C_E_loosestool_child_1day=0
+replace C_E_loosestool_child_1day=1  if R_E_comb_child_stool_24h ==1 | R_E_comb_child_stool_yest ==1
+gen     C_E_loosestool_child_1week=0
+replace C_E_loosestool_child_1week=1 if (R_E_comb_child_stool_24h ==1 | R_E_comb_child_stool_yest ==1 | R_E_comb_child_stool_wk ==1) 
+gen     C_E_loosestool_child_2weeks=0
+replace C_E_loosestool_child_2weeks=1 if (R_E_comb_child_stool_24h ==1 | R_E_comb_child_stool_yest ==1 | R_E_comb_child_stool_wk ==1 | R_E_comb_child_stool_2wk ==1)
+
+* Cut
+gen     C_E_cuts_child_1day=0
+replace C_E_cuts_child_1day=1  if R_E_comb_child_cuts_day ==1
+gen     C_E_cuts_child_1week=0
+replace C_E_cuts_child_1week=1 if (R_E_comb_child_cuts_day ==1 | R_E_comb_child_cuts_wk ==1) 
+gen     C_E_cuts_child_2weeks=0
+replace C_E_cuts_child_2weeks=1 if (R_E_comb_child_cuts_day ==1 | R_E_comb_child_cuts_wk ==1 | R_E_comb_child_cuts_2wk ==1) 
+
+*generating new vars using both vars for diarrhea
+gen    C_E_diarrhea_comb_U5_1day=0
+replace C_E_diarrhea_comb_U5_1day=1 if C_E_diarrhea_prev_child_1day==1 | C_E_loosestool_child_1day==1
+
+gen    C_E_diarrhea_comb_U5_1week=0
+replace C_E_diarrhea_comb_U5_1week=1 if C_E_diarrhea_prev_child_1week==1 | C_E_loosestool_child_1week==1
+
+gen    C_E_diarrhea_comb_U5_2weeks=0
+replace C_E_diarrhea_comb_U5_2weeks=1 if C_E_diarrhea_prev_child_2weeks==1 | C_E_loosestool_child_2weeks==1
+
+label var C_E_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
+label var C_E_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
+label var C_E_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
+label var C_E_loosestool_child_1day "Loose stool- U5 (1 day)" 
+label var C_E_loosestool_child_1week "Loose stool- U5 (1 week)" 
+label var C_E_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+
+label var C_E_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
+label var C_E_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
+label var C_E_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
+
+**********************
+*B. Baseline
+**********************
+
+* Creating diarrhea vars
+gen     C_Cen_diarrhea_prev_child_1day=0
+replace C_Cen_diarrhea_prev_child_1day=1  if R_Cen_comb_child_diarr_day  ==1 
+gen     C_Cen_diarrhea_prev_child_1week=0
+replace C_Cen_diarrhea_prev_child_1week=1  if (R_Cen_comb_child_diarr_day ==1 | R_Cen_comb_child_diarr_wk ==1)
+gen     C_Cen_diarrhea_prev_child_2weeks=0
+replace C_Cen_diarrhea_prev_child_2weeks=1 if (R_Cen_comb_child_diarr_day ==1 | R_Cen_comb_child_diarr_wk ==1 | R_Cen_comb_child_diarr_2wk ==1) 
+
+*Using loose & watery stool vars
+gen     C_Cen_loosestool_child_1day=0
+replace C_Cen_loosestool_child_1day=1  if R_Cen_comb_child_stool_24h ==1 | R_Cen_comb_child_stool_yest ==1
+gen     C_Cen_loosestool_child_1week=0
+replace C_Cen_loosestool_child_1week=1 if (R_Cen_comb_child_stool_24h ==1 | R_Cen_comb_child_stool_yest ==1 | R_Cen_comb_child_stool_wk ==1) 
+gen     C_Cen_loosestool_child_2weeks=0
+replace C_Cen_loosestool_child_2weeks=1 if (R_Cen_comb_child_stool_24h ==1 | R_Cen_comb_child_stool_yest ==1 | R_Cen_comb_child_stool_wk ==1 | R_Cen_comb_child_stool_2wk ==1)
+
+* Cut
+gen     C_Cen_cuts_child_1day=0
+replace C_Cen_cuts_child_1day=1  if R_Cen_comb_child_cuts_day  ==1
+gen     C_Cen_cuts_child_1week=0
+replace C_Cen_cuts_child_1week=1 if (R_Cen_comb_child_cuts_day ==1 | R_Cen_comb_child_cuts_wk  ==1) 
+gen     C_Cen_cuts_child_2weeks=0
+replace C_Cen_cuts_child_2weeks=1 if (R_Cen_comb_child_cuts_day ==1 | R_Cen_comb_child_cuts_wk  ==1 | R_Cen_comb_child_cuts_2wk ==1) 
+
+*generating new vars using both vars for diarrhea
+gen    C_Cen_diarrhea_comb_U5_1day=0
+replace C_Cen_diarrhea_comb_U5_1day=1 if C_Cen_diarrhea_prev_child_1day==1 | C_Cen_loosestool_child_1day==1
+
+gen    C_Cen_diarrhea_comb_U5_1week=0
+replace C_Cen_diarrhea_comb_U5_1week=1 if C_Cen_diarrhea_prev_child_1week==1 | C_Cen_loosestool_child_1week==1
+
+gen    C_Cen_diarrhea_comb_U5_2weeks=0
+replace C_Cen_diarrhea_comb_U5_2weeks=1 if C_Cen_diarrhea_prev_child_2weeks==1 | C_Cen_loosestool_child_2weeks==1
+
+label var C_Cen_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
+label var C_Cen_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
+label var C_Cen_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
+label var C_Cen_loosestool_child_1day "Loose stool- U5 (1 day)" 
+label var C_Cen_loosestool_child_1week "Loose stool- U5 (1 week)" 
+label var C_Cen_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+
+label var C_Cen_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
+label var C_Cen_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
+label var C_Cen_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
+
+
+/*-----------------------------------------------------------------------------------------
 Dropping unecesary variables 
 ------------------------------------------------------------------------------------------*/
+
 drop _merge dup_HHID dup_UID match R_Cen_hh_member_names_count R_E_Village
 save "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", replace
 

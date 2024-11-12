@@ -10,6 +10,8 @@
 	* use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 ****** Output data : 
 ****** Language: English
+****** Note on Prefixes used: R_Cen_: Raw Baseline Census Variable; R_E_cen_: Raw Endline Census Variable (census members); R_E_n_: Raw Endline Census Variable (new members); comb_: ; C_Cen_: Coded/New Baseline Census Variable; C_E_: Coded/New Endline Census Variable; C_: Coded/New variables for both Basleine and Endline Census
+
 *=========================================================================*
 ** In this do file: 
 	* This do file exports..... Cleaned data for Endline survey
@@ -30,149 +32,31 @@ save "${DataTemp}Baseline_ChildLevel.dta", replace
  /*--------------------------------------------
     Section A.1: Diarrhea analysis (Cleaning) - This section cam be moved earlier once finalized
  --------------------------------------------*/
-* Cleaning of "${DataTemp}U5_Child_23_24.dta" for the analysis
 
-
-
-/*
-------------------------------------------------------------------------------------------------
-IMP NOTE FOR DATASET CHANGE : 
--------------------------------------------------------------------------------------------------
-we are using the below dataset "${DataTemp}U5_Child_23_24_part1.dta"  for analysis now  instead of "${DataFinal}1_1_Endline_U5_Child_23_24.dta" because we are creating final versions of the dataset as a result we are removing duplicate datasets. The only difference between ${DataFinal}1_1_Endline_U5_Child_23_24.dta and use "${DataTemp}U5_Child_23_24_part1.dta is that first one only contains those values where the caregiver were available and the second one contains alll the values where caregiver was or wasn't available. We should be using second type of dataset for any analysis because we can just drop the irrelevant entries that are not applicable for our use and this way we will only be using one version of dataset. */
-
-use "${DataTemp}U5_Child_23_24_part1.dta", clear  //endline main child dataset (both new and census child) 
-drop if comb_child_comb_name_label == ""
-drop if comb_child_caregiver_present == .   //this commands gets rid of unecessary entry that might have been created in the process of loop. 
-cap drop _merge
-
-
-/*we need to certain opeartions on this dataset because we need variables like Age for analysis so we need to get this age variable for some children. 
-
-🧐 WHY THE AGE VARIABLE IS PRESENT IN A DIFFERENT DATASET?
-
-The reason that is the case is because when creating individual datasets survey cto divides the dataset based on the loops so for eg- age of the new children were asked in the loop of new roster members which is at the beginning but the questions about new child's health were asked in a different loop so survey cto divided these two datasets now to get the age variable for new children we would need to get it from where the new member roster data was present which is ${DataTemp}Requested_long_backcheck1.dta.  We only need to get this age variable for new child and not the census child because ages of the census child were asked within this loop itself so we are on the safe side for that. Cen type = 4 means census entry and 5 means new entry. To tabulate census and new entries just tab Cen_type variable 
-To do -  add age variable, remove unavailable cases, assign treatment status 
-*/
-
-/* WHY ARE CREATING NEW UNIQUE IDENTIFIERS? 
-So, in the individual datasets such as  child dataset we don't have any "unique" keys as such because unique_id variable in our dataset is assigned at the household level. So, at one household we can have more than 1 U5 children right so they will both share the same unique_id because unique_id is at the housheold level. So, to create any identifiers for child we need to see what makes every row unique. In our case combination of two variables: key  and comb_child_comb_name_label(child name) makes it unique so the command below is to check for that. If there are 0 duplicates, we can treat this as a unique identifier across other datasets in this case new member roster dataset. 
-
-There are 5 ways to look for duplicates in child names - 
-
-1. Way 1: Finding duplicates by bysorting by key and then wherever keys are repeated manually check if child names are same  (Most Preferred and most accurate)
-
-2. Way 2:  Finding duplicates using key and child name. If they are no duplicats that means at each key, we have unique child names. (Exactly similar)
-
-3. Way 3: Finding duplicates using key and child name. If they are no duplicats that means at each key, we have unique child names. (Exactly similar)
-
-4. Way 4: This uses basic duplicate command but is not very hand as if there are any duplicates this doens't allow you to browse and check specific entreis 
-
-5. Way 5: Fuzzy match- Create a unique idnetifier and then use reclink to check if duplicates can be found in strings that might have spelling mistakes. This is not the most perfect way because the first step is to create unique idnetifiers which is what we are looking for so it acts as a good verification check but not the solution to the orgininal problem 
-*/
-
-// WAY 1
-bysort key: gen dup_key = cond(_N ==1,0,_n)	
-br comb_child_comb_name_label dup_key if dup_key != 0
-
-//WAY 2
-duplicates tag key comb_child_comb_name_label, gen(dup_HH)
-tab dup_HH
-
-//WAY 3
-bysort key comb_child_comb_name_label : gen dup_HHID = cond(_N==1,0,_n)
-tab dup_HHID
-
-//WAY 4
-unique key comb_child_comb_name_label
-
-//WAY 5 	
-/*
-Check with Akito- 
-Lets do a fuzzy match just to be sure. 
-	
-preserve
-use "${DataTemp}U5_Child_23_24_part1.dta", clear 
-drop if comb_child_comb_name_label == ""
-unique key comb_child_comb_name_label
-keep comb_child_comb_name_label comb_child_comb_caregiver_label key comb_child_caregiver_present
-drop if comb_child_caregiver_present == .	
-gen unique_identifier = _n
-clonevar final_resp_name = comb_child_comb_name_label 
-clonevar  unique_identifier_A =  unique_identifier
-replace comb_child_comb_name_label  = lower(comb_child_comb_name_label )
-save "${DataTemp}Child_Fuzzy_1.dta", replace
-restore
-
-preserve
-use "${DataTemp}U5_Child_23_24_part1.dta", clear 
-drop if comb_child_comb_name_label == ""
-unique key comb_child_comb_name_label
-keep comb_child_comb_name_label comb_child_comb_caregiver_label key comb_child_caregiver_present
-drop if comb_child_caregiver_present == .	
-gen unique_identifier = _n
-clonevar  unique_identifier_B =  unique_identifier
-//clonevar final_resp_name = comb_child_comb_name_label 
-//clonevar  unique_identifier_2 =  unique_identifier
-replace comb_child_comb_name_label  = lower(comb_child_comb_name_label )
-save "${DataTemp}Child_Fuzzy_2.dta", replace
-reclink unique_identifier comb_child_comb_name_label using "${DataTemp}Child_Fuzzy_1.dta", idmaster(unique_identifier_B) idusing(unique_identifier_A) required (unique_identifier) gen(fuzzy) minscore(.9)
-assert fuzzy > 0.9 //
-restore
-
-*/
-
-//we need the age variable from this dataset so making it usuable for any merge
-preserve
-use "${DataTemp}Requested_long_backcheck1.dta", clear
-drop if comb_namefromearlier == ""
-duplicates tag key comb_namefromearlier, gen(dup_HH)
-//below is the alternative way to check for it 
-bysort key comb_namefromearlier : gen dup_HHID = cond(_N==1,0,_n)
-count if dup_HHID > 0 
-tab dup_HHID
-rename  comb_namefromearlier comb_child_comb_name_label
-cap drop _merge
-save "${DataTemp}new_roster_temp.dta", replace
-//after that do 1;1 merge 
-restore
-merge 1:1 key comb_child_comb_name_label using "${DataTemp}new_roster_temp.dta", keepusing (comb_hhmember_age unique_id)
-keep if _merge == 1 | _merge == 3
-//please note that we have to keep both _merge == 1 and _merge == 3 because _merge == 1 are census child entries and _merge == 3 are new child entries they together make child dataset 
-
-
-keep if comb_child_caregiver_present == 1 //we will only analyse data for available children 
-clonevar R_E_key = key
-drop _merge
-//checking consented cases 
-merge m:1 R_E_key using "${DataFinal}1_8_Endline_Census_cleaned_consented.dta", keepusing (unique_id R_E_consent)  
-//plaese note that we have found 99 unmatches out of which 4 are from master (child dataset) and 95 are from using (household level dataset) 
-keep if _merge == 1 | _merge == 3
-/*
-Detailed Explanation: Why are keeping _merge == 1. Aren't they non-consented? 
-
-The R_E_consent variable in the household dataset only captures consent of the main respondents that is those respondents who asnwer us about WASH etc. The respondents who give us survey about children are the child caregivers so it is possible that the main respondent can say No to the WASH section survey but if there is any child caregiver is present in the house we will still go and take their survey so if the child caregiver refuses the survey that we will capture in the variable comb_child_caregiver_present  as -98 or in others and these are the cases that we anyway are dropping so we are good to go I did this merge just for verification and explain why household consent is different from caregiver consent! 
-*/
-
-drop  R_E_consent //dropping this to avoid confusion. I explained earlier why this is not required for the child dataset 
-
-//AKITO'S CODE STARTS 
-
+//TArchi: his dataset gets created in "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+*If you want any additional variable for analysis which is not present here- Please go and check this file 
+use "${DataFinal}1_11_Endline_Census_Child_consented_individual.dta", clear
 missings dropvars, force
 * Cleaning age variable and creating one age variable 
-replace comb_child_age=comb_hhmember_age if comb_child_age==.
-drop comb_hhmember_age
+replace R_E_comb_child_age= R_E_comb_hhmember_age if R_E_comb_child_age==.
+drop R_E_comb_hhmember_age
  
-replace comb_child_residence=0 if comb_child_residence==-98
-replace comb_child_comb_relation=98 if comb_child_comb_relation==-77
+replace R_E_comb_child_residence=98 if R_E_comb_child_residence== -98 //changed 0 to 98 because it makes more sense as 0 is a valid response so it can't be used as a placeholder
 
-* Replace missing (999/888) to .
-foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_days comb_child_vomit_day comb_child_diarr_day comb_child_residence comb_child_age {
+//Archi to Akito - I don't understand why this replacement is made? -77 stands for others and -98 stands for refusal so why is this replacement required? 
+*replace R_E_comb_child_comb_relation= 98 if R_E_comb_child_comb_relation==-77
+
+* Replace missing (999/889) to . //change the code of breatsfeeding question from 888 to 889
+//old vars- comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_days comb_child_vomit_day comb_child_diarr_day comb_child_residence comb_child_age
+//replaced it with more vars
+foreach i in R_E_comb_child_care_dia_day R_E_comb_child_care_dia_wk R_E_comb_child_care_dia_2wk R_E_comb_child_breastfeeding R_E_comb_child_breastfed_num R_E_comb_child_breastfed_month R_E_comb_child_breastfed_days R_E_comb_child_vomit_day R_E_comb_child_vomit_wk R_E_comb_child_vomit_2wk R_E_comb_child_diarr_day R_E_comb_child_diarr_wk R_E_comb_child_diarr_2wk R_E_comb_child_diarr_wk_num R_E_comb_child_diarr_2wk_num R_E_comb_child_residence R_E_comb_child_age {
 	replace `i'=. if `i'==999
-	replace `i'=. if `i'==888
+	replace `i'=. if `i'==889
 }
 
-* Create Dummy
-	foreach v in comb_child_residence comb_child_breastfeeding comb_med_seek_care_comb comb_child_caregiver_present comb_child_comb_relation {
+* Create Dummy - Archi: Attached R_E_ prefix everywhere 
+replace R_E_comb_child_comb_relation = 77 if  R_E_comb_child_comb_relation == -77 //to create dummy easily
+foreach v in R_E_comb_child_residence R_E_comb_child_breastfeeding R_E_comb_med_seek_care_comb R_E_comb_child_careg_present R_E_comb_child_comb_relation {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -182,91 +66,91 @@ foreach i in comb_child_care_dia_day comb_child_care_dia_2wk comb_child_breastfe
 	}
 	}
 	
-	label var comb_child_age "Child age"
-	label var comb_child_residence "Usual residence"
-	label var comb_child_care_dia_day "Diarrhea today/yester day"
-	label var comb_child_care_dia_wk "Diarrhea week"
-	label var comb_child_care_dia_2wk "2 weeks"
-	label var comb_child_breastfeeding "Exclusive breast feeding"
-	label var comb_child_breastfed_num "Up to which months?"
+	label var R_E_comb_child_age "Child age"
+	label var R_E_comb_child_residence "Usual residence"
+	label var R_E_comb_child_care_dia_day "Diarrhea today/yester day"
+	label var R_E_comb_child_care_dia_wk "Diarrhea week"
+	label var R_E_comb_child_care_dia_2wk "2 weeks"
+	label var R_E_comb_child_breastfeeding "Exclusive breast feeding"
+	label var R_E_comb_child_breastfed_num "Up to which months?"
 	
 * Creating diarrhea variables
-gen     C_diarrhea_prev_child_1day=0
-replace C_diarrhea_prev_child_1day=1  if comb_child_diarr_day==1 
-gen     C_diarrhea_prev_child_1week=0
-replace C_diarrhea_prev_child_1week=1  if (comb_child_diarr_day==1 | comb_child_diarr_wk==1)
-gen     C_diarrhea_prev_child_2weeks=0
-replace C_diarrhea_prev_child_2weeks=1 if (comb_child_diarr_day==1 | comb_child_diarr_wk==1 | comb_child_diarr_2wk==1) 
+gen     C_E_diarrhea_prev_child_1day=0
+replace C_E_diarrhea_prev_child_1day=1  if R_E_comb_child_diarr_day==1 
+gen     C_E_diarrhea_prev_child_1week=0
+replace C_E_diarrhea_prev_child_1week=1  if (R_E_comb_child_diarr_day==1 | R_E_comb_child_diarr_wk==1)
+gen     C_E_diarrhea_prev_child_2weeks=0
+replace C_E_diarrhea_prev_child_2weeks=1 if (R_E_comb_child_diarr_day==1 | R_E_comb_child_diarr_wk==1 | R_E_comb_child_diarr_2wk==1) 
 
 *Using loose & watery stool vars
-gen     C_loosestool_child_1day=0
-replace C_loosestool_child_1day=1  if comb_child_stool_24h==1 | comb_child_stool_yest==1
-gen     C_loosestool_child_1week=0
-replace C_loosestool_child_1week=1 if (comb_child_stool_24h==1 | comb_child_stool_yest==1 | comb_child_stool_wk==1) 
-gen     C_loosestool_child_2weeks=0
-replace C_loosestool_child_2weeks=1 if (comb_child_stool_24h==1 | comb_child_stool_yest==1 | comb_child_stool_wk==1 | comb_child_stool_2wk==1)
+gen     C_E_loosestool_child_1day=0
+replace C_E_loosestool_child_1day=1  if R_E_comb_child_stool_24h==1 | R_E_comb_child_stool_yest==1
+gen     C_E_loosestool_child_1week=0
+replace C_E_loosestool_child_1week=1 if (R_E_comb_child_stool_24h==1 | R_E_comb_child_stool_yest==1 | R_E_comb_child_stool_wk==1) 
+gen     C_E_loosestool_child_2weeks=0
+replace C_E_loosestool_child_2weeks=1 if (R_E_comb_child_stool_24h==1 | R_E_comb_child_stool_yest==1 | R_E_comb_child_stool_wk==1 | R_E_comb_child_stool_2wk==1)
 
 * Cut
-gen     C_cuts_child_1day=0
-replace C_cuts_child_1day=1  if comb_child_cuts_day==1
-gen     C_cuts_child_1week=0
-replace C_cuts_child_1week=1 if (comb_child_cuts_day==1 | comb_child_cuts_wk==1) 
-gen     C_cuts_child_2weeks=0
-replace C_cuts_child_2weeks=1 if (comb_child_cuts_day==1 | comb_child_cuts_wk==1 | comb_child_cuts_2wk==1) 
+gen     C_E_cuts_child_1day=0
+replace C_E_cuts_child_1day=1  if R_E_comb_child_cuts_day==1
+gen     C_E_cuts_child_1week=0
+replace C_E_cuts_child_1week=1 if (R_E_comb_child_cuts_day==1 | R_E_comb_child_cuts_wk==1) 
+gen     C_E_cuts_child_2weeks=0
+replace C_E_cuts_child_2weeks=1 if (R_E_comb_child_cuts_day==1 | R_E_comb_child_cuts_wk==1 | R_E_comb_child_cuts_2wk==1) 
 
 *generating new vars using both vars for diarrhea
-gen     C_diarrhea_comb_U5_1day=0
-replace C_diarrhea_comb_U5_1day=1 if C_diarrhea_prev_child_1day==1 | C_loosestool_child_1day==1
+gen     C_E_diarrhea_comb_U5_1day=0
+replace C_E_diarrhea_comb_U5_1day=1 if C_E_diarrhea_prev_child_1day==1 | C_E_loosestool_child_1day==1
 
-gen     C_diarrhea_comb_U5_1week=0
-replace C_diarrhea_comb_U5_1week=1 if C_diarrhea_prev_child_1week==1 | C_loosestool_child_1week==1
+gen     C_E_diarrhea_comb_U5_1week=0
+replace C_E_diarrhea_comb_U5_1week=1 if C_E_diarrhea_prev_child_1week==1 | C_E_loosestool_child_1week==1
 
-gen     C_diarrhea_comb_U5_2weeks=0
-replace C_diarrhea_comb_U5_2weeks=1 if C_diarrhea_prev_child_2weeks==1 | C_loosestool_child_2weeks==1
+gen     C_E_diarrhea_comb_U5_2weeks=0
+replace C_E_diarrhea_comb_U5_2weeks=1 if C_E_diarrhea_prev_child_2weeks==1 | C_E_loosestool_child_2weeks==1
 
-label var C_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
-label var C_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
-label var C_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
+label var C_E_diarrhea_prev_child_1day "Diarrhea- U5 (1 day)" 
+label var C_E_diarrhea_prev_child_1week "Diarrhea- U5 (1 week)" 
+label var C_E_diarrhea_prev_child_2weeks "Diarrhea- U5 (2 weeks)"
 
-label var C_loosestool_child_1day "Loose stool- U5 (1 day)" 
-label var C_loosestool_child_1week "Loose stool- U5 (1 week)" 
-label var C_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
+label var C_E_loosestool_child_1day "Loose stool- U5 (1 day)" 
+label var C_E_loosestool_child_1week "Loose stool- U5 (1 week)" 
+label var C_E_loosestool_child_2weeks "Loose stool- U5 (2 weeks)" 
 
-label var C_cuts_child_1day "Cuts/Bruise- U5 (1 day)" 
-label var C_cuts_child_1week "Cuts/Bruise- U5 (1 week)" 
-label var C_cuts_child_2weeks "Cuts/Bruise- U5 (2 weeks)" 
+label var C_E_cuts_child_1day "Cuts/Bruise- U5 (1 day)" 
+label var C_E_cuts_child_1week "Cuts/Bruise- U5 (1 week)" 
+label var C_E_cuts_child_2weeks "Cuts/Bruise- U5 (2 weeks)" 
 
-label var C_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
-label var C_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
-label var C_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
+label var C_E_diarrhea_comb_U5_1day "Diarrhea/Loose- U5 (1 day)"
+label var C_E_diarrhea_comb_U5_1week "Diarrhea/Loose- U5 (1 week)" 
+label var C_E_diarrhea_comb_U5_2weeks "Diarrhea/Loose- U5 (2 weeks)" 
 
-label var comb_child_diarr_wk_num "Number of days they had diarrhea (7 days)" 
-label var comb_child_diarr_2wk_num "Number of days they had diarrhea (2 weeks)" 
-label var comb_child_diarr_freq "Number of stools in the last 24 hours" 
+label var R_E_comb_child_diarr_wk_num "Number of days they had diarrhea (7 days)" 
+label var R_E_comb_child_diarr_2wk_num "Number of days they had diarrhea (2 weeks)" 
+label var R_E_comb_child_diarr_freq "Number of stools in the last 24 hours" 
 
-destring key3, replace
-rename key3 num
-mdesc village
-save "${DataFinal}U5_Child_23_24_clean.dta", replace
+destring R_E_key3, replace
+rename R_E_key3 num
+mdesc R_E_village
+save "${DataTemp}U5_Child_23_24_clean.dta", replace
 
  /*--------------------------------------------
     Section A.2: Diarrhea analysis (Descriptive statistics)
  --------------------------------------------*/
-use "${DataFinal}U5_Child_23_24_clean.dta", clear
-tab comb_child_age Cen_Type,m
+use "${DataTemp}U5_Child_23_24_clean.dta", clear
+tab R_E_comb_child_age C_E_entry_type,m
 
 * N_HHmember_age: Add this, Cen_CBW_consent
 global U5Var ///
-       comb_child_caregiver_present_1 comb_child_age ///
-	   comb_child_residence ///
-	   comb_child_comb_relation_1 comb_child_comb_relation_2 comb_child_comb_relation_3 comb_child_comb_relation_5 comb_child_comb_relation_98 ///
-	   comb_child_breastfeeding comb_child_breastfed_num comb_child_breastfed_month ///
-	   comb_child_breastfed_days ///
-	   C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks ///
-	   comb_child_diarr_wk_num comb_child_diarr_2wk_num comb_child_diarr_freq ///
-	   C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks ///
-	   C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks ///
-	   C_cuts_child_1day C_cuts_child_1week C_cuts_child_2weeks ///
+       R_E_comb_child_careg_present_1 R_E_comb_child_age ///
+	   R_E_comb_child_residence ///
+	   R_E_comb_child_comb_relation_1 R_E_comb_child_comb_relation_2 R_E_comb_child_comb_relation_3 R_E_comb_child_comb_relation_5 ///
+	   R_E_comb_child_breastfeeding R_E_comb_child_breastfed_num R_E_comb_child_breastfed_month ///
+	   R_E_comb_child_breastfed_days ///
+	   C_E_diarrhea_prev_child_1day C_E_diarrhea_prev_child_1week C_E_diarrhea_prev_child_2weeks ///
+	   R_E_comb_child_diarr_wk_num R_E_comb_child_diarr_2wk_num R_E_comb_child_diarr_freq ///
+	   C_E_loosestool_child_1day C_E_loosestool_child_1week C_E_loosestool_child_2weeks ///
+	   C_E_diarrhea_comb_U5_1day C_E_diarrhea_comb_U5_1week C_E_diarrhea_comb_U5_2weeks ///
+	   C_E_cuts_child_1day C_E_cuts_child_1week C_E_cuts_child_2weeks ///
 	   
 	   * Vomit
 	   * comb_child_vomit_day comb_child_vomit_wk comb_child_vomit_2wk ///
@@ -282,8 +166,8 @@ local noteU5Var "Notes: To do, 98 for relationship is other?"
 foreach k in U5Var {
 * Mean
 	eststo  model0: estpost summarize $`k'
-	eststo  model01: estpost summarize $`k' if Treat_V==1
-	eststo  model02: estpost summarize $`k' if Treat_V==0
+	eststo  model01: estpost summarize $`k' if R_E_Treat_V==1
+	eststo  model02: estpost summarize $`k' if R_E_Treat_V==0
 * Median
 	foreach i in $`k' {
 	egen m_`i'=median(`i')
@@ -338,44 +222,52 @@ eststo clear
     Section A.3: Diarrhea analysis (Regression)
  --------------------------------------------*/
 * Main specification: Combined diarrhea with U5
-use "${DataFinal}0_Master_ChildLevel.dta", clear
-tab  village Merge_Baseline_CL,m
+//Archi: This dataset was earlier generated in 3_X_Final_Data_Creation but now that do file has been archived so we will be using this updated dataset- "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta"
+*use "${DataFinal}0_Master_ChildLevel.dta", clear   
+use "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", clear
+//tab  village Merge_Baseline_CL,m
 * For every regression check the missing 
-mdesc *1day *1week *2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode comb_child_age
+mdesc *1day *1week *2weeks R_E_Treat_V R_E_village_name_str  unique_id R_E_Panchatvillage R_E_BlockCode R_E_comb_child_age
 * Be clear in what case you have missing info in the regression
-tab Merge_Baseline_CL Cen_Type if Treat_V==.,m
-global U5COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
-global U5DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
-global U5STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
-global U5CUT C_cuts_child_1day C_cuts_child_1week C_cuts_child_2weeks
+//tab Merge_Baseline_CL Cen_Type if Treat_V==.,m
+
+global U5COMB C_E_diarrhea_comb_U5_1day C_E_diarrhea_comb_U5_1week C_E_diarrhea_comb_U5_2weeks
+global U5DIA  C_E_diarrhea_prev_child_1day C_E_diarrhea_prev_child_1week C_E_diarrhea_prev_child_2weeks
+global U5STOOL C_E_loosestool_child_1day C_E_loosestool_child_1week C_E_loosestool_child_2weeks
+global U5CUT C_E_cuts_child_1day C_E_cuts_child_1week C_E_cuts_child_2weeks
 local  U5CUT "Probability of experiencing any bruising, scrapes, or cuts in the past 2 weeks among children U5 at endline"
 local  U5COMB "Probability of experiencing diarrhea/loose stool (Combined) among children U5 at endline"
 local  U5DIA "Probability of experiencing diarrhea (Self-reported) among children U5 at endline"
 local  U5STOOL "Probability of experiencing loose stool (WHO definition) among children U5 at endline"
 local  Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
-local  RENAMEU5CUT "B_C_cuts_child_1week B_C_cuts_child_1day B_C_cuts_child_2weeks B_C_cuts_child_1day"
-local  RENAMEU5COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
-local  RENAMEU5DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
-local  RENAMEU5STOOL  "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
+
+// Rename all variables with prefix "C_Cen_" to "B_C_E_" for running the loop and doing the analysis only as the loop calls for B prefix
+rename C_Cen_* B_C_E_*  
+rename B_C_E_reshape C_Cen_reshape //this is not needed for analyises
+
+/*local  RENAMEU5CUT "C_Cen_cuts_child_1week C_Cen_cuts_child_1day C_Cen_cuts_child_2weeks C_Cen_cuts_child_1day"
+local  RENAMEU5COMB "C_Cen_diarrhea_comb_U5_1week C_Cen_diarrhea_comb_U5_1day C_Cen_diarrhea_comb_U5_2weeks C_Cen_diarrhea_comb_U5_1day"
+local  RENAMEU5DIA  "C_Cen_diarrhea_prev_child_1week C_Cen_diarrhea_prev_child_1day C_Cen_diarrhea_prev_child_2weeks C_Cen_diarrhea_prev_child_1day"
+local  RENAMEU5STOOL  "C_Cen_loosestool_child_1week C_Cen_loosestool_child_1day C_Cen_loosestool_child_2weeks C_Cen_loosestool_child_1day"*/
 
 * Program effect
 foreach k in U5COMB U5DIA U5STOOL U5CUT {	
 foreach i in $`k' {
 	
-eststo: reg `i' Treat_V , cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V , cluster(R_Cen_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V B_`i', cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V B_`i', cluster(R_Cen_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V B_`i' i.R_E_Panchatvillage i.R_E_BlockCode, cluster(R_Cen_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
 }
-esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+esttab using "${Table}ILC_E_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
 			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
              indicate("Stratification FE= *Panchatvillage *BlockCode") ///
 			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
@@ -389,24 +281,24 @@ eststo clear
 }
 
 * Baseline balance
-global B_U5CUT B_C_cuts_child_1day B_C_cuts_child_1week B_C_cuts_child_2weeks
-global B_U5STOOL B_C_loosestool_child_1day B_C_loosestool_child_1week B_C_loosestool_child_2weeks
+global B_U5CUT B_C_E_cuts_child_1day B_C_E_cuts_child_1week B_C_E_cuts_child_2weeks
+global B_U5STOOL B_C_E_loosestool_child_1day B_C_E_loosestool_child_1week B_C_E_loosestool_child_2weeks
 local  B_U5CUT "Probability of experiencing any bruising, scrapes, or cuts in the past 2 weeks among children U5 at baseline"
 local  B_U5STOOL "Probability of experiencing loose stool (WHO definition) among children U5 at baseline"
 
 foreach k in B_U5STOOL B_U5CUT {	
 foreach i in $`k' {
 	
-eststo: reg `i' Treat_V , cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V , cluster(R_Cen_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V i.Panchatvillage i.BlockCode, cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V i.R_E_Panchatvillage i.R_E_BlockCode, cluster(R_Cen_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
 }
-esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+esttab using "${Table}ILC_E_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
 			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
              indicate("Stratification FE= *Panchatvillage *BlockCode") ///
 			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
@@ -421,41 +313,52 @@ eststo clear
 
 
 * Main specification: Combined diarrhea with U2
-* Run this do file to udpate the data
-* 3_X_Final_Data_Creation.do
-use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
-keep if comb_child_age<2
-* For every regression check the missing 
-mdesc *_U5_1day *_U5_1week *U5_2weeks Treat_V village Merge_Baseline_CL unique_id Panchatvillage BlockCode
+* Run this do file to udpate the data - "GitHub\i-h2o-india\Code\1_profile_ILC\3_X_Endline_Individual_level_Data_Creation.do"
+* 
+use "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", clear
+/*
+The dataset that Akito was using earlier no longer exisits because he chnaged the name from this to ${DataFinal}0_Master_ChildLevel.dta . As specified earlier, we are now using the dataset "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta" in replacement of ${DataFinal}0_Master_ChildLevel.dta.
+ Refer to the commit- https://github.com/DevInnovationLab/i-h2o-india/commit/042bfbb33308ab58ca4a7fe0058bb49d4bdfde6e#diff-15f8544b5c97adb2c9aae3af2e98cfe658ea5719c38d5a6cc0f7248ab482425d
+use "${DataTemp}U5_Child_Diarrhea_data.dta", clear   */
 
-global U2COMB C_diarrhea_comb_U5_1day C_diarrhea_comb_U5_1week C_diarrhea_comb_U5_2weeks
-global U2DIA  C_diarrhea_prev_child_1day C_diarrhea_prev_child_1week C_diarrhea_prev_child_2weeks
-global U2STOOL C_loosestool_child_1day C_loosestool_child_1week C_loosestool_child_2weeks
+keep if R_E_comb_child_age<2
+* For every regression check the missing 
+mdesc *_U5_1day *_U5_1week *U5_2weeks R_E_Treat_V R_Cen_village_name_str  unique_id R_E_Panchatvillage R_E_BlockCode
+
+global U2COMB C_E_diarrhea_comb_U5_1day C_E_diarrhea_comb_U5_1week C_E_diarrhea_comb_U5_2weeks
+global U2DIA  C_E_diarrhea_prev_child_1day C_E_diarrhea_prev_child_1week C_E_diarrhea_prev_child_2weeks
+global U2STOOL C_E_loosestool_child_1day C_E_loosestool_child_1week C_E_loosestool_child_2weeks
 local U2COMB "Probability of experiencing diarrhea/loose stool (Combined) among children U2"
 local U2DIA "Probability of experiencing diarrhea (Self-reported) among children U2"
 local U2STOOL "Probability of experiencing loose stool (WHO definition) among children U2"
 local Notediarrhea "Note: Standard errors in parentheses clustered at the village level, $\sym{*} p<.10,\sym{**} p<.05,\sym{***} p<.01$. The stratification variable includes block and panchayatta dummies."
-local RENAMEU2COMB "B_C_diarrhea_comb_U5_1week B_C_diarrhea_comb_U5_1day B_C_diarrhea_comb_U5_2weeks B_C_diarrhea_comb_U5_1day"
-local RENAMEU2DIA  "B_C_diarrhea_prev_child_1week B_C_diarrhea_prev_child_1day B_C_diarrhea_prev_child_2weeks B_C_diarrhea_prev_child_1day"
-local RENAMEU2STOOL "B_C_loosestool_child_1week B_C_loosestool_child_1day B_C_loosestool_child_2weeks B_C_loosestool_child_1day"
+
+// Rename all variables with prefix "C_Cen_" to "B_C_E_" for running the loop and doing the analysis only as the loop calls for B prefix
+rename C_Cen_* B_C_E_*  
+rename B_C_E_reshape C_Cen_reshape //this is not needed for analyises
+
+
+/*local RENAMEU2COMB "B_C_E_diarrhea_comb_U5_1week B_C_E_diarrhea_comb_U5_1day B_C_E_diarrhea_comb_U5_2weeks B_C_E_diarrhea_comb_U5_1day"
+local RENAMEU2DIA  "B_C_E_diarrhea_prev_child_1week B_C_E_diarrhea_prev_child_1day B_C_E_diarrhea_prev_child_2weeks B_C_E_diarrhea_prev_child_1day"
+local RENAMEU2STOOL "B_C_E_loosestool_child_1week B_C_E_loosestool_child_1day B_C_E_loosestool_child_2weeks B_C_E_loosestool_child_1day"*/
 
 foreach k in U2COMB U2DIA U2STOOL {	
 foreach i in $`k' {
 	
-eststo: reg `i' Treat_V , cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V , cluster(R_E_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V B_`i', cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V B_`i', cluster(R_E_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
-eststo: reg `i' Treat_V B_`i' i.Panchatvillage i.BlockCode, cluster(village)
-sum `i' if Treat_V==0
+eststo: reg `i' R_E_Treat_V B_`i' i.R_E_Panchatvillage i.R_E_BlockCode, cluster(R_E_village_name_str)
+sum `i' if R_E_Treat_V==0
 estadd scalar Mean = r(mean)
 
 }
-esttab using "${Table}ILC_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
+esttab using "${Table}ILC_E_Main_`k'_RCT.tex",label se ar2 nomtitle title("``k''" \label{LabelD}) nonotes nobase nocons ///
 			 stats(Mean r2_a N, fmt(%9.2fc %9.2fc %9.0fc) labels(`"Control mean"' `"Adjusted \(R^{2}\)"' `"Observation"')) ///
              indicate("Stratification FE= *Panchatvillage *BlockCode") ///
 			 mgroups("1 day" "\shortstack[c]{1 week}" "2 weeks", pattern(1 0 0 1 0 0 1 0 0 ) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) /// 
@@ -472,19 +375,24 @@ eststo clear
 
  /*--------------------------------------------
 	To be cleaned
+	Archi- Now updating with the cleaned datasets 
  --------------------------------------------*/
 
 
 END
-
-use "${DataTemp}U5_Child_Diarrhea_data.dta", clear
-graph bar B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks, over(village, sort(Treat_V) label(angle(45))) ///
+use "${DataFinal}1_12_Baseline_Endline_Census_Child_cleaned.dta", clear
+//commenting this out as this an old dataset now
+*use "${DataTemp}U5_Child_Diarrhea_data.dta", clear 
+// Rename all variables with prefix "C_Cen_" to "B_C_E_" for running the loop and doing the analysis only as the loop calls for B prefix
+rename C_Cen_* B_C_E_*  
+rename B_C_E_reshape C_Cen_reshape //this is not needed for analyises
+graph bar B_C_E_diarrhea_comb_U5_2weeks C_E_diarrhea_comb_U5_2weeks, over(R_Cen_village_name_str, sort(R_E_Treat_V) label(angle(45))) ///
           legend(order(1 "Baseline" 2 "Endline")) note("The left 10 villages are control. Starting from Asada, it is treatment")
 
 * I have to clean 13 cases, also download the new data
-gen flag_B=1 if B_C_diarrhea_comb_U5_2weeks!=.
-gen flag_E=1 if C_diarrhea_comb_U5_2weeks!=.
-collapse B_C_diarrhea_comb_U5_2weeks C_diarrhea_comb_U5_2weeks (sum) flag_B flag_E, by(village)
+gen flag_B=1 if B_C_E_diarrhea_comb_U5_2weeks!=.
+gen flag_E=1 if C_E_diarrhea_comb_U5_2weeks!=.
+collapse B_C_E_diarrhea_comb_U5_2weeks C_E_diarrhea_comb_U5_2weeks (sum) flag_B flag_E, by(R_Cen_village_name_str)
 
 END
 
@@ -492,17 +400,17 @@ END
 
 use "${DataTemp}U5_Child_23_24_clean.dta", clear
 
-	   graph bar comb_med_seek_care_comb_1, over(R_E_enum_name, sort(1) label(angle(45))) ///
+	   graph bar R_E_comb_med_seek_care_comb_1, over(R_E_enum_name_label, sort(1) label(angle(45))) ///
     blabel(bar, position(center) format(%9.2f) color(white) size(tiny))  bar(5, color(black)) ///
 	title("Seek med yes by enum")
 	  graph export "${Figure}End_member_seek.eps", replace  
 
-	graph bar comb_child_breastfeeding_1, over(R_E_enum_name, sort(1) label(angle(45))) ///
+	graph bar R_E_comb_child_breastfeeding_1, over(R_E_enum_name_label, sort(1) label(angle(45))) ///
     blabel(bar, position(center) format(%9.2f) color(white) size(tiny))  bar(5, color(black)) ///
 	title("Breast feeding yes by enum")
 	  graph export "${Figure}End_member_breast.eps", replace  
 	
-	graph bar comb_child_residence_0, over(R_E_enum_name, sort(1) label(angle(45))) ///
+	graph bar R_E_comb_child_residence_0, over(R_E_enum_name_label, sort(1) label(angle(45))) ///
     blabel(bar, position(center) format(%9.2f) color(white) size(tiny))  bar(5, color(black)) ///
 	title("Child residence is no, or refused to answer by enum")
 	  graph export "${Figure}End_member_residence.eps", replace  
@@ -512,12 +420,12 @@ END
 
 
 
-keep if Cen_Type==2
+/*keep if Cen_Type==2
 * 90 HH
 unique R_E_key
 
 gen New_member_111=1 if strpos(comb_hhmember_name, "111") > 0 
-br unique_id comb_hhmember_name New_member_111 if New_member_111==1
+br unique_id comb_hhmember_name New_member_111 if New_member_111==1*/
 
 
 
@@ -525,10 +433,11 @@ DE
 /* ----------------------------------------------------
 * Name of the new mother and father exported in excel
  ----------------------------------------------------*/
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear 
 
-//Archi to Akito- Hey, Akito for this file I cannot drop unavailable values in the data creation file because of presence of roster members, women members and children so if I drop rows for mother's unavailable cases it would also drop cases for child that might be available so this has to be incirporated in this file itself 
+//Archi to Akito- Commenting this for now, because this is not used for nalaysis and it requires some work in getting these variables from the roster dataset. This can be done later during rigourous analysis phase
 
+/*
+use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear //old dataset
 foreach i in father mother {
 use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
 unique R_E_key key3
@@ -539,14 +448,15 @@ rename comb_u5`i'_name key3
 keep R_E_key key3
 merge 1:m R_E_key key3 using "${DataTemp}Endline_Long_Indiv_analysis.dta", keep(1 3) keepusing(Cen_Type comb_hhmember_name comb_hhmember_gender comb_hhmember_age name_from_earlier_hh)
 capture export excel R_E_key Cen_Type key3 name_from_earlier_hh comb_hhmember_name comb_hhmember_gender comb_hhmember_age using "${Endline}Master_Excel_Endline_HFC.xlsx", sheet("List of new `i'", modify) firstrow(var) 
-}
+}*/
 
 
-
-use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear
-gen Leng_comb_preg_rch_id=length(comb_preg_rch_id)
+**Archi- The command below is trying to find specific HFCs consistency so I am commenting it for now. As this requires some error enquiry 
+/*use "${DataFinal}0_Master_10_Individual_data_endline_census.dta", clear 
+*use  "${DataTemp}Endline_Long_Indiv_analysis.dta", clear  //this datset is old now so replavcing it with above one
+gen Leng_comb_preg_rch_id=length(R_E_comb_preg_rch_id )
  * Create Dummy
-	foreach v in comb_hhmember_gender comb_resp_avail_comb {
+	foreach v in R_E_comb_hhmember_gender R_E_comb_resp_avail_comb {
 	levelsof `v'
 	foreach value in `r(levels)' {
 		gen     `v'_`value'=0
@@ -556,9 +466,9 @@ gen Leng_comb_preg_rch_id=length(comb_preg_rch_id)
 	}
 	}
 	* Month of preg: Check togetehr
-	scatter comb_preg_delivery comb_preg_month if  comb_preg_delivery!=999 , mlab(R_E_enum_name) mlabangle(15)
-	gen Rev_comb_preg_month=4-comb_preg_month-1
-	scatter comb_preg_delivery Rev_comb_preg_month if  comb_preg_delivery!=999 , mlab(R_E_enum_name) mlabangle(15)
+	scatter R_E_comb_preg_delivery R_E_comb_preg_month if  R_E_comb_preg_delivery!=999 , mlab(R_E_enum_name_label) mlabangle(15)
+	gen Rev_comb_preg_month=4-R_E_comb_preg_month-1
+	scatter R_E_comb_preg_delivery Rev_comb_preg_month if  R_E_comb_preg_delivery!=999 , mlab(R_E_enum_name_label) mlabangle(15)
 	graph export "${Figure}End_preg_month_consis.eps", replace  
 	
 	tab comb_vill_residence comb_preg_residence
@@ -590,6 +500,7 @@ gen Leng_comb_preg_rch_id=length(comb_preg_rch_id)
 	title(`T_`i'')
 	graph export "${Figure}`F_`i''.eps", replace  
 	}
+*/
 
 use "${DataTemp}Medical_expenditure_person_clean.dta", clear
 * N_HHmember_age: Add this, Cen_CBW_consent
@@ -726,8 +637,10 @@ esttab model0 model1 model6 model7 model8 using "${Table}Enr_`k'.tex", title("``
 
 END
 
-key_creation
+*key_creation  Archi- this program has already been run on this so commenting it for now
 * Parent key does not match with the one in the master data unelss we process in the following way
+/* Archi- There are some problems with running this part. Due to lack of time, I am not troubleshooting it right now 
+
 global keepvar cen_med_treat_type_all_* cen_med_trans_all_*
 * HH level (37 HH)
 collapse (sum) $keepvar, by(key)
@@ -753,6 +666,9 @@ collapse (sum) $keepvar, by(key)
 prefix_rename
 save "${DataTemp}1_8_Endline_Census-N_med_notnull_all-N_prvidr_exp_lp_all_HH.dta", replace
 
+*/
+
+/* Archi- The command below is also being used  for HFC work so commenting this for now 
 /*--------------------------------------------
     Testing platform
  --------------------------------------------*/
@@ -803,7 +719,7 @@ save "${DataTemp}1_8_Endline_Census-N_med_notnull_all-N_prvidr_exp_lp_all_HH.dta
  
 END
 
-
+*/
 
 /*
 The given do file uses and saves several datasets. Here are the details:
@@ -839,13 +755,13 @@ Archi to Akito- Can't find where this dataset is created. In what file I mean?
 3. **`${Table}Enr_U5Var.tex`**
    - Tables for descriptive statistics of children under age 5 at endline are saved using this file name pattern, with different variable names replacing `U5Var`.
 
-4. **`${Table}ILC_Main_U5COMB_RCT.tex`, `${Table}ILC_Main_U5DIA_RCT.tex`, `${Table}ILC_Main_U5STOOL_RCT.tex`, `${Table}ILC_Main_U5CUT_RCT.tex`**
+4. **`${Table}ILC_E_Main_U5COMB_RCT.tex`, `${Table}ILC_E_Main_U5DIA_RCT.tex`, `${Table}ILC_E_Main_U5STOOL_RCT.tex`, `${Table}ILC_E_Main_U5CUT_RCT.tex`**
    - These files save regression analysis results for different health outcomes among children under 5 at endline.
 
-5. **`${Table}ILC_Main_B_U5STOOL_RCT.tex`, `${Table}ILC_Main_B_U5CUT_RCT.tex`**
+5. **`${Table}ILC_E_Main_B_U5STOOL_RCT.tex`, `${Table}ILC_E_Main_B_U5CUT_RCT.tex`**
    - These files save baseline balance analysis results for different health outcomes among children under 5.
 
-6. **`${Table}ILC_Main_U2COMB_RCT.tex`, `${Table}ILC_Main_U2DIA_RCT.tex`, `${Table}ILC_Main_U2STOOL_RCT.tex`**
+6. **`${Table}ILC_E_Main_U2COMB_RCT.tex`, `${Table}ILC_E_Main_U2DIA_RCT.tex`, `${Table}ILC_E_Main_U2STOOL_RCT.tex`**
    - These files save regression analysis results for different health outcomes among children under 2 at endline.
 
 Overall, the primary datasets used are `${DataTemp}U5_Child_23_24.dta`, `${DataTemp}Medical_expenditure_person_clean.dta`, `${DataTemp}Endline_Long_Indiv_analysis.dta`, and `${DataTemp}U5_Child_Diarrhea_data.dta`. The cleaned and analyzed datasets are saved under different filenames reflecting various stages of the data processing and analysis.
