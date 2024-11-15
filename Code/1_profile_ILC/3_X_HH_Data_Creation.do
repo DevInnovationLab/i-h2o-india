@@ -1927,12 +1927,21 @@ label define R_E_water_source_prim 1 "Government provided household Taps (supply
 label values R_E_water_source_prim R_E_water_source_prim
 
 ********************************************************************************
-*** Creating a clean baseline census data for indivodual data processsing
+*** Creating a clean baseline census data for individual data processsing
 ********************************************************************************
 
 preserve
 drop R_E_*
 save "${DataFinal}1_1_Baseline_Census_HH_clean_consented.dta", replace
+restore
+
+********************************************************************************
+*** Creating a clean endline census data for individual data processsing
+********************************************************************************
+
+preserve
+drop R_E_*
+save "${DataFinal}1_10_Endline_Census_HH_clean_consented.dta", replace
 restore
 
 ********************************************************************************
