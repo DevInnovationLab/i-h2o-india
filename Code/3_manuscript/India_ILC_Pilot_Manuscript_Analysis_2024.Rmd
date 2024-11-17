@@ -86,19 +86,19 @@ source(paste0(github_path(),"/3_manuscript/0-config.R"))
 #bl_raw <- read_csv(paste0(user_path(), "/1_raw/Baseline follow up survey_WIDE.csv"))
 
 #Baseline Survey
-bl <- read_stata(paste0(user_path(), "/3_final/1_2_Followup_cleaned.dta"))
+bl <- read_stata(paste0(user_path(), "/3_final/1_2_FU_clean_final.dta"))
 
 #Baseline Census
-cen <- read_stata(paste0(user_path(),"/3_final/Final_HH_Odisha_consented_Full.dta"))
+cen <- read_stata(paste0(user_path(),"/3_final/1_1_Baseline_Census_HH_clean_consented.dta"))
 
 #Round 1 survey
-r1 <- read_stata(paste0(user_path(),"/3_final/1_5_followup_R1_cleaned.dta"))
+r1 <- read_stata(paste0(user_path(),"/3_final/1_5_FU_R1_clean_final.dta"))
 
 #Round 2 survey
-r2 <- read_stata(paste0(user_path(),"/3_final/1_6_followup_R2_cleaned.dta"))
+r2 <- read_stata(paste0(user_path(),"/3_final/1_6_FU_R2_clean_final.dta"))
 
 #Round 3 survey
-r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
+r3 <- read_stata(paste0(user_path(),"/3_final/1_7_FU_R3_clean_final.dta"))
 
 #Round 4 survey
 r4 <- read_csv(paste0(user_path(),"/3_final/1_10_monthly_follow_up_cleaned.csv"))
@@ -111,13 +111,13 @@ r6 <- read_csv(paste0(user_path(),"/3_final/1_10_monthly_follow_up_cleaned_R3.cs
 
 
 #All rounds
-r_all <- read_stata(paste0(user_path(),"/3_final/0_Master_HHLevel_FU_Census_final.dta"))
+r_all <- read_stata(paste0(user_path(),"/3_final/0_Master_HHLevel_FU_Census.dta"))
 
 #Chlorine Monitoring Survey
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
 #Longitudinal Chlorine Monitoring
-mon_long <- read_csv(paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
+#mon_long <- read_csv(paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
 
 
 #Longitudinal chlorine monitoring form
@@ -160,7 +160,7 @@ villages <- read_stata(paste0(user_path(),"4_other/India ILC_Pilot_Rayagada Vill
 
 
 #Cen final
-cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta" ))
+#cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta" ))
 
 
 #endline census
@@ -334,31 +334,31 @@ cl_p2
 ```{r Longitudinal Chlorine Monitoring}
 
 
-p_mon_long <- ggplot(data = mon_long) +
-  geom_point(aes(x = time, y = tw_fc, color = factor(location))) +
-  geom_line(aes(x = time, y = tw_fc, color = factor(location), group = location)) +
-  facet_wrap(~ village_code, scales = "free_x") +
-  geom_hline(yintercept = 0.20, linetype = "dashed", color = "red") +
-  geom_hline(yintercept = 0.60, linetype = "dashed", color = "red") +
-  labs(
-    title = "Longitudinal Chlorine Monitoring Over Water Supply Time",
-    x = "Time of Sample Collection",
-    y = "Free Chlorine Concentration (mg/L)",
-    color = "Sampling Location"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1),
-    legend.position = "bottom",
-    strip.text = element_text(size = 12)
-  ) +
-  scale_y_continuous(
-    limits = c(0, 1),
-    breaks = seq(from = 0.0, to = 1.0, by = 0.2)
-  ) 
-
-
-p_mon_long
+# p_mon_long <- ggplot(data = mon_long) +
+#   geom_point(aes(x = time, y = tw_fc, color = factor(location))) +
+#   geom_line(aes(x = time, y = tw_fc, color = factor(location), group = location)) +
+#   facet_wrap(~ village_code, scales = "free_x") +
+#   geom_hline(yintercept = 0.20, linetype = "dashed", color = "red") +
+#   geom_hline(yintercept = 0.60, linetype = "dashed", color = "red") +
+#   labs(
+#     title = "Longitudinal Chlorine Monitoring Over Water Supply Time",
+#     x = "Time of Sample Collection",
+#     y = "Free Chlorine Concentration (mg/L)",
+#     color = "Sampling Location"
+#   ) +
+#   theme_bw() +
+#   theme(
+#     axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1),
+#     legend.position = "bottom",
+#     strip.text = element_text(size = 12)
+#   ) +
+#   scale_y_continuous(
+#     limits = c(0, 1),
+#     breaks = seq(from = 0.0, to = 1.0, by = 0.2)
+#   ) 
+# 
+# 
+# p_mon_long
 
 
 ```
@@ -389,38 +389,38 @@ outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_
 #Summarizing desc stats for each variable
 #reset_gtsummary_theme()
 
-desc_stats <- fu_rounds%>%
-  dplyr::select("assignment","data_round","prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary","tap_trust_binary", "tap_taste_binary", "tap_future_binary","fc_tap_binary", "fc_stored_binary")%>%
-  tbl_strata(
-    strata = data_round,
-    .tbl_fun =
-      ~ .x %>%
-        tbl_summary(by = assignment, 
-                    missing = "no",
-                    type = c("prim_source_jjm", "sec_source", "jjm_drinking",
-                             "water_treat_binary", "tap_trust_binary", "tap_taste_binary",
-                             "tap_future_binary","fc_tap_binary",
-                             "fc_stored_binary") ~ "continuous",
-                    statistic = list(
-                      all_continuous() ~ "{mean} ({sd})",
-                      all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
-                    label = list(prim_source_jjm ~ "Government-provided tap as primary source",
-                                 sec_source ~ "Use of a secondary source",
-                                 jjm_drinking ~ "Use of government-provided taps for drinking",
-                                 water_treat_binary ~ "Water treatment used",
-                                 tap_trust_binary ~ "Trust in safety of taps",
-                                 tap_taste_binary ~ "Satisfaction with taste from taps",
-                                 tap_future_binary ~ "Likelihood of using taps in future",
-                                 fc_tap_binary ~ "Presence of free chlorine in taps (>0.1 mg/L)",
-                                 fc_stored_binary ~ "Presence of free chlorine in stored water (>0.1 mg/L)"
-                                 )
-                    )%>%
-     modify_footnote(all_stat_cols() ~ "Mean (SD)"),
-    .header = "**{strata}**"
-  )%>%
-  modify_footnote(update =  ~ "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
+# desc_stats <- fu_rounds%>%
+#   dplyr::select("assignment","data_round","prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary","tap_trust_binary", "tap_taste_binary", "tap_future_binary","fc_tap_binary", "fc_stored_binary")%>%
+#   tbl_strata(
+#     strata = data_round,
+#     .tbl_fun =
+#       ~ .x %>%
+#         tbl_summary(by = assignment, 
+#                     missing = "no",
+#                     type = c("prim_source_jjm", "sec_source", "jjm_drinking",
+#                              "water_treat_binary", "tap_trust_binary", "tap_taste_binary",
+#                              "tap_future_binary","fc_tap_binary",
+#                              "fc_stored_binary") ~ "continuous",
+#                     statistic = list(
+#                       all_continuous() ~ "{mean} ({sd})",
+#                       all_categorical() ~ "{p}%"),
+#                     digits = list(all_continuous() ~ 2, 
+#                                   all_categorical() ~ 0),
+#                     label = list(prim_source_jjm ~ "Government-provided tap as primary source",
+#                                  sec_source ~ "Use of a secondary source",
+#                                  jjm_drinking ~ "Use of government-provided taps for drinking",
+#                                  water_treat_binary ~ "Water treatment used",
+#                                  tap_trust_binary ~ "Trust in safety of taps",
+#                                  tap_taste_binary ~ "Satisfaction with taste from taps",
+#                                  tap_future_binary ~ "Likelihood of using taps in future",
+#                                  fc_tap_binary ~ "Presence of free chlorine in taps (>0.1 mg/L)",
+#                                  fc_stored_binary ~ "Presence of free chlorine in stored water (>0.1 mg/L)"
+#                                  )
+#                     )%>%
+#      modify_footnote(all_stat_cols() ~ "Mean (SD)"),
+#     .header = "**{strata}**"
+#   )%>%
+#   modify_footnote(update =  ~ "Mean (SD); BL - Oct 2023, R1 - February 2024, R2 - March 2024, R3 - April 2024")
 
 # desc_stats <- as_gt(desc_stats)%>%
 #   tab_options(table.font.size = 11)
@@ -1467,6 +1467,30 @@ p_ec_abr <- ggplot(data = tc_stats_abr) +
 
 p_ec_abr
 
+#Creating total combined results
+tc_stats_abr_pooled <- pooled_stats_abr(idexx_abr_fu)
+
+#Plotting treatment/control stats on a bar plot
+p_ec_abr_combined <- ggplot(data = tc_stats_abr_pooled) + 
+  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
+  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                    fill = assignment), position = position_dodge(width = 0.9),
+                width = 0.25) +
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0))+
+  labs(x = "Sample Type", 
+       y = expression(paste("% positive for ABR ",italic("E. coli"))),
+       fill = "Assignment",
+       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 267)")),
+       caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in April 2024 and October 2024."
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  #facet_wrap(~ data_round)+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+p_ec_abr_combined
 
 
 
