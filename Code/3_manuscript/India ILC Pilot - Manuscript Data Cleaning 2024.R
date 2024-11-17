@@ -35,8 +35,8 @@ village_details <- village_details%>%
   mutate(`Panchat village` = Panchayat)
 
 #Making block variable compatible with existing data
-village_details <- village_details%>%
-  rename(block = "Block")
+ village_details <- village_details%>%
+   rename(block = "Block")
 
 #Adding anonymous village code
 village_details <- village_details%>%
@@ -69,8 +69,8 @@ rayagada <- shp_file_2%>%
 #--------------------------Baseline Census Data Cleaning-------------------
 
 #Removing duplicate variables
-cen <- cen%>%
-  dplyr::select(!c(R_Cen_submissiondate, R_Cen_starttime, R_Cen_endtime))
+#cen <- cen%>%
+ # dplyr::select(!c(R_Cen_submissiondate, R_Cen_starttime, R_Cen_endtime))
 
 #Changing variable names
 cen <- cen%>%
@@ -119,7 +119,7 @@ cen <- cen%>%
 
 #Renaming village_ID variable
 cen <- cen%>%
-  rename(village_ID = "village_name")
+  rename(village_ID = "village")
 
 #Adding village information
 cen$village_ID <- as.character(cen$village_ID)
@@ -165,16 +165,16 @@ cen$hhhead_gender <- cen$hhhead_gender%>%
 #Recoding factor levels for ws_prim
 cen <- cen%>%
   mutate(prim_source = NA)
-cen$prim_source <- cen$ws_prim%>%
+cen$prim_source <- cen$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "PWS: JJM Taps",
-    "Community Tap" = "PWS: Govt. community standpipe",
-    "Community Tap" = "PWS: GP/Other community standpipe",
-    "Surface Water"  = "PWS: Surface water",
-    "Surface Water" = "PWS: Private surface well",
-    "Covered Dug Well" = "PWS: Covered dug well",
-    "Borehole" = "PWS: Manual handpump",
-    "Other" = "PWS: Other"
+    "Government-provided Tap" = "Government provided household Taps (supply paani)",
+    "Community Tap" = "Government provided community standpipe (part of JJM taps)",
+    "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation channel)",
+    "Surface Water" = "Private Surface well",
+    "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Manual handpump",
+    "Other" = "Other"
   )%>%
   as.character()
 
@@ -186,8 +186,8 @@ cen <- cen%>%
 #recoding secondary source
 cen$water_sec_yn <- cen$water_sec_yn%>%
   fct_recode(
-    "No" = "SWS: No secondary water source",
-    "Yes" = "SWS: Yes"
+    "No" = "No",
+    "Yes" = "Yes"
   )
 
 
@@ -215,8 +215,8 @@ cen <- cen%>%
 #recoding secondary source
 cen$water_treat <- cen$water_treat%>%
   fct_recode(
-    "No" = "WT: No water treatment",
-    "Yes" = "WT: Yes"
+    "No" = "No",
+    "Yes" = "Yes"
   )
 
 
@@ -248,12 +248,6 @@ cen <- cen%>%
 #---------------------------Baseline Survey Data Cleaning-----------------
 
 
-#Filtering out test data from training, based on village IDs
-bl <- bl%>%
-  filter(!(R_FU_unique_id_1 == 88888 |
-             R_FU_unique_id_1 == 99999)) # Clean data doesn't require this step
-
-
 #Selecting bl data key variables for WQ testing
 #bl <- bl%>%
  # dplyr::select(R_FU_unique_id_1, R_FU_unique_id_2, R_FU_unique_id_3, unique_id_num,
@@ -268,9 +262,9 @@ bl <- bl%>%
 #Assigning more meaningful variable names
 bl <- bl%>%
   rename_all(~stringr::str_replace(.,"R_FU_",""))%>%
-  rename(village = "r_cen_village_name_str")%>%
-  rename(village_ID = "unique_id_1")%>%
-  rename(unique_id = "unique_id_num")%>%
+  #rename(village = "r_cen_village_name_str")%>%
+  rename(village_ID = "village_id")%>%
+  #rename(unique_id = "unique_id_num")%>%
   rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
   rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
   rename(fc_tap_2 = "wq_tap_fc_again")%>%
@@ -365,15 +359,15 @@ bl <- bl%>%
   mutate(prim_source = NA)
 bl$prim_source <- bl$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani)",
-    "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM tank",
+    # "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    # "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
+    # "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    # "Surface Water" = "Private Surface well",
+    # "Surface Water" = "Uncovered dug well",
     "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
+    # "Covered Dug Well" = "Covered dug well",
     "Borehole" = "Manual handpump",
     "Other" = "Other"
   )
@@ -398,20 +392,21 @@ bl <- bl%>%
 #Updating stored bag water quality testing sources
 bl$stored_bag_source <- bl$stored_bag_source%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
-    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
-    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
-    "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
-    "Borehole" = "Manual handpump",
-    "Government-provided Tap" = "Other (please specify)"
-  )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+    "Government-provided Tap" = "Government provided household Taps (supply paani)",
+    # "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    # "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    #"Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    # "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    # "Surface Water" = "Private Surface well",
+    # "Surface Water" = "Uncovered dug well",
+    #"Borehole"  = "Borewell operated by electric pump",
+    # "Covered Dug Well" = "Covered dug well",
+    #"Borehole" = "Manual handpump",
+    #"Other" = "Other"
+  )
+  # )%>%
+  # fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+  #             "Borehole", "Covered Dug Well", "Other")
 
 
 #Updating satisfaction and confidence questions to be binary
@@ -454,8 +449,8 @@ bl <- bl%>%
   ))
 
 #Setting JJM use variable
-bl <- bl%>%
-  mutate(jjm_drinking = tap_use_1)
+# bl <- bl%>%
+#   mutate(jjm_drinking = tap_use_1)
 
 #Checking median stored water time
 bl <- bl%>%
@@ -481,9 +476,9 @@ bl$unique_id <- as.character(bl$unique_id)
 
 
 #Filtering out test data from training, based on village IDs
-r1 <- r1%>%
-  filter(!(R_FU1_unique_id_1 == 88888 |
-             R_FU1_unique_id_1 == 99999)) # Clean data doesn't require this step
+# r1 <- r1%>%
+#   filter(!(R_FU1_unique_id_1 == 88888 |
+#              R_FU1_unique_id_1 == 99999)) # Clean data doesn't require this step
 
 
 #Selecting r1 data key variables for WQ testing
@@ -496,9 +491,9 @@ r1 <- r1%>%
 #Assigning more meaningful variable names
 r1 <- r1%>%
   rename_all(~stringr::str_replace(.,"R_FU1_",""))%>%
-  rename(village = "r_cen_village_name_str")%>%
-  rename(village_ID = "unique_id_1")%>%
-  rename(unique_id = "unique_id_num")%>%
+  rename(village = "village")%>%
+  rename(village_ID = "village_id")%>%
+  # rename(unique_id = "unique_id_num")%>%
   rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
   rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
   rename(fc_tap_2 = "wq_tap_fc_again")%>%
@@ -602,11 +597,11 @@ r1 <- r1%>%
   mutate(prim_source = NA)
 r1$prim_source <- r1$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM tank",
     "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    #"Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    #"Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
     "Surface Water" = "Private Surface well",
     "Surface Water" = "Uncovered dug well",
     "Borehole"  = "Borewell operated by electric pump",
@@ -614,8 +609,11 @@ r1$prim_source <- r1$water_source_prim%>%
     "Borehole" = "Manual handpump",
     "Other" = "Other"
   )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+  fct_relevel("Government-provided Tap", "Community Tap", 
+              # "Surface Water", 
+              "Borehole"
+              # , "Covered Dug Well", "Other"
+              )
 
 #Setting primary source binary variable
 r1 <- r1%>%
@@ -641,20 +639,24 @@ r1 <- r1%>%
 #Updating stored bag sources
 r1$stored_bag_source <- r1$stored_bag_source%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
-    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
-    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
-    "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
-    "Borehole" = "Manual handpump",
-    "Other" = "Other (please specify)"
+    "Government-provided Tap" = "Government provided household Taps (supply paani)",
+    #"Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    #"Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    #"Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    #"Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    #"Surface Water" = "Private Surface well",
+    #"Surface Water" = "Uncovered dug well",
+    #"Borehole"  = "Borewell operated by electric pump",
+    #"Covered Dug Well" = "Covered dug well",
+    #"Borehole" = "Manual handpump",
+    #"Other" = "Other"
   )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+  fct_relevel("Government-provided Tap", 
+              # "Community Tap", 
+              # "Surface Water", 
+              "Borehole"
+              # , "Covered Dug Well", "Other"
+  )
 
 #Updating satisfaction and confidence questions to be binary
 r1 <- r1%>%
@@ -696,10 +698,10 @@ r1 <- r1%>%
   ))
 
 #Setting JJM use variable
-r1 <- r1%>%
-  mutate(jjm_drinking = case_when(
-    tap_use_drinking_yesno == "Yes" ~ 1,
-    tap_use_drinking_yesno == "No" ~ 0))
+# r1 <- r1%>%
+#   mutate(jjm_drinking = case_when(
+#     tap_use_drinking_yesno == "Yes" ~ 1,
+#     tap_use_drinking_yesno == "No" ~ 0))
 
 
 #Checking median stored water time
@@ -724,9 +726,9 @@ r1$unique_id <- as.character(r1$unique_id)
 
 
 #Filtering out test data from training, based on village IDs
-r2 <- r2%>%
-  filter(!(R_FU2_unique_id_1 == 88888 |
-             R_FU2_unique_id_1 == 99999)) # Clean data doesn't require this step
+# r2 <- r2%>%
+#   filter(!(R_FU2_unique_id_1 == 88888 |
+   #          R_FU2_unique_id_1 == 99999)) # Clean data doesn't require this step
 
 
 #Selecting r2 data key variables for WQ testing
@@ -743,9 +745,9 @@ r2 <- r2%>%
 #Assigning more meaningful variable names
 r2 <- r2%>%
   rename_all(~stringr::str_replace(.,"R_FU2_",""))%>%
-  rename(village = "r_cen_village_name_str")%>%
-  rename(village_ID = "unique_id_1")%>%
-  rename(unique_id = "unique_id_num")%>%
+  rename(village = "village")%>%
+  rename(village_ID = "village_id")%>%
+  #rename(unique_id = "unique_id_num")%>%
   rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
   rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
   rename(fc_tap_2 = "wq_tap_fc_again")%>%
@@ -853,20 +855,23 @@ r2 <- r2%>%
   mutate(prim_source = NA)
 r2$prim_source <- r2$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
-    "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
-    "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM tank",
+     "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+    # "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+    # "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    # "Surface Water" = "Private Surface well",
+    # "Surface Water" = "Uncovered dug well",
     "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
+    #"Covered Dug Well" = "Covered dug well",
     "Borehole" = "Manual handpump",
-    "Other" = "Other"
+    #"Other" = "Other"
   )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+  fct_relevel("Government-provided Tap", "Community Tap",
+              #"Surface Water", 
+              "Borehole"
+            #  "Covered Dug Well", "Other"
+              )
 
 #Setting primary source binary variable
 r2 <- r2%>%
@@ -890,22 +895,22 @@ r2 <- r2%>%
   ))
 
 #Updating stored bag water quality testing sources
-r2$stored_bag_source <- r2$stored_bag_source%>%
-  fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
-    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
-    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
-    "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
-    "Borehole" = "Manual handpump",
-    "Other" = "Other (please specify)"
-  )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+# r2$stored_bag_source <- r2$stored_bag_source%>%
+#   fct_recode(
+#     "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+#     "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+#     "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+#     "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+#     "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+#     "Surface Water" = "Private Surface well",
+#     "Surface Water" = "Uncovered dug well",
+#     "Borehole"  = "Borewell operated by electric pump",
+#     "Covered Dug Well" = "Covered dug well",
+#     "Borehole" = "Manual handpump",
+#     "Other" = "Other (please specify)"
+#   )%>%
+#   fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+#               "Borehole", "Covered Dug Well", "Other")
 
 
 #Updating satisfaction and confidence questions to be binary
@@ -948,10 +953,10 @@ r2 <- r2%>%
   ))
 
 #Setting JJM use variable
-r2 <- r2%>%
-  mutate(jjm_drinking = case_when(
-    tap_use_drinking_yesno == "Yes" ~ 1,
-    tap_use_drinking_yesno == "No" ~ 0))
+# r2 <- r2%>%
+#   mutate(jjm_drinking = case_when(
+#     tap_use_drinking_yesno == "Yes" ~ 1,
+#     tap_use_drinking_yesno == "No" ~ 0))
 
 
 #Checking median stored water time
@@ -971,9 +976,9 @@ r2 <- r2%>%
 
 
 #Filtering out test data from training, based on village IDs
-r3 <- r3%>%
-  filter(!(R_FU3_unique_id_1 == 88888 |
-             R_FU3_unique_id_1 == 99999)) # Clean data doesn't require this step
+# r3 <- r3%>%
+#   filter(!(R_FU3_unique_id_1 == 88888 |
+#              R_FU3_unique_id_1 == 99999)) # Clean data doesn't require this step
 
 
 #Selecting r3 data key variables for WQ testing
@@ -983,9 +988,9 @@ r3 <- r3%>%
 #Assigning more meaningful variable names
 r3 <- r3%>%
   rename_all(~stringr::str_replace(.,"R_FU3_",""))%>%
-  rename(village = "r_cen_village_name_str")%>%
-  rename(village_ID = "unique_id_1")%>%
-  rename(unique_id = "unique_id_num")%>%
+  rename(village = "village")%>%
+  rename(village_ID = "village_id")%>%
+  #rename(unique_id = "unique_id_num")%>%
   rename(tc_stored_2 = "wq_chlorine_storedtc_again")%>%
   rename(fc_stored_2 = "wq_chlorine_storedfc_again")%>%
   rename(fc_tap_2 = "wq_tap_fc_again")%>%
@@ -1086,20 +1091,23 @@ r3 <- r3%>%
   mutate(prim_source = NA)
 r3$prim_source <- r3$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM tank",
     "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+    #"Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
+    #"Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+    #"Surface Water" = "Private Surface well",
+    #"Surface Water" = "Uncovered dug well",
     "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
+    #"Covered Dug Well" = "Covered dug well",
     "Borehole" = "Manual handpump",
-    "Other" = "Other"
+    #"Other" = "Other"
   )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+  fct_relevel("Government-provided Tap", "Community Tap",
+              #"Surface Water", 
+              "Borehole",
+              #"Covered Dug Well", "Other"
+              )
 
 #Setting primary source binary variable
 r3 <- r3%>%
@@ -1125,22 +1133,22 @@ r3 <- r3%>%
 
 
 #Updating stored bag water quality testing sources
-r3$stored_bag_source <- r3$stored_bag_source%>%
-  fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
-    "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
-    "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
-    "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
-    "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
-    "Surface Water" = "Private Surface well",
-    "Surface Water" = "Uncovered dug well",
-    "Borehole"  = "Borewell operated by electric pump",
-    "Covered Dug Well" = "Covered dug well",
-    "Borehole" = "Manual handpump",
-    "Other" = "Other (please specify)"
-  )%>%
-  fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
-              "Borehole", "Covered Dug Well", "Other")
+# r3$stored_bag_source <- r3$stored_bag_source%>%
+#   fct_recode(
+#     "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+#     "Government-provided Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
+#     "Government-provided Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
+#     "Government-provided Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
+#     "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
+#     "Surface Water" = "Private Surface well",
+#     "Surface Water" = "Uncovered dug well",
+#     "Borehole"  = "Borewell operated by electric pump",
+#     "Covered Dug Well" = "Covered dug well",
+#     "Borehole" = "Manual handpump",
+#     "Other" = "Other (please specify)"
+#   )%>%
+#   fct_relevel("Government-provided Tap", "Community Tap", "Surface Water", 
+#               "Borehole", "Covered Dug Well", "Other")
 
 #Updating satisfaction and confidence questions to be binary
 r3 <- r3%>%
@@ -1182,10 +1190,10 @@ r3 <- r3%>%
   ))
 
 #Setting JJM use variable
-r3 <- r3%>%
-  mutate(jjm_drinking = case_when(
-    tap_use_drinking_yesno == "Yes" ~ 1,
-    tap_use_drinking_yesno == "No" ~ 0))
+# r3 <- r3%>%
+#   mutate(jjm_drinking = case_when(
+#     tap_use_drinking_yesno == "Yes" ~ 1,
+#     tap_use_drinking_yesno == "No" ~ 0))
 
 #Checking median stored water time
 r3 <- r3%>%
@@ -1375,11 +1383,14 @@ r2_tab <- r2%>%
 r3_tab <- r3%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
                 stored_bag_source, available_jjm)%>%
+  mutate(
+         stored_water_time = NA
+         )%>%
   mutate(data_round = "R3")
 
 r4_tab <- r4%>%
