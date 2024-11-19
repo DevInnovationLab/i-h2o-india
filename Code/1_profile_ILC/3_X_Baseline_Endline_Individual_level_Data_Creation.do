@@ -1707,7 +1707,6 @@ SECTION 6
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 *************************************************************************************************************************************************************************************/
 
-
   /*****************************************************************
  COMBINING ALL INDIVIDUAL DATASETS 
 *****************************************************************/
@@ -2968,7 +2967,9 @@ stopit
 
 
 
+/*
 
+old code 
 
 /*************************************************************************************************************************************************************************************
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3048,26 +3049,14 @@ gen HH_revisit_for_lock = .
 replace HH_revisit_for_lock = 1 if _merge == 3
 replace HH_revisit_for_lock = 0 if _merge == 1
 
-
-//recoding instruction variable 
-clonevar R_E_C_instruction = R_E_instruction
-
-//this was a non consnet case so I recoded it as a refused case 
-replace R_E_C_instruction = "-98" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
-
+//this was a non consnet case so I recoded it as a refused case
+replace R_E_instruction = "-98" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
 //this also needs to be replaced as we are already tackling this non consneted case above
-clonevar R_E_C_consent = R_E_consent
-replace R_E_C_consent = "" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
-
+replace R_E_consent = "" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
 //case of UID - 50101115006
 //here enum chose other to write the reason for unavailability but there is already a separate option for unavailability so we don't need to show this in others
-replace R_E_C_instruction = "6" if unique_id == "50101115006" & R_E_key == "uuid:131dfecd-cf82-497f-a815-22c0d16c7d34" & R_E_instruction_oth == "Main respondent Maika geyehai kab ayegi pata nehi ghar me un ki husband ko pani ke baremay patanehi un ki sasu maa ko sunai nehi dete" 
-
-clonevar R_E_C_instruction_oth = R_E_instruction_oth
-replace R_E_C_instruction_oth = "" if R_E_instruction_oth == "Main respondent Maika geyehai kab ayegi pata nehi ghar me un ki husband ko pani ke baremay patanehi un ki sasu maa ko sunai nehi dete" 
-
-
-
+replace R_E_instruction = "6" if unique_id == "50101115006" & R_E_key == "uuid:131dfecd-cf82-497f-a815-22c0d16c7d34" & R_E_instruction_oth == "Main respondent Maika geyehai kab ayegi pata nehi ghar me un ki husband ko pani ke baremay patanehi un ki sasu maa ko sunai nehi dete"
+replace R_E_instruction_oth = "" if R_E_instruction_oth == "Main respondent Maika geyehai kab ayegi pata nehi ghar me un ki husband ko pani ke baremay patanehi un ki sasu maa ko sunai nehi dete"
 cap drop _merge
 
 
@@ -3174,7 +3163,7 @@ assign in the raw dataset itself */
 40202113033	Simadri manbik	Simadri manbik	12	Male		
 40202113033	111 Simadri Manbik				1	Male*/
 
-
+*/
 
 
 
