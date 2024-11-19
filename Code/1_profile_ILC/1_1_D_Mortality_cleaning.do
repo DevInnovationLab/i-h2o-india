@@ -127,6 +127,9 @@ In summary, it combines data from the original and screened versions into a sing
 
 */ 
 
+/*Archi: The code breaks exactly here and tat is because there is a problem with the logic of the loop because it tries to drop variables with _sc and at the same time there are also some variables with _sc present in the varlist women_child_bearing_count - translator_4. Additionally, not every variable has counterpart _sc that is why it becomes tricky. I have soecified a few commenst below to make it work but overall, this code needs to be re-visited 
+order women_child_bearing_count_sc setofwomen_child_bearing_sc, after( translator_4)
+use capture with replace `x'_f = `x'_sc if  missing(`x') & !missing(`x'_sc)*/
 
 foreach x of varlist women_child_bearing_count - translator_4 {
 	gen `x'_f = `x'
@@ -190,7 +193,6 @@ In summary, it creates cleaner versions of variables by removing the `_sc` suffi
 
 
 */ 
-
 local var_left_sc *_5_sc *_6_sc 
 foreach x of varlist `var_left_sc' {
     local y_`x' = regexr("`x'", "_sc","")
