@@ -190,13 +190,25 @@ df_clean <- df_long %>%
 #  select(-tw_time_char, -tw_time_corrected)  # removing temporary columns
 
 # Converting the tw_time variable to hms object
-df_clean$time_hms <- hms(df_clean$tw_time)
+#df_clean$time_hms <- hms(df_clean$tw_time)
 # Extract hours and minutes from the tw_time variable and store in a new var 'time'
-df_clean$hours <- hour(df_clean$time_hms)
-df_clean$minutes <- minute(df_clean$time_hms)
+#df_clean$hours <- hour(df_clean$tw_time)
+#df_clean$minutes <- minute(df_clean$tw_time)
 # Combine hours and minutes into a single column
-df_clean$time <- sprintf("%02d:%02d", df_clean$hours, df_clean$minutes)
+#df_clean$time <- sprintf("%02d:%02d", df_clean$hours, df_clean$minutes)
 #select(-hours, -minutes, -time_hms)  # removing temporary columns()
+
+# Converting the tw_time variable to hms object
+#checking storage type
+str(df_clean$tw_time)
+#Ensure that tw_time is a character column (in case it's not)
+df_clean$tw_time <- as.character(df_clean$tw_time)
+#Extract hours, minutes, and seconds using regular expressions
+df_clean$hours <- as.numeric(sub(":.*", "", df_clean$tw_time))  # Extract hours
+df_clean$minutes <- as.numeric(sub(".*:(.*):.*", "\\1", df_clean$tw_time))  # Extract minutes
+
+# Combine hours and minutes into a single "hh:mm" formatted string
+df_clean$time <- sprintf("%02d:%02d", df_clean$hours, df_clean$minutes)
 
 View(df_clean)
 
@@ -206,19 +218,40 @@ View(df_clean)
 df_clean_sw <- df_clean 
 
 # Converting the time_sw_collect variable to hms object
-df_clean_sw$time_sw_hms <- hms(df_clean$time_sw_collect)
+#df_clean_sw$time_sw_hms <- hms(df_clean$time_sw_collect)
 # Extract hours and minutes from the tw_time variable and store in a new var 'time'
-df_clean_sw$sw_hours <- hour(df_clean_sw$time_sw_hms)
-df_clean_sw$sw_minutes <- minute(df_clean_sw$time_sw_hms)
+#df_clean_sw$sw_hours <- hour(df_clean_sw$time_sw_hms)
+#df_clean_sw$sw_minutes <- minute(df_clean_sw$time_sw_hms)
 # Combine hours and minutes into a single column
-df_clean_sw$sw_time_collect <- sprintf("%02d:%02d", df_clean_sw$sw_hours, df_clean_sw$sw_minutes)
+#df_clean_sw$sw_time_collect <- sprintf("%02d:%02d", df_clean_sw$sw_hours, df_clean_sw$sw_minutes)
 #select(-hours, -minutes, -time_hms)  # removing temporary columns()
+#View(df_clean_sw)
+
+# Checking if time_sw_collect is a character vector
+str(df_clean_sw$time_sw_collect)
+# the varioable is in hms format 
+
+# Extract hours and minutes from the tw_time variable and store in new vars
+df_clean_sw$sw_hours <- hour(df_clean_sw$time_sw_collect)
+df_clean_sw$sw_minutes <- minute(df_clean_sw$time_sw_collect)
+
+# Combine hours and minutes into a single "hh:mm" formatted column
+df_clean_sw$sw_time_collect <- sprintf("%02d:%02d", df_clean_sw$sw_hours, df_clean_sw$sw_minutes)
+
+# View the dataframe to confirm the results
 View(df_clean_sw)
+
 
 
 # Convert times to a suitable format
 #df_clean_sw$time <- as.POSIXct(df_clean_sw$time, format = "%I:%M %p")
 #df_clean_sw$sw_time_collect <- as.POSIXct(df_clean_sw$sw_time_collect, format = "%I:%M %p")
+
+# Renaming a varibale storing 2nd test of stored water (question added for testing done in Nov)
+df_clean_sw <- df_clean_sw %>% 
+  rename(time_sw_test_2 = time_sw_collect_2)
+
+View(df_clean_sw[c("village_name", "sw_time_collect", "time", "time_sw_test", "time_sw_test_2")])
 
 #Exact Match Filtering
 df_exact_match <- df_clean_sw %>%
@@ -229,11 +262,12 @@ View(df_exact_match)
 # Manual filtering (using Specific Conditions) for obs where time differnce does not allow exact matching 
 # Creating a list of conditions to retain values
 specific_conditions <- data.frame(
-  sw_time_collect = c("06:19", "06:14", "06:31", "06:45", "07:28", "07:21", "07:01", "07:17", "06:31", "06:09", "07:43", "07:15", "06:09", "06:08"),  # stored water collection times
-  time = c("06:16", "06:13", "06:29", "06:42", "07:23", "07:19", "06:56", "07:15", "06:27", "06:06", "07:39", "07:12", "06:07", "06:06"),              # running water times
-  village_name = c("Badabangi", "Badabangi", "Asada", "Asada", "Naira", "Naira", "Asada", "Asada", "Badabangi", "Mukundpur", "Mukundpur", "Naira", "Bichikote", "Bichikote")           # Corresponding villages
+  sw_time_collect = c("06:19", "06:14", "06:31", "06:45", "07:28", "07:21", "07:01", "07:17", "06:31", "06:09", "07:43", "07:15", "06:09", "06:08", "16:15", "16:19"),  # stored water collection times
+  time = c("06:16", "06:13", "06:29", "06:42", "07:23", "07:19", "06:56", "07:15", "06:27", "06:06", "07:39", "07:12", "06:07", "06:06", "16:16", "16:21" ),              # running water times
+  village_name = c("Badabangi", "Badabangi", "Asada", "Asada", "Naira", "Naira", "Asada", "Asada", "Badabangi", "Mukundpur", "Mukundpur", "Naira", "Bichikote", "Bichikote", "Tandipur", "Birnarayanpur")           # Corresponding villages
 )
 View(specific_conditions)
+
 
 # Initialize an empty dataframe for manual selections
 df_manual_selection <- data.frame()
@@ -254,13 +288,94 @@ df_clean_sw_final <- bind_rows(df_exact_match, df_manual_selection) %>%
   distinct()  # Remove duplicates, if any
 View(df_clean_sw_final)
 
-#Creating new variable to store anonymised village names
+
+#Creating new df to store anonymised village names - wide format 
 df_clean_sw_final_new <- df_clean_sw_final %>%
   mutate(anonymized_village_name = paste("Village", dense_rank(village_name)))
 
 
+# Reshaping df from wide to long to account for 2nd round of stored water testing post 90 mins of collection of sample
+df_clean_sw_long <- df_clean_sw_final %>%
+  pivot_longer(cols = c(sw_fc, sw_fc_2), 
+               names_to = "time_point", 
+               values_to = "sw_fc_value") %>%
+  mutate(time_point = factor(time_point, levels = c("sw_fc", "sw_fc_2"),
+                             labels = c("45 minutes", "90 minutes")))
+View(df_clean_sw_long)
 
-# Create the scatterplot for decay in stored water with Village names 
+#Creating new df to store anonymised village names - long format to account for second test for stored water 
+df_clean_sw_long_new <- df_clean_sw_long %>%
+  mutate(anonymized_village_name = paste("Village", dense_rank(village_name)))
+
+
+# Creating scatterplot for decay in stored water with village names (45 mins and 90 mins post sample collection)
+plot_sw_45_90 <- ggplot(df_clean_sw_long, aes(x = tw_fc, y = sw_fc_value, color = village_name, shape = time_point)) +
+  geom_point() +  # Add points, color by village_name and shape by time_point
+  labs(title = "Chlorine Decay in Stored Water Over Time",
+       x = "FC in Running Water at Time of Stored Water Collection (mg/L)", 
+       y = "FC in Stored Water (mg/L)",
+       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 minutes and 90 minutes after sample collection in seven villages.") +
+  theme_minimal() +  # Use a minimal theme
+  scale_color_viridis_d(name = "Village") +  # Automatically generate colors for each village
+  scale_shape_manual(name = "Time Point", values = c(16, 17)) +  # Different shapes for 45m and 90m points
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
+  annotate("text", x = 1.2, y = 1.2, label = "45° Line of Reference", 
+           color = "red", size = 4, vjust = -1) +  # Annotate 45-degree line
+  geom_smooth(aes(color = time_point), method = "lm", se = FALSE, size = 0.5) +  # Solid trend lines with different colors
+  annotate("text", x = 1.2, y = 0.8, label = "Trend Line (45mins)", 
+           color = "black", size = 4, vjust = -1) +  # Annotate 45-minute trend line
+  annotate("text", x = 1.2, y = 0.2, label = "Trend Line (90mins)", 
+           color = "black", size = 4, vjust = -1) +  # Annotate 90-minute trend line
+  scale_x_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  scale_y_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  theme(plot.caption = element_text(hjust = 0))  # Left-justify the caption
+# Print the plot
+print(plot_sw_45_90)
+# Save the plot
+ggsave(paste0(overleaf(), "Figure/Chlorine_decay_sw_45and90mins.png"), plot_sw_45_90, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+# Create the scatterplot for decay in stored water without Village names (45 mins and 90 mins post sample collection)
+plot_sw_45_90_anony <- ggplot(df_clean_sw_long_new, aes(x = tw_fc, y = sw_fc_value, color = anonymized_village_name, shape = time_point)) +
+  geom_point() +  # Add points, color by village_name and shape by time_point
+  labs(title = "Chlorine Decay in Stored Water Over Time",
+       x = "FC in Running Water at Time of Stored Water Collection (mg/L)", 
+       y = "FC in Stored Water (mg/L)",
+       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 minutes and 90 minutes after sample collection in seven villages.") +
+  theme_minimal() +  # Use a minimal theme
+  scale_color_viridis_d(name = "Village") +  # Automatically generate colors for each village
+  scale_shape_manual(name = "Time Point", values = c(16, 17)) +  # Different shapes for 45m and 90m points
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
+  annotate("text", x = 1.2, y = 1.2, label = "45° Line of Reference", 
+           color = "red", size = 4, vjust = -1) +  # Annotate 45-degree line
+  geom_smooth(aes(color = time_point), method = "lm", se = FALSE, size = 0.5) +  # Solid trend lines with different colors
+  annotate("text", x = 1.2, y = 0.8, label = "Trend Line (45mins)", 
+           color = "black", size = 4, vjust = -1) +  # Annotate 45-minute trend line
+  annotate("text", x = 1.2, y = 0.2, label = "Trend Line (90mins)", 
+           color = "black", size = 4, vjust = -1) +  # Annotate 90-minute trend line
+  scale_x_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  scale_y_continuous(
+    limits = c(0.0, 1.4),
+    breaks = seq(from = 0.0, to = 1.4, by = 0.2)
+  ) +
+  theme(plot.caption = element_text(hjust = 0))  # Left-justify the caption
+# Print the plot
+print(plot_sw_45_90_anony)
+# Save the plot
+ggsave(paste0(overleaf(), "Figure/Chlorine_decay_sw_45and90mins_wo_village.png"), plot_sw_45_90_anony, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+
+# Create the scatterplot for decay in stored water with Village names (45 mins post sample collection)
 plot <- ggplot(df_clean_sw_final, aes(x = tw_fc, y = sw_fc, color = village_name)) +
   geom_point() +  # Add points
   labs(title = "Chlorine Decay in Stored Water Over Time",
@@ -289,7 +404,7 @@ print(plot)
 ggplot2::ggsave(paste0(overleaf(), "Figure/Chlorine decay in stored water.png"), plot, bg = "white", width = 10, height = 6, dpi = 200)
 
 
-# Create the scatterplot for decay in stored water without  Village names 
+# Create the scatterplot for decay in stored water without Village names (45 mins post sample collection)
 plot_sw <- ggplot(df_clean_sw_final_new, aes(x = tw_fc, y = sw_fc, color = anonymized_village_name)) +
   geom_point() +  # Add points
   labs(title = "Chlorine Decay in Stored Water Over Time",
@@ -318,44 +433,68 @@ print(plot_sw)
 ggplot2::ggsave(paste0(overleaf(), "Figure/Chlorine decay_stored water_wo vill names.png"), plot_sw, bg = "white", width = 10, height = 6, dpi = 200)
 
 
-# Calculate chlorine decay
+# Calculate chlorine decay in 45 mins
 df_clean_sw_final <- df_clean_sw_final %>%
-  mutate(chlorine_decay = tw_fc - sw_fc)  # Calculate the decay
+  mutate(chlorine_decay_45 = tw_fc - sw_fc)  # Calculate the decay
 
-# Calculate the average chlorine decay
-average_decay <- df_clean_sw_final %>%
-  summarise(average_decay = mean(chlorine_decay, na.rm = TRUE))  # Mean decay, excluding NA values
+# Calculate the average chlorine decay in 45 mins
+average_decay_45 <- df_clean_sw_final %>%
+  summarise(average_decay_45 = mean(chlorine_decay_45, na.rm = TRUE))  # Mean decay, excluding NA values
+
+# Calculate chlorine decay in 90 mins
+df_clean_sw_final <- df_clean_sw_final %>%
+  mutate(chlorine_decay_90 = tw_fc - sw_fc_2)  # Calculate the decay
+
+# Calculate the average chlorine decay in 90 mins
+average_decay_90 <- df_clean_sw_final %>%
+  summarise(average_decay_90 = mean(chlorine_decay_90, na.rm = TRUE))  # Mean decay, excluding NA values
+
+
+# View the results
+print(average_decay_45)
+print(average_decay_90)
+
+
+# Calculate the percent decrease in chlorine levels in 45 mins
+df_clean_sw_final <- df_clean_sw_final %>%
+  mutate(percent_decrease_45 = ((tw_fc - sw_fc) / tw_fc) * 100)  # Calculate percent decrease
+
+# Calculate the percent decrease in chlorine levels in 90 mins
+df_clean_sw_final <- df_clean_sw_final %>%
+  mutate(percent_decrease_90 = ((tw_fc - sw_fc_2) / tw_fc) * 100)  # Calculate percent decrease
+
+# Calculate the average percent decrease in 45 mins
+average_percent_decrease_45 <- df_clean_sw_final %>%
+  summarise(average_percent_decrease_45 = mean(percent_decrease_45, na.rm = TRUE))  # Mean percent decrease, excluding NA values
+
+# Calculate the average percent decrease in 90 mins
+average_percent_decrease_90 <- df_clean_sw_final %>%
+  summarise(average_percent_decrease_90 = mean(percent_decrease_90, na.rm = TRUE))  # Mean percent decrease, excluding NA values
 
 # View the result
-print(average_decay)
-
-# Calculate the percent decrease in chlorine levels
-df_clean_sw_final <- df_clean_sw_final %>%
-  mutate(percent_decrease = ((tw_fc - sw_fc) / tw_fc) * 100)  # Calculate percent decrease
-
-# Calculate the average percent decrease
-average_percent_decrease <- df_clean_sw_final %>%
-  summarise(average_percent_decrease = mean(percent_decrease, na.rm = TRUE))  # Mean percent decrease, excluding NA values
-
-# View the result
-print(average_percent_decrease)
+print(average_percent_decrease_45)
+print(average_percent_decrease_90)
 
 # Calculate average tw_fc and sw_fc
 averages <- df_clean_sw_final %>%
   summarise(
     average_tw_fc = mean(tw_fc, na.rm = TRUE),
-    average_sw_fc = mean(sw_fc, na.rm = TRUE)
+    average_sw_fc_45 = mean(sw_fc, na.rm = TRUE),
+    average_sw_fc_90 = mean(sw_fc_2, na.rm = TRUE)
   )
 
 # Create a message about the average decrease
 average_decrease_message <- paste(
   "The average chlorine level decreased from",
   round(averages$average_tw_fc, 2), "mg/L to",
-  round(averages$average_sw_fc, 2), "mg/L."
+  round(averages$average_sw_fc_45, 2), "mg/L in 45 minutes and to",
+  round(averages$average_sw_fc_90, 2), "mg/L in 90 minutes."
+  
 )
 
 # Print the message
 print(average_decrease_message)
+
 
 #------------------------------Creating variables for minutes since supply and round--------
 
@@ -401,7 +540,7 @@ filtered_data_r2 <- df_clean %>%
 
 View(filtered_data_r2)
 
-#Filtering dtaa for Round 2 (Data collectiuon done in Mukundpur twice, removing teh first instance's obs)
+#Filtering data for Round 2 (Data colectiuon done in Mukundpur twice, removing the first instance's obs)
 filtered_data_r2_new <- df_clean %>%
   filter(date_only >= cutoff_date & !(village_name == "Mukundpur" & date_only == "2024-09-06"))
 
@@ -515,13 +654,13 @@ color_farthest <- "#FF8C00"
 plot3 <- ggplot(data = filtered_data_r2_new) +
   geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
   geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
-  facet_wrap(~ anonymized_village_name, scales = "free_x") +
+  facet_wrap(~ village_name, scales = "free_x") +
   labs(
     title = "Chlorine Concentrations Over Supply Time in Rayagada Study Sample",
     x = "Minutes since start of supply time",
     y = "Free Chlorine Concentration in Running Water (mg/L)",
     color = "Tap",
-    caption = "Note: Data points from longitudinal testing throughout the supply time in six villages at the nearest and farthest taps."
+    caption = "Note: Data points from longitudinal testing throughout the supply time in nine villages at the nearest and farthest taps."
   ) +
   theme_bw() +
   theme(
@@ -610,7 +749,7 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_asada.png"), plot_asada,
   
   #-----------------------------Saving the dataset------------------------
 #saving the cleaned dataset
-write_csv(df_clean,paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
+write_csv(df_clean,paste0(user_path(),"/3_final/1_15_Longitudinal Testing.csv"))
 
 
 
