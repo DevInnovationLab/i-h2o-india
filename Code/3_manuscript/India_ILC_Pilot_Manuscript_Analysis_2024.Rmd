@@ -658,8 +658,8 @@ p_ec_pooled <- ggplot(data = tc_stats_pooled) +
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
        fill = "Assignment",
-       title = "",
-       caption = ""
+       title = expression(paste("Presence of ", italic("E. coli"), " in Household Drinking Water (N = 960)")),
+  caption = "Stored and tap water samples were pooled across 6 household surveys rounds across 20 villages in February, March, April, August, September, and October 2024."
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
   theme_bw() + 
@@ -692,6 +692,8 @@ p_pooled <-
 )
 
 p_pooled
+
+ggsave(filename = "manuscript_ecoli_pooled_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
 
 
 #Creating figure of IDEXX results stratified by round
@@ -805,7 +807,7 @@ p_by_round
 
 #Creating plot of pooled results from the monsoon rounds
 tc_stats_monsoon <- tc_stats_round%>%
-  filter(data_round == "R4" | data_round == "R5")
+  filter(data_round == "R4" | data_round == "R5" | data_round == "R6")
 
 #Plotting treatment/control stats on a bar plot
 p_ec_monsoon <- ggplot(data = tc_stats_monsoon) + 
@@ -1022,7 +1024,7 @@ desc_stats_tap <- fu_rounds%>%
 
 kbl(desc_stats_tap)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
@@ -1040,7 +1042,7 @@ desc_stats_stored <- fu_rounds%>%
 
 kbl(desc_stats_stored)%>%
   kable_styling(bootstrap_options = "striped", full_width = TRUE) %>%
-  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 6)) %>%
+  add_header_above(c("Follow-up -- Average Chlorine Concentrations " = 7)) %>%
   row_spec(0, bold = TRUE, color = "black", background = "white") %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(2, width = "75px")
@@ -1468,6 +1470,9 @@ p_ec_abr <- ggplot(data = tc_stats_abr) +
 p_ec_abr
 
 #Creating total combined results
+idexx_abr_fu <- idexx_abr%>%
+  filter(data_round == "R3" | data_round == "R6")
+
 tc_stats_abr_pooled <- pooled_stats_abr(idexx_abr_fu)
 
 #Plotting treatment/control stats on a bar plot
@@ -1491,6 +1496,8 @@ p_ec_abr_combined <- ggplot(data = tc_stats_abr_pooled) +
   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
 
 p_ec_abr_combined
+
+ggsave(filename = "manuscript_ABR_ecoli_pooled_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
 
 
 
