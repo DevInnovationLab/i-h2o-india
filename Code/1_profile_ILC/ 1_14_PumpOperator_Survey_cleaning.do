@@ -7,9 +7,9 @@
 ****** Input data : 
 	- "${DataDeid}/pump_operator_survey.dta"
 ****** Output data/file : 
-	- "${DataFinal}pump_operator_survey.dta"
+	- "${DataFinal}1_14_PO_Survey_final.dta"
 ****** Do file to run before this do file
-	- "2_15_Checks_PumpOperatorSurvey.do"
+	- "2_14_Checks_PumpOperatorSurvey.do"
 ****** Language: English
 *=========================================================================*/
 ** In this do file: 

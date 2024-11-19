@@ -21,8 +21,8 @@ set mem 100m
 local overwrite_old_data 0
 
 * initialize form-specific parameters
-local csvfile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey_WIDE.csv"
-local dtafile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey.dta"
+local csvfile "${DataRaw}1_14_Pump_Operator_Survey/pump_operator_survey_WIDE.csv"
+local dtafile "${DataRaw}1_14_Pump_Operator_Survey/pump_operator_survey.dta"
 
 local corrfile "${DataRaw}1_10_Pump_Operator_Survey/pump_operator_survey_corrections.csv"
 local note_fields1 ""
