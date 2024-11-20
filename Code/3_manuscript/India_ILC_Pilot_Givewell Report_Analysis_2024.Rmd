@@ -117,18 +117,20 @@ source(paste0(github_path(),"/3_manuscript/0-config.R"))
 
 #Baseline Survey
 bl <- read_stata(paste0(user_path(), "/3_final/1_2_Followup_cleaned.dta"))
+#bl <- read_stata(paste0(user_path(), "/3_final/1_1_Baseline_Census_HH_clean_consented.dta")) #NB: repalcing with the latest version
 
+#NB: The file below is the merged version of bl census and bl hh survey; this has been archived now (3_final/Z_Archive/); alternatively "/8_Intermediate Datasets/1_2_Followup.dta" can be sued here generated from 1_2_A_Followup_cleaning.do
 #Baseline Census
-cen <- read_stata(paste0(user_path(),"/3_final/Final_HH_Odisha_consented_Full.dta"))
+#cen <- read_stata(paste0(user_path(),"/3_final/Final_HH_Odisha_consented_Full.dta")) 
 
 #Round 1 survey
-r1 <- read_stata(paste0(user_path(),"/3_final/1_5_followup_R1_cleaned.dta"))
+r1 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_5_Followup_R1.dta"))
 
 #Round 2 survey
-r2 <- read_stata(paste0(user_path(),"/3_final/1_6_followup_R2_cleaned.dta"))
+r2 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_6_Followup_R2.dta"))
 
 #Round 3 survey
-r3 <- read_stata(paste0(user_path(),"/3_final/1_7_followup_R3_cleaned.dta"))
+r3 <- read_stata(paste0(user_path(),"/8_Intermediate Datasets/1_7_Followup_R3.dta"))
 
 #Chlorine Monitoring Survey
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
@@ -170,11 +172,13 @@ villages <- read_stata(paste0(user_path(),"4_other/India ILC_Pilot_Rayagada Vill
 
 
 #Cen final
-cen_info <- read_stata(paste0(user_path(),"3_final/Final_Population_Village.dta" ))
+cen_info <- read_stata(paste0(user_path(),"4_other/Final_Population_Village.dta" ))
 
 
 #endline census
 el <- read_stata(paste0(user_path(),"3_final/1_8_Endline_Census_cleaned.dta" ))
+#el <- read_stata(paste0(user_path(),"3_final/1_10_Endline_Census_HH_clean_consented.dta" )) #NB: replacing with the latest dataset 
+
 
 #map data - shapefile
 shp_file_0 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_0.shp"))
