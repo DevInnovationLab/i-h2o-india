@@ -1438,7 +1438,7 @@ insheet using "${DataFinal}POOLED_idexx_master_cleaned.csv", clear
 //1121 obs
 
 * Dropping observations 
-drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
+// drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
 //480 obs dropped, 641 obs left 
 
 * Generating new variable :String version of UID variable
@@ -1453,7 +1453,10 @@ replace Round="R_FU_" if data_round=="BL"
 replace Round="R_FU1_" if data_round=="R1"
 replace Round="R_FU2_" if data_round=="R2"
 replace Round="R_FU3_" if data_round=="R3"
-//160 observations per round and 161 in FU1
+replace Round="R_FU4_" if data_round=="R4"
+replace Round="R_FU5_" if data_round=="R5"
+replace Round="R_FU6_" if data_round=="R6"
+//160 observations in all FU rounds except FU1; 161 in FU1
 
 * Reshaping the data to ensure all observations for one HH are there in one row within the same round 
 //dropping vars not required
@@ -1476,7 +1479,7 @@ insheet using "${DataFinal}POOLED_idexx_ABR_master_cleaned.csv", clear
 //365 total obs
 
 * Dropping observations 
-drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
+// drop if data_round=="R4" | data_round=="R5" | data_round=="R6" //dropping monsoon rounds (other than FU rounds)
 //122 obs dropped, 243 obs left 
 
 * Generating new variable :String version of UID variable
@@ -1491,7 +1494,10 @@ replace Round="R_FU_" if data_round=="BL"
 replace Round="R_FU1_" if data_round=="R1"
 replace Round="R_FU2_" if data_round=="R2"
 replace Round="R_FU3_" if data_round=="R3"
-//145 observations in FU R3 and 98 in FU R1
+replace Round="R_FU4_" if data_round=="R4"
+replace Round="R_FU5_" if data_round=="R5"
+replace Round="R_FU6_" if data_round=="R6"
+//145 observations in FU_R3, 122 in FU_R6 and 98 in FU_R1
 
 * Reshaping the data to ensure all observations for one HH are there in one row within the same round 
 //dropping vars not required
@@ -1503,31 +1509,25 @@ bysort unique_id_num Round: gen hh_id = _n
 * Now reshape the dataset
 reshape wide sample_id bag_id_tap bag_id_stored sample_type cf_mpn ec_mpn cf_95hi cf_95lo ec_95hi ec_95lo cf_pa_binary ec_pa_binary cf_pa ec_pa cf_log ec_log fc_tap_avg fc_stored_avg , i(unique_id_num Round) j( hh_id)  
 
-* Changing the storage type
-replace cf_log1="999" if  cf_log1=="-Inf" //if the cf_mpn value is 0 or cf_log value is undefined, replacing it with 999: a placeholder
-replace cf_log2="999" if  cf_log2=="-Inf" //if the cf_mpn value is 0 or cf_log value is undefined, replacing it with 999: a placeholder
-destring cf_log1 cf_log2, replace 
-
-replace ec_log1="999" if  ec_log1=="-Inf" //if the ec_mpn value is 0 or ec_log value is undefined, replacing it with 999: a placeholder
-replace ec_log2="999" if  ec_log2=="-Inf" //if the ec_mpn value is 0 or ec_log value is undefined, replacing it with 999: a placeholder
-destring ec_log1 ec_log2, replace 
-
 
 * Save the dataset
 save "${Intermediate}1_13_IDEXX_ABR_FUrounds.dta", replace 
 
 ********************************************************************************
-*** Merging the FU data with IDEXX data
+*** Merging the FU data with IDEXX and ABR data
 ********************************************************************************
 
 use "${Intermediate}1_13_Followup_clean_long.dta", clear 
 merge 1:1  Round unique_id_num using "${Intermediate}1_13_IDEXX_FUrounds.dta", gen(Merge_IDEXX_FU) 
+//321 obs matched 
 
-//* Changing the storage type for consistency 
-//replace ec_95hi2=="" if ec_95hi2=="NA" //if values are equal to NA, replacing with a placeholder: xx
-//destring ec_95hi2 ec_95hi1, replace 
+* Changing the storage type for consistency 
+replace ec_95hi2="0" if ec_95hi2=="NA" //if values are equal to NA, replacing with 0 if the values are equal to NA and detection limit is very low/no detetction 
+replace ec_95hi1="0" if ec_95hi1=="NA" 
+destring ec_95hi2 ec_95hi1, replace 
 
-// merge 1:1  Round unique_id_num using "${Intermediate}1_13_IDEXX_ABR_FUrounds.dta", gen(Merge_ABR_FU) 
+merge 1:1  Round unique_id_num using "${Intermediate}1_13_IDEXX_ABR_FUrounds.dta", gen(Merge_ABR_FU) 
+//195 matched observations
 
 ********************************************************************************
 *** Saving individual FU round datasets

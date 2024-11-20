@@ -6,7 +6,7 @@
 ****** Used by:  DIL
 /****** Input data : 
 1. `"${DataDeid}1_2_Followup_cleaned.dta"`
-2. `"${DataPre}1_1_Census_cleaned.dta"`
+2. `"${DataFinal}1_1_Census_cleaned.dta"`
 3. `"${DataOther}India ILC_Pilot_Rayagada Village Tracking_clean.dta"`
 4. `"${DataIdexx}BL_idexx_master_cleaned.csv"`
 5. `"${DataDeid}1_5_Followup_R1_cleaned.dta"`
@@ -1037,7 +1037,7 @@ esttab model29  model30 using "${Table}Perceptions_`k'.tex", ///
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 * Looking at Baseline HH survey data (Akito)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 merge 1:1 unique_id_num using "${DataDeid}1_2_Followup_cleaned.dta",gen(Merge_C_F)
 keep if Merge_C_F==3
 keep if R_FU_consent==1
@@ -1490,7 +1490,7 @@ graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water pr
 													/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 																 Follow-up R1 survey data
 													%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-use "${DataPre}1_1_Census_cleaned.dta", clear 
+use "${DataFinal}1_1_Census_cleaned.dta", clear 
 merge 1:1 unique_id_num using "${DataDeid}1_5_Followup_R1_cleaned.dta", gen(Merge_C_F) 
 keep if Merge_C_F==3
 keep if R_FU1_consent ==1
@@ -1751,7 +1751,7 @@ graph export "/Users/michellecherian/Library/CloudStorage/Box-Box/India Water pr
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *Follow-up R2 survey data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-use "${DataPre}1_1_Census_cleaned.dta", clear 
+use "${DataFinal}1_1_Census_cleaned.dta", clear 
 merge 1:1 unique_id_num using "${DataDeid}1_6_Followup_R2_cleaned.dta", gen(Merge_C_F) 
 keep if Merge_C_F==3
 keep if R_FU2_consent ==1
@@ -2000,7 +2000,7 @@ twoway histogram ec_log if sample_type=="Stored" || kdensity ec_log if sample_ty
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *Follow-up R3 survey data
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-use "${DataPre}1_1_Census_cleaned.dta", clear 
+use "${DataFinal}1_1_Census_cleaned.dta", clear 
 merge 1:1 unique_id_num using "${DataDeid}1_7_Followup_R3_cleaned.dta", gen(Merge_C_F) 
 keep if Merge_C_F==3
 keep if R_FU3_consent ==1
@@ -2533,7 +2533,7 @@ reg cf_log treatment panchayat_village i.blockcode if sample_type=="Stored", clu
 /*----------------------------------------------------
 *Comparing data between baseline and endline census
 ------------------------------------------------------*/
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 tab R_Cen_consent
 keep if R_Cen_consent==1
 drop if R_Cen_village_str=="Badaalubadi" | R_Cen_village_str=="Hatikhamba"
@@ -2647,7 +2647,7 @@ reg `k' treatment panchayat_village i.R_Cen_block_name, cluster(R_Cen_village_st
 									/*------------------------------------------------------------
 									    Baseline and Endline: Panel A. Water sources & treatment
 								     ------------------------------------------------------------*/
-use "${DataFinal}0_Master_HHLevel.dta", clear
+use "${Intermediate}0_Master_HHLevel.dta", clear
 rename R_Cen_a12_water_source_prim R_C_water_source_prim
 
 //generating relevant vars

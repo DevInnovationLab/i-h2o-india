@@ -44,8 +44,8 @@ user_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/"
   } 
-  else if (user == ""){
-    path = ""
+  else if (user == "uchicago"){
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -71,6 +71,10 @@ github_path <- function() {
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
   } 
+  else if (user == "uchicago"){
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
+  
   else if (user == "") {
     github = ""
   } 
@@ -94,6 +98,9 @@ overleaf <- function() {
   } 
   else if (user == "Archi Gupta") {
     overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "uchicago") {
+    overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "") {
     overleaf = ""
@@ -126,6 +133,9 @@ Final_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
   } 
+  else if (user == "uchicago") {
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/3_final/"
+  }
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -155,6 +165,9 @@ Intermediate <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/8_Intermediate Datasets/" 
   } 
+  else if (user == "uchicago") {
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/8_Intermediate Datasets/"
+  }
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()

@@ -314,7 +314,7 @@ keep unique_id R_Cen_a40_gps_latitude R_Cen_a40_gps_longitude R_Cen_village_name
 keep if R_Cen_a40_gps_latitude!=.
 gen Type=1
 * Adding tank
-append using "${DataFinal}90_Village_Geo.dta"
+append using "${DataOther}90_Village_Geo.dta"
 replace Type=30 if unique_id=="Tank"
 replace Type=31 if unique_id=="Anganwadi center"
 

@@ -132,7 +132,7 @@ mon_full <- read_csv(paste0(user_path(),"/1_raw/india_ilc_pilot_monitoring_WIDE.
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
-mon_long <- read_csv(paste0(user_path(), "1_raw/1_11_Longitudinal Testing/Longitudinal Testing Survey_WIDE.csv"))
+mon_long <- read_csv(paste0(user_path(), "1_raw/1_15_Longitudinal Testing/Longitudinal Testing Survey_WIDE.csv"))
 
 #-------------------------Village information cleaning-----------------------#
 
@@ -374,7 +374,7 @@ mon_long <- mon_long%>%
   filter(!(village_code == "NAI" & date_only < "2024-09-03"))
 
 #Writing clean dataset
-write_csv(mon_long,paste0(user_path(),"/3_final/1_11_Longitudinal Testing/longitudinal_testing_cleaned.csv"))
+write_csv(mon_long,paste0(user_path(),"/3_final/longitudinal_testing_cleaned.csv"))
 
 
 

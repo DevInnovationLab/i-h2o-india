@@ -489,10 +489,14 @@ idexx <- idexx%>%
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
 
-#Adding long-transformed data for baseline ABR
+#Adding long-transformed data for baseline ABR (imputing 0 values with 0.5 to avoid intedeterminate values post log transformation)
 abr <- abr%>%
-  mutate(ec_log = log(ec_mpn, base = 10))%>%
-  mutate(cf_log = log(cf_mpn, base = 10))
+  mutate(ec_mpn_2 = case_when(ec_mpn <= 0 ~ 0.5, #half the detection limit
+                              ec_mpn > 0 ~ ec_mpn))%>%
+  mutate(cf_mpn_2 = case_when(cf_mpn <= 0 ~ 0.5,
+                              cf_mpn > 0 ~ cf_mpn))%>%
+  mutate(ec_log = log(ec_mpn_2, base = 10))%>%
+  mutate(cf_log = log(cf_mpn_2, base = 10))
 
 #Code for writing/updating final file
 #Writing files to lab_data and final folders

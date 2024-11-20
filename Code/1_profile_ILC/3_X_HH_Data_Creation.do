@@ -179,7 +179,7 @@ restore
 clear
 use  "${Intermediate}1_10_Endline_final_Child_level_merged_dataset_cleaned.dta", clear
 drop if R_E_comb_child_comb_name_label== ""
-keep R_E_comb_child_comb_name_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_caregiver_present R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence R_E_comb_child_comb_care_label unique_id C_E_entry_type 
+keep R_E_comb_child_comb_name_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_careg_present R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence R_E_comb_child_comb_care_label unique_id C_E_entry_type 
 
 //Archi: the variable R_E_Cen_Type is replaced with C_E_entry_type 
 
@@ -194,7 +194,7 @@ bys unique_id: gen Num=_n
 
 rename R_E_comb_child_comb_name_label U5_Child_label
 rename R_E_comb_child_comb_care_label U5_caregiver_label
-rename  R_E_comb_child_caregiver_present  R_E_comb_child_care_pres
+rename  R_E_comb_child_careg_present  R_E_comb_child_care_pres
 reshape wide U5_Child_label R_E_comb_combchild_status R_E_comb_combchild_index R_E_comb_child_care_pres R_E_comb_child_care_pres_oth R_E_comb_child_caregiver_name R_E_comb_child_residence U5_caregiver_label C_E_entry_type, i(unique_id) j(Num)
 // drop if unique_id=="30501107052" //dropping the obs FOR NOW as the respondent in this case is not a member of the HH  
 save "${DataTemp}U5_Child_Endline_Census_for_merge.dta", replace
@@ -440,6 +440,16 @@ replace R_E_n_female_15to49="1" if unique_id=="30301104006" //respondent's gende
 Given she was listed as Male, the respondent's details for the CBW Women section were not collected. Flagged the same in the Individual level data as well
 */
 replace R_Cen_a4_hhmember_gender_3=2 if unique_id=="50101119006" & R_Cen_namefromearlier_3=="Rukmani katabansa"
+
+
+**Incorporated from Archi's code: Coding a non-consent case as refused to answer for consistency
+replace R_E_instruction = "-98" if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" & R_E_instruction == "1"
+replace R_E_consent =. if unique_id == "10101113002" & R_E_key == "uuid:15a2cff6-4db0-4d6b-80bc-f09e35fb0eaa" 
+
+
+**Enumerator error: 
+//enumertaor selected other option to mention the reason for not being able to find a respondent when we already have a relevant option  
+replace R_E_instruction = "6" if unique_id == "50101115006" & R_E_key == "uuid:131dfecd-cf82-497f-a815-22c0d16c7d34" & R_E_instruction_oth == "Main respondent Maika geyehai kab ayegi pata nehi ghar me un ki husband ko pani ke baremay patanehi un ki sasu maa ko sunai nehi dete"
 
 
 **Correcting the name of the village (GitHub Issue: #138)

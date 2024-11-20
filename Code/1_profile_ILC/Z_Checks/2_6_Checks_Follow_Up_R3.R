@@ -45,6 +45,9 @@ user_path <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/"
   } 
+  else if (user == "uchicago") {
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/"
+  }
   else if (user == ""){
     path = ""
   } 
@@ -72,6 +75,9 @@ github_path <- function() {
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
   } 
+  else if (user == "uchicago"){
+    github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
+  } 
   else if (user == "") {
     github = ""
   } 
@@ -95,6 +101,9 @@ overleaf <- function() {
   } 
   else if (user == "Archi Gupta") {
     overleaf = "C:/Users/Archi Gupta/Dropbox/Apps/Overleaf/Everything document -ILC/"
+  } 
+  else if (user == "uchicago") {
+    overleaf = "/Users/uchicago/Dropbox/Apps/Overleaf/Everything document -ILC/"
   } 
   else if (user == "") {
     overleaf = ""
@@ -125,6 +134,9 @@ Intermediate <- function() {
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/8_Intermediate Datasets/" 
   } 
+  else if (user == "uchicago") {
+    path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/8_Intermediate Datasets/"
+  }
   else {
     warning("No path found for current user (", user, ")")
     path = getwd()
@@ -140,7 +152,7 @@ knitr::opts_knit$set(root.dir = Intermediate())
 
 #------------------------ Load the data ----------------------------------------#
 
-df.temp <- read_dta(paste0(Intermediate(),"1_2_Followup.dta" ))
+df.temp <- read_dta(paste0(Intermediate(),"1_7_Followup_R3.dta" ))
 df.preload <- read_xlsx(paste0(user_path(),"99_Preload/FollowupR3_preload_5 Apr 2024.xlsx"))
 #------------------------ Apply the labels for variables  ----------------------------------------#
 
