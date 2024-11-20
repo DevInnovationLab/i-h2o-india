@@ -1363,16 +1363,17 @@ p_ec_cl_4 <- idexx_cl_comb%>%
   ggplot() + 
    geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
                  width = 2, color = "black") + #Does not include robust standard errors for village clustering
-  geom_point(aes(x = test_week, y = cl_presence, fill = assignment), size = 3)+
+  geom_point(aes(x = test_week, y = cl_presence), size = 3)+
   #geom_path(aes(x = test_week, y = cl_presence), color = "#FF474C")+ #Geom path makes the plot cluttered
   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_vline(aes(xintercept = ymd("2024-09-01")), lty = 2, color = "green")+ #Placing protocol change date
   # geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
   #           nudge_x = -25, color = "#FF474C")+
   scale_y_continuous(
                      limits = c(0, 105),
                      expand = c(0,0)
                      )+
-  scale_x_date(limits = c(ymd("2023-10-06"), ymd("2024-10-08")),
+  scale_x_date(limits = c(ymd("2024-1-06"), ymd("2024-10-08")),
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
@@ -1390,7 +1391,7 @@ p_ec_cl_4 <- idexx_cl_comb%>%
 
 p_ec_cl_4
 
-ggsave(filename = "manuscript_chlorine_time_series_v3.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
+ggsave(filename = "manuscript_chlorine_time_series_v4.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 5, height = 2, units = "in", scale = 2)
 
 #Combining in patchwork so the scales are correct
 p_ec_cl <- p_ec_cl_3 / p_ec_cl_4
