@@ -11,7 +11,7 @@
 ** In this do file: 
 	* This do file exports.....
 	
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 
 ***Change date prior to running
 
@@ -116,7 +116,7 @@ export excel using "${pilot}Data_quality.xlsx", sheet("Census refused") firstrow
 
 
 //6. Checking reason for primary and secondary water source not being JJM but people drinking JJM water
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 gen date= dofc(R_Cen_starttime)
 format date %td
 
@@ -128,7 +128,7 @@ export excel using "${pilot}Data_quality.xlsx", sheet("JJM_drink_noprimsec") fir
 
 
 	//6a. 
-	use "${DataPre}1_1_Census_cleaned.dta", clear
+	use "${DataFinal}1_1_Census_cleaned.dta", clear
 	count if R_Cen_a12_water_source_prim == 3 & R_Cen_a18_jjm_drinking==1
 	tab R_Cen_village_name if R_Cen_a12_water_source_prim == 3 & R_Cen_a18_jjm_drinking==1
 	
@@ -137,7 +137,7 @@ export excel using "${pilot}Data_quality.xlsx", sheet("JJM_drink_noprimsec") fir
 
 
 //7. Checking if "Other" primary water source can be clubbed in one of the existing categories 
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 gen date= dofc(R_Cen_starttime)
 format date %td
 tab R_Cen_a12_prim_source_oth if R_Cen_a12_water_source_prim== -77 
@@ -166,7 +166,7 @@ export excel using "${pilot}Data_quality.xlsx", sheet("Other cases") firstrow(va
 
 
 //generating preload for data quality 
-use "${DataPre}1_1_Census_cleaned.dta", clear
+use "${DataFinal}1_1_Census_cleaned.dta", clear
 keep if  R_Cen_village_name==30601 | R_Cen_village_name==30701 
 
 keep if R_Cen_a12_water_source_prim == -77 | (R_Cen_a12_water_source_prim == 2 & R_Cen_a18_jjm_drinking==0) | (R_Cen_a12_water_source_prim ==3 & R_Cen_a18_jjm_drinking==1) | (R_Cen_a12_water_source_prim != 1 & R_Cen_a18_jjm_drinking==1 & R_Cen_a13_water_source_sec_1!=1) 
@@ -224,7 +224,7 @@ drop if R_Cen_village_name_str==""
 tempfile BC_IDs
 save `BC_IDs', replace
 
-use "${DataPre}1_1_Census_cleaned.dta"
+use "${DataFinal}1_1_Census_cleaned.dta"
 keep unique_id R_Cen_enum_name R_Cen_enum_code
 merge 1:1 unique_id using `BC_IDs'
 keep if _merge==3
