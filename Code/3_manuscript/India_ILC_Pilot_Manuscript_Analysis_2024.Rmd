@@ -117,7 +117,7 @@ r_all <- read_stata(paste0(user_path(),"/3_final/0_Master_HHLevel_FU_Census.dta"
 mon <- read_stata(paste0(user_path(),"/3_final/1_X_chlorine_monitoring.dta"))
 
 #Longitudinal Chlorine Monitoring
-mon_long <- read_csv(paste0(user_path(),"/3_final/logitudinal_testing_cleaned.csv"))
+mon_long <- read_csv(paste0(user_path(),"/3_final/longitudinal_testing_cleaned.csv"))
 
 
 #Longitudinal chlorine monitoring form
@@ -142,7 +142,7 @@ idexx_r2 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R2_idexx_mast
 idexx_r3 <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv"))
 
 #Pooled IDEXX Rounds
-idexx_tab <- read_csv(paste0(user_path(),"/5_lab data/idexx/cleaned/POOLED_idexx_master_cleaned.csv"))
+idexx_tab <- read_csv(paste0(user_path(),"/3_final/POOLED_idexx_master_cleaned.csv"))
 
 #Pooled IDEXX Rounds
 idexx_abr <- read_csv(paste0(user_path(),"/3_final/POOLED_idexx_ABR_master_cleaned.csv"))
@@ -155,17 +155,10 @@ idexx_mc <- read_stata(paste0(user_path(),"/2_deidentified/Ecoli results followu
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
-#Village Details
-villages <- read_stata(paste0(user_path(),"4_other/India ILC_Pilot_Rayagada Village Tracking_clean_final.dta" ))
-
-
-#Cen final
-cen_info <- read_stata(paste0(user_path(),"4_other/Final_Population_Village.dta" ))
-
 
 #endline census
 #el <- read_stata(paste0(user_path(),"3_final/1_8_Endline_Census_cleaned.dta" ))
-el <- read_stata(paste0(user_path(),"/3_final/1_10_Endline_Census_HH_clean_consented.dta")) #NB: replacing with final version of EL data
+el <- read_stata(paste0(user_path(),"/3_final/1_10_Endline_Census_HH_clean_consented.dta"))
 
 
 #map data - shapefile
@@ -178,6 +171,7 @@ shp_file_3 <- st_read(paste0(user_path(), "7_map/shapefiles/gadm41_IND_3.shp"), 
 
 
 ```
+
 # Defining Functions
 
 ```{r defining misc functions}
