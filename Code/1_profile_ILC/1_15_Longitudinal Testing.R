@@ -341,6 +341,22 @@ print(plot_sw_45_90)
 ggsave(paste0(overleaf(), "Figure/Chlorine_decay_sw_45and90mins.png"), plot_sw_45_90, bg = "white", width = 10, height = 6, dpi = 200)
 
 
+# Anonymize village names based on the specified rules
+df_clean_sw_long_new <- df_clean_sw_long_new %>%
+  mutate(anonymized_village_name = case_when(
+    village_name == "Nathma"       ~ "NAT",
+    village_name == "Birnarayanpur" ~ "BN",
+    village_name == "Gopi Kankubadi" ~ "GO",
+    village_name == "Bichikote"    ~ "BI",
+    village_name == "Badabangi"    ~ "BA",
+    village_name == "Tandipur"     ~ "TA",
+    village_name == "Asada"        ~ "AS",
+    village_name == "Mukundpur"    ~ "MU",
+    village_name == "Naira"        ~ "NAI",
+    TRUE ~ village_name            # Default to original village name if no match
+  ))
+
+
 # Create the scatterplot for decay in stored water without Village names (45 mins and 90 mins post sample collection)
 plot_sw_45_90_anony <- ggplot(df_clean_sw_long_new, aes(x = tw_fc, y = sw_fc_value, color = anonymized_village_name, shape = time_point)) +
   geom_point() +  # Add points, color by village_name and shape by time_point
@@ -404,13 +420,29 @@ print(plot)
 ggplot2::ggsave(paste0(overleaf(), "Figure/Chlorine decay in stored water.png"), plot, bg = "white", width = 10, height = 6, dpi = 200)
 
 
+# Anonymize village names based on the specified rules
+df_clean_sw_final_new <- df_clean_sw_final_new %>%
+  mutate(anonymized_village_name = case_when(
+    village_name == "Nathma"       ~ "NAT",
+    village_name == "Birnarayanpur" ~ "BN",
+    village_name == "Gopi Kankubadi" ~ "GO",
+    village_name == "Bichikote"    ~ "BI",
+    village_name == "Badabangi"    ~ "BA",
+    village_name == "Tandipur"     ~ "TA",
+    village_name == "Asada"        ~ "AS",
+    village_name == "Mukundpur"    ~ "MU",
+    village_name == "Naira"        ~ "NAI",
+    TRUE ~ village_name            # Default to original village name if no match
+  ))
+
+
 # Create the scatterplot for decay in stored water without Village names (45 mins post sample collection)
 plot_sw <- ggplot(df_clean_sw_final_new, aes(x = tw_fc, y = sw_fc, color = anonymized_village_name)) +
   geom_point() +  # Add points
   labs(title = "Chlorine Decay in Stored Water Over Time",
        x = "FC in Running Water at Time of Stored Water Collection (mg/L)", 
        y = "FC in Stored Water 45 Minutes After Water Collection (mg/L)",
-       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 minutes after sample collection in seven villages. \nTesting was performed across two rounds at different chlorine levels at the nearest and farthest taps, which accounts for multiple observations per village.") +
+       caption = "Note: Data points are from longitudinal testing of stored water conducted 45 and 90 minutes after sample collection in seven villages.") +
   theme_minimal() +  # Use a minimal theme
   scale_color_discrete(name = "Village") +  # Legend title
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # 45-degree line
@@ -553,6 +585,39 @@ filtered_data_r2_new <- filtered_data_r2_new %>%
 
 View(filtered_data_r2_new)
 
+# ------------------ NEW PART: Combine R1 and R2 for all villages except Birnaryanpur and Gopi Kankubadi - to get final data-------------------
+
+# Exclude Birnaryanpur and Gopi Kankubadi from Round 2 data
+filtered_data_r2_new_exclude_villages <- filtered_data_r2_new %>%
+  filter(!(village_name %in% c("Birnaryanpur", "Gopi Kankubadi")))
+
+# Select data for Birnaryanpur and Gopi Kankubadi from Round 1
+filtered_data_r1_villages <- filtered_data_r1 %>%
+  filter(village_name %in% c("Birnaryanpur", "Gopi Kankubadi"))
+
+# Combine the data: Round 1 data for Birnaryanpur and Gopi Kankubadi, and Round 2 data for the rest
+final_data <- bind_rows(filtered_data_r1_villages, filtered_data_r2_new_exclude_villages)
+
+# View the final combined data
+View(final_data)
+
+# Anonymize village names based on the specified rules
+final_data <- final_data %>%
+  mutate(anonymized_village_name = case_when(
+    village_name == "Nathma"       ~ "NAT",
+    village_name == "Birnarayanpur" ~ "BN",
+    village_name == "Gopi Kankubadi" ~ "GO",
+    village_name == "Bichikote"    ~ "BI",
+    village_name == "Badabangi"    ~ "BA",
+    village_name == "Tandipur"     ~ "TA",
+    village_name == "Asada"        ~ "AS",
+    village_name == "Mukundpur"    ~ "MU",
+    village_name == "Naira"        ~ "NAI",
+    TRUE ~ village_name            # Default to original village name if no match
+  ))
+
+# View the final data with anonymized village names
+View(final_data)
 
 #-----------------------------------Creating GGplots - round-wise---------------
 #Round 1 of Longitudinal Testing
@@ -681,6 +746,40 @@ plot3 <- ggplot(data = filtered_data_r2_new) +
 
 print(plot3)
 ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_findings.png"), plot3, bg = "white", width = 10, height = 6, dpi = 200)
+
+#------------------------Final graph for Longitudinal testing at tap water --------------------------
+
+plot4 <- ggplot(data = final_data) +
+  geom_point(aes(x = time_since_supply, y = tw_fc, color = factor(location))) +
+  geom_line(aes(x = time_since_supply, y = tw_fc, color = factor(location), group = location)) +
+  facet_wrap(~ anonymized_village_name, scales = "free_x") +
+  labs(
+    title = "Chlorine Concentrations Over Supply Time in Rayagada Study Sample",
+    x = "Minutes since start of supply time",
+    y = "Free Chlorine Concentration in Running Water (mg/L)",
+    color = "Tap",
+    caption = "Note: Data points from longitudinal testing throughout the supply time in nine villages at the nearest and farthest taps."
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 90, vjust = 1, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12),
+    plot.caption = element_text(size = 10, hjust = 0, face = "plain", color = "black", lineheight = 0.5)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(from = 0.0, to = 2.0, by = 0.2)
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(filtered_data_r2_new$time_since_supply)),
+    breaks = seq(0, max(filtered_data_r2_new$time_since_supply), by = 10)
+  ) +
+  scale_color_manual(values = c("Nearest Tap" = color_nearest, "Farthest Tap" = color_farthest))
+
+print(plot4)
+ggplot2::ggsave(paste0(overleaf(), "Figure/longitudinal_findings_new.png"), plot4, bg = "white", width = 10, height = 6, dpi = 200)
+
 
 #------------------------Creating new dfs for each village----------------------
 
