@@ -468,7 +468,7 @@ for (i in mon_villages){
 
 
 
-```{r JPAL Chlorine Monitoring results - pt 2, message = FALSE, fig.height=8, fig.width=9}
+```{r JPAL Chlorine Monitoring results - pt 2, message = FALSE, fig.height=6, fig.width=12}
 
   
 #Representing them on facet_wrap()
@@ -478,6 +478,19 @@ mon_wide <- mon_wide%>%
   dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc)%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
                cols = c(nearest_tap_fc, farthest_tap_fc))
+
+# Anonymizing village names and filter for Naira and Mukundpur for Odisha Report
+mon_wide_anonymized <- mon_wide %>%
+  mutate(village_name = case_when(
+    village_name == "Naira" ~ "NAI",  
+    village_name == "Mukundpur" ~ "MU",  
+    TRUE ~ village_name  
+  )) %>%
+  filter(village_name %in% c("NAI", "MU")) %>%  
+  filter(test_date > "2024-04-05") %>% 
+  filter(test_date < "2024-10-30") %>% 
+  filter(!is.na(chlorine_concentration))  # Remove rows with NA 
+
 
 #Making a plot for Karnapadu
 #mon_karnapadu <- mon_wide%>%
@@ -514,6 +527,11 @@ mon_wide$chlorine_test <- factor(mon_wide$chlorine_test)
 mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
                                   "Nearest Tap - Free Chlorine" = "nearest_tap_fc",
                                   "Farthest Tap - Free Chlorine" = "farthest_tap_fc")
+# Recode chlorine test sample types
+mon_wide_anonymized$chlorine_test <- factor(mon_wide_anonymized$chlorine_test)
+mon_wide_anonymized$chlorine_test <- fct_recode(mon_wide_anonymized$chlorine_test,
+                                                "Nearest Tap" = "Nearest Tap - Free Chlorine",
+                                                "Farthest Tap" = "Farthest Tap - Free Chlorine")
 
 
 
@@ -550,9 +568,24 @@ mon_wide$chlorine_test <- fct_recode(mon_wide$chlorine_test,
   print(p1)
 
 
+  p2 <- ggplot(data = mon_wide_anonymized) + 
+  geom_point(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+  geom_line(aes(x = test_date, y = chlorine_concentration, color = chlorine_test)) +
+  scale_color_manual(values = c("Nearest Tap" = "blue", 
+                                "Farthest Tap" = "#FF8C00")) +  # Set specific colors
+  scale_y_continuous(
+    limits = c(0, 1.2),
+    expand = c(0, 0)
+  ) +
+  labs(x = "Month", 
+       y = "Free Chlorine Concentration (mg/L)",
+       color = "Tap Location",
+       title = "Chlorine Monitoring Results across the Distribution Line") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  facet_wrap(~village_name, ncol = 3)   # Facet by the anonymized village names (NAI, MU)
+  
+ print(p2)
 
 ```
-
-
-
 
