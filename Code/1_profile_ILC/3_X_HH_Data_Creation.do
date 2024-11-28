@@ -1950,8 +1950,11 @@ restore
 ********************************************************************************
 
 preserve
-drop R_E_*
+drop R_Cen_*
+drop if R_E_consent==. //dropping the empty vairables which contain baseline preload information 
+count 
 save "${DataFinal}1_10_Endline_Census_HH_clean_consented.dta", replace
+//880 observations: final endline observations 
 restore
 
 ********************************************************************************
