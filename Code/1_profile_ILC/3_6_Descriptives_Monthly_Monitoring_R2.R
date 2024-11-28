@@ -2591,6 +2591,63 @@ MM_idexx_vis <- MM_idexx_vis %>%
 View(MM_idexx_vis)
 
 str(MM_idexx_vis$date)
+
+##########################################################################
+
+#-------------- Monthly Monitoring R2 Survey ----------------------------------
+##########################################################################
+
+
+MM_2_idexx <- read_csv(paste0(Final_path(), "idexx_monthly_master_cleaned_R2.csv"))
+
+
+MM_2_idexx$date <- as.POSIXct(MM_2_idexx$SubmissionDate.x, format = "%d-%b-%Y %H:%M:%S")
+
+names(MM_2_idexx)
+#tap_water_fc variable renames as fc_tap_avg in the cleaning file for R2, changing the name of var below
+MM_2_idexx_vis <- MM_2_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, village_name, ec_mpn, cf_mpn, date_processed, date, fc_tap_avg)
+
+#Commenting out the code beow as the var has been renames in 1_10_monthly_Monitoring_Cleaning_R2 file
+#MM_2_idexx_vis <- MM_2_idexx_vis %>% 
+#  rename (fc_tap_avg = tap_water_fc)
+
+MM_2_idexx_vis <- MM_2_idexx_vis %>% 
+  rename (village = village_name)
+
+
+View(MM_2_idexx_vis)
+
+str(MM_2_idexx_vis$date)
+
+
+##########################################################################
+
+#-------------- Monthly Monitoring R3 Survey ----------------------------------
+##########################################################################
+
+
+MM_3_idexx <- read_csv(paste0(Final_path(), "idexx_monthly_master_cleaned_R3.csv"))
+
+
+MM_3_idexx$date <- as.POSIXct(MM_3_idexx$SubmissionDate.x, format = "%d-%b-%Y %H:%M:%S")
+
+names(MM_3_idexx)
+#tap_water_fc variable renames as fc_tap_avg in the cleaning file for R2, changing the name of var below
+MM_3_idexx_vis <- MM_3_idexx %>% select(sample_type, ec_log, cf_log, ec_risk, ec_pa, cf_pa, village_name, ec_mpn, cf_mpn, date_processed, date, fc_tap_avg)
+
+#Commenting out the code beow as the var has been renames in 1_10_monthly_Monitoring_Cleaning_R2 file
+#MM_3_idexx_vis <- MM_3_idexx_vis %>% 
+#  rename (fc_tap_avg = tap_water_fc)
+
+MM_3_idexx_vis <- MM_3_idexx_vis %>% 
+  rename (village = village_name)
+
+
+View(MM_3_idexx_vis)
+
+str(MM_3_idexx_vis$date)
+
+
 ##########################################################################
 
 #-------------- COMBINED GRAPHS ----------------------------------
@@ -2642,6 +2699,8 @@ FU1_idexx_vis <- FU1_idexx_vis %>% mutate(village = as.character(village))
 FU2_idexx_vis <- FU2_idexx_vis %>% mutate(village = as.character(village))
 FU3_idexx_vis <- FU3_idexx_vis %>% mutate(village = as.character(village))
 MM_idexx_vis <- MM_idexx_vis %>% mutate(village = as.character(village))
+MM_2_idexx_vis <- MM_2_idexx_vis %>% mutate(village = as.character(village))
+MM_3_idexx_vis <- MM_3_idexx_vis %>% mutate(village = as.character(village))
 
 # Combine the data
 #combined_data <- bind_rows(
@@ -2657,7 +2716,9 @@ combined_data <- bind_rows(
   FU1_idexx_vis %>% mutate(period = "Follow up R1"),
   FU2_idexx_vis %>% mutate(period = "Follow up R2"),
   FU3_idexx_vis %>% mutate(period = "Follow up R3"),
-  MM_idexx_vis %>% mutate(period = "Monthly monitoring")
+  MM_idexx_vis %>% mutate(period = "Monthly monitoring R1"),
+  MM_2_idexx_vis %>% mutate(period = "Monthly monitoring R2"),
+  MM_3_idexx_vis %>% mutate(period = "Monthly monitoring R3")
 )
 
 
@@ -2719,7 +2780,9 @@ merged_data_f <- merged_data_f %>%
     year_month == "2024-04-01" ~ "Apr24",
     year_month == "2024-05-01" ~ "May24",
     year_month == "2024-07-01" ~ "July24",
-    year_month == "2024-08-01" ~ "August24",
+    year_month == "2024-08-01" ~ "Aug24",
+    year_month == "2024-09-01" ~ "Sept24",
+    year_month == "2024-10-01" ~ "Oct24",
     TRUE ~ as.character(year_month)  # Keep the original value if no match
   ))
 
@@ -2730,7 +2793,7 @@ merged_data_f <- merged_data_f %>%
 
 # Manually specify the order of levels for year_month
 merged_data_f <- merged_data_f %>%
-  mutate(year_month = factor(year_month, levels = c("Oct23", "Nov23", "Feb24", "Mar24", "Apr24", "May24", "July24", "August24")))
+  mutate(year_month = factor(year_month, levels = c("Oct23", "Nov23", "Feb24", "Mar24", "Apr24", "May24", "July24", "Aug24", "Sept24", "Oct24")))
 
 # Plot the boxplot with the correctly ordered year_month
 unique(merged_data_f$sample_type)
@@ -2824,6 +2887,168 @@ print(ecoli)
 
 ggplot2::ggsave(paste0(overleaf(), "Figure/e-coli_temporal.png"), ecoli, bg = "white", width = 10, height = 6, dpi = 200)
 
+
+##############################################################################
+#plots for odisha report
+################################################################################
+######### tap water #########
+
+merged_data_f <- merged_data_f %>%
+  mutate(period_new = case_when(
+    period == "Baseline HH" ~ "Pre ILC",
+    period == "Follow up R1" ~ "R1",
+    period == "Follow up R2" ~ "R2",
+    period == "Follow up R3" ~ "R3",
+    period == "Monthly monitoring R1" ~ "R4",
+    period == "Monthly monitoring R2" ~ "R5",
+    period == "Monthly monitoring R3" ~ "R6",
+    TRUE ~ period  # Retain the original value if none of the conditions are met
+  ))
+
+merged_data_f <- merged_data_f %>%
+  mutate(assignment_new = case_when(
+    assignment == "Treatment" ~ "Chlorinated Samples",
+    assignment == "Control" ~ "Non-Chlorinated Samples",
+    TRUE ~ period  # Retain the original value if none of the conditions are met
+  ))
+
+
+
+ecoli_tw <- ggplot(merged_data_f, aes(x = period_new, y = ec_log, fill = assignment)) +
+  
+  # Adjust boxplot width, and color outliers
+  geom_boxplot(width = 0.6, outlier.colour = "grey", outlier.size = 2, color = "grey24") + 
+  # Highlight the mean with a black point
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "black", color = "black") +
+  # Facet by 'assignment_new' (treatment/control) with different colors
+  facet_wrap(~ assignment) +
+  # Add the threshold line slightly below zero in red
+  geom_hline(yintercept = -0.01, linetype = "solid", color = "blue", size = 0.5) + 
+  
+  # Add labels
+  labs(
+    x = "Survey Round",  
+    y = "Magnitude of E.coli detected (Log 10 MPN)",
+    title = "E.Coli Contamination in Household Tap Water Samples before and after Chlorination",
+    fill = "Assignment"
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the background to white
+    panel.grid.major = element_line(color = "grey90", size = 0.25),  # Grid lines for major axes
+    panel.grid.minor = element_line(color = "grey90", size = 0.25),  # Minor grid lines
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),   # Rotate x-axis labels
+    axis.text.y = element_text(size = 10),                         # Increase y-axis text size
+    axis.title.x = element_text(size = 12),                        # Increase x-axis title size
+    axis.title.y = element_text(size = 10),                        # Increase y-axis title size
+    strip.text = element_text(size = 10),                          # Increase facet label size
+    plot.title = element_text(size = 14),                          # Increase title size
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
+  ) +
+  # Set color for 'assignment_new' facets
+  scale_fill_manual(values = c("Treatment" = "cadetblue3", "Control" = "coral2")) + 
+  annotate("text", x = Inf, y = 0.05, label = "E.coli Presence", vjust = -1, hjust = 1.1, color = "blue") +
+  theme(panel.grid = element_blank())  # Optional: Remove background gridlines if desired
+
+# Print the plot
+print(ecoli_tw)
+ggplot2::ggsave(paste0(overleaf(), "Figure/ecoli_tw_pre_postILC.png"), ecoli_tw, bg = "white", width = 10, height = 6, dpi = 200)
+
+
+
+######### stored water #########
+merged_data_sw <- merged_data %>% filter(sample_type == "Stored")
+
+View(merged_data_sw)
+names(merged_data_sw)
+
+
+merged_data_sw <- merged_data_sw %>%
+  mutate(year_month = as.factor(year_month)) %>%
+  mutate(year_month = case_when(
+    year_month == "2023-10-01" ~ "Oct23",
+    year_month == "2023-11-01" ~ "Nov23",
+    year_month == "2024-02-01" ~ "Feb24",
+    year_month == "2024-03-01" ~ "Mar24",
+    year_month == "2024-04-01" ~ "Apr24",
+    year_month == "2024-05-01" ~ "May24",
+    year_month == "2024-07-01" ~ "July24",
+    year_month == "2024-08-01" ~ "Aug24",
+    year_month == "2024-09-01" ~ "Sept24",
+    year_month == "2024-10-01" ~ "Oct24",
+    TRUE ~ as.character(year_month)  # Keep the original value if no match
+  ))
+
+# Convert back to factor if needed
+merged_data_sw <- merged_data_sw %>%
+  mutate(year_month = as.factor(year_month))
+
+
+# Manually specify the order of levels for year_month
+merged_data_sw <- merged_data_sw %>%
+  mutate(year_month = factor(year_month, levels = c("Oct23", "Nov23", "Feb24", "Mar24", "Apr24", "May24", "July24", "Aug24", "Sept24", "Oct24")))
+
+# Plot the boxplot with the correctly ordered year_month
+unique(merged_data_sw$sample_type)
+
+
+merged_data_sw <- merged_data_sw %>%
+  mutate(period_new = case_when(
+    period == "Baseline HH" ~ "Pre ILC",
+    period == "Follow up R1" ~ "R1",
+    period == "Follow up R2" ~ "R2",
+    period == "Follow up R3" ~ "R3",
+    period == "Monthly monitoring R1" ~ "R4",
+    period == "Monthly monitoring R2" ~ "R5",
+    period == "Monthly monitoring R3" ~ "R6",
+    TRUE ~ period  # Retain the original value if none of the conditions are met
+  ))
+
+merged_data_sw <- merged_data_sw %>%
+  mutate(assignment_new = case_when(
+    assignment == "T" ~ "Treatment",
+    assignment == "C" ~ "Control",
+    TRUE ~ period  # Retain the original value if none of the conditions are met
+  ))
+
+
+ecoli_sw <- ggplot(merged_data_sw, aes(x = period_new, y = ec_log, fill = assignment_new)) +
+  
+  # Adjust boxplot width, and color outliers
+  geom_boxplot(width = 0.6, outlier.colour = "grey", outlier.size = 2, color = "grey24") + 
+  # Highlight the mean with a black point
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "black", color = "black") +
+  # Facet by 'assignment_new' (treatment/control) with different colors
+  facet_wrap(~ assignment_new) +
+  # Add the threshold line slightly below zero in red
+  geom_hline(yintercept = -0.01, linetype = "solid", color = "blue", size = 0.5) + 
+  
+  # Add labels
+  labs(
+    x = "Survey Round",  
+    y = "Magnitude of E.coli detected (Log 10 MPN)",
+    title = "E.Coli Contamination in Household Stored Water Samples before and after Chlorination",
+    fill = "Assignment",
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white", color = "black"),  # Set the background to white
+    panel.grid.major = element_line(color = "grey90", size = 0.25),  # Grid lines for major axes
+    panel.grid.minor = element_line(color = "grey90", size = 0.25),  # Minor grid lines
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),   # Rotate x-axis labels
+    axis.text.y = element_text(size = 10),                         # Increase y-axis text size
+    axis.title.x = element_text(size = 12),                        # Increase x-axis title size
+    axis.title.y = element_text(size = 10),                        # Increase y-axis title size
+    strip.text = element_text(size = 10),                          # Increase facet label size
+    plot.title = element_text(size = 14),                          # Increase title size
+    plot.caption = element_text(size = 10, hjust = 0, face = "italic", color = "gray40", lineheight = 0.5)  # Style the caption
+  ) +
+  # Set color for 'assignment_new' facets
+  scale_fill_manual(values = c("Treatment" = "cadetblue3", "Control" = "coral2")) + 
+  annotate("text", x = Inf, y = 0.19, label = "E.coli Presence", vjust = -1, hjust = 1.1, color = "blue") +
+  theme(panel.grid = element_blank())  # Optional: Remove background gridlines if desired
+
+# Print the plot
+print(ecoli_sw)
+ggplot2::ggsave(paste0(overleaf(), "Figure/ecoli_sw_pre_postILC.png"), ecoli_sw, bg = "white", width = 10, height = 6, dpi = 200)
 
 ##############################################################################
 #now descriptive stats 
