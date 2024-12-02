@@ -238,6 +238,10 @@ round_stats <- function(idexx_data){
       # },
       # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
       "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
+      "Lower CI - Tap" = mean(fc_tap_avg) -
+        (qt(0.975, n() - 1) * sd(fc_tap_avg/sqrt(n()))),
+      "Upper CI - Tap" = mean(fc_tap_avg) +
+        (qt(0.975, n() - 1) * sd(fc_tap_avg/sqrt(n()))),
       "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2),
       "WHO 'High' Risk Contamination (> 100 MPN E. coli per 100 mL)" = round(sum(ec_risk == "High Risk") / n()*100, 1)
       

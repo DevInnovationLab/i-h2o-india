@@ -1197,20 +1197,31 @@ idexx_cl_comb_1 <- mon_summary_weekly%>%
   mutate(assignment = "Treatment")%>%
   mutate(`% Positive for E. coli` = NA)%>%
   mutate(`Lower CI - EC` = NA)%>%
-  mutate(`Upper CI - EC` = NA) #Adding in variables from the other dataset so they can be directly combined
+  mutate(`Upper CI - EC` = NA)%>%
+  mutate(`Lower CI - Tap` = NA) %>%
+  mutate(`Upper CI - Tap` = NA)#Adding in variables from the other dataset so they can be directly combined
 
 
 idexx_cl_comb_2 <- tc_stats_round%>%
   rename("test_week" = "data_round_month")%>% #renaming to align with other dataset
   select(test_week, assignment, sample_type, `% Positive for E. coli`,
-         `Lower CI - EC`, `Upper CI - EC`)%>%
+         `Lower CI - EC`, `Upper CI - EC`, `Tap - Average Free Chlorine Concentration (mg/L)`,`Lower CI - Tap`, `Upper CI - Tap`)%>%
   filter(sample_type == "Tap")%>%
-  mutate(avg_concentration = NA,
+  mutate(
          lower_ci = NA,
          upper_ci = NA,
          cl_presence = NA,
          lower_ci_pa = NA,
          upper_ci_pa = NA)
+idexx_cl_comb_2 <- idexx_cl_comb_2%>%
+  rename("avg_concentration" = `Tap - Average Free Chlorine Concentration (mg/L)`)
+
+#Removing chlorine tests from control group -- all null
+idexx_cl_comb_2 <- idexx_cl_comb_2%>%
+  mutate(avg_concentration = ifelse(avg_concentration > 0.05, avg_concentration, NA))%>%
+  mutate(`Lower CI - Tap` = ifelse(avg_concentration > 0.05, `Lower CI - Tap`, NA))%>%
+  mutate(`Upper CI - Tap` = ifelse(avg_concentration > 0.05, `Upper CI - Tap`, NA))
+
 
 #Combining datasets together
 idexx_cl_comb <- rbind(idexx_cl_comb_1, idexx_cl_comb_2)
@@ -1432,7 +1443,113 @@ ggsave(filename = "manuscript_e_coli_chlorine_time_series_v4.jpeg", path = (past
 
 
 
+#Plotting treatment/control stats on a bar plot
+p_ec_cl_5 <- idexx_cl_comb_2%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+           position = "dodge", width = 12) +
+   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     fill = assignment), position = position_dodge(width = 12),
+                 width = 6, color = "black") +
+   geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
+                 width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
+  geom_point(aes(x = test_week+7, y = avg_concentration*scale_value), color = "#FF474C")+
+  geom_errorbar(aes(x = test_week+7, ymin = `Lower CI - Tap`*scale_value,
+                    ymax = `Upper CI - Tap`*scale_value), width = 2, color =  "#FF474C") +
+  #geom_path(aes(x = test_week+6, y = avg_concentration*scale_value), color = "#FF474C")+
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"), size = 3,
+            nudge_x = -20, color = "#FF474C")+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0),
+                     sec.axis = sec_axis(~./scale_value,
+                                          name = 'Average Free Chlorine Concentration (mg/L)',
+                                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
+                                                     1.4, 1.6, 1.8, 2.0))
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = expression(paste("% tap samples positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p_ec_cl_5
+
+
+
+
+
+
+
+#Plotting treatment/control stats on a bar plot
+p_ec_cl_6 <- idexx_cl_comb_2%>%
+  ggplot() + 
+  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+           position = "dodge", width = 12) +
+   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     fill = assignment), position = position_dodge(width = 12),
+                 width = 6, color = "black") +
+   geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
+                 width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
+  geom_label(aes(x = test_week+10, label = avg_concentration, y = 1.5), size = 2.5, color = "#FF474C")+
+  #geom_path(aes(x = test_week+6, y = avg_concentration*scale_value), color = "#FF474C")+
+  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"), size = 3,
+            nudge_x = -18, color = "#FF474C")+
+  geom_vline(aes(xintercept = ymd("2024-07-01")), lty = 2, color = "darkblue")+ #Placing monsoon start date
+  geom_text(aes(x = ymd("2024-07-01"), y = 80, label = "Monsoon Onset"), size = 3,
+            nudge_x = -16, color = "darkblue")+
+  geom_vline(aes(xintercept = ymd("2024-08-20")), lty = 2, color = "darkgreen")+ #Placing target dose change date
+  geom_text(aes(x = ymd("2024-08-20"), y = 80, label = "Target"), size = 3,
+            nudge_x = -8, color = "darkgreen")+
+  geom_text(aes(x = ymd("2024-08-20"), y = 77, label = "Dose"), size = 3,
+            nudge_x = -8, color = "darkgreen")+
+  geom_text(aes(x = ymd("2024-08-20"), y = 74, label = "Increase"), size = 3,
+            nudge_x = -8, color = "darkgreen")+
+  #geom_text(aes(x = ymd("2024-02-01"), y = 6, label = "Avg. Conc. (mg/L)"), size = 2.5,
+   #         nudge_x = 30, color = "#FF474C")+
+  scale_y_continuous(
+                     limits = c(0, 100),
+                     expand = c(0,0)
+                     )+
+  scale_x_date(
+        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+        date_labels = "%b")+
+  scale_fill_brewer(palette = "Pastel1")+
+  labs(x = "Date", 
+       y = expression(paste("% tap samples positive for ",italic("E. coli"))),
+       fill = "Assignment",
+       title = "",
+       caption = ""
+       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       )+
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+p_ec_cl_6
+
+
+
+
+
 ```
+
+
+
+
+
+
 
 
 
@@ -1970,7 +2087,8 @@ desc_stats <- el%>%
 
 # Poisson Regression -- Treatment Effect -------------------------------------
 
-outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat")
+outcome_vars <- c("prim_source_jjm", "sec_source", #Issue after code cleaning updates
+                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat")
 
 el_model <- factormaker(el, outcome_vars) #Making variables numeric
 
@@ -2220,6 +2338,104 @@ print(el_forestplot)
 #combined regular and ABR IDEXX results
 
 #Removed total coliform and e. coli tap results from ABR IDEXX
+# idexx_abr_poisson <- idexx_abr_poisson%>%
+#   filter(model_name != "cf_tap")%>%
+#   filter(model_name != "cf_stored")%>%
+#   mutate(model_name = ifelse(model_name == "ec_stored","Presence Antibiotic Resistant E. coli in Stored Water", "Presence Antibiotic Resistant E. coli in Tap Water"))%>%
+#   select(!(sample_type))
+# 
+# 
+# #Removing chlorine results from regular IDEXX results
+# fu_poisson <- fu_poisson%>%
+#   filter(model_name != "fc_tap")%>%
+#   filter(model_name != "fc_stored")%>%
+#   select(!(sample_type))
+# 
+# #Joining poisson results
+# el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson, el_models)
+# 
+# 
+# #Changing model names
+# el_models_forestplot <- el_models_forestplot%>%
+#   mutate(mean = estimate)%>%
+#   mutate(estimate = as.character(round(estimate, 2)))%>%
+#   mutate(Lower_CI = round(Lower_CI, 2))%>%
+#   mutate(Upper_CI = round(Upper_CI, 2))%>%
+#   mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+#   mutate(lower = Lower_CI)%>%
+#   mutate(upper = Upper_CI)%>%
+#   mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+# 
+# el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+#   factor()%>%
+#   fct_recode("Presence of Total Coliform at Taps"= "cf_tap",
+#               "Presence of E. coli at Taps"= "ec_tap",
+#               "Presence of Total Coliform in Stored Water"= "cf_stored",
+#               "Presence of E. coli in Stored Water"= "ec_stored",
+#              "Presence Antibiotic Resistant E. coli in Stored Water" =
+#                "Presence Antibiotic Resistant E. coli in Stored Water",
+#              "Taps as Primary Source" = "prim_source_jjm",
+#              "Use a Secondary Source" = "sec_source",
+#              "Drink Tap Water" = "jjm_drinking",
+#              "Treat Water" = "water_treat_binary",
+#              "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+#              "Time Spent Treating Water is >10 Minutes" = "time_spent_treat"
+#              )
+# 
+# el_forestplot <- el_models_forestplot%>%
+#   forestplot(labeltext = c(model_name, estimate, p_value, N),
+#              title = "Intervention Effect on Key Water Use and Quality Outcomes",
+#              caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
+#              clip = c(0, 1.5),
+#              xticks = c(0, 0.5, 1, 1.5),
+#              fn.ci_norm = fpDrawCircleCI,
+#              vertices = TRUE,
+#              xlog = FALSE,
+#              txt_gp = fpTxtGp(
+#                label = gpar(fontsize = 10),       # Adjust label text size
+#                ticks = gpar(fontsize = 15),       # Adjust tick text size
+#                xlab = gpar(fontsize = 15)),
+#              boxsize = 0.2
+#              )%>%
+#   fp_add_lines(h_3 = gpar(lty = 1), 
+#                h_15 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
+#   fp_set_style(box = "black",
+#                line = "black",
+#                summary = "black",
+#                align = "lrrr",
+#                hrz_lines = "black")%>% 
+#   fp_add_header(model_name = c("", "Outcome"),
+#                 estimate = c("Prevalence Ratio", "(95% CI)")%>%
+#                   fp_align_center(),
+#                 p_value = c("", "P-value")%>% 
+#                   fp_align_center(),
+#                 N = c("", "N")%>%
+#                   fp_align_center()
+#                 )%>%
+#   fp_decorate_graph(grid = structure(c(1), 
+#                               gp = gpar(lty = 2, col = "grey")))
+# 
+print(el_forestplot)
+
+
+
+
+
+
+```
+
+
+
+
+# Combined Forestplot Using ggplot
+
+
+```{r ggplot forestplot}
+
+####Code provided by Courtney Victor, UNC W&H Conference 2024
+
+
+#Removed total coliform and e. coli tap results from ABR IDEXX
 idexx_abr_poisson <- idexx_abr_poisson%>%
   filter(model_name != "cf_tap")%>%
   filter(model_name != "cf_stored")%>%
@@ -2236,7 +2452,7 @@ fu_poisson <- fu_poisson%>%
 #Joining poisson results
 el_models_forestplot <- rbind(fu_poisson, idexx_abr_poisson, el_models)
 
-
+#Setting order of variables
 #Changing model names
 el_models_forestplot <- el_models_forestplot%>%
   mutate(mean = estimate)%>%
@@ -2248,6 +2464,9 @@ el_models_forestplot <- el_models_forestplot%>%
   mutate(upper = Upper_CI)%>%
   mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
 
+
+
+
 el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
   factor()%>%
   fct_recode("Presence of Total Coliform at Taps"= "cf_tap",
@@ -2255,7 +2474,7 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
               "Presence of Total Coliform in Stored Water"= "cf_stored",
               "Presence of E. coli in Stored Water"= "ec_stored",
              "Presence Antibiotic Resistant E. coli in Stored Water" =
-               "Presence Antibiotic Resistant E. coli in Stored Water",
+              "Presence Antibiotic Resistant E. coli in Stored Water",
              "Taps as Primary Source" = "prim_source_jjm",
              "Use a Secondary Source" = "sec_source",
              "Drink Tap Water" = "jjm_drinking",
@@ -2263,45 +2482,81 @@ el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
              "Reported Water Taste/Smell Issue" = "tap_issues_taste",
              "Time Spent Treating Water is >10 Minutes" = "time_spent_treat"
              )
-
-el_forestplot <- el_models_forestplot%>%
-  forestplot(labeltext = c(model_name, estimate, p_value, N),
-             title = "Intervention Effect on Key Water Use and Quality Outcomes",
-             caption = "Prevalence ratios were estimated using Poisson regression with robust standard errors for village-level clustering. Models include fixed effects for block and Panchayat village status randomization.",
-             clip = c(0, 1.5),
-             xticks = c(0, 0.5, 1, 1.5),
-             fn.ci_norm = fpDrawCircleCI,
-             vertices = TRUE,
-             xlog = FALSE,
-             txt_gp = fpTxtGp(
-               label = gpar(fontsize = 10),       # Adjust label text size
-               ticks = gpar(fontsize = 15),       # Adjust tick text size
-               xlab = gpar(fontsize = 15)),
-             boxsize = 0.2
-             )%>%
-  fp_add_lines(h_3 = gpar(lty = 1), 
-               h_15 = gpar(lwd = 1, columns = 1:5, col = "black"))%>% 
-  fp_set_style(box = "black",
-               line = "black",
-               summary = "black",
-               align = "lrrr",
-               hrz_lines = "black")%>% 
-  fp_add_header(model_name = c("", "Outcome"),
-                estimate = c("Prevalence Ratio", "(95% CI)")%>%
-                  fp_align_center(),
-                p_value = c("", "P-value")%>% 
-                  fp_align_center(),
-                N = c("", "N")%>%
-                  fp_align_center()
-                )%>%
-  fp_decorate_graph(grid = structure(c(1), 
-                              gp = gpar(lty = 2, col = "grey")))
-
-print(el_forestplot)
+#Reordering
+el_models_forestplot$model_name <- factor(el_models_forestplot$model_name, levels = 
+                                            c(
+             "Time Spent Treating Water is >10 Minutes",
+             "Reported Water Taste/Smell Issue",
+             "Treat Water",
+             "Drink Tap Water",
+              "Use a Secondary Source",
+             "Taps as Primary Source",
+             "Presence Antibiotic Resistant E. coli in Stored Water",
+              "Presence Antibiotic Resistant E. coli in Tap Water",
+             "Presence of E. coli in Stored Water",
+             "Presence of Total Coliform in Stored Water",
+             "Presence of E. coli at Taps",
+             "Presence of Total Coliform at Taps"
+             ))
 
 
 
+#Manually adding in column names to the figure
+# el_models_forestplot <- el_models_forestplot%>%
+#   bind_rows(
+#     data.frame(
+#       model_name = "Outcome",
+#       covariate = NA,
+#       estimate = "Prevalence Ratio (95% CI)",
+#       std_error = NA,
+#       p_value = "P-value",
+#       N = NA,
+#       Lower_CI = NA,
+#       Upper_CI = NA,
+#       signif = NA,
+#       mean = NA,
+#       lower = NA,
+#       upper = NA
+#     ))
+#This is not a good option
 
+
+#Creating Foresplot using ggplot
+
+## Create plot 
+p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
+  geom_point(size = 2) +  
+  geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI), height = 0.2) + 
+  geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
+  scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
+  scale_x_continuous(limits = c(0.5, 1.70), breaks = c(0.50, 0.75, 1.00, 1.2))+
+  #scale_color_manual(values = family_colors) +  # Uses customized colors for 'intervention'
+  labs(
+    x = "Prevalence Ratio", 
+    y = "Outcome") + 
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        axis.text.y = element_text(size = 10), 
+        axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13)) #+
+  #guides(color = guide_legend(reverse = TRUE)) # Ensures the order of the legend matches the order in which point estimates appear on the plot
+
+# Add horizontal lines between levels of outcomes to create separation
+y_levels <- levels(factor(el_models_forestplot$model_name))
+y_positions <- seq_along(y_levels) - 0.5
+for (y in y_positions) {
+  p_forestplot <- p_forestplot + geom_hline(yintercept = y, color = "darkgrey", linetype = "solid", linewidth = 0.5)
+}
+
+#Adding in effect estimates and p-values
+p_forestplot <- p_forestplot + 
+  geom_text(aes(label = estimate, x = max(Upper_CI) + 0.25), hjust = 0, size = 3) + 
+    geom_text(aes(label = p_value, x = max(Upper_CI) + 0.45), hjust = 0, size = 3)
+
+#Viewing
+p_forestplot
+
+ggsave(filename = "forestplot_v2.png", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 10, height = 6, units = "in")
 
 
 ```

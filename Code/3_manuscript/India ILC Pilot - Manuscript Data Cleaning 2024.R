@@ -1521,7 +1521,7 @@ el <- el%>%
   mutate(prim_source = NA)
 el$prim_source <- el$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani) connected to RWSS/Basudha/JJM",
+    "Government-provided Tap" = "Government provided household Taps (supply paani)",
     "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
     "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
@@ -1547,8 +1547,8 @@ el <- el%>%
 #Secondary source variable cleaning
 el <- el%>%
   mutate(sec_source = case_when(
-    water_sec_yn == "Yes" ~ 1,
-    water_sec_yn == "No" ~ 0
+    water_sec_yn == 1 ~ 1,
+    water_sec_yn == 0 ~ 0
   ))
 
 #Secondary source type JJM
@@ -1563,16 +1563,16 @@ el <- el%>%
 #Updating water treatment binary variable
 el <- el%>%
   mutate(water_treat_binary = case_when(
-    water_treat == "Yes" ~ 1,
-    water_treat == "No" ~ 0
+    water_treat == 1 ~ 1,
+    water_treat == 0 ~ 0
   )) #630 Households reported treating their drinking water
 
 #Setting JJM use variable
 el <- el%>%
   mutate(jjm_drinking_yn = jjm_drinking)%>%
   mutate(jjm_drinking = case_when(
-    jjm_drinking == "Yes" ~ 1,
-    jjm_drinking == "No" ~ 0))
+    jjm_drinking == 1 ~ 1,
+    jjm_drinking == 0 ~ 0))
 
 #Creating variable for complaints about taste and smell
 el <- el%>%
