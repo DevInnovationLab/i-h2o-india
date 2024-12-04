@@ -718,7 +718,7 @@ p_pooled <-
   p_cf_pooled + p_ec_pooled +
   plot_annotation(
   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 961)")),
-  caption = "Stored and tap water samples were pooled across 5 household surveys rounds across 20 villages in February, March, April, July, and August 2024."
+  caption = "Stored and tap water samples were pooled across 6 household surveys rounds across 20 villages in February, March, April, August, September, and October 2024."
 )
 
 p_pooled
@@ -883,7 +883,7 @@ p_monsoon <-
   p_cf_monsoon + p_ec_monsoon +
   plot_annotation(
   title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 320)")),
-  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
+  caption = "Stored and tap water samples were pooled across 6 monthly household surveys rounds across 20 villages in February, March, and April, July, and August 2024."
 )
 
 p_monsoon
@@ -911,6 +911,38 @@ p_ec_risk <- ggplot(data = tc_stats_round) +
 
 
 p_ec_risk
+
+
+#Plotting stacked bar plot for risk levels
+
+p_ec_risk_2 <- idexx_tab%>%
+  filter(pooled_round == "FU")%>%
+  ggplot(aes(x = assignment, fill = ec_risk)) +
+  geom_bar(position = "fill", aes(y = ..prop.., group = ec_risk)) +
+  facet_wrap(~ sample_type) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(
+    values = c("High Risk" = "red", "Intermediate Risk" = "orange", "Low Risk" = "yellow", "Very Low Risk - Nondetectable" = "green"),
+    name = expression(paste(italic("E. coli"), " Risk Level"))
+  ) +
+  labs(
+    title = expression(paste("WHO ", italic("E. coli"),"Risk Classification Levels in Stored and Tap Drinking Water", " (0, 1-10, 10-100, >100 MPN ", italic("E. coli"),  " per 100 mL sample) (N = 961)")),
+    x = "Study Assignment",
+    y = "Proportion (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "right"
+  )
+
+p_ec_risk_2
+
+
+ggsave(filename = "SI_ecoli_risk_levels_v1.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 7, height = 3, units = "in", scale = 2)
+
+
+
 
 
 #Displaying desc stats table for IDEXX
@@ -1180,11 +1212,17 @@ p_stored_pooled <- ggplot(data = stored_stats_pooled) +
 p_pooled <- 
   p_tap_pooled + p_stored_pooled +
   plot_annotation(
-  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water vs Chlorine Concentration (N = 960)")),
-  caption = "Stored and tap water samples were pooled across 5 monthly household surveys rounds across 20 villages in February, March, April, July, and August 2024."
+  title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water vs Chlorine Concentration (N = 961)")),
+  caption = "Stored and tap water samples were pooled across 6 household surveys rounds across 20 villages in February, March, April, August, September, and October 2024."
 )
 
 p_pooled
+
+ggsave(filename = "SI_water_cl_comparison_v1.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
+
+
+
+
 
 
 #Plotting time series data of microbial contamination and chlorine testing
@@ -2499,6 +2537,13 @@ el_models_forestplot$model_name <- factor(el_models_forestplot$model_name, level
              "Presence of Total Coliform at Taps"
              ))
 
+el_models_forestplot <- el_models_forestplot%>%
+  mutate(variable_type = ifelse(model_name %in% c("Presence Antibiotic Resistant E. coli in Stored Water",
+              "Presence Antibiotic Resistant E. coli in Tap Water",
+             "Presence of E. coli in Stored Water",
+             "Presence of Total Coliform in Stored Water",
+             "Presence of E. coli at Taps",
+             "Presence of Total Coliform at Taps"), "Water Quality Outcome", "Behavioral Outcome"))
 
 
 #Manually adding in column names to the figure
@@ -2525,11 +2570,13 @@ el_models_forestplot$model_name <- factor(el_models_forestplot$model_name, level
 
 ## Create plot 
 p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
-  geom_point(size = 2) +  
-  geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI), height = 0.2) + 
+  geom_point(aes(color = variable_type), size = 2) +  
+  geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI,  color = variable_type), height = 0.2) + 
   geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
   scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
-  scale_x_continuous(limits = c(0.5, 1.70), breaks = c(0.50, 0.75, 1.00, 1.2))+
+  scale_x_continuous(limits = c(0.5, 1.90), breaks = c(0.50, 0.75, 1.00, 1.2))+
+  scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944")) +  # Custom colors
+  
   #scale_color_manual(values = family_colors) +  # Uses customized colors for 'intervention'
   labs(
     x = "Prevalence Ratio", 
@@ -2551,12 +2598,14 @@ for (y in y_positions) {
 #Adding in effect estimates and p-values
 p_forestplot <- p_forestplot + 
   geom_text(aes(label = estimate, x = max(Upper_CI) + 0.25), hjust = 0, size = 3) + 
-    geom_text(aes(label = p_value, x = max(Upper_CI) + 0.45), hjust = 0, size = 3)
+    geom_text(aes(label = p_value, x = max(Upper_CI) + 0.50), hjust = 0, size = 3) + 
+    geom_text(aes(label = N, x = max(Upper_CI) + 0.65), hjust = 0, size = 3)
+  
 
 #Viewing
 p_forestplot
 
-ggsave(filename = "forestplot_v2.png", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 10, height = 6, units = "in")
+ggsave(filename = "forestplot_v2.png", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
 
 
 ```
