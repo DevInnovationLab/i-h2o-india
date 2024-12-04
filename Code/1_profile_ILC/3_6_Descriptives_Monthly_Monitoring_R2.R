@@ -244,6 +244,9 @@ Final_path <- function() {
   else if (user=="akitokamei"){
     path = "/Users/akitokamei/Box Sync/India Water project/2_Pilot/Data/"
   } 
+  else if (user == "jerem"){
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/"
+  }
   else if (user == "Archi Gupta"){
     path = "C:/Users/Archi Gupta/Box/Data/3_final/" 
   } 
@@ -352,7 +355,7 @@ Lab_path <- function() {
     path = "C:/Users/Archi Gupta/Box/Data/5_lab data/idexx/cleaned/"
   } 
   else if (user == "jerem"){
-    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/2_deidentified/"
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned/"
   } 
   else if (user == "uchicago"){
     path = "/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/5_lab data/idexx/cleaned//" 
