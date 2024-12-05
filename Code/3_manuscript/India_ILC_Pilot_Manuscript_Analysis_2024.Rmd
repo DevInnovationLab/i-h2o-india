@@ -1401,36 +1401,49 @@ ggsave(filename = "manuscript_ecoli_chlorine_time_series_v2.jpeg", path = (paste
 #Plotting treatment/control stats on a bar plot
 p_ec_cl_3 <- idexx_cl_comb%>%
   ggplot() + 
-  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
-           position = "dodge", width = 12) +
+  geom_point(aes(x = test_week, y = `% Positive for E. coli`, color = assignment), 
+           position = position_dodge(width = 5), size = 3) +
    geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                     fill = assignment), position = position_dodge(width = 12),
-                 width = 6, color = "black") +
+                     color = assignment), position = position_dodge(width = 5),
+                 width = 6) +
   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
   geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
-            nudge_x = -25, color = "#FF474C")+
+            nudge_x = -19, color = "#FF474C", size = 3)+
+  geom_vline(aes(xintercept = ymd("2024-07-01")), lty = 2, color = "darkblue")+ #Placing monsoon start date
+  geom_text(aes(x = ymd("2024-07-01"), y = 80, label = "Monsoon Onset"), size = 3,
+            nudge_x = -18, color = "darkblue")+
+  geom_vline(aes(xintercept = ymd("2024-08-20")), lty = 2, color = "darkgreen")+ #Placing target dose change date
+  geom_text(aes(x = ymd("2024-08-20"), y = 80, label = "Target"), size = 3,
+            nudge_x = -10, color = "darkgreen")+
+  geom_text(aes(x = ymd("2024-08-20"), y = 75, label = "Dose"), size = 3,
+            nudge_x = -10, color = "darkgreen")+
+  geom_text(aes(x = ymd("2024-08-20"), y = 70, label = "Increase"), size = 3,
+            nudge_x = -10, color = "darkgreen")+
   scale_y_continuous(
                      limits = c(0, 105),
                      expand = c(0,0)
                      )+
-  scale_x_date(limits = c(ymd("2023-10-06"), ymd("2024-10-08")),
+  scale_x_date(limits = c(ymd("2023-10-06"), ymd("2024-10-15")),
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
   labs(x = "Date", 
        y = expression(paste("% of tap samples positive for ",italic("E. coli"))),
-       fill = "Assignment",
+       color = "Assignment",
        title = "",
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme_classic() + 
+  theme(#axis.text.x = element_text(angle=45, vjust=1, hjust=1)
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank()
+    )
 
 
 p_ec_cl_3
 
-ggsave(filename = "manuscript_ecoli_time_series_v3.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
+#ggsave(filename = "manuscript_ecoli_time_series_v3.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
 
 
 
@@ -1443,16 +1456,17 @@ p_ec_cl_4 <- idexx_cl_comb%>%
    geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
                  width = 2, color = "black") + #Does not include robust standard errors for village clustering
   geom_point(aes(x = test_week, y = cl_presence), size = 3)+
-  #geom_path(aes(x = test_week, y = cl_presence), color = "#FF474C")+ #Geom path makes the plot cluttered
+  geom_path(aes(x = test_week, y = cl_presence), color = "black")+ #Geom path makes the plot cluttered
   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
-  geom_vline(aes(xintercept = ymd("2024-09-01")), lty = 2, color = "green")+ #Placing protocol change date
+    geom_vline(aes(xintercept = ymd("2024-07-01")), lty = 2, color = "darkblue")+ #Placing monsoon start date
+  geom_vline(aes(xintercept = ymd("2024-08-20")), lty = 2, color = "darkgreen")+ #Placing target dose change date
   # geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"),
   #           nudge_x = -25, color = "#FF474C")+
   scale_y_continuous(
                      limits = c(0, 105),
                      expand = c(0,0)
                      )+
-  scale_x_date(limits = c(ymd("2024-1-06"), ymd("2024-10-08")),
+  scale_x_date(limits = c(ymd("2023-10-03"), ymd("2024-10-15")),
         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
@@ -1463,65 +1477,65 @@ p_ec_cl_4 <- idexx_cl_comb%>%
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  theme_bw() + 
+  theme_classic() + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
         plot.title = element_text(size = 2))
 
 
 p_ec_cl_4
 
-ggsave(filename = "manuscript_chlorine_time_series_v4.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 5, height = 2, units = "in", scale = 2)
+#ggsave(filename = "manuscript_chlorine_time_series_v4.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 5, height = 2, units = "in", scale = 2)
 
 #Combining in patchwork so the scales are correct
 p_ec_cl <- p_ec_cl_3 / p_ec_cl_4
 p_ec_cl
 
-ggsave(filename = "manuscript_e_coli_chlorine_time_series_v4.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
+ggsave(filename = "manuscript_e_coli_chlorine_time_series_v5.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 4.5, units = "in", scale = 2)
 
 
 
 
 #Plotting treatment/control stats on a bar plot
-p_ec_cl_5 <- idexx_cl_comb_2%>%
-  ggplot() + 
-  geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
-           position = "dodge", width = 12) +
-   geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                     fill = assignment), position = position_dodge(width = 12),
-                 width = 6, color = "black") +
-   geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
-                 width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
-  geom_point(aes(x = test_week+7, y = avg_concentration*scale_value), color = "#FF474C")+
-  geom_errorbar(aes(x = test_week+7, ymin = `Lower CI - Tap`*scale_value,
-                    ymax = `Upper CI - Tap`*scale_value), width = 2, color =  "#FF474C") +
-  #geom_path(aes(x = test_week+6, y = avg_concentration*scale_value), color = "#FF474C")+
-  geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
-  geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"), size = 3,
-            nudge_x = -20, color = "#FF474C")+
-  scale_y_continuous(
-                     limits = c(0, 100),
-                     expand = c(0,0),
-                     sec.axis = sec_axis(~./scale_value,
-                                          name = 'Average Free Chlorine Concentration (mg/L)',
-                                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
-                                                     1.4, 1.6, 1.8, 2.0))
-                     )+
-  scale_x_date(
-        date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
-        date_labels = "%b")+
-  scale_fill_brewer(palette = "Pastel1")+
-  labs(x = "Date", 
-       y = expression(paste("% tap samples positive for ",italic("E. coli"))),
-       fill = "Assignment",
-       title = "",
-       caption = ""
-       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
-       )+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-
-
-p_ec_cl_5
+# p_ec_cl_5 <- idexx_cl_comb_2%>%
+#   ggplot() + 
+#   geom_col(aes(x = test_week, y = `% Positive for E. coli`, fill = assignment), 
+#            position = "dodge", width = 12) +
+#    geom_errorbar(aes(x = test_week, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+#                      fill = assignment), position = position_dodge(width = 12),
+#                  width = 6, color = "black") +
+#    geom_errorbar(aes(x = test_week, ymin = lower_ci*scale_value, ymax = upper_ci*scale_value),
+#                  width = 2, color = "#FF474C") + #Does not include robust standard errors for village clustering
+#   geom_point(aes(x = test_week+7, y = avg_concentration*scale_value), color = "#FF474C")+
+#   geom_errorbar(aes(x = test_week+7, ymin = `Lower CI - Tap`*scale_value,
+#                     ymax = `Upper CI - Tap`*scale_value), width = 2, color =  "#FF474C") +
+#   #geom_path(aes(x = test_week+6, y = avg_concentration*scale_value), color = "#FF474C")+
+#   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
+#   geom_text(aes(x = ymd("2024-02-01"), y = 80, label = "Intervention Start"), size = 3,
+#             nudge_x = -20, color = "#FF474C")+
+#   scale_y_continuous(
+#                      limits = c(0, 100),
+#                      expand = c(0,0),
+#                      sec.axis = sec_axis(~./scale_value,
+#                                           name = 'Average Free Chlorine Concentration (mg/L)',
+#                                           breaks = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2,
+#                                                      1.4, 1.6, 1.8, 2.0))
+#                      )+
+#   scale_x_date(
+#         date_breaks = "1 month",   # Adds more frequent x-axis breaks (monthly)
+#         date_labels = "%b")+
+#   scale_fill_brewer(palette = "Pastel1")+
+#   labs(x = "Date", 
+#        y = expression(paste("% tap samples positive for ",italic("E. coli"))),
+#        fill = "Assignment",
+#        title = "",
+#        caption = ""
+#        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+#        )+
+#   theme_bw() + 
+#   theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+# 
+# 
+# p_ec_cl_5
 
 
 
@@ -1550,9 +1564,9 @@ p_ec_cl_6 <- idexx_cl_comb_2%>%
   geom_vline(aes(xintercept = ymd("2024-08-20")), lty = 2, color = "darkgreen")+ #Placing target dose change date
   geom_text(aes(x = ymd("2024-08-20"), y = 80, label = "Target"), size = 3,
             nudge_x = -8, color = "darkgreen")+
-  geom_text(aes(x = ymd("2024-08-20"), y = 77, label = "Dose"), size = 3,
+  geom_text(aes(x = ymd("2024-08-20"), y = 76, label = "Dose"), size = 3,
             nudge_x = -8, color = "darkgreen")+
-  geom_text(aes(x = ymd("2024-08-20"), y = 74, label = "Increase"), size = 3,
+  geom_text(aes(x = ymd("2024-08-20"), y = 73, label = "Increase"), size = 3,
             nudge_x = -8, color = "darkgreen")+
   #geom_text(aes(x = ymd("2024-02-01"), y = 6, label = "Avg. Conc. (mg/L)"), size = 2.5,
    #         nudge_x = 30, color = "#FF474C")+
