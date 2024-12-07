@@ -3061,108 +3061,226 @@ ggplot2::ggsave(paste0(overleaf(), "Figure/ecoli_sw_pre_postILC.png"), ecoli_sw,
 # descriptive stats for Odisha report
 ################################################################################
 
-# Percenatge of tap weater samples across each risk category - across all rounds 
-ecoli_risk_percentages <- merged_data_f %>%
+# 2. percenatge of tap water samples with detectable ecoli across each risk category 
+ecoli_risk_percentages_presence <- merged_data_f %>%
+  # Creating new ec_risk variable based on ec_mpn values and replacing with NA if necessary
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ NA_character_,  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
+  # Including only unchlorinated water samples
+  filter((period_new == "Pre ILC" | 
+            (period_new %in% c("R1", "R2", "R3", "R4", "R5", "R6") & assignment == "Control")) & ec_pa != "Absence") %>%
+  # % of observations in each risk category and ec_pa values
+  summarise(
+    "Total Observations" = n(),  
+    "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
+    "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
+    "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
+    .groups = "drop"
+    )
+
+print(ecoli_risk_percentages_presence)
+
+# 1. Percenatge of tap weater samples across each risk category - across all rounds 
+ecoli_risk_percentages_presence <- merged_data_f %>%
+  # Creating new ec_risk variable based on ec_mpn values and replacing with NA if necessary
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
   # Including only unchlorinated water samples
   filter((period_new == "Pre ILC") | 
            (period_new %in% c("R1", "R2", "R3", "R4", "R5", "R6") & assignment == "Control")) %>%
   # % of observations in each risk category
   summarise(
     "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
     "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
     "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
     "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
-    "% Presence for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),  # Percentage of 'Presence'
-    "% Absence for E. coli" = round((sum(ec_pa == "Absence") / n()) * 100, 1),    # Percentage of 'Absence'
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
     .groups = "drop"
   )
-print(ecoli_risk_percentages)
 
-# percenatge of tap water samples with detectable ecoli across each risk category
-ecoli_risk_percentages_presence <- merged_data_f %>%
-  # Including only unchlorinated water samples
-  filter((period_new == "Pre ILC" | 
-           (period_new %in% c("R1", "R2", "R3", "R4", "R5", "R6") & assignment == "Control")) & ec_pa != "Absence") %>%
-  # % of observations in each risk category
-  summarise(
-    "Total Observations" = n(),  
-    "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
-    "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
-    "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
-    .groups = "drop"
-  )
 print(ecoli_risk_percentages_presence)
 
-# Percenatge of tap water samples across each risk category - monsoon rounds 
+
+# 3. Percenatge of tap water samples across each risk category - monsoon rounds 
 ecoli_risk_percentages_monsoon <- merged_data_f %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
   # Including only unchlorinated water samples
   filter((period_new %in% c("R4", "R5", "R6") & assignment == "Control")) %>%
   summarise(
-    "Total Observations" = n(), 
+    "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
     "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
     "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
     "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
-    "% Presence for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),  # Percentage of 'Presence'
-    "% Absence for E. coli" = round((sum(ec_pa == "Absence") / n()) * 100, 1),    # Percentage of 'Absence'
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
     .groups = "drop"
   )
 print(ecoli_risk_percentages_monsoon)
 
-# percenatge of tap water samples with detectable ecoli across each risk category - monsoon rounds
+# 4. percenatge of tap water samples with detectable ecoli across each risk category - monsoon rounds
 ecoli_risk_percent_presence_monsoon <- merged_data_f %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
   # Including only unchlorinated water samples
   filter((period_new %in% c("R4", "R5", "R6") & assignment == "Control") & ec_pa != "Absence") %>%
   # % of observations in each risk category
   summarise(
     "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
     "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
     "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
     "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
     .groups = "drop"
   )
 print(ecoli_risk_percent_presence_monsoon)
 
-# Percenatge of stored water samples across each risk category - monsoon rounds 
 
+
+
+# 5. Percenatge of stored water samples across each risk category - all rounds 
 ecoli_risk_percentages_presence_sw <- merged_data_sw %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
   # Including only unchlorinated water samples
   filter((period_new == "Pre ILC") | 
            (period_new %in% c("R1", "R2", "R3", "R4", "R5", "R6") & assignment_new == "Control")) %>%
   # % of observations in each risk category
   summarise(
     "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
     "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
     "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
     "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
-    "% Presence for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),  # Percentage of 'Presence'
-    "% Absence for E. coli" = round((sum(ec_pa == "Absence") / n()) * 100, 1),    # Percentage of 'Absence'
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
     .groups = "drop"
   )
 print(ecoli_risk_percentages_presence_sw)
 
+# 6. Percenatge of stored water samples across each risk category with detectable ecoli  - monsoon rounds 
+ecoli_risk_percentages_sw <- merged_data_sw %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 ~ "Safe",  # Safe if ec_mpn is 0
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk category 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk category 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk category 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk category > 1,000
+      TRUE ~ NA_character_  # Any other values will be NA
+    )
+  ) %>%
+  # Including only unchlorinated water samples and those with ec_pa == "Presence"
+  filter((period_new == "Pre ILC" | 
+            (period_new %in% c("R1", "R2", "R3", "R4", "R5", "R6") & assignment_new == "Control")) & ec_pa != "Absence") %>%
+  # Getting % of observations in each risk category
+  summarise(
+    "Total Observations" = n(),
+    "% Low Risk" = round((sum(ec_risk == "Low Risk", na.rm = TRUE) / n()) * 100, 1),
+    "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk", na.rm = TRUE) / n()) * 100, 1),
+    "% High Risk" = round((sum(ec_risk == "High Risk", na.rm = TRUE) / n()) * 100, 1),
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk", na.rm = TRUE) / n()) * 100, 1),
+    "% Safe" = round((sum(ec_risk == "Safe", na.rm = TRUE) / n()) * 100, 1),  # Added Safe category
+    .groups = "drop"
+  )
 
-# percenatge of stored water samples with detectable ecoli across each risk category - monsoon rounds
+print(ecoli_risk_percentages_sw)
+
+
+# percenatge of stored water samples across each risk category - monsoon rounds
 ecoli_risk_percent_presence_monsoon <- merged_data_sw %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
   # Including only unchlorinated water samples
   filter((period_new %in% c("R4", "R5", "R6") & assignment_new == "Control")) %>%
   # % of observations in each risk category
   summarise(
     "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
     "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
     "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
     "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
-    "% Very Low Risk" = round((sum(ec_risk == "Very Low Risk - Nondetectable") / n()) * 100, 1),
-    "% Presence for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),  # Percentage of 'Presence'
-    "% Absence for E. coli" = round((sum(ec_pa == "Absence") / n()) * 100, 1),    # Percentage of 'Absence'
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
     .groups = "drop"
   )
 print(ecoli_risk_percent_presence_monsoon)
 
+
+# percenatge of stored water samples with detectable ecoli across each risk category - monsoon rounds
+ecoli_risk_percent_presence_monsoon <- merged_data_sw %>%
+  mutate(
+    ec_risk = case_when(
+      ec_mpn == 0 | ec_pa == "Absence" ~ "Safe",  # Replace with NA if ec_mpn is 0 or ec_pa is Absence
+      ec_mpn > 0 & ec_mpn <= 10 ~ "Low Risk",            # Low risk: 0.001–10
+      ec_mpn > 10 & ec_mpn <= 100 ~ "Intermediate Risk",  # Intermediate risk: 10–100
+      ec_mpn > 100 & ec_mpn <= 1000 ~ "High Risk",       # High risk: 100–1,000
+      ec_mpn > 1000 ~ "Very High Risk",                   # Very high risk: > 1,000
+      TRUE ~ NA_character_                                # Any other value gets NA
+    )
+  ) %>%
+  # Including only unchlorinated water samples
+  filter((period_new %in% c("R4", "R5", "R6") & assignment == "Control") & ec_pa != "Absence") %>%
+  # % of observations in each risk category
+  summarise(
+    "Total Observations" = n(),  
+    "% Safe" = round((sum(ec_risk == "Safe") / n()) * 100, 1),
+    "% Low Risk" = round((sum(ec_risk == "Low Risk") / n()) * 100, 1),
+    "% Intermediate Risk" = round((sum(ec_risk == "Intermediate Risk") / n()) * 100, 1),
+    "% High Risk" = round((sum(ec_risk == "High Risk") / n()) * 100, 1),
+    "% Very High Risk" = round((sum(ec_risk == "Very High Risk") / n()) * 100, 1),
+    .groups = "drop"
+  )
+print(ecoli_risk_percent_presence_monsoon)
 
 
 
