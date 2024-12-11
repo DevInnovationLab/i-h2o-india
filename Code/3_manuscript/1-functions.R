@@ -659,3 +659,89 @@ ilc_model_table <- function(models = all_models){
   return(model_table_kbl)
   
 }
+
+
+compute_desc_stats <- function(data, var_names, treatment_col) {
+  library(dplyr)
+  
+  # Ensure the treatment column exists
+  if (!assignment %in% names(data)) {
+    stop("Treatment column not found in the dataset.")
+  }
+  
+  # Ensure the variables exist
+  missing_var_names <- setdiff(var_names, names(data))
+  if (length(missing_var_names) > 0) {
+    stop("The following variables are missing in the dataset: ", paste(missing_var_names, collapse = ", "))
+  }
+  
+  # Prepare data
+  data <- data %>%
+    mutate(across(
+      all_of(var_names), 
+      function(x) {
+        if (is.character(x)) {
+          as.factor(x)
+        } else {
+          as.numeric(x)
+        }
+      }
+    ))
+  
+  
+  # Initialize an empty list to store results
+  stats_list <- list()
+  
+  # Loop through variables
+  for (var in var_names) {
+    if (is.numeric(data[[var]])) {
+      # Compute mean and standard deviation for numeric variables
+      summary_stats <- data %>%
+        group_by(across(all_of(treatment_col))) %>%
+        summarise(
+          Mean = mean(.data[[var]], na.rm = TRUE),
+          SD = sd(.data[[var]], na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        mutate(Variable = var)
+    } else if (is.factor(data[[var]])) {
+      # Compute proportions for factor variables
+      summary_stats <- data %>%
+        group_by(across(all_of(treatment_col)), .data[[var]]) %>%
+        summarise(Count = n(), .groups = "drop") %>%
+        group_by(across(all_of(treatment_col))) %>%
+        mutate(Proportion = Count / sum(Count)) %>%
+        ungroup() %>%
+        rename(Category = .data[[var]]) %>%
+        mutate(Variable = var)
+    } else {
+      next  # Skip unsupported types
+    }
+    
+    # Add to the results list
+    stats_list[[var]] <- summary_stats
+  }
+  
+  # Combine all results into a single dataframe
+  result <- bind_rows(stats_list, .id = "Variable")
+  
+  return(result)
+
+  }
+
+# Example usage
+# data <- data.frame(
+#   treatment = c("control", "treatment", "control", "treatment"),
+#   age = c(25, 30, 35, 40),
+#   gender = c("male", "female", "female", "male"),
+#   stringsAsFactors = FALSE
+# )
+# 
+# descriptive_stats <- compute_descriptive_stats(
+#   data = data,
+#   var_names = c("age", "gender"),
+#   treatment_col = "treatment"
+# )
+# 
+# print(descriptive_stats)
+
