@@ -18,7 +18,7 @@ packages <- c("rsurveycto", "expss", "labelled", "httr", "lubridate", "quantitra
               "sjmisc", "knitr", "kableExtra", "readxl", "experiment", "stargazer",
               "haven", "googlesheets4", "ggsignif", "patchwork", "table1", "gtsummary",
               "gt", "webshot2", "clubSandwich", "sandwich", "lmtest", "broom",
-              "tidyverse", "sf", "gridExtra", "crosstable", "viridis")
+              "tidyverse", "sf", "gridExtra", "crosstable", "viridis", "flextable")
 
 #Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
@@ -196,7 +196,8 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 
 ```{r Baseline household characteristics}
 
-outcome_vars <- c("assignment","hhmember_count", "hhhead_gender", "read_write_1", "prim_source", "sec_source", "water_treat_binary")
+outcome_vars <- c("hhmember_count", "hhhead_gender",
+                  "read_write_1", "prim_source", "sec_source", "water_treat_binary")
 
 #GT method
 #Summarizing desc stats for each variable
@@ -228,6 +229,20 @@ desc_stats <- cen%>%
                       "Mean (SD)")
 
 
+#Manual Desc Stat Method
+#
+desc_stats <- compute_desc_stats(data = cen, vars = outcome_vars,
+                                 treatment_col = "assignment")
+
+
+kable <- present_desc_stats_kable(desc_stats, treatment_col = "assignment")
+
+
+ft <- present_desc_stats_flextable(desc_stats, treatment_col = "assignment")
+
+
+
+#Baseline Balance -----
 
 outcome_vars <- c("hhmember_count",
                   "hhhead_gender",
@@ -1490,7 +1505,7 @@ p_ec_cl_4
 p_ec_cl <- p_ec_cl_3 / p_ec_cl_4
 p_ec_cl
 
-ggsave(filename = "manuscript_e_coli_chlorine_time_series_v5.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 4.5, units = "in", scale = 2)
+ggsave(filename = "manuscript_e_coli_chlorine_time_series_v5.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
 
 
 
@@ -2589,9 +2604,7 @@ p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
   scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
   scale_x_continuous(limits = c(0.5, 1.90), breaks = c(0.50, 0.75, 1.00, 1.2))+
-  scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944")) +  # Custom colors
-  
-  #scale_color_manual(values = family_colors) +  # Uses customized colors for 'intervention'
+  scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944"))
   labs(
     x = "Prevalence Ratio", 
     y = "Outcome") + 
@@ -2619,7 +2632,7 @@ p_forestplot <- p_forestplot +
 #Viewing
 p_forestplot
 
-ggsave(filename = "forestplot_v2.png", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
+ggsave(filename = "forestplot_v2.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
 
 
 ```

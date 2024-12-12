@@ -661,55 +661,52 @@ ilc_model_table <- function(models = all_models){
 }
 
 
-compute_desc_stats <- function(data, var_names, treatment_col) {
+
+
+
+
+
+#Compute_desc_stats function
+compute_desc_stats <- function(data, vars, treatment_col) {
   library(dplyr)
   
   # Ensure the treatment column exists
-  if (!assignment %in% names(data)) {
+  if (!treatment_col %in% names(data)) {
     stop("Treatment column not found in the dataset.")
   }
   
   # Ensure the variables exist
-  missing_var_names <- setdiff(var_names, names(data))
-  if (length(missing_var_names) > 0) {
-    stop("The following variables are missing in the dataset: ", paste(missing_var_names, collapse = ", "))
+  missing_vars <- setdiff(vars, names(data))
+  if (length(missing_vars) > 0) {
+    stop("The following variables are missing in the dataset: ", paste(missing_vars, collapse = ", "))
   }
   
   # Prepare data
   data <- data %>%
-    mutate(across(
-      all_of(var_names), 
-      function(x) {
-        if (is.character(x)) {
-          as.factor(x)
-        } else {
-          as.numeric(x)
-        }
-      }
-    ))
-  
+    mutate(across(all_of(vars), ~ if (is.character(.)) as.factor(.) else .))
   
   # Initialize an empty list to store results
   stats_list <- list()
   
   # Loop through variables
-  for (var in var_names) {
+  for (var in vars) {
     if (is.numeric(data[[var]])) {
       # Compute mean and standard deviation for numeric variables
       summary_stats <- data %>%
-        group_by(across(all_of(treatment_col))) %>%
+        group_by(.data[[treatment_col]]) %>%
         summarise(
           Mean = mean(.data[[var]], na.rm = TRUE),
           SD = sd(.data[[var]], na.rm = TRUE),
           .groups = "drop"
         ) %>%
         mutate(Variable = var)
+      
     } else if (is.factor(data[[var]])) {
       # Compute proportions for factor variables
       summary_stats <- data %>%
-        group_by(across(all_of(treatment_col)), .data[[var]]) %>%
+        group_by(.data[[treatment_col]], .data[[var]]) %>%
         summarise(Count = n(), .groups = "drop") %>%
-        group_by(across(all_of(treatment_col))) %>%
+        group_by(.data[[treatment_col]]) %>%
         mutate(Proportion = Count / sum(Count)) %>%
         ungroup() %>%
         rename(Category = .data[[var]]) %>%
@@ -726,8 +723,7 @@ compute_desc_stats <- function(data, var_names, treatment_col) {
   result <- bind_rows(stats_list, .id = "Variable")
   
   return(result)
-
-  }
+}
 
 # Example usage
 # data <- data.frame(
@@ -744,4 +740,60 @@ compute_desc_stats <- function(data, var_names, treatment_col) {
 # )
 # 
 # print(descriptive_stats)
+
+
+
+
+present_desc_stats_kable <- function(desc_stats, treatment_col) {
+  # Pivot the data to have treatment groups as columns
+  table_data <- desc_stats %>%
+    select(Variable, Category, Mean, SD, Proportion, !!sym(treatment_col)) %>%
+    pivot_wider(
+      names_from = !!sym(treatment_col),
+      values_from = c("Mean", "SD", "Proportion"),
+      names_glue = "{.value}_{.name}"
+    ) %>%
+    arrange(Variable)
+  
+  # Create the kable table
+  kable(table_data, format = "html", col.names = c(
+    "Variable", "Category", 
+    "Mean (Control)", "SD (Control)", "Proportion (Control)",
+    "Mean (Treatment)", "SD (Treatment)", "Proportion (Treatment)"
+  )) %>%
+    kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+}
+
+
+
+
+
+
+
+present_desc_stats_flextable <- function(desc_stats, treatment_col) {
+  # Pivot the data to have treatment groups as columns
+  table_data <- desc_stats %>%
+    select(Variable, Category, Mean, SD, Proportion, !!sym(treatment_col)) %>%
+    pivot_wider(
+      names_from = !!sym(treatment_col),
+      values_from = c("Mean", "SD", "Proportion"),
+      names_glue = "{.value}_{.name}"
+    ) %>%
+    arrange(Variable)
+  
+  # Create the flextable
+  flextable::flextable(table_data) %>%
+    flextable::set_header_labels(
+      Variable = "Variable",
+      Category = "Category",
+      Mean_control = "Mean (Control)",
+      SD_control = "SD (Control)",
+      Proportion_control = "Proportion (Control)",
+      Mean_treatment = "Mean (Treatment)",
+      SD_treatment = "SD (Treatment)",
+      Proportion_treatment = "Proportion (Treatment)"
+    ) %>%
+    flextable::theme_booktabs() %>%
+    flextable::autofit()
+}
 
