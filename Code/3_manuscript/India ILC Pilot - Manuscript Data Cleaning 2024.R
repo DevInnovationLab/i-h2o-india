@@ -167,12 +167,14 @@ cen <- cen%>%
   mutate(prim_source = NA)
 cen$prim_source <- cen$water_source_prim%>%
   fct_recode(
-    "Government-provided Tap" = "Government provided household Taps (supply paani)",
+    "Household Tap" = "Government provided household Taps (supply paani)",
+    "Household Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
     "Community Tap" = "Government provided community standpipe (part of JJM taps)",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
     "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation channel)",
     "Surface Water" = "Private Surface well",
     "Covered Dug Well" = "Covered dug well",
+    "Borehole" = "Borewell operated by electric pump",
     "Borehole" = "Manual handpump",
     "Other" = "Other"
   )%>%
@@ -237,8 +239,43 @@ cen <- cen%>%
 
 
 
+#Coding Socioeconomic Variables
+#Electricity
+cen <- cen%>%
+  mutate(electricity_binary = case_when(
+    electricity == "Yes" ~ 1,
+    electricity == "No" ~ 0
+  ))
 
+cen <- cen%>%
+  mutate(mobile_binary = case_when(
+    mobile == "Yes" ~ 1,
+    mobile == "No" ~ 0
+  ))
 
+cen <- cen%>%
+  mutate(bicycle_binary = case_when(
+    bicycle == "Yes" ~ 1,
+    bicycle == "No" ~ 0
+  ))
+
+cen <- cen%>%
+  mutate(motorcycle_binary = case_when(
+    motorcycle == "Yes" ~ 1,
+    motorcycle == "No" ~ 0
+  ))
+
+cen <- cen%>%
+  mutate(fridge_binary = case_when(
+    fridge == "Yes" ~ 1,
+    fridge == "No" ~ 0
+  ))
+
+cen <- cen%>%
+  mutate(tv_binary = case_when(
+    colourtv == "Yes" ~ 1,
+    colourtv == "No" ~ 0
+  ))
 
 
 
@@ -447,6 +484,20 @@ bl <- bl%>%
     water_treat == "Yes" ~ 1,
     water_treat == "No" ~ 0
   ))
+
+#Updating time spent treating water variable
+bl$treat_time_category <- as.character(bl$treat_time_category)
+
+bl <- bl%>%
+  mutate(treat_time_category = ifelse(
+    is.na(treat_time_category) == TRUE, "Do not treat water", treat_time_category
+  ))
+
+bl$treat_time_category <- factor(bl$treat_time_category)%>%
+  fct_relevel("< 5 minutes", "5-15 minutes", "15-30 minutes", 
+              "30-60 minutes", "> 60 minutes", "Do not treat water")
+
+
 
 #Setting JJM use variable
 # bl <- bl%>%

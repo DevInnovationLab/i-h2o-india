@@ -695,6 +695,7 @@ compute_desc_stats <- function(data, vars, treatment_col) {
       summary_stats <- data %>%
         group_by(.data[[treatment_col]]) %>%
         summarise(
+          N = sum(!is.na(.data[[var]])),
           Mean = mean(.data[[var]], na.rm = TRUE),
           SD = sd(.data[[var]], na.rm = TRUE),
           .groups = "drop"
@@ -707,7 +708,10 @@ compute_desc_stats <- function(data, vars, treatment_col) {
         group_by(.data[[treatment_col]], .data[[var]]) %>%
         summarise(Count = n(), .groups = "drop") %>%
         group_by(.data[[treatment_col]]) %>%
-        mutate(Proportion = Count / sum(Count)) %>%
+        mutate(
+          Proportion = Count / sum(Count),
+          N = sum(Count)
+          ) %>%
         ungroup() %>%
         rename(Category = .data[[var]]) %>%
         mutate(Variable = var)
@@ -744,39 +748,20 @@ compute_desc_stats <- function(data, vars, treatment_col) {
 
 
 
-present_desc_stats_kable <- function(desc_stats, treatment_col) {
-  # Pivot the data to have treatment groups as columns
-  table_data <- desc_stats %>%
-    select(Variable, Category, Mean, SD, Proportion, !!sym(treatment_col)) %>%
-    pivot_wider(
-      names_from = !!sym(treatment_col),
-      values_from = c("Mean", "SD", "Proportion"),
-      names_glue = "{.value}_{.name}"
-    ) %>%
-    arrange(Variable)
-  
-  # Create the kable table
-  kable(table_data, format = "html", col.names = c(
-    "Variable", "Category", 
-    "Mean (Control)", "SD (Control)", "Proportion (Control)",
-    "Mean (Treatment)", "SD (Treatment)", "Proportion (Treatment)"
-  )) %>%
-    kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
-}
 
 
 
 
-
-
+#Present desc stats as a flextable
 
 present_desc_stats_flextable <- function(desc_stats, treatment_col) {
+  
   # Pivot the data to have treatment groups as columns
   table_data <- desc_stats %>%
-    select(Variable, Category, Mean, SD, Proportion, !!sym(treatment_col)) %>%
+    select(Variable, Category, N, Mean, SD, Proportion, !!sym(treatment_col)) %>%
     pivot_wider(
       names_from = !!sym(treatment_col),
-      values_from = c("Mean", "SD", "Proportion"),
+      values_from = c("N", "Mean", "SD", "Proportion"),
       names_glue = "{.value}_{.name}"
     ) %>%
     arrange(Variable)
@@ -786,14 +771,39 @@ present_desc_stats_flextable <- function(desc_stats, treatment_col) {
     flextable::set_header_labels(
       Variable = "Variable",
       Category = "Category",
+      N_control = "N (Control)",
       Mean_control = "Mean (Control)",
       SD_control = "SD (Control)",
       Proportion_control = "Proportion (Control)",
+      N_treatment = "N (Treatment)",
       Mean_treatment = "Mean (Treatment)",
       SD_treatment = "SD (Treatment)",
       Proportion_treatment = "Proportion (Treatment)"
     ) %>%
     flextable::theme_booktabs() %>%
     flextable::autofit()
+}
+
+
+#Present desc stats as a kable
+present_desc_stats_kable <- function(desc_stats, treatment_col) {
+  
+  # Pivot the data to have treatment groups as columns
+  table_data <- desc_stats %>%
+    select(Variable, Category, N, Mean, SD, Proportion, !!sym(treatment_col)) %>%
+    pivot_wider(
+      names_from = !!sym(treatment_col),
+      values_from = c("N", "Mean", "SD", "Proportion"),
+      names_glue = "{.value}_{.name}"
+    ) %>%
+    arrange(Variable)
+  
+  # Create the kable table
+  kable(table_data, format = "html", col.names = c(
+    "Variable", "Category",
+    "N (Control)", "Mean (Control)", "SD (Control)", "Proportion (Control)",
+    "N (Treatment)", "Mean (Treatment)", "SD (Treatment)", "Proportion (Treatment)"
+  )) %>%
+    kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
 }
 

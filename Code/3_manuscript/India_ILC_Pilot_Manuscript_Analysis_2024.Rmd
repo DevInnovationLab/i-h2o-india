@@ -196,14 +196,17 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 
 ```{r Baseline household characteristics}
 
-outcome_vars <- c("hhmember_count", "hhhead_gender",
-                  "read_write_1", "prim_source", "sec_source", "water_treat_binary")
+
+#Baseline Census Desc Stats
+outcome_vars <- c("assignment","hhmember_count", "hhhead_gender",
+                  "read_write_1", "prim_source", "sec_source","jjm_drinking", "water_treat_binary",
+                  "electricity_binary", "tv_binary","mobile_binary", "fridge_binary",
+                  "motorcycle_binary")
 
 #GT method
 #Summarizing desc stats for each variable
 #reset_gtsummary_theme()
-
-desc_stats <- cen%>%
+desc_stats_cen <- cen%>%
   dplyr::select(all_of(outcome_vars))%>%
         tbl_summary(by = assignment, 
                     missing = "no",
@@ -222,24 +225,182 @@ desc_stats <- cen%>%
                                  hhhead_gender ~ "Household head gender",
                                  read_write_1 ~ "Respondent can read and write",
                                  prim_source ~ "Primary drinking water source",
-                                 sec_source ~ "Use of a secondary source",
-                                 water_treat_binary ~ "Water treatment used")
+                                 sec_source ~ "Uses a secondary drinking water source",
+                                 jjm_drinking ~ "Drink water from their tap connection",
+                                 water_treat_binary ~ "Treats drinking water",
+                                 electricity_binary ~ "Has electricity",
+                                 tv_binary ~ "Owns a TV",
+                                 mobile_binary ~ "Owns a cell phone",
+                                 fridge_binary ~ "Owns a refrigerator",
+                                 motorcycle_binary ~ "Owns a motorbike or scooter"
+                                 )
                     )%>%
-                      modify_footnote(update =  ~ 
-                      "Mean (SD)")
+  add_n()
+
+desc_stats_cen_gt <- as_tibble(desc_stats_cen)%>%
+  gt::gt()
+
+# desc_stats_cen_gt%>%
+#   gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_cen.pdf")
+
+desc_stats_cen_df <- desc_stats_cen%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 423`)%>%
+  rename("Control" = `**Control**  \nN = 491`)
+
+
+
+
+#Baseline followup survey desc stats
+outcome_vars <- c("assignment", "fc_tap_binary", "fc_stored_binary",
+                  #"cf_pa_binary1","cf_pa_binary2","ec_pa_binary1","ec_pa_binary2",
+                  "water_treat_binary",
+                  "treat_time_category", "tap_taste_binary")
+
+desc_stats_bl <- bl%>%
+  dplyr::select(all_of(outcome_vars))%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    # type = list(c("hhmember_count","sec_source"
+                    #          "water_treat_binary") ~ "continuous",
+                    #         c("hhhead_gender", "read_write_1",
+                    #          "mobile","electricity", "prim_source") ~ "categorical"
+                    #         ),
+                    
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(
+                                 fc_tap_binary ~ "Presence of free chlorine at tap connection",
+                                 fc_stored_binary ~ "Presence of free chlorine in stored water",
+                                 # cf_pa_binary1 ~ "Presence of total coliform in tap water",
+                                 # cf_pa_binary2 ~ "Presence of total coliform in stored water",
+                                 # ec_pa_binary1 ~ "Presence of E. coli in tap water",
+                                 # ec_pa_binary2 ~ "Presence of E. coli in stored water",
+                                 #water_treat_binary ~ "Treats drinking water",
+                                 treat_time_category ~ "Time spent treating water",
+                                 tap_taste_binary ~ "Satisfied with taste of tap water"
+                                 )
+                    )%>%
+  add_n()
+
+desc_stats_bl_gt <- as_tibble(desc_stats_bl)%>%
+  gt::gt()
+
+# desc_stats_bl_gt%>%
+#   gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_bl.pdf")
+
+desc_stats_bl_df <- desc_stats_bl%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 100`)%>%
+  rename("Control" = `**Control**  \nN = 100`)
+
+
+#Separating stored vs tap water tests ------
+
+idexx_bl_tap <- idexx%>%
+  filter(sample_type == "Tap")%>%
+  #filter(pooled_round == "FU")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_tap = "cf_pa_binary")%>%
+  rename(ec_pa_tap = "ec_pa_binary")%>%
+  rename(cf_log_tap = "cf_log")%>%
+  rename(ec_log_tap = "ec_log")
+
+idexx_bl_stored <- idexx%>%
+  filter(sample_type == "Stored")%>%
+  #filter(pooled_round == "FU")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_stored = "cf_pa_binary")%>%
+  rename(ec_pa_stored = "ec_pa_binary")%>%
+  rename(cf_log_stored = "cf_log")%>%
+  rename(ec_log_stored = "ec_log")
+
+
+
+#Summarizing desc stats --------------------------------------
+
+#Tap water
+desc_stats_bl_tap <- idexx_bl_tap%>%
+  dplyr::select(assignment, cf_pa_tap, ec_pa_tap#, 
+                #cf_log_tap, ec_log_tap
+                )%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_tap", "ec_pa_tap"#,
+                             #"cf_log_tap","ec_log_tap"
+                             ) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_tap ~ "Tap - Presence/Absence of Total Coliform",
+                                 ec_pa_tap ~ "Tap - Presence/Absence of E. coli"#,
+                                 # cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
+                                 # ec_log_tap ~ "Tap - Mean Log10 of E. coli"
+                                )
+                    )%>%
+  add_n()%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 40`)%>%
+  rename("Control" = `**Control**  \nN = 40`)
+
+
+#Stored water
+desc_stats_bl_stored <- idexx_bl_stored%>%
+  dplyr::select(assignment, cf_pa_stored, ec_pa_stored#, cf_log_stored, ec_log_stored
+                )%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_stored", "ec_pa_stored"#, "cf_log_stored", "ec_log_stored"
+                             ) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_stored ~ "Stored - Presence/Absence of Total Coliform",
+                                 ec_pa_stored ~ "Stored - Presence/Absence of E. coli"#,
+                                 # cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
+                                 # ec_log_stored ~ "Stored - Mean Log10 of E. coli"
+                                )
+                    )%>%
+  add_n()%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 40`)%>%
+  rename("Control" = `**Control**  \nN = 40`)
+
+
+#Recombining tables
+desc_stats_bl <- bind_rows(desc_stats_cen_df, desc_stats_bl_df)%>% 
+  bind_rows(desc_stats_bl_tap)%>%
+  bind_rows(desc_stats_bl_stored)%>%
+  as_tibble()%>%
+  gt::gt()
+
+desc_stats_bl%>%
+  gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_bl.pdf")
+
+
 
 
 #Manual Desc Stat Method
 #
-desc_stats <- compute_desc_stats(data = cen, vars = outcome_vars,
-                                 treatment_col = "assignment")
-
-
-kable <- present_desc_stats_kable(desc_stats, treatment_col = "assignment")
-
-
-ft <- present_desc_stats_flextable(desc_stats, treatment_col = "assignment")
-
+# outcome_vars <- c("hhmember_count", "hhhead_gender",
+#                   "read_write_1", "prim_source", "sec_source", "water_treat_binary")
+# 
+# desc_stats <- compute_desc_stats(data = cen, vars = outcome_vars,
+#                                  treatment_col = "assignment")
+# 
+# 
+# kable <- present_desc_stats_kable(desc_stats, treatment_col = "assignment")
+# 
+# 
+# ft <- present_desc_stats_flextable(desc_stats, treatment_col = "assignment")
+# 
 
 
 #Baseline Balance -----
@@ -611,51 +772,30 @@ all_stats_bl <- all_stats(idexx)
 #Creating figure of baseline IDEXX results
 
 #Plotting treatment/control stats on a bar plot
-p_ec_bl <- ggplot(data = all_stats_bl) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`),
-                position = position_dodge(width = 0.9),
-                width = 0.25) +
-  scale_y_continuous(
-                     limits = c(0, 100),
-                     expand = c(0,0))+
-  labs(x = "Sample Type", 
-       y = expression(paste("% positive for ",italic("E. coli"))),
-       # fill = "Assignment",
-       title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 160)")),
-  caption = "Stored and tap water samples were collected during the baseline survey round in October 2023."
-       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
-       )+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
-
-p_ec_bl
-
-ggsave(filename = "manuscript_ecoli_baseline_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
-
-
-
 p_ec_bl <- ggplot(data = tc_stats_bl) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                    fill = assignment), position = position_dodge(width = 0.9),
-                width = 0.25) +
+  geom_point(aes(x = sample_type, y = `% Positive for E. coli`, color = assignment), 
+           position = position_dodge(width = 0.35), size = 3) +
+   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     color = assignment), position = position_dodge(width = 0.35),
+                 width = .2) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
-       fill = "Assignment",
+       color = "Assignment",
        title = expression(paste("Presence of Total Coliform and ", italic("E. coli"), " in Household Drinking Water (N = 160)")),
   caption = "Stored and tap water samples were collected during the baseline survey round in October 2023."
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme_classic() + 
+  theme(axis.text.x = element_text(vjust=1))
 
 p_ec_bl
 
-ggsave(filename = "manuscript_ecoli_baseline_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
+#ggsave(filename = "manuscript_ecoli_baseline_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
+
+
 
 p_cf_bl <- ggplot(data = tc_stats_bl) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
@@ -693,22 +833,23 @@ p_bl
 
 #Plotting treatment/control stats on a bar plot
 p_ec_pooled <- ggplot(data = tc_stats_pooled) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                    fill = assignment), position = position_dodge(width = 0.9),
-                width = 0.25) +
+  geom_point(aes(x = sample_type, y = `% Positive for E. coli`, color = assignment), 
+           position = position_dodge(width = 0.35), size = 3) +
+   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     color = assignment), position = position_dodge(width = 0.35),
+                 width = .2) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ",italic("E. coli"))),
-       fill = "Assignment",
+       color = "Assignment",
        title = expression(paste("Presence of ", italic("E. coli"), " in Household Drinking Water (N = 961)")),
   caption = "Stored and tap water samples were pooled across 6 household surveys rounds across 20 villages in February, March, April, August, September, and October 2024."
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
        )+
-  theme_bw() + 
-  theme(axis.text.x = element_text(vjust=1, hjust=1))
+  theme_classic() + 
+  theme(axis.text.x = element_text(vjust=1))
 
 p_cf_pooled <- ggplot(data = tc_stats_pooled) + 
   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
@@ -726,7 +867,7 @@ p_cf_pooled <- ggplot(data = tc_stats_pooled) +
        caption = ""
        )+
   theme_bw() + 
-  theme(axis.text.x = element_text( vjust=1, hjust=1))
+  theme(axis.text.x = element_text(vjust=1, hjust=1))
 
 #Patchwork package addition
 p_pooled <- 
@@ -738,7 +879,23 @@ p_pooled <-
 
 p_pooled
 
-ggsave(filename = "manuscript_ecoli_pooled_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
+#ggsave(filename = "manuscript_ecoli_pooled_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
+
+
+
+
+
+#Combining baseline results and pooled results into one figure
+p_ec <- p_ec_bl + p_ec_pooled
+p_ec
+
+ggsave(filename = "manuscript_ecoli_results.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 3.5, height = 1.5, units = "in", scale = 2)
+
+
+
+
+
+
 
 
 #Creating figure of IDEXX results stratified by round
@@ -1629,28 +1786,28 @@ p_ec_cl_6
 
 #
 
-#Creating plot of ABR results stratified by round
-tc_stats_abr <- abr_stats(idexx_abr)
+#Creating plot of baseline ABR results
+tc_stats_abr <- abr_stats(idexx_abr)%>%
+  filter(data_round == "BL")
 
 #Plotting treatment/control stats on a bar plot
 p_ec_abr <- ggplot(data = tc_stats_abr) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                    fill = assignment), position = position_dodge(width = 0.9),
-                width = 0.25) +
+  geom_point(aes(x = sample_type, y = `% Positive for E. coli`, color = assignment), 
+           position = position_dodge(width = 0.35), size = 3) +
+   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     color = assignment), position = position_dodge(width = 0.35),
+                 width = .2) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ABR ",italic("E. coli"))),
-       fill = "Assignment",
-       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 243)")),
-       caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in October 2023 and April 2024."
-       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       color = "Assignment",
+       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 243)"))
        )+
-  facet_wrap(~ data_round)+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  #facet_wrap(~ data_round)+
+  theme_classic() + 
+  theme(axis.text.x = element_text(vjust=1))
 
 # p_cf_abr <- ggplot(data = tc_stats_abr) + 
 #   geom_col(aes(x = sample_type, y = `% Positive for Total Coliform`, fill = assignment), position = "dodge") +
@@ -1691,28 +1848,31 @@ idexx_abr_fu <- idexx_abr%>%
 tc_stats_abr_pooled <- pooled_stats_abr(idexx_abr_fu)
 
 #Plotting treatment/control stats on a bar plot
-p_ec_abr_combined <- ggplot(data = tc_stats_abr_pooled) + 
-  geom_col(aes(x = sample_type, y = `% Positive for E. coli`, fill = assignment), position = "dodge") +
-  geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
-                    fill = assignment), position = position_dodge(width = 0.9),
-                width = 0.25) +
+p_ec_abr_pooled <- ggplot(data = tc_stats_abr_pooled) + 
+  geom_point(aes(x = sample_type, y = `% Positive for E. coli`, color = assignment), 
+           position = position_dodge(width = 0.35), size = 3) +
+   geom_errorbar(aes(x = sample_type, ymin = `Lower CI - EC`, ymax = `Upper CI - EC`,
+                     color = assignment), position = position_dodge(width = 0.35),
+                 width = .2) +
   scale_y_continuous(
                      limits = c(0, 100),
                      expand = c(0,0))+
   labs(x = "Sample Type", 
        y = expression(paste("% positive for ABR ",italic("E. coli"))),
-       fill = "Assignment",
-       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 267)")),
-       caption = "Stored and tap water samples were pooled across 2 monthly household surveys rounds across 20 villages in April 2024 and October 2024."
-       #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
+       color = "Assignment",
+       title = expression(paste("Presence of Antibiotic Resistant ", italic("E. coli"), " in Household Drinking Water (N = 243)"))
        )+
   #facet_wrap(~ data_round)+
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+  theme_classic() + 
+  theme(axis.text.x = element_text(vjust=1))
 
-p_ec_abr_combined
+p_ec_abr_pooled
 
-ggsave(filename = "manuscript_ABR_ecoli_pooled_results.jpeg", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 4, height = 2, units = "in", scale = 2.6)
+
+p_abr <- p_ec_abr + p_ec_abr_pooled
+p_abr
+
+ggsave(filename = "manuscript_ABR_results.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 3.5, height = 1.5, units = "in", scale = 2)
 
 
 
