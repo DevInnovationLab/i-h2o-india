@@ -302,7 +302,6 @@ desc_stats_bl_df <- desc_stats_bl%>%
 
 idexx_bl_tap <- idexx%>%
   filter(sample_type == "Tap")%>%
-  #filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_tap = "cf_pa_binary")%>%
   rename(ec_pa_tap = "ec_pa_binary")%>%
@@ -311,7 +310,6 @@ idexx_bl_tap <- idexx%>%
 
 idexx_bl_stored <- idexx%>%
   filter(sample_type == "Stored")%>%
-  #filter(pooled_round == "FU")%>%
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_stored = "cf_pa_binary")%>%
   rename(ec_pa_stored = "ec_pa_binary")%>%
@@ -324,13 +322,13 @@ idexx_bl_stored <- idexx%>%
 
 #Tap water
 desc_stats_bl_tap <- idexx_bl_tap%>%
-  dplyr::select(assignment, cf_pa_tap, ec_pa_tap#, 
-                #cf_log_tap, ec_log_tap
+  dplyr::select(assignment, cf_pa_tap, ec_pa_tap, 
+                cf_log_tap, ec_log_tap
                 )%>%
         tbl_summary(by = assignment, 
                     missing = "no",
-                    type = c("cf_pa_tap", "ec_pa_tap"#,
-                             #"cf_log_tap","ec_log_tap"
+                    type = c("cf_pa_tap", "ec_pa_tap",
+                             "cf_log_tap","ec_log_tap"
                              ) ~ "continuous",
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
@@ -338,9 +336,9 @@ desc_stats_bl_tap <- idexx_bl_tap%>%
                     digits = list(all_continuous() ~ 2, 
                                   all_categorical() ~ 0),
                     label = list(cf_pa_tap ~ "Tap - Presence/Absence of Total Coliform",
-                                 ec_pa_tap ~ "Tap - Presence/Absence of E. coli"#,
-                                 # cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
-                                 # ec_log_tap ~ "Tap - Mean Log10 of E. coli"
+                                 ec_pa_tap ~ "Tap - Presence/Absence of E. coli",
+                                 cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
+                                 ec_log_tap ~ "Tap - Mean Log10 of E. coli"
                                 )
                     )%>%
   add_n()%>%
@@ -351,11 +349,12 @@ desc_stats_bl_tap <- idexx_bl_tap%>%
 
 #Stored water
 desc_stats_bl_stored <- idexx_bl_stored%>%
-  dplyr::select(assignment, cf_pa_stored, ec_pa_stored#, cf_log_stored, ec_log_stored
+  dplyr::select(assignment, cf_pa_stored, ec_pa_stored, cf_log_stored, ec_log_stored
                 )%>%
         tbl_summary(by = assignment, 
                     missing = "no",
-                    type = c("cf_pa_stored", "ec_pa_stored"#, "cf_log_stored", "ec_log_stored"
+                    type = c("cf_pa_stored", "ec_pa_stored",
+                             "cf_log_stored", "ec_log_stored"
                              ) ~ "continuous",
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
@@ -363,9 +362,9 @@ desc_stats_bl_stored <- idexx_bl_stored%>%
                     digits = list(all_continuous() ~ 2, 
                                   all_categorical() ~ 0),
                     label = list(cf_pa_stored ~ "Stored - Presence/Absence of Total Coliform",
-                                 ec_pa_stored ~ "Stored - Presence/Absence of E. coli"#,
-                                 # cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
-                                 # ec_log_stored ~ "Stored - Mean Log10 of E. coli"
+                                 ec_pa_stored ~ "Stored - Presence/Absence of E. coli",
+                                 cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
+                                 ec_log_stored ~ "Stored - Mean Log10 of E. coli"
                                 )
                     )%>%
   add_n()%>%
@@ -1191,8 +1190,8 @@ kbl(caption = paste(
 #Desc stats -------------------
 
 #Pooled Results
-fu_rounds <- all_rounds%>%
-  filter(data_round != "BL")#%>%
+# fu_rounds <- all_rounds%>%
+#   filter(data_round != "BL")#%>%
   #filter(available_jjm == "Both stored and running water are from JJM") #Removing chlorine data that are not from JJM source
 
 fu_rounds <- all_rounds%>%
@@ -2285,6 +2284,188 @@ print(el_forestplot)
 
 ```
 
+#Endline Desc Stats
+
+```{r Endline Desc Stats}
+
+#Baseline Census Desc Stats
+outcome_vars <- c("assignment",#"hhmember_count", "hhhead_gender", "read_write_1",
+                  "prim_source", "sec_source","jjm_drinking", "water_treat_binary",
+                   "time_spent_treat", "tap_issues_taste"
+                  )
+
+#GT method
+#Summarizing desc stats for each variable
+#reset_gtsummary_theme()
+desc_stats_el <- el%>%
+  dplyr::select(all_of(outcome_vars))%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(prim_source ~ "Primary drinking water source",
+                                 sec_source ~ "Use a secondary drinking water source",
+                                 jjm_drinking ~ "Drink water from their tap connection",
+                                 water_treat_binary ~ "Treat drinking water",
+                                 time_spent_treat ~ "Time spent treating water is > 10 minutes",
+                                 tap_issues_taste ~ "Reported smell or taste issue from tap water"
+                                 )
+                    )%>%
+  add_n()
+
+desc_stats_el_gt <- as_tibble(desc_stats_el)%>%
+  gt::gt()
+
+# desc_stats_cen_gt%>%
+#   gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_cen.pdf")
+
+desc_stats_el_df <- desc_stats_el%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 405`)%>%
+  rename("Control" = `**Control**  \nN = 475`)
+
+
+
+
+
+
+#Subsetting follow-up survey rounds
+fu_rounds <- all_rounds%>%
+  filter(data_round != "BL")
+
+#Baseline followup survey desc stats
+outcome_vars <- c("assignment", "fc_tap_binary", "fc_stored_binary",
+                  "fc_tap_.2", "fc_stored_.2", "fc_tap_2ppm", "fc_stored_2ppm",
+                  "tap_taste_binary"
+                  )
+
+desc_stats_fu <- fu_rounds%>%
+  dplyr::select(all_of(outcome_vars))%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(
+                                 fc_tap_binary ~ "Presence of free chlorine at tap connection",
+                                 fc_stored_binary ~ "Presence of free chlorine in stored water",
+                                 fc_tap_.2 ~ "Proportion of samples > 0.2 mg/L at tap",
+                                 fc_stored_.2 ~ "Proportion of samples > 0.2 mg/L in stored water",
+                                 fc_tap_2ppm ~ "Proportion of samples > 2.0 mg/L at tap",
+                                 fc_stored_2ppm ~ "Proportion of samples > 2.0 mg/L in stored water",
+                                 tap_taste_binary ~ "Satisfied with taste of tap water"
+                                 )
+                    )%>%
+  add_n()
+
+desc_stats_fu_gt <- as_tibble(desc_stats_fu)%>%
+  gt::gt()
+
+# desc_stats_bl_gt%>%
+#   gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_bl.pdf")
+
+desc_stats_fu_df <- desc_stats_fu%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 421`)%>%
+  rename("Control" = `**Control**  \nN = 420`)
+
+
+#Separating stored vs tap water tests ------
+
+idexx_fu_tap <- idexx_fu%>%
+  filter(sample_type == "Tap")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_tap = "cf_pa_binary")%>%
+  rename(ec_pa_tap = "ec_pa_binary")%>%
+  rename(cf_log_tap = "cf_log")%>%
+  rename(ec_log_tap = "ec_log")
+
+idexx_fu_stored <- idexx_fu%>%
+  filter(sample_type == "Stored")%>%
+  dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
+  rename(cf_pa_stored = "cf_pa_binary")%>%
+  rename(ec_pa_stored = "ec_pa_binary")%>%
+  rename(cf_log_stored = "cf_log")%>%
+  rename(ec_log_stored = "ec_log")
+
+
+
+#Summarizing desc stats --------------------------------------
+
+#Tap water
+desc_stats_fu_tap <- idexx_fu_tap%>%
+  dplyr::select(assignment, cf_pa_tap, ec_pa_tap, 
+                cf_log_tap, ec_log_tap
+                )%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_tap", "ec_pa_tap",
+                             "cf_log_tap","ec_log_tap"
+                             ) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_tap ~ "Tap - Presence/Absence of Total Coliform",
+                                 ec_pa_tap ~ "Tap - Presence/Absence of E. coli",
+                                 cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
+                                 ec_log_tap ~ "Tap - Mean Log10 of E. coli"
+                                )
+                    )%>%
+  add_n()%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 240`)%>%
+  rename("Control" = `**Control**  \nN = 241`)
+
+
+#Stored water
+desc_stats_fu_stored <- idexx_fu_stored%>%
+  dplyr::select(assignment, cf_pa_stored, ec_pa_stored, cf_log_stored, ec_log_stored
+                )%>%
+        tbl_summary(by = assignment, 
+                    missing = "no",
+                    type = c("cf_pa_stored", "ec_pa_stored",
+                             "cf_log_stored", "ec_log_stored"
+                             ) ~ "continuous",
+                    statistic = list(
+                      all_continuous() ~ "{mean} ({sd})",
+                      all_categorical() ~ "{p}%"),
+                    digits = list(all_continuous() ~ 2, 
+                                  all_categorical() ~ 0),
+                    label = list(cf_pa_stored ~ "Stored - Presence/Absence of Total Coliform",
+                                 ec_pa_stored ~ "Stored - Presence/Absence of E. coli",
+                                 cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
+                                 ec_log_stored ~ "Stored - Mean Log10 of E. coli"
+                                )
+                    )%>%
+  add_n()%>%
+  as.data.frame()%>%
+  rename("Treatment" = `**Treatment**  \nN = 240`)%>%
+  rename("Control" = `**Control**  \nN = 240`)
+
+
+#Recombining tables
+desc_stats_fu <- bind_rows(desc_stats_el_df, desc_stats_fu_df)%>% 
+  bind_rows(desc_stats_fu_tap)%>%
+  bind_rows(desc_stats_fu_stored)%>%
+  as_tibble()%>%
+  gt::gt()
+
+desc_stats_fu%>%
+  gtsave(path = (paste0(github_path(), "/3_manuscript/figures")), filename = "desc_stats_fu.pdf")
+
+
+
+
+
+
+```
 
 
 \newpage

@@ -373,6 +373,36 @@ bl <- bl%>%
     tc_stored_avg >= 0.14 ~ 1,
     tc_stored_avg < 0.14 ~ 0))
 
+#Adding variable to represent 0.2 ppm threshold
+bl <- bl%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+#Adding variable to represent 2.0 ppm threshold
+bl <- bl%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
+
 
 
 
@@ -639,7 +669,35 @@ r1 <- r1%>%
     tc_stored_avg >= 0.10 ~ 1,
     tc_stored_avg < 0.10 ~ 0))
 
+#Adding variable to represent 0.2 ppm threshold
+r1 <- r1%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
 
+#Adding variable to represent 2.0 ppm threshold
+r1 <- r1%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
 
 
 
@@ -898,6 +956,35 @@ r2 <- r2%>%
     tc_stored_avg < 0.10 ~ 0))
 
 
+#Adding variable to represent 0.2 ppm threshold
+r2 <- r2%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+#Adding variable to represent 2.0 ppm threshold
+r2 <- r2%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
 
 
 
@@ -1134,6 +1221,36 @@ r3 <- r3%>%
     tc_stored_avg >= 0.10 ~ 1,
     tc_stored_avg < 0.10 ~ 0))
 
+#Adding variable to represent 0.2 ppm threshold
+r3 <- r3%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+#Adding variable to represent 2.0 ppm threshold
+r3 <- r3%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
+
 
 
 
@@ -1299,6 +1416,36 @@ r4 <- r4%>%
     tc_stored_avg >= 0.10 ~ 1,
     tc_stored_avg < 0.10 ~ 0))
 
+#Adding variable to represent 0.2 ppm threshold
+r4 <- r4%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+#Adding variable to represent 2.0 ppm threshold
+r4 <- r4%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
+
 
 
 # ------------------------Follow Up R5 Data Cleaning --------------------------------
@@ -1348,6 +1495,39 @@ r5 <- r5%>%
     tc_stored_avg < 0.10 ~ 0))
 
 
+#Adding variable to represent 0.2 ppm threshold
+r5 <- r5%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+#Adding variable to represent 2.0 ppm threshold
+r5 <- r5%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
+
+
+
+
 # ------------------------Follow Up R6 Data Cleaning --------------------------------
 
 
@@ -1380,6 +1560,22 @@ r6 <- r6%>%
     tc_stored_avg >= 0.10 ~ "Presence",
     tc_stored_avg < 0.10 ~ 'Absence'))
 
+#Adding variable to represent 0.2 ppm threshold
+r6 <- r6%>%
+  mutate(fc_tap_.2 = case_when(
+    fc_tap_avg >= 0.20 ~ 1,
+    fc_tap_avg < 0.20 ~ 0))%>%
+  mutate(tc_tap_.2 = case_when(
+    tc_tap_avg >= 0.20 ~ 1,
+    tc_tap_avg < 0.20 ~ 0))%>%
+  mutate(fc_stored_.2 = case_when(
+    fc_stored_avg >= 0.20 ~ 1,
+    fc_stored_avg < 0.20 ~ 0))%>%
+  mutate(tc_stored_.2 = case_when(
+    tc_stored_avg >= 0.20 ~ 1,
+    tc_stored_avg < 0.20 ~ 0))
+
+
 
 #Adding presence/absence variable
 r6 <- r6%>%
@@ -1396,6 +1592,21 @@ r6 <- r6%>%
     tc_stored_avg >= 0.10 ~ 1,
     tc_stored_avg < 0.10 ~ 0))
 
+#Adding variable to represent 2.0 ppm threshold
+r6 <- r6%>%
+  mutate(fc_tap_2ppm = case_when(
+    fc_tap_avg >= 2.0 ~ 1,
+    fc_tap_avg < 2.0 ~ 0))%>%
+  mutate(tc_tap_2ppm = case_when(
+    tc_tap_avg >= 2.0 ~ 1,
+    tc_tap_avg < 2.0 ~ 0))%>%
+  mutate(fc_stored_2ppm = case_when(
+    fc_stored_avg >= 2.0 ~ 1,
+    fc_stored_avg < 2.0 ~ 0))%>%
+  mutate(tc_stored_2ppm = case_when(
+    tc_stored_avg >= 2.0 ~ 1,
+    tc_stored_avg < 2.0 ~ 0))
+
 #------------------------Combining HH Survey Data----------------------------
 
 
@@ -1407,6 +1618,8 @@ bl_tab <- bl%>%
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 stored_bag_source)%>%
   mutate(data_round = "BL")%>%
   mutate(available_jjm = NA)
@@ -1418,6 +1631,8 @@ r1_tab <- r1%>%
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 stored_bag_source, available_jjm)%>%
   mutate(data_round = "R1")
 
@@ -1427,7 +1642,9 @@ r2_tab <- r2%>%
                 prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
-                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary, 
+                tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm, 
                 stored_bag_source, available_jjm)%>%
   mutate(data_round = "R2")
 
@@ -1438,6 +1655,8 @@ r3_tab <- r3%>%
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 stored_bag_source, available_jjm)%>%
   mutate(
          stored_water_time = NA
@@ -1450,6 +1669,8 @@ r4_tab <- r4%>%
                 village, village_code, block, panchayat_village,
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 )%>%
   mutate(data_round = "R4")%>%
   mutate(prim_source = NA,
@@ -1470,6 +1691,8 @@ r5_tab <- r5%>%
                 village, village_code, block, panchayat_village,
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
   )%>%
   mutate(data_round = "R5")%>%
   mutate(prim_source = NA,
@@ -1490,6 +1713,8 @@ r6_tab <- r6%>%
                 village, village_code, block, panchayat_village,
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
+                fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
+                fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
   )%>%
   mutate(data_round = "R6")%>%
   mutate(prim_source = NA,
@@ -1573,12 +1798,14 @@ el <- el%>%
 el$prim_source <- el$water_source_prim%>%
   fct_recode(
     "Government-provided Tap" = "Government provided household Taps (supply paani)",
+    "Government-provided Tap" = "Government provided community standpipe (part of JJM taps)",
     "Community Tap" = "Household tap connections not connected to RWSS/Basudha/JJM tank",
     "Community Tap" = "Government provided community standpipe (connected to piped system, through Vasu",
     "Community Tap" = "Gram Panchayat/Other Community Standpipe (e.g. solar pump, PVC tank)",
     "Surface Water"  = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation c",
     "Surface Water" = "Private Surface well",
     "Surface Water" = "Uncovered dug well",
+    "Surface Water" = "Directly fetched by surface water (river/dam/lake/pond/stream/canal/irrigation channel)",
     "Borehole"  = "Borewell operated by electric pump",
     "Covered Dug Well" = "Covered dug well",
     "Borehole" = "Manual handpump",
