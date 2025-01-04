@@ -498,6 +498,21 @@ cl_p2 <- ggplot(data = mon_summary_weekly) +
 cl_p2
 
 
+
+
+#Calculating # of no dosing events
+
+mon_no_dosing <- mon_wide%>%
+  filter(nearest_tap_fc < 0.10 | farthest_tap_fc < 0.10)
+
+mon_no_dosing <- mon_no_dosing%>%
+  group_by(test_date, village_name)%>%
+  summarise(no_dosing_events = n())
+  
+
+
+
+
 ```
 \newpage
 # Longitudinal Chlorine Monitoring

@@ -184,6 +184,30 @@ gv_refill <- gv_refill%>%
   mutate(refill_date_0 = visit_date)
 
 
+#Calculating average # of days between refills per village
+gv_refill_days <- gv_refill%>%
+  dplyr::select(Village = Village, 
+         Date = `Date:`, 
+         Refilled = `Did you/the pump operator refill chlorine tablets since the last visit?`) %>%
+  mutate(Date = ymd(Date)) %>% # Parse Date column to Date format
+  filter(tolower(Refilled) == "yes") %>% # Filter rows where chlorine tablets were refilled
+  arrange(Village, Date) # Sort data by Village and Date
+
+gv_refill_days <- gv_refill_days%>%
+  group_by(Village) %>%
+  mutate(Days_Between_Refills = as.numeric(difftime(Date, lag(Date), units = "days"))) %>%
+  ungroup()
+
+# Calculate the average number of days between refills for each village
+average_days_per_village <- gv_refill_days%>%
+  group_by(Village) %>%
+  summarize(Average_Days = mean(Days_Between_Refills, na.rm = TRUE)) %>%
+  drop_na() # Remove villages with no valid data
+
+# View the results
+#print(average_days_per_village)
+
+
 #Selecting dates + village to display in a kable
 gv_refill <- gv_refill%>%
   dplyr::select(Village, days_since_refill, refill_date_0, refill_date_1, refill_date_2, refill_date_3)

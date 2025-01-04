@@ -52,22 +52,25 @@ library(tidyverse)
 #from Box
 
 #Jeremy's file path
-#mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+mon <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
 
-#mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
-
-#village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
-
-#gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
-
-#Niharika's file path
-mon <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
-
-mon_full <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+mon_full <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
 
 village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
 
-gv <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
+gv <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
+
+long <- read_csv("C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/1_15_Longitudinal Testing.csv")
+
+
+#Niharika's file path
+#mon <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/Daily Chlorine Monitoring Form_WIDE.csv")
+
+#mon_full <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/1_raw/india_ilc_pilot_monitoring_WIDE.csv")
+
+#village_details <- read_sheet("https://docs.google.com/spreadsheets/d/1iWDd8k6L5Ny6KklxEnwvGZDkrAHBd0t67d-29BfbMGo/edit?pli=1#gid=1710429467")
+
+#gv <- read_csv("/Users/uchicago/Library/CloudStorage/Box-Box/India Water project/2_Pilot/Data/6_Gram Vikas/India ILC - Gram Vikas Chlorine Monitoring_current.csv")
 
 ```
 
@@ -587,5 +590,87 @@ mon_wide_anonymized$chlorine_test <- fct_recode(mon_wide_anonymized$chlorine_tes
   
  print(p2)
 
+```
+
+
+
+# Longitudinal Chlorine Testing Over Supply Time
+
+
+```{r long testing over supply time}
+
+cutoff_date <- as.Date("2024-09-04")
+
+
+# Filter out chlorine values (tw_fc) below 0.2
+filtered_data <- long%>%
+  filter(date_only >= cutoff_date & !(village_name == "Mukundpur" & date_only == "2024-09-06"))%>%
+  filter(date_only >= cutoff_date & !(village_name == "Tandipur" & date_only == "2024-09-12"))%>%
+  filter(tw_fc >= 0.1)
+
+# Calculate the mean, standard deviation, and range for each village
+village_stats <- filtered_data %>%
+  group_by(village_name) %>%
+  summarise(
+    chlorine_mean = mean(tw_fc, na.rm = TRUE),
+    chlorine_sd = sd(tw_fc, na.rm = TRUE),
+    chlorine_range = max(tw_fc, na.rm = TRUE) - min(tw_fc, na.rm = TRUE)
+  ) %>%
+  arrange(desc(chlorine_range))
+
+# Display the statistics for each village
+print(village_stats)
+
+# Calculate the overall mean and standard deviation of chlorine values
+overall_stats <- filtered_data %>%
+  summarise(
+    overall_mean = mean(tw_fc, na.rm = TRUE),
+    overall_sd = sd(tw_fc, na.rm = TRUE)
+  )
+
+# Display the overall statistics
+print(overall_stats)
+
+# Extract the statistics specifically for Asada village
+asada_stats <- village_stats %>%
+  filter(village_name == "Asada")
+
+# Display the statistics for Asada village
+print(asada_stats)
+
+
+# Calculate paired ranges between nearest and farthest taps based on tw_fc_variable
+paired_ranges <- filtered_data %>%
+  group_by(village_name, tw_fc_variable) %>%
+  summarise(
+    nearest_value = tw_fc[location == "Nearest Tap"],
+    farthest_value = tw_fc[location == "Farthest Tap"],
+    range = abs(farthest_value - nearest_value)
+  ) %>%
+  ungroup()
+
+# Find the greatest paired range for each village
+village_paired_ranges <- paired_ranges %>%
+  group_by(village_name) %>%
+  summarise(
+    max_paired_range = max(range, na.rm = TRUE)
+  ) %>%
+  arrange(desc(max_paired_range))
+
+#Average range overall
+village_paired_ranges_overall <- paired_ranges%>%
+  summarise(avg_range = mean(range),
+            sd_range = sd(range))
+
+
+# Display the paired ranges for each village
+print(village_paired_ranges)
+
+# Extract the greatest paired range and corresponding village
+greatest_paired_range <- village_paired_ranges %>%
+  filter(max_paired_range == max(max_paired_range, na.rm = TRUE))
+
+# Display the village with the greatest paired range
+print(greatest_paired_range)
 ```
 
