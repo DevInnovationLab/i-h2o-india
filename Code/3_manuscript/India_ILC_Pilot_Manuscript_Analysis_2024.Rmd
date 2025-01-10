@@ -502,8 +502,9 @@ cl_p2
 
 #Calculating # of no dosing events
 
-mon_no_dosing <- mon_wide%>%
-  filter(nearest_tap_fc < 0.10 | farthest_tap_fc < 0.10)
+mon_no_dosing <- mon%>%
+  filter(chlorine_concentration < 0.10)%>%
+  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")
 
 mon_no_dosing <- mon_no_dosing%>%
   group_by(test_date, village_name)%>%

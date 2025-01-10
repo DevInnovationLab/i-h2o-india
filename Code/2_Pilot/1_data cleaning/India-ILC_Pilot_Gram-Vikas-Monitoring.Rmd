@@ -204,6 +204,11 @@ average_days_per_village <- gv_refill_days%>%
   summarize(Average_Days = mean(Days_Between_Refills, na.rm = TRUE)) %>%
   drop_na() # Remove villages with no valid data
 
+average_days_per_refill <- gv_refill_days%>%
+  summarize(Average_Days = mean(Days_Between_Refills, na.rm = TRUE),
+            refill_sd = sd(Days_Between_Refills, na.rm = TRUE)) %>%
+  drop_na()
+
 # View the results
 #print(average_days_per_village)
 
