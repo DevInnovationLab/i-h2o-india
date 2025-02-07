@@ -2184,7 +2184,7 @@ idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
 
 outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
 
-idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
+idexx_model <- idexx_fu_tap #setting model dataset
 
 #Running all models
 #Poisson regression
@@ -2206,15 +2206,15 @@ idexx_lm_tap <- idexx_lm_tap%>%
 
 #Running Poisson Regression on Stored Samples ----
 
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
 
-idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
+idexx_model <- idexx_fu_stored #setting model dataset
 
 #Running all models
 #Poisson regression
 all_models <- lapply(outcome_vars,
                    function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
+                    ilc_lm(data = idexx_model, var)
                  }
                   )
 
@@ -2222,13 +2222,13 @@ all_models <- lapply(outcome_vars,
 names(all_models) <- outcome_vars
 
 #Formatting table output
-idexx_poisson_stored <- ilc_model_table_only(all_models)
-idexx_poisson_stored <- idexx_poisson_stored%>%
-  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
+idexx_lm_stored <- ilc_model_lm_table_only(all_models)
+idexx_lm_stored <- idexx_lm_stored%>%
+  mutate(model_name = ifelse(model_name == "cf_log", "cf_log", "ec_log"))%>%
   mutate(sample_type = "Stored")
 
 
-idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
+idexx_lm <- rbind(idexx_lm_tap, idexx_lm_stored)
 
 
 
