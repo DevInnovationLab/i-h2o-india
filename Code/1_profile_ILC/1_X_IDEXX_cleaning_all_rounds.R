@@ -1258,19 +1258,22 @@ write_csv(idexx_r3,paste0(user_path(),"/3_final/R3_idexx_master_cleaned.csv"))
 
 #Renaming panchayat variable
 idexx_r4 <- idexx_r4%>%
-  mutate(panchayat_village = `Panchat village`)
+  mutate(panchayat_village = `Panchat village`)%>%
+  mutate(village = village_name)
 
 ###-------------------------Round 5 data cleaning------------------------#####
 
 #Renaming panchayat variable
 idexx_r5 <- idexx_r5%>%
-  mutate(panchayat_village = `Panchat village`)
+  mutate(panchayat_village = `Panchat village`)%>%
+  mutate(village = village_name)
 
 ###-------------------------Round 6 data cleaning------------------------#####
 
 #Renaming panchayat variable
 idexx_r6 <- idexx_r6%>%
-  mutate(panchayat_village = `Panchat village`)
+  mutate(panchayat_village = `Panchat village`)%>%
+  mutate(village = village_name)
 
 
 #Selecting out ABR data

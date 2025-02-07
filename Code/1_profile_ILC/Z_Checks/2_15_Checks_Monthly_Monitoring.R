@@ -291,6 +291,8 @@ DI_path <- function() {
 knitr::opts_knit$set(root.dir = DI_path())
 
 
+
+
 #---------------------------------Loading functions------------------------------
 
 
@@ -357,6 +359,8 @@ tc_stats <- function(idexx_data){
 
 names(ms)
 #stored_water_fc #tap_water_fc #R_Cen_village_name_str #assignment 
+
+
 
 #----------------------------------Loading Cleaned Data---------------------------------
 
