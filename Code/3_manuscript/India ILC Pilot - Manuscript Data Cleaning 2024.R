@@ -1872,7 +1872,15 @@ el <- el%>%
   mutate(time_spent_treat_binary = ifelse(treat_time == 0, 0, 1))%>%
   mutate(time_spent_treat = ifelse(treat_time >= 10, 1, #10 is the median value
                                    ifelse(treat_time == 999, NA, 0))) #888 is a permanent filter
-  
+
+#Adding a variable for a 15-minute threshold too
+el <- el%>%
+  mutate(treat_time = ifelse(is.na(treat_time) == TRUE, 0, treat_time))%>% #Making people who do not report treating their water = 0 
+  mutate(time_spent_treat_binary = ifelse(treat_time == 0, 0, 1))%>%
+  mutate(time_spent_treat_15 = ifelse(treat_time >= 15, 1, #10 is the median value
+                                   ifelse(treat_time == 999, NA, 0))) #888 is a permanent filter
+
+
 
 
 #Decided to not treat water because of lack of time

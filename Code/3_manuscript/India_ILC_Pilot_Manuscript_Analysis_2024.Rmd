@@ -219,8 +219,8 @@ desc_stats_cen <- cen%>%
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
                       all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
+                    digits = list(all_continuous() ~ 1, 
+                                  all_categorical() ~ 1),
                     label = list(hhmember_count ~ "Average household size",
                                  hhhead_gender ~ "Household head gender",
                                  read_write_1 ~ "Respondent can read and write",
@@ -270,8 +270,8 @@ desc_stats_bl <- bl%>%
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
                       all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
+                    digits = list(all_continuous() ~ 1, 
+                                  all_categorical() ~ 1),
                     label = list(
                                  fc_tap_binary ~ "Presence of free chlorine at tap connection",
                                  fc_stored_binary ~ "Presence of free chlorine in stored water",
@@ -333,8 +333,8 @@ desc_stats_bl_tap <- idexx_bl_tap%>%
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
                       all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
+                    digits = list(all_continuous() ~ 1, 
+                                  all_categorical() ~ 1),
                     label = list(cf_pa_tap ~ "Tap - Presence/Absence of Total Coliform",
                                  ec_pa_tap ~ "Tap - Presence/Absence of E. coli",
                                  cf_log_tap ~ "Tap - Mean Log10 of Total Coliform",
@@ -359,8 +359,8 @@ desc_stats_bl_stored <- idexx_bl_stored%>%
                     statistic = list(
                       all_continuous() ~ "{mean} ({sd})",
                       all_categorical() ~ "{p}%"),
-                    digits = list(all_continuous() ~ 2, 
-                                  all_categorical() ~ 0),
+                    digits = list(all_continuous() ~ 1, 
+                                  all_categorical() ~ 1),
                     label = list(cf_pa_stored ~ "Stored - Presence/Absence of Total Coliform",
                                  ec_pa_stored ~ "Stored - Presence/Absence of E. coli",
                                  cf_log_stored ~ "Stored - Mean Log10 of Total Coliform",
@@ -402,14 +402,31 @@ desc_stats_bl%>%
 # 
 
 
+
+
+
+```
+\newpage
+# Baseline Balance
+
+```{r Baseline Balance}
+
+
+
 #Baseline Balance -----
 
+#Baseline Census
 outcome_vars <- c("hhmember_count",
                   "hhhead_gender",
                   "read_write_1",
                   "prim_source",
                   "sec_source",
                   "water_treat_binary")
+
+outcome_vars <- c("hhmember_count","read_write_1", "prim_source", "sec_source",
+                  "jjm_drinking", "water_treat_binary",
+                  "electricity_binary", "tv_binary","mobile_binary", "fridge_binary",
+                  "motorcycle_binary")
 
 cen_model <- factormaker(cen, outcome_vars)
 
@@ -432,6 +449,152 @@ names(all_models) <- outcome_vars
 
 #Formatting table output
 ilc_model_table(all_models)
+
+
+
+#Baseline followup survey ----
+outcome_vars <- c("fc_tap_binary", "fc_stored_binary",
+                  #"cf_pa_binary1","cf_pa_binary2","ec_pa_binary1","ec_pa_binary2",
+                  "treat_time_category", "tap_taste_binary")
+
+
+bl_model <- factormaker(bl, outcome_vars)
+
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = bl_model, var)
+                 }
+                  )
+
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+ilc_model_table(all_models)
+
+
+
+
+# Microbial Contamination - Baseline Balance -------------------------------------------------
+
+#Separating by tap and stored water
+idexx_bl_tap <- idexx%>%
+  filter(sample_type == "Tap")
+
+idexx_bl_stored <- idexx%>%
+  filter(sample_type == "Stored")
+  
+
+#Running Poisson Regression on Tap Samples ----
+
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_bl_tap, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_tap <- ilc_model_table_only(all_models)
+idexx_poisson_tap <- idexx_poisson_tap%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
+  mutate(sample_type = "Tap")
+
+
+#Running Poisson Regression on Stored Samples ----
+
+outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_bl_stored, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_stored <- ilc_model_table_only(all_models)
+idexx_poisson_stored <- idexx_poisson_stored%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
+  mutate(sample_type = "Stored")
+
+
+idexx_poisson_bl <- rbind(idexx_poisson_tap, idexx_poisson_stored)
+
+
+
+
+#Running Linear Regression on Tap Samples ----
+
+
+outcome_vars <- c("ec_log") #Selecting outcome variables
+
+idexx_model <- idexx_bl_tap
+
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_lm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_lm_tap <- ilc_model_lm_table_only(all_models)
+idexx_lm_tap <- idexx_lm_tap%>%
+  mutate(sample_type = "Tap")
+
+
+#Running Poisson Regression on Stored Samples ----
+
+outcome_vars <- c("ec_log") #Selecting outcome variables
+
+idexx_model <- idexx_bl_stored
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_lm(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_lm_stored <- ilc_model_lm_table_only(all_models)
+idexx_lm_stored <- idexx_lm_stored%>%
+  mutate(sample_type = "Stored")
+
+
+idexx_lm_bl <- rbind(idexx_lm_tap, idexx_lm_stored)
+
+idexx_lm_bl
+
 
 
 
@@ -2046,69 +2209,6 @@ print(el_forestplot)
 ```{r Chlorine and Microbial Contamination Treatment Effect}
 
 
-# Poisson Regression - Baseline Balance -------------------------------------------------
-
-#Separating by tap and stored water
-idexx_bl_tap <- idexx%>%
-  filter(sample_type == "Tap")
-
-idexx_bl_stored <- idexx%>%
-  filter(sample_type == "Stored")
-  
-
-#Running Poisson Regression on Tap Samples ----
-
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_bl_tap, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_tap <- ilc_model_table_only(all_models)
-idexx_poisson_tap <- idexx_poisson_tap%>%
-  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
-  mutate(sample_type = "Tap")
-
-
-#Running Poisson Regression on Stored Samples ----
-
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
-
-idexx_model <- factormaker(idexx_bl_stored, outcome_vars) #Converting to numeric type
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_poisson_stored <- ilc_model_table_only(all_models)
-idexx_poisson_stored <- idexx_poisson_stored%>%
-  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_stored", "ec_stored"))%>%
-  mutate(sample_type = "Stored")
-
-
-idexx_poisson_bl <- rbind(idexx_poisson_tap, idexx_poisson_stored)
-
-
-
 
 # Poisson Regression - Treatment Effect -------------------------------------------------
 
@@ -2361,7 +2461,7 @@ print(el_forestplot)
 #Baseline Census Desc Stats
 outcome_vars <- c("assignment",#"hhmember_count", "hhhead_gender", "read_write_1",
                   "prim_source", "sec_source","jjm_drinking", "water_treat_binary",
-                   "time_spent_treat", "tap_issues_taste"
+                   "time_spent_treat", "time_spent_treat_15", "tap_issues_taste"
                   )
 
 #GT method
@@ -2381,6 +2481,7 @@ desc_stats_el <- el%>%
                                  jjm_drinking ~ "Drink water from their tap connection",
                                  water_treat_binary ~ "Treat drinking water",
                                  time_spent_treat ~ "Time spent treating water is > 10 minutes",
+                                 time_spent_treat_15 ~ "Time spent treating water is > 15 minutes",
                                  tap_issues_taste ~ "Reported smell or taste issue from tap water"
                                  )
                     )%>%
@@ -2547,7 +2648,7 @@ desc_stats_fu%>%
 #Desc Stats --------------------------------------------------
 
 #Selecting variables
-outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat")
+outcome_vars <- c("prim_source_jjm", "sec_source", "jjm_drinking", "water_treat_binary", "time_spent_treat", "time_spent_treat_15")
 
 
 #GT method
@@ -2566,7 +2667,7 @@ desc_stats <- el%>%
 # Poisson Regression -- Treatment Effect -------------------------------------
 
 outcome_vars <- c("prim_source_jjm", "sec_source", #Issue after code cleaning updates
-                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat")
+                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat", "time_spent_treat_15")
 
 el_model <- factormaker(el, outcome_vars) #Making variables numeric
 
