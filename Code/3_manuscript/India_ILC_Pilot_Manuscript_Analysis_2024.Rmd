@@ -416,12 +416,12 @@ desc_stats_bl%>%
 #Baseline Balance -----
 
 #Baseline Census
-outcome_vars <- c("hhmember_count",
-                  "hhhead_gender",
-                  "read_write_1",
-                  "prim_source",
-                  "sec_source",
-                  "water_treat_binary")
+# outcome_vars <- c("hhmember_count",
+#                   "hhhead_gender",
+#                   "read_write_1",
+#                   "prim_source",
+#                   "sec_source",
+#                   "water_treat_binary")
 
 outcome_vars <- c("hhmember_count","read_write_1", "prim_source", "sec_source",
                   "jjm_drinking", "water_treat_binary",
