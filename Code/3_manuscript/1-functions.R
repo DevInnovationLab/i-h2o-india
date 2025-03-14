@@ -522,7 +522,53 @@ ilc_glm <- function(data, var){
   return(tidy_results)
 }
 
-
+#ilc_glm
+#Runs generalized linear model for comparing control and treatment group outcomes using Poisson regression
+#data: overall dataset to pull from
+#var: vector containing binary outcome variable names in each dataset to model
+ilc_glm_unadj <- function(data, var){
+  
+  #Specifying the formula
+  formula <- as.formula(paste(var, "~ assignment"))
+  #Running model
+  model <- glm(formula, data = data, family = poisson)
+  
+  #Storing N
+  N <- length(model$y)
+  
+  # Adjust for clustering at the village level
+  cluster_vcov <- vcovCL(model, cluster = data$village, type = "HC1")
+  # Get the coefficients with clustered standard errors
+  clustered_results <- coeftest(model, vcov. = cluster_vcov)
+  
+  #Tidying models -- need to understand how to use clustered results option
+  tidy_results <- tidy(clustered_results)
+  # Rename the columns for better readability
+  colnames(tidy_results) <- c("covariate", "estimate", "std_error", "z_statistic", "p_value")
+  
+  #Adding N
+  tidy_results <- tidy_results%>%
+    mutate(N = N)
+  
+  
+  #exponentiate the estimates/std errors to get Prevalence Ratio
+  
+  tidy_results$estimate <- exp(tidy_results$estimate)
+  tidy_results$std_error <- exp(tidy_results$std_error)
+  
+  #Calculating Confidence Intervals
+  #Need to calculate on original beta scale before transforming!
+  tidy_results <- tidy_results%>%
+    mutate(ln_estimate = log(estimate))%>%
+    mutate(ln_std_error = log(std_error))%>%
+    mutate(Lower_CI = exp(ln_estimate - qt(0.975, N) * ln_std_error))%>%
+    mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
+                                Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
+    mutate(Upper_CI = exp(ln_estimate + qt(0.975, N) * ln_std_error))
+  
+  
+  return(tidy_results)
+}
 
 #ilc_lm
 #Runs LINEAR model for comparing control and treatment group outcomes

@@ -527,6 +527,17 @@ bl$treat_time_category <- factor(bl$treat_time_category)%>%
   fct_relevel("< 5 minutes", "5-15 minutes", "15-30 minutes", 
               "30-60 minutes", "> 60 minutes", "Do not treat water")
 
+#Adding variable for 5 minute threshold
+bl <- bl%>%
+  mutate(treat_time_5min = case_when(treat_time_category == "< 5 minutes" ~ 0,
+                                     treat_time_category == "Do not treat water" ~ 0,
+                                     treat_time_category == "5-15 minutes" ~ 1,
+                                     treat_time_category == "15-30 minutes" ~ 1,
+                                     treat_time_category == "30-60 minutes" ~ 1,
+                                     treat_time_category == "> 60 minutes" ~ 1
+  )
+  )
+
 
 
 #Setting JJM use variable
@@ -1879,6 +1890,15 @@ el <- el%>%
   mutate(time_spent_treat_binary = ifelse(treat_time == 0, 0, 1))%>%
   mutate(time_spent_treat_15 = ifelse(treat_time >= 15, 1, #10 is the median value
                                    ifelse(treat_time == 999, NA, 0))) #888 is a permanent filter
+
+
+#Adding a variable for a 5-minute threshold too
+el <- el%>%
+  mutate(treat_time = ifelse(is.na(treat_time) == TRUE, 0, treat_time))%>% #Making people who do not report treating their water = 0 
+  mutate(time_spent_treat_binary = ifelse(treat_time == 0, 0, 1))%>%
+  mutate(time_spent_treat_5 = ifelse(treat_time >= 5, 1, #10 is the median value
+                                      ifelse(treat_time == 999, NA, 0))) #888 is a permanent filter
+
 
 
 

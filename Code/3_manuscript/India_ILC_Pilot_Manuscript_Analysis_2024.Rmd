@@ -255,7 +255,7 @@ desc_stats_cen_df <- desc_stats_cen%>%
 outcome_vars <- c("assignment", "fc_tap_binary", "fc_stored_binary",
                   #"cf_pa_binary1","cf_pa_binary2","ec_pa_binary1","ec_pa_binary2",
                   "water_treat_binary",
-                  "treat_time_category", "tap_taste_binary")
+                  "treat_time_category", "tap_taste_binary", "treat_time_5min")
 
 desc_stats_bl <- bl%>%
   dplyr::select(all_of(outcome_vars))%>%
@@ -281,6 +281,7 @@ desc_stats_bl <- bl%>%
                                  # ec_pa_binary2 ~ "Presence of E. coli in stored water",
                                  #water_treat_binary ~ "Treats drinking water",
                                  treat_time_category ~ "Time spent treating water",
+                                 treat_time_5min ~ "Time spent treating water > 5 min",
                                  tap_taste_binary ~ "Satisfied with taste of tap water"
                                  )
                     )%>%
@@ -594,6 +595,32 @@ idexx_lm_stored <- idexx_lm_stored%>%
 idexx_lm_bl <- rbind(idexx_lm_tap, idexx_lm_stored)
 
 idexx_lm_bl
+
+
+#Checking unadjusted balance on E. coli measurements in tap samples
+
+
+outcome_vars <- c("ec_pa_binary") #Selecting outcome variables
+
+idexx_model <- factormaker(idexx_bl_tap, outcome_vars) #Converting to numeric type
+
+#Running all models
+#Poisson regression
+all_models <- lapply(outcome_vars,
+                   function(var){ #This functions "subsets" the ilc_glm function
+                    ilc_glm_unadj(data = idexx_model, var)
+                 }
+                  )
+
+#Assigning names to models
+names(all_models) <- outcome_vars
+
+#Formatting table output
+idexx_poisson_tap <- ilc_model_table_only(all_models)
+idexx_poisson_tap <- idexx_poisson_tap%>%
+  mutate(model_name = ifelse(model_name == "cf_pa_binary", "cf_tap", "ec_tap"))%>%
+  mutate(sample_type = "Tap")
+
 
 
 
@@ -2667,7 +2694,7 @@ desc_stats <- el%>%
 # Poisson Regression -- Treatment Effect -------------------------------------
 
 outcome_vars <- c("prim_source_jjm", "sec_source", #Issue after code cleaning updates
-                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat", "time_spent_treat_15")
+                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat", "time_spent_treat_15", "time_spent_treat_5")
 
 el_model <- factormaker(el, outcome_vars) #Making variables numeric
 
@@ -2814,8 +2841,8 @@ library(forestplot)
 el_models_forestplot <- el_models%>%
   mutate(mean = estimate)%>%
   mutate(estimate = as.character(round(estimate, 2)))%>%
-  mutate(Lower_CI = round(Lower_CI, 1))%>%
-  mutate(Upper_CI = round(Upper_CI, 1))%>%
+  mutate(Lower_CI = round(Lower_CI, 2))%>%
+  mutate(Upper_CI = round(Upper_CI, 2))%>%
   mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
   mutate(lower = Lower_CI)%>%
   mutate(upper = Upper_CI)%>%
