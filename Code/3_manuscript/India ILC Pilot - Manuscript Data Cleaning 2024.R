@@ -196,8 +196,8 @@ cen$water_sec_yn <- cen$water_sec_yn%>%
 #Setting primary source binary variable
 cen <- cen%>%
   mutate(prim_source_jjm = case_when(
-    prim_source == "Government-provided Tap" ~ 1,
-    prim_source != "Government-provided Tap" ~ 0
+    prim_source == "Household Tap" ~ 1,
+    prim_source != "Household Tap" ~ 0
   ))
 
 #Secondary source variable cleaning
