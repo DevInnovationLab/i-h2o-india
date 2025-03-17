@@ -191,11 +191,32 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 ```
 
 
-```{r New Baseline Census Desc Stats Code}
+```{r saving datasets}
+
+# cen <- cen%>%
+#   mutate(hhhead_gender = ifelse(hhhead_gender == "Female", 1, 0))%>%
+#   mutate(read_write_1 = ifelse(read_write_1 == "Yes", 1, 0))
+
+# Only used when needed to output
+
+# write_csv(cen,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_census.csv"))
+# write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
+# write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
+# write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+# 
+
+```
+
+
+
+
+# Baseline Desc Stats
+
+```{r New Baseline Desc Stats Code}
 
 cen <- cen%>%
-  mutate(hhhead_gender = ifelse(hhhead_gender == "Female", 1, 0))%>%
-  mutate(read_write_1 = ifelse(read_write_1 == "Yes", 1, 0))
+  mutate(hhhead_gender_binary = ifelse(hhhead_gender == "Female", 1, 0))%>%
+  mutate(read_write_binary = ifelse(read_write_1 == "Yes", 1, 0))
   
 
 
@@ -205,7 +226,7 @@ calculate_se <- function(p, n) {
 }
 
 # Identify variable types
-binary_categorical_vars <- c("hhhead_gender", "read_write_1", 
+binary_categorical_vars <- c("hhhead_gender_binary", "read_write_binary", 
                              "sec_source", "jjm_drinking", "water_treat_binary", 
                              "electricity_binary", "tv_binary", "mobile_binary", 
                              "fridge_binary", "motorcycle_binary")
@@ -229,7 +250,7 @@ binary_categorical_summary_cen <- cen %>%
     n = sum(!is.na(value)),  # Count non-missing values
     p = mean(value, na.rm = TRUE),  # Proportion
     se = calculate_se(p, n),  # Standard error
-    formatted_stat = sprintf("%.1f%% (%.2f)", p * 100, se),
+    formatted_stat = sprintf("%.1f%% (%.1f)", p * 100, se * 100),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -250,7 +271,7 @@ binary_categorical_summary_bl <- bl%>%
     n = sum(!is.na(value)),  # Count non-missing values
     p = mean(value, na.rm = TRUE),  # Proportion
     se = calculate_se(p, n),  # Standard error
-    formatted_stat = sprintf("%.1f%% (%.2f)", p * 100, se),
+    formatted_stat = sprintf("%.1f%% (%.1f)", p * 100, se * 100),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -269,7 +290,7 @@ multi_categorical_summary <- cen %>%
     total = unique(total),  # Correctly get the total responses for that treatment group
     p = n / total,  # Proportion of each level within treatment
     se = calculate_se(p, total),  # Standard error
-    formatted_stat = sprintf("%.1f%% (%.2f)", p * 100, se),
+    formatted_stat = sprintf("%.1f%% (%.1f)", p * 100, se * 100),
     .groups = "drop"
   ) %>%
   rename(category = value) %>%
@@ -326,7 +347,7 @@ binary_categorical_summary_tap <- idexx_bl_tap%>%
     n = sum(!is.na(value)),  # Count non-missing values
     p = mean(value, na.rm = TRUE),  # Proportion
     se = calculate_se(p, n),  # Standard error
-    formatted_stat = sprintf("%.1f%% (%.2f)", p * 100, se),
+    formatted_stat = sprintf("%.1f%% (%.1f)", p * 100, se * 100),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -347,7 +368,7 @@ binary_categorical_summary_stored <- idexx_bl_stored%>%
     n = sum(!is.na(value)),  # Count non-missing values
     p = mean(value, na.rm = TRUE),  # Proportion
     se = calculate_se(p, n),  # Standard error
-    formatted_stat = sprintf("%.1f%% (%.2f)", p * 100, se),
+    formatted_stat = sprintf("%.1f%% (%.1f)", p * 100, se * 100),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -366,7 +387,7 @@ continuous_summary_tap <- idexx_bl_tap %>%
   summarise(
     mean = mean(value, na.rm = TRUE),
     sd = sd(value, na.rm = TRUE),
-    formatted_stat = sprintf("%.1f (%.1f)", mean, sd),
+    formatted_stat = sprintf("%.1f (%.2f)", mean, sd),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -383,7 +404,7 @@ continuous_summary_stored <- idexx_bl_stored%>%
   summarise(
     mean = mean(value, na.rm = TRUE),
     sd = sd(value, na.rm = TRUE),
-    formatted_stat = sprintf("%.1f (%.1f)", mean, sd),
+    formatted_stat = sprintf("%.1f (%.2f)", mean, sd),
     .groups = "drop"
   ) %>%
   select(variable, assignment, formatted_stat)
@@ -407,12 +428,6 @@ desc_stats_cen %>%
 
 ```
 
-
-```{r New Baseline Survey Desc Stats}
-
-
-
-```
 
 
 
@@ -3515,37 +3530,150 @@ ggsave(filename = "forestplot_v2.pdf", path = (paste0(github_path(), "/3_manuscr
 
 #cen dataset
 
-cen_vars <- c("prim_source_jjm", "sec_source",
-                  "jjm_drinking", "water_treat_binary", 
+#Defining bl variables to select
+cen_vars <- c("unique_id","prim_source_jjm", "sec_source",
+                  "jjm_drinking", "water_treat_binary" 
                   # Not in data "tap_issues_taste", "time_spent_treat", "time_spent_treat_15", "time_spent_treat_5"
                   )
+
+#Selecting census variables to keep
+cen_model <- cen%>%
+  dplyr::select(all_of(cen_vars))%>%
+  rename(bl_prim_source_jjm = "prim_source_jjm")%>%
+  rename(bl_sec_source = "sec_source")%>%
+  rename(bl_jjm_drinking = "jjm_drinking")%>%
+  rename(bl_water_treat_binary = "water_treat_binary")
+
+#Gathering baseline variable names
+cen_model_vars <- colnames(cen_model)[-1]
 
 
 #bl dataset
 
-bl_vars <- c("treat_time_5min") #But can I use this to control for baseline data if the dataset is partial?
+bl_vars <- c("unique_id","treat_time_5min") #But can I use this to control for baseline data if the dataset is partial?
+#Selecting census variables to keep
+bl_model <- bl%>%
+  dplyr::select(all_of(bl_vars))%>%
+  rename(bl_treat_time_5min = "treat_time_5min")
+
+#Gathering baseline variable names
+bl_model_vars <- colnames(bl_model)[-1]
 
 
-#IDEXX - Standard - Tap
+
+
+#IDEXX - Standard
+
 #make unique id a character from "idexx" so it can be joined
 #filter for sample type
 
+idexx_bl_tap <- idexx%>%
+  filter(sample_type == "Tap")%>%
+  dplyr::select(unique_id, cf_pa_binary, ec_pa_binary#, cf_log, ec_log
+                )%>%
+  rename(bl_cf_pa_tap = "cf_pa_binary")%>%
+  rename(bl_ec_pa_tap = "ec_pa_binary")%>%
+  # rename(cf_log_tap = "cf_log")%>%
+  # rename(ec_log_tap = "ec_log")%>%
+  mutate(unique_id = as.character(unique_id))
+
+idx_tap_vars <- colnames(idexx_bl_tap)[-1]
+
+idexx_bl_stored <- idexx%>%
+  filter(sample_type == "Stored")%>%
+  dplyr::select(unique_id, cf_pa_binary, ec_pa_binary#, cf_log, ec_log
+                )%>%
+  rename(bl_cf_pa_stored = "cf_pa_binary")%>%
+  rename(bl_ec_pa_stored = "ec_pa_binary")%>%
+  # rename(cf_log_stored = "cf_log")%>%
+  # rename(ec_log_stored = "ec_log")%>%
+  mutate(unique_id = as.character(unique_id))
+
+idx_stored_vars <- colnames(idexx_bl_stored)[-1]
+
+
+
+#IDEXX - ABR 
+idexx_bl_abr_tap <- idexx_abr%>%
+  filter(data_round == "BL")%>%
+  filter(sample_type == "Tap")%>%
+  dplyr::select(unique_id, ec_pa_binary
+                )%>%
+  rename(bl_ec_abr_tap = "ec_pa_binary")%>%
+  mutate(unique_id = as.character(unique_id))
+
+
+abr_tap_vars <- colnames(idexx_bl_abr_tap)[-1]
+
+idexx_bl_abr_stored <- idexx_abr%>%
+  filter(data_round == "BL")%>%
+  filter(sample_type == "Stored")%>%
+  dplyr::select(unique_id, ec_pa_binary
+                )%>%
+  rename(bl_ec_abr_stored = "ec_pa_binary")%>%
+  mutate(unique_id = as.character(unique_id))
+
+abr_stored_vars <- colnames(idexx_bl_abr_stored)[-1]
 
 
 
 
 
-#IDEXX - Standard - Stored
 
 
 
 
+#Joining data to endline dataset
+el_model <- el%>%
+  left_join(cen_model, by = "unique_id")%>%
+  left_join(bl_model, by = "unique_id")
+  
+  
+  
+#Joining IDEXX data
+#Removing BL data
+idexx_fu <- idexx_tab%>%
+  filter(data_round != "BL")
 
-#IDEXX - ABR - Tap
+#Separating by tap and stored water
+idexx_fu_tap <- idexx_fu%>%
+  filter(sample_type == "Tap")%>%
+  mutate(unique_id = as.character(unique_id))
+
+idexx_fu_stored <- idexx_fu%>%
+  filter(sample_type == "Stored")%>%
+  mutate(unique_id = as.character(unique_id))
+
+#Joining datasets
+idexx_fu_tap <- idexx_fu_tap%>%
+  left_join(idexx_bl_tap, by = "unique_id")
+
+idexx_fu_stored <- idexx_fu_stored%>%
+  left_join(idexx_bl_stored, by = "unique_id")
 
 
 
-#IDEXX - ABR - Stored
+#Removing BL data
+idexx_abr_fu <- idexx_abr%>%
+  filter(data_round != "BL")
+
+#Separating by tap and stored water
+idexx_abr_tap <- idexx_abr_fu%>%
+  filter(sample_type == "Tap")%>%
+  mutate(unique_id = as.character(unique_id))
+
+idexx_abr_stored <- idexx_abr_fu%>%
+  filter(sample_type == "Stored")%>%
+  mutate(unique_id = as.character(unique_id))
+
+#Joining datasets
+idexx_abr_tap <- idexx_abr_tap%>%
+  left_join(idexx_bl_abr_tap, by = "unique_id")
+
+idexx_abr_stored <- idexx_abr_stored%>%
+  left_join(idexx_bl_abr_stored, by = "unique_id")
+  
+
 
 
 
@@ -3560,23 +3688,25 @@ bl_vars <- c("treat_time_5min") #But can I use this to control for baseline data
 #Survey Outcomes --- 
 
 outcome_vars <- c("prim_source_jjm", "sec_source", #Issue after code cleaning updates
-                  "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat", "time_spent_treat_15", "time_spent_treat_5")
+                  "jjm_drinking", "water_treat_binary", "time_spent_treat_5")
 
-el_model <- factormaker(el, outcome_vars) #Making variables numeric
+bl_vars <- c("bl_prim_source_jjm", "bl_sec_source", "bl_jjm_drinking", "bl_water_treat_binary",
+              "bl_treat_time_5min")
+
+
+
+el_model <- factormaker(el_model, outcome_vars) #Making variables numeric
+el_model <- factormaker(el_model, bl_vars) #Making variables numeric
+
 
 
 #Poisson Regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = el_model, var)
-                 }
-                  )
-#linear regression
-# all_models <- lapply(outcome_vars, 
-#                      function(var){ #This functions "subsets" the ilc_glm function
-#                        ilc_lm(data = el_model, var)
-#                      }
-#                        )
+all_models <- mapply(
+                     function(var, bl_var) {
+                       ilc_glm_bl(data = el_model, var = var, bl_var = bl_var)
+                       },  
+                     outcome_vars, bl_vars,
+                     SIMPLIFY = FALSE)
 
 #Assigning names to models
 names(all_models) <- outcome_vars
@@ -3611,45 +3741,27 @@ ilc_model_table(all_models)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 # Poisson Regression - Treatment Effect -------------------------------------------------
 
-#Removing BL data
-idexx_fu <- idexx_tab%>%
-  filter(data_round != "BL")
-
-#Separating by tap and stored water
-idexx_fu_tap <- idexx_fu%>%
-  filter(sample_type == "Tap")
-
-idexx_fu_stored <- idexx_fu%>%
-  filter(sample_type == "Stored")
-  
 
 #Running Poisson Regression on Tap Samples ----
 
 
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+bl_vars <- c("bl_cf_pa_tap", "bl_ec_pa_tap")
+
 
 idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
+idexx_model <- factormaker(idexx_fu_tap, bl_vars)
 
 #Running all models
 #Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
+all_models <- mapply(
+                     function(var, bl_var) {
+                       ilc_glm_bl(data = idexx_model, var = var, bl_var = bl_var)
+                       },  
+                     outcome_vars, bl_vars,
+                     SIMPLIFY = FALSE)
 
 #Assigning names to models
 names(all_models) <- outcome_vars
@@ -3664,16 +3776,20 @@ idexx_poisson_tap <- idexx_poisson_tap%>%
 #Running Poisson Regression on Stored Samples ----
 
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+bl_vars <- c("bl_cf_pa_stored", "bl_ec_pa_stored")
+
 
 idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
+idexx_model <- factormaker(idexx_fu_stored, bl_vars)
 
 #Running all models
 #Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
+all_models <- mapply(
+                     function(var, bl_var) {
+                       ilc_glm_bl(data = idexx_model, var = var, bl_var = bl_var)
+                       },  
+                     outcome_vars, bl_vars,
+                     SIMPLIFY = FALSE)
 
 #Assigning names to models
 names(all_models) <- outcome_vars
@@ -3686,64 +3802,6 @@ idexx_poisson_stored <- idexx_poisson_stored%>%
 
 
 idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
-
-
-
-#Running Linear Regression on Log-transformed E. coli Counts -- Treatment Effect
-
-#Running on Tap Samples ----
-
-
-outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
-
-idexx_model <- idexx_fu_tap #setting model dataset
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_lm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_lm_tap <- ilc_model_lm_table_only(all_models)
-idexx_lm_tap <- idexx_lm_tap%>%
-  mutate(model_name = ifelse(model_name == "cf_log", "cf_log", "ec_log"))%>%
-  mutate(sample_type = "Tap")
-
-
-#Running Poisson Regression on Stored Samples ----
-
-outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
-
-idexx_model <- idexx_fu_stored #setting model dataset
-
-#Running all models
-#Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_lm(data = idexx_model, var)
-                 }
-                  )
-
-#Assigning names to models
-names(all_models) <- outcome_vars
-
-#Formatting table output
-idexx_lm_stored <- ilc_model_lm_table_only(all_models)
-idexx_lm_stored <- idexx_lm_stored%>%
-  mutate(model_name = ifelse(model_name == "cf_log", "cf_log", "ec_log"))%>%
-  mutate(sample_type = "Stored")
-
-
-idexx_lm <- rbind(idexx_lm_tap, idexx_lm_stored)
-
-
-
 
 
 
@@ -3769,32 +3827,26 @@ idexx_lm <- rbind(idexx_lm_tap, idexx_lm_stored)
 #Antibiotic Resistance Results ----
 
 
-#Removing BL data
-idexx_abr_fu <- idexx_abr%>%
-  filter(data_round != "BL")
-
-#Separating by tap and stored water
-idexx_abr_tap <- idexx_abr_fu%>%
-  filter(sample_type == "Tap")
-
-idexx_abr_stored <- idexx_abr_fu%>%
-  filter(sample_type == "Stored")
   
 
 #Running Poisson Regression on Tap Samples ----
 
+outcome_vars <- c("ec_pa_binary") #Selecting outcome variables
+bl_vars <- c("bl_ec_abr_tap")
 
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 
 idexx_model <- factormaker(idexx_abr_tap, outcome_vars) #Converting to numeric type
+idexx_model <- factormaker(idexx_model, bl_vars)
 
 #Running all models
 #Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
+all_models <- mapply(
+                     function(var, bl_var) {
+                       ilc_glm_bl(data = idexx_model, var = var, bl_var = bl_var)
+                       },  
+                     outcome_vars, bl_vars,
+                     SIMPLIFY = FALSE)
+
 
 #Assigning names to models
 names(all_models) <- outcome_vars
@@ -3808,17 +3860,21 @@ idexx_poisson_tap <- idexx_poisson_tap%>%
 
 #Running Poisson Regression on Stored Samples ----
 
-outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
+outcome_vars <- c("ec_pa_binary") #Selecting outcome variables
+bl_vars <- c("bl_ec_abr_stored")
+
 
 idexx_model <- factormaker(idexx_abr_stored, outcome_vars) #Converting to numeric type
+idexx_model <- factormaker(idexx_model, bl_vars)
 
 #Running all models
 #Poisson regression
-all_models <- lapply(outcome_vars,
-                   function(var){ #This functions "subsets" the ilc_glm function
-                    ilc_glm(data = idexx_model, var)
-                 }
-                  )
+all_models <- mapply(
+                     function(var, bl_var) {
+                       ilc_glm_bl(data = idexx_model, var = var, bl_var = bl_var)
+                       },  
+                     outcome_vars, bl_vars,
+                     SIMPLIFY = FALSE)
 
 #Assigning names to models
 names(all_models) <- outcome_vars
@@ -3833,6 +3889,152 @@ idexx_poisson_stored <- idexx_poisson_stored%>%
 idexx_abr_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Updating idexx_poisson
+idexx_poisson <- idexx_poisson%>%
+  dplyr::select(!(sample_type))
+
+
+#Updating idexx_abr_poisson
+idexx_abr_poisson <- idexx_abr_poisson%>%
+  filter(model_name != "cf_tap")%>%
+  filter(model_name != "cf_stored")%>%
+  mutate(model_name = ifelse(model_name == "ec_stored","Presence Antibiotic Resistant E. coli in Stored Water", "Presence Antibiotic Resistant E. coli in Tap Water"))%>%
+  select(!(sample_type))
+
+
+#Joining poisson results
+el_models_forestplot <- rbind(idexx_poisson, idexx_abr_poisson, el_models)
+
+#Setting order of variables
+#Changing model names
+el_models_forestplot <- el_models_forestplot%>%
+  mutate(mean = estimate)%>%
+  mutate(estimate = as.character(round(estimate, 2)))%>%
+  mutate(Lower_CI = round(Lower_CI, 2))%>%
+  mutate(Upper_CI = round(Upper_CI, 2))%>%
+  mutate(estimate = paste0(estimate, " (", Lower_CI, ", ", Upper_CI, ")"))%>%
+  mutate(lower = Lower_CI)%>%
+  mutate(upper = Upper_CI)%>%
+  mutate(p_value = ifelse(p_value < 0.001, "< 0.001", as.character(round(p_value, 3))))
+
+
+
+
+el_models_forestplot$model_name <- el_models_forestplot$model_name%>%
+  factor()%>%
+  fct_recode("Presence of Total Coliform at Taps"= "cf_tap",
+              "Presence of E. coli at Taps"= "ec_tap",
+              "Presence of Total Coliform in Stored Water"= "cf_stored",
+              "Presence of E. coli in Stored Water"= "ec_stored",
+             "Presence Antibiotic Resistant E. coli in Stored Water" =
+              "Presence Antibiotic Resistant E. coli in Stored Water",
+             "Taps as Primary Source" = "prim_source_jjm",
+             "Use a Secondary Source" = "sec_source",
+             "Drink Tap Water" = "jjm_drinking",
+             "Treat Water" = "water_treat_binary",
+             "Time Spent Treating Water is >5 Minutes" = "time_spent_treat_5"
+             )
+#Reordering
+el_models_forestplot$model_name <- factor(el_models_forestplot$model_name, levels = 
+                                            c(
+             "Time Spent Treating Water is >5 Minutes",
+             "Treat Water",
+             "Drink Tap Water",
+              "Use a Secondary Source",
+             "Taps as Primary Source",
+             "Presence Antibiotic Resistant E. coli in Stored Water",
+              "Presence Antibiotic Resistant E. coli in Tap Water",
+             "Presence of E. coli in Stored Water",
+             "Presence of Total Coliform in Stored Water",
+             "Presence of E. coli at Taps",
+             "Presence of Total Coliform at Taps"
+             ))
+
+el_models_forestplot <- el_models_forestplot%>%
+  mutate(variable_type = ifelse(model_name %in% c("Presence Antibiotic Resistant E. coli in Stored Water",
+              "Presence Antibiotic Resistant E. coli in Tap Water",
+             "Presence of E. coli in Stored Water",
+             "Presence of Total Coliform in Stored Water",
+             "Presence of E. coli at Taps",
+             "Presence of Total Coliform at Taps"), "Water Quality Outcome", "Behavioral Outcome"))
+
+
+#Manually adding in column names to the figure
+# el_models_forestplot <- el_models_forestplot%>%
+#   bind_rows(
+#     data.frame(
+#       model_name = "Outcome",
+#       covariate = NA,
+#       estimate = "Prevalence Ratio (95% CI)",
+#       std_error = NA,
+#       p_value = "P-value",
+#       N = NA,
+#       Lower_CI = NA,
+#       Upper_CI = NA,
+#       signif = NA,
+#       mean = NA,
+#       lower = NA,
+#       upper = NA
+#     ))
+#This is not a good option
+
+
+#Creating Foresplot using ggplot
+
+## Create plot 
+p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
+  geom_point(aes(color = variable_type), size = 2) +  
+  geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI,  color = variable_type), height = 0.2) + 
+  geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
+  scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
+  scale_x_continuous(limits = c(0.5, 1.90), breaks = c(0.50, 0.75, 1.00, 1.2))+
+  scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944"))+
+  labs(
+    x = "Prevalence Ratio", 
+    y = "Outcome") + 
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        axis.text.y = element_text(size = 10), 
+        axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13)) #+
+  #guides(color = guide_legend(reverse = TRUE)) # Ensures the order of the legend matches the order in which point estimates appear on the plot
+
+# Add horizontal lines between levels of outcomes to create separation
+y_levels <- levels(factor(el_models_forestplot$model_name))
+y_positions <- seq_along(y_levels) - 0.5
+for (y in y_positions) {
+  p_forestplot <- p_forestplot + geom_hline(yintercept = y, color = "darkgrey", linetype = "solid", linewidth = 0.5)
+}
+
+#Adding in effect estimates and p-values
+p_forestplot <- p_forestplot + 
+  geom_text(aes(label = estimate, x = max(Upper_CI) + 0.25), hjust = 0, size = 3) + 
+    geom_text(aes(label = p_value, x = max(Upper_CI) + 0.50), hjust = 0, size = 3) + 
+    geom_text(aes(label = N, x = max(Upper_CI) + 0.65), hjust = 0, size = 3)
+  
+
+#Viewing
+p_forestplot
+
+ggsave(filename = "forestplot_bl_control_v1.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
 
 
 

@@ -899,9 +899,9 @@ present_desc_stats_kable <- function(desc_stats, treatment_col) {
 ilc_glm_bl <- function(data, var, bl_var){
   
   #Specifying the formula
-  formula <- as.formula(paste(var, "~ assignment ", bl_var, "+ block + panchayat_village"))
+  formula <- as.formula(paste(var, "~ assignment +", bl_var, "+ block + panchayat_village"))
   #Running model
-  model <- glm(formula, data = data, family = poisson)
+  model <- glm(formula, data = data, family = poisson, na.action = na.exclude)
   
   #Storing N
   N <- length(model$y)
