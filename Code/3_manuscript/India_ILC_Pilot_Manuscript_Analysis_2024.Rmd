@@ -791,7 +791,7 @@ idexx_poisson_bl <- rbind(idexx_poisson_tap, idexx_poisson_stored)
 #Running Linear Regression on Tap Samples ----
 
 
-outcome_vars <- c("ec_log") #Selecting outcome variables
+outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
 
 idexx_model <- idexx_bl_tap
 
@@ -815,7 +815,7 @@ idexx_lm_tap <- idexx_lm_tap%>%
 
 #Running Poisson Regression on Stored Samples ----
 
-outcome_vars <- c("ec_log") #Selecting outcome variables
+outcome_vars <- c("cf_log","ec_log") #Selecting outcome variables
 
 idexx_model <- idexx_bl_stored
 
@@ -3531,7 +3531,7 @@ ggsave(filename = "forestplot_v2.pdf", path = (paste0(github_path(), "/3_manuscr
 #cen dataset
 
 #Defining bl variables to select
-cen_vars <- c("unique_id","prim_source_jjm", "sec_source",
+cen_vars <- c("unique_id","village","prim_source_jjm", "sec_source",
                   "jjm_drinking", "water_treat_binary" 
                   # Not in data "tap_issues_taste", "time_spent_treat", "time_spent_treat_15", "time_spent_treat_5"
                   )
@@ -3544,17 +3544,36 @@ cen_model <- cen%>%
   rename(bl_jjm_drinking = "jjm_drinking")%>%
   rename(bl_water_treat_binary = "water_treat_binary")
 
+#Summarizing stats for each village
+cen_model <- cen_model%>%
+  group_by(village)%>%
+  summarise(
+    bl_prim_source_jjm = mean(bl_prim_source_jjm, na.rm = TRUE),
+    bl_sec_source = mean(bl_sec_source, na.rm = TRUE),
+    bl_jjm_drinking = mean(bl_jjm_drinking, na.rm = TRUE),
+    bl_water_treat_binary = mean(bl_water_treat_binary, na.rm = TRUE)
+  )
+
+
 #Gathering baseline variable names
 cen_model_vars <- colnames(cen_model)[-1]
 
 
 #bl dataset
 
-bl_vars <- c("unique_id","treat_time_5min") #But can I use this to control for baseline data if the dataset is partial?
+bl_vars <- c("unique_id","village","treat_time_5min") #But can I use this to control for baseline data if the dataset is partial?
 #Selecting census variables to keep
 bl_model <- bl%>%
   dplyr::select(all_of(bl_vars))%>%
   rename(bl_treat_time_5min = "treat_time_5min")
+
+#Summarizing stats for each village
+bl_model <- bl_model%>%
+  group_by(village)%>%
+  summarise(
+    bl_treat_time_5min = mean(bl_treat_time_5min, na.rm = TRUE)
+  )
+
 
 #Gathering baseline variable names
 bl_model_vars <- colnames(bl_model)[-1]
@@ -3569,25 +3588,42 @@ bl_model_vars <- colnames(bl_model)[-1]
 
 idexx_bl_tap <- idexx%>%
   filter(sample_type == "Tap")%>%
-  dplyr::select(unique_id, cf_pa_binary, ec_pa_binary#, cf_log, ec_log
+  dplyr::select(unique_id, village, cf_log, ec_log#, cf_log, ec_log
                 )%>%
-  rename(bl_cf_pa_tap = "cf_pa_binary")%>%
-  rename(bl_ec_pa_tap = "ec_pa_binary")%>%
+  rename(bl_cf_pa_tap = "cf_log")%>%
+  rename(bl_ec_pa_tap = "ec_log")%>%
   # rename(cf_log_tap = "cf_log")%>%
   # rename(ec_log_tap = "ec_log")%>%
   mutate(unique_id = as.character(unique_id))
+
+#Summarizing stats for each village
+idexx_bl_tap <- idexx_bl_tap%>%
+  group_by(village)%>%
+  summarise(
+    bl_cf_pa_tap = mean(bl_cf_pa_tap, na.rm = TRUE),
+    bl_ec_pa_tap = mean(bl_ec_pa_tap, na.rm = TRUE)
+  )
 
 idx_tap_vars <- colnames(idexx_bl_tap)[-1]
 
 idexx_bl_stored <- idexx%>%
   filter(sample_type == "Stored")%>%
-  dplyr::select(unique_id, cf_pa_binary, ec_pa_binary#, cf_log, ec_log
+  dplyr::select(unique_id, village, cf_log, ec_log#, cf_log, ec_log
                 )%>%
-  rename(bl_cf_pa_stored = "cf_pa_binary")%>%
-  rename(bl_ec_pa_stored = "ec_pa_binary")%>%
+  rename(bl_cf_pa_stored = "cf_log")%>%
+  rename(bl_ec_pa_stored = "ec_log")%>%
   # rename(cf_log_stored = "cf_log")%>%
   # rename(ec_log_stored = "ec_log")%>%
   mutate(unique_id = as.character(unique_id))
+
+#Summarizing stats for each village
+idexx_bl_stored <- idexx_bl_stored%>%
+  group_by(village)%>%
+  summarise(
+    bl_cf_pa_stored = mean(bl_cf_pa_stored, na.rm = TRUE),
+    bl_ec_pa_stored = mean(bl_ec_pa_stored, na.rm = TRUE)
+  )
+
 
 idx_stored_vars <- colnames(idexx_bl_stored)[-1]
 
@@ -3597,21 +3633,35 @@ idx_stored_vars <- colnames(idexx_bl_stored)[-1]
 idexx_bl_abr_tap <- idexx_abr%>%
   filter(data_round == "BL")%>%
   filter(sample_type == "Tap")%>%
-  dplyr::select(unique_id, ec_pa_binary
+  dplyr::select(unique_id, village, ec_log
                 )%>%
-  rename(bl_ec_abr_tap = "ec_pa_binary")%>%
+  rename(bl_ec_abr_tap = "ec_log")%>%
   mutate(unique_id = as.character(unique_id))
 
+#Summarizing stats for each village
+idexx_bl_abr_tap <- idexx_bl_abr_tap%>%
+  group_by(village)%>%
+  summarise(
+    bl_ec_abr_tap = mean(bl_ec_abr_tap, na.rm = TRUE)
+  )
 
 abr_tap_vars <- colnames(idexx_bl_abr_tap)[-1]
+
 
 idexx_bl_abr_stored <- idexx_abr%>%
   filter(data_round == "BL")%>%
   filter(sample_type == "Stored")%>%
-  dplyr::select(unique_id, ec_pa_binary
+  dplyr::select(unique_id, village, ec_log
                 )%>%
-  rename(bl_ec_abr_stored = "ec_pa_binary")%>%
+  rename(bl_ec_abr_stored = "ec_log")%>%
   mutate(unique_id = as.character(unique_id))
+
+#Summarizing stats for each village
+idexx_bl_abr_stored <- idexx_bl_abr_stored%>%
+  group_by(village)%>%
+  summarise(
+    bl_ec_abr_stored = mean(bl_ec_abr_stored, na.rm = TRUE)
+  )
 
 abr_stored_vars <- colnames(idexx_bl_abr_stored)[-1]
 
@@ -3619,14 +3669,10 @@ abr_stored_vars <- colnames(idexx_bl_abr_stored)[-1]
 
 
 
-
-
-
-
 #Joining data to endline dataset
 el_model <- el%>%
-  left_join(cen_model, by = "unique_id")%>%
-  left_join(bl_model, by = "unique_id")
+  left_join(cen_model, by = "village")%>%
+  left_join(bl_model, by = "village")
   
   
   
@@ -3646,10 +3692,10 @@ idexx_fu_stored <- idexx_fu%>%
 
 #Joining datasets
 idexx_fu_tap <- idexx_fu_tap%>%
-  left_join(idexx_bl_tap, by = "unique_id")
+  left_join(idexx_bl_tap, by = "village")
 
 idexx_fu_stored <- idexx_fu_stored%>%
-  left_join(idexx_bl_stored, by = "unique_id")
+  left_join(idexx_bl_stored, by = "village")
 
 
 
@@ -3668,10 +3714,10 @@ idexx_abr_stored <- idexx_abr_fu%>%
 
 #Joining datasets
 idexx_abr_tap <- idexx_abr_tap%>%
-  left_join(idexx_bl_abr_tap, by = "unique_id")
+  left_join(idexx_bl_abr_tap, by = "village")
 
 idexx_abr_stored <- idexx_abr_stored%>%
-  left_join(idexx_bl_abr_stored, by = "unique_id")
+  left_join(idexx_bl_abr_stored, by = "village")
   
 
 
@@ -4005,7 +4051,7 @@ p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
   geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI,  color = variable_type), height = 0.2) + 
   geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
   scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
-  scale_x_continuous(limits = c(0.5, 1.90), breaks = c(0.50, 0.75, 1.00, 1.2))+
+  scale_x_continuous(limits = c(0.15, 1.90), breaks = c(0.25, 0.50, 0.75, 1.00, 1.2))+
   scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944"))+
   labs(
     x = "Prevalence Ratio", 
