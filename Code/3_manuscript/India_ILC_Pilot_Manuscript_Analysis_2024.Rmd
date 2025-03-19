@@ -193,17 +193,17 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 
 ```{r saving datasets}
 
-# cen <- cen%>%
-#   mutate(hhhead_gender = ifelse(hhhead_gender == "Female", 1, 0))%>%
-#   mutate(read_write_1 = ifelse(read_write_1 == "Yes", 1, 0))
-
-# Only used when needed to output
-
-# write_csv(cen,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_census.csv"))
-# write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
-# write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
-# write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+#  cen <- cen%>%
+#    mutate(hhhead_gender = ifelse(hhhead_gender == "Female", 1, 0))%>%
+#    mutate(read_write_1 = ifelse(read_write_1 == "Yes", 1, 0))
 # 
+# # Only used when needed to output
+# 
+#  write_csv(cen,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_census.csv"))
+#  write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
+#  write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
+#  write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+
 
 ```
 

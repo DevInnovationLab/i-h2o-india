@@ -185,6 +185,17 @@ cen$prim_source <- cen$water_source_prim%>%
 cen <- cen%>%
   mutate(prim_source = ifelse(prim_source == "Other", "Borehole", prim_source))
 
+#Creating new variables to represent when a primary source is selected
+cen <- cen%>%
+  mutate(
+    prim_source_tap = ifelse(prim_source == "Household Tap", 1, 0),
+    prim_source_ctap = ifelse(prim_source == "Community Tap", 1, 0),
+    prim_source_surface = ifelse(prim_source == "Surface Water", 1, 0),
+    prim_source_well = ifelse(prim_source == "Covered Dug Well", 1, 0),
+    prim_source_borehole = ifelse(prim_source == "Borehole", 1, 0),
+    prim_source_other = ifelse(prim_source == "Other", 1, 0)
+  )
+
 #recoding secondary source
 cen$water_sec_yn <- cen$water_sec_yn%>%
   fct_recode(

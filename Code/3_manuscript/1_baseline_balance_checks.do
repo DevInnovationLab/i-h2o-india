@@ -11,7 +11,7 @@ label define assign_lbl 1 "Control" 2 "Treatment"
 label values assignment_num assign_lbl
 
 // Convert string variables (if necessary) to numeric
-foreach var in sec_source jjm_drinking water_treat_binary electricity_binary tv_binary mobile_binary fridge_binary motorcycle_binary {
+foreach var in sec_source jjm_drinking water_treat_binary  prim_source_tap  prim_source_ctap  prim_source_surface  prim_source_well  prim_source_borehole  prim_source_other electricity_binary tv_binary mobile_binary fridge_binary motorcycle_binary {
     destring `var', replace ignore("NA")
 }
 
@@ -20,7 +20,7 @@ gen block_panchayat_fe = blockcode * 10 + panchayat_village
 
 // Generate the balance table
 iebaltab ///
-    hhmember_count hhhead_gender read_write_1 sec_source jjm_drinking water_treat_binary ///
+    hhmember_count hhhead_gender read_write_1 sec_source prim_source_tap  prim_source_ctap  prim_source_surface  prim_source_well  prim_source_borehole  prim_source_other jjm_drinking water_treat_binary ///
     electricity_binary tv_binary mobile_binary fridge_binary ///
     motorcycle_binary, ///
     groupvar(assignment_num) ///
@@ -30,7 +30,7 @@ iebaltab ///
     groupcodes /// Include only if 'assignment' has value labels
     rowvarlabels /// Ensure balance variables have labels
     grouplabels(1 "Control" @ 2 "Treatment") /// Use numeric values with labels
-    rowlabels("hhmember_count Household Members @ hhhead_gender Head Gender @ read_write_1 Literacy Status @ sec_source Secondary Water Source @ jjm_drinking JJM Drinking Water @ water_treat_binary Water Treatment @ electricity_binary Electricity @ tv_binary TV Ownership @ mobile_binary Mobile Ownership @ fridge_binary Fridge Ownership @ motorcycle_binary Motorcycle Ownership") ///
+    rowlabels("hhmember_count Household Members @ hhhead_gender Head Gender @ read_write_1 Literacy Status @ sec_source Secondary Water Source @ prim_source_tap Prim Source Tap @  prim_source_ctap Prim Source Community Tap @ prim_source_surface Prim Source Surface Water @ prim_source_well Prim Source Well @ prim_source_borehole Prim Source Borehole @ prim_source_other Prim Source Other @ jjm_drinking JJM Drinking Water @ water_treat_binary Water Treatment @ electricity_binary Electricity @ tv_binary TV Ownership @ mobile_binary Mobile Ownership @ fridge_binary Fridge Ownership @ motorcycle_binary Motorcycle Ownership") ///
     savexlsx ("C:\Users\jerem\Box\India Water project\2_Pilot\Data\3_final\manuscript_datasets\balance_table.xlsx")
 
 	
@@ -47,7 +47,7 @@ label define assign_lbl 1 "Control" 2 "Treatment"
 label values assignment_num assign_lbl
 
 // Convert string variables (if necessary) to numeric
-foreach var in sec_source jjm_drinking water_treat_binary electricity_binary tv_binary mobile_binary fridge_binary motorcycle_binary {
+foreach var in sec_source jjm_drinking water_treat_binary  prim_source_tap  prim_source_ctap  prim_source_surface  prim_source_well  prim_source_borehole  prim_source_other electricity_binary tv_binary mobile_binary fridge_binary motorcycle_binary {
     destring `var', replace ignore("NA")
 }
 
@@ -56,7 +56,7 @@ gen block_panchayat_fe = blockcode * 10 + panchayat_village
 
 // Generate the standard errors balance table
 iebaltab ///
-    hhmember_count hhhead_gender read_write_1 sec_source jjm_drinking water_treat_binary ///
+    hhmember_count hhhead_gender read_write_1 sec_source prim_source_tap  prim_source_ctap  prim_source_surface  prim_source_well  prim_source_borehole  prim_source_other jjm_drinking water_treat_binary ///
     electricity_binary tv_binary mobile_binary fridge_binary ///
     motorcycle_binary, ///
     groupvar(assignment_num) ///
@@ -67,7 +67,7 @@ iebaltab ///
     groupcodes /// Include only if 'assignment' has value labels
     rowvarlabels /// Ensure balance variables have labels
     grouplabels(1 "Control" @ 2 "Treatment") /// Use numeric values with labels
-    rowlabels("hhmember_count Household Members @ hhhead_gender Head Gender @ read_write_1 Literacy Status @ sec_source Secondary Water Source @ jjm_drinking JJM Drinking Water @ water_treat_binary Water Treatment @ electricity_binary Electricity @ tv_binary TV Ownership @ mobile_binary Mobile Ownership @ fridge_binary Fridge Ownership @ motorcycle_binary Motorcycle Ownership") ///
+    rowlabels("hhmember_count Household Members @ hhhead_gender Head Gender @ read_write_1 Literacy Status @ sec_source Secondary Water Source @ prim_source_tap Prim Source Tap @  prim_source_ctap Prim Source Community Tap @ prim_source_surface Prim Source Surface Water @ prim_source_well Prim Source Well @ prim_source_borehole Prim Source Borehole @ prim_source_other Prim Source Other @ jjm_drinking JJM Drinking Water @ water_treat_binary Water Treatment @ electricity_binary Electricity @ tv_binary TV Ownership @ mobile_binary Mobile Ownership @ fridge_binary Fridge Ownership @ motorcycle_binary Motorcycle Ownership") ///
     savexlsx ("C:\Users\jerem\Box\India Water project\2_Pilot\Data\3_final\manuscript_datasets\balance_table_SEs.xlsx")
 
 	
