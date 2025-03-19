@@ -1,6 +1,7 @@
 #India ILC Pilot - File Path Configuration Script
 #Author: Jeremy Lowe
 #Date: 6/5/24
+#This script sets user-defined paths to Box and Github
 
 
 #------------------------ setting user path ----------------------------------------#
@@ -57,6 +58,8 @@ github_path <- function() {
 }
 
 github <- github_path()
+
+
 
 #Setting overleaf
 overleaf_path <- function() {

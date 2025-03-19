@@ -288,6 +288,9 @@ cen <- cen%>%
     colourtv == "No" ~ 0
   ))
 
+cen <- cen%>%
+  mutate(hhhead_gender_binary = ifelse(hhhead_gender == "Female", 1, 0))%>%
+  mutate(read_write_binary = ifelse(read_write_1 == "Yes", 1, 0))
 
 
 

@@ -1,8 +1,7 @@
 #India ILC Pilot - Defining functions
 #Author: Jeremy Lowe
 #Date: 6/5/24
-
-
+#This script defines common functions to be used in analysis
 
 
 
@@ -26,7 +25,6 @@ labelmaker <- function(x){
 #Converts all selected variables to factors/numbers. Used for Poisson regression
 #x: Data
 #vars: List of variables
-
 factormaker <- function(x, vars){
   x <- x %>%
     mutate(across(all_of(vars), ~ as.numeric(factor(.)))) #First converts variables to factors so they are numbers,
@@ -38,8 +36,7 @@ factormaker <- function(x, vars){
 
 #Microbiological contamination descriptive stats -----------------------------
 
-
-#idexx_data: Formatted IDEXX data including variables listed in the function
+#Summarizes desc stats for IDEXX data stratified by village and sample type
 village_stats <- function(idexx_data){
   idexx_data%>%
     dplyr::group_by(village, sample_type) %>%
@@ -56,6 +53,8 @@ village_stats <- function(idexx_data){
 
 
 
+#Calculates descriptive stats for IDEXX data based on sample type and across control/treatment assignment
+#idexx_data: Formatted IDEXX data including variables listed in the function
 tc_stats <- function(idexx_data){
   
   tc <- idexx_data%>%
@@ -63,10 +62,6 @@ tc_stats <- function(idexx_data){
     summarise(
       "Number of Samples" = n(),
       "% Positive for Total Coliform" = round((sum(cf_pa == "Presence") / n()) * 100, 1),
-      #"Lower CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 - 
-      # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-      #"Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 + 
-      # (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
       "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
         model <- glm(cf_pa_binary ~ 1, family = binomial)
         vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
@@ -82,10 +77,6 @@ tc_stats <- function(idexx_data){
         est + qt(0.975, df.residual(model)) * se
       },
       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
-      #"Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 - 
-      # (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-      #"Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 + 
-      #  (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
       "Lower CI - EC" = {
         model <- glm(ec_pa_binary ~ 1, family = binomial)
         vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
@@ -124,7 +115,8 @@ tc_stats <- function(idexx_data){
 
 
 
-
+#Calculates desc stats for IDEXX results across all data collection rounds (pooled results)
+#idexx_data: Formatted IDEXX data including variables listed in the function
 pooled_stats <- function(idexx_data){
   
   tc <- idexx_data%>%
@@ -136,45 +128,14 @@ pooled_stats <- function(idexx_data){
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
       "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-      #   "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
       "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 -
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
       "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-      # # "Lower CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
-      # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
       "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
       "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2),
       "WHO 'High' Risk Contamination (> 100 MPN E. coli per 100 mL)" = round(sum(ec_risk == "High Risk") / n()*100, 1)
-      
-      
     )
   
   tc <- tc%>%
@@ -192,6 +153,7 @@ pooled_stats <- function(idexx_data){
 
 
 #Calculates desc stats stratified by round for IDEXX data
+#idexx_data: Formatted IDEXX data including variables listed in the function
 round_stats <- function(idexx_data){
   
   tc <- idexx_data%>%
@@ -203,40 +165,11 @@ round_stats <- function(idexx_data){
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
       "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-      #   "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
       "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 -
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
       "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-      # # "Lower CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
-      # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
       "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
       "Lower CI - Tap" = mean(fc_tap_avg) -
         (qt(0.975, n() - 1) * sd(fc_tap_avg/sqrt(n()))),
@@ -247,7 +180,7 @@ round_stats <- function(idexx_data){
       
       
     )%>%
-    mutate(data_round_month = ifelse(data_round == "BL", "2023-10-15",
+    mutate(data_round_month = ifelse(data_round == "BL", "2023-10-15", #Adding in dates for the first surveys conducted for each round.
                                      ifelse(data_round == "R1", "2024-02-15",
                                             ifelse(data_round == "R2", "2024-03-25",
                                                    ifelse(data_round == "R3", "2024-04-15",
@@ -272,6 +205,7 @@ round_stats <- function(idexx_data){
 
 
 #Calculates desc stats stratified by round for ABR IDEXX data
+#idexx_data: Formatted ABR IDEXX data including variables listed in the function
 abr_stats <- function(idexx_data){
   
   tc <- idexx_data%>%
@@ -283,40 +217,11 @@ abr_stats <- function(idexx_data){
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
       "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-      #   "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
       "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 -
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
       "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-      # # "Lower CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
-      # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
       "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
       "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2)
     )
@@ -335,6 +240,8 @@ abr_stats <- function(idexx_data){
 }
 
 
+
+#idexx_data: Formatted IDEXX data including variables listed in the function
 pooled_stats_abr <- function(idexx_data){
   
   tc <- idexx_data%>%
@@ -346,44 +253,13 @@ pooled_stats_abr <- function(idexx_data){
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
       "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-      #   "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-      #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(cf_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
       "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
       "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 -
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
       "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 +
         (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
-      # # "Lower CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est - qt(0.975, df.residual(model)) * se
-      # },
-      # "Upper CI - EC" = {
-      #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-      #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-      #   se <- sqrt(vcov_cluster[1, 1])
-      #   est <- (sum(ec_pa == "Presence") / n()) * 100
-      #   est + qt(0.975, df.residual(model)) * se
-      # },
-      # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
       "Tap - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_tap_avg), 2),
-      "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2),
-      #"WHO 'High' Risk Contamination (> 100 MPN E. coli per 100 mL)" = round(sum(ec_risk == "High Risk") / n()*100, 1)
-      
+      "Stored - Average Free Chlorine Concentration (mg/L)" = round(mean(fc_stored_avg), 2)
       
     )
   
@@ -413,40 +289,11 @@ all_stats <- function(idexx_data){
       (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
     "Upper CI - TC" = (sum(cf_pa == "Presence") / n()) * 100 +
       (qt(0.975, n() - 1) * sd(cf_pa_binary*100)/sqrt(n())),
-    #   "Lower CI - TC" = { #Robust standard errors accounting for clustering at villages
-    #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-    #   se <- sqrt(vcov_cluster[1, 1])
-    #   est <- (sum(cf_pa == "Presence") / n()) * 100
-    #   est - qt(0.975, df.residual(model)) * se
-    # },
-    # "Upper CI - TC" = { #Robust standard errors accounting for clustering at villages
-    #   model <- glm(cf_pa_binary ~ 1, family = binomial)
-    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-    #   se <- sqrt(vcov_cluster[1, 1])
-    #   est <- (sum(cf_pa == "Presence") / n()) * 100
-    #   est + qt(0.975, df.residual(model)) * se
-    # },
     "% Positive for E. coli" = round((sum(ec_pa == "Presence") / n()) * 100, 1),
     "Lower CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 -
       (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n())),
     "Upper CI - EC" = (sum(ec_pa == "Presence") / n()) * 100 +
       (qt(0.975, n() - 1) * sd(ec_pa_binary*100)/sqrt(n()))
-    # # "Lower CI - EC" = {
-    #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-    #   se <- sqrt(vcov_cluster[1, 1])
-    #   est <- (sum(ec_pa == "Presence") / n()) * 100
-    #   est - qt(0.975, df.residual(model)) * se
-    # },
-    # "Upper CI - EC" = {
-    #   model <- glm(ec_pa_binary ~ 1, family = binomial)
-    #   vcov_cluster <- vcovCR(model, cluster = village, type = "CR2")
-    #   se <- sqrt(vcov_cluster[1, 1])
-    #   est <- (sum(ec_pa == "Presence") / n()) * 100
-    #   est + qt(0.975, df.residual(model)) * se
-    # },
-    # "Median MPN E. coli/100 mL" = median(ec_mpn)#,
     
     )
 
@@ -463,7 +310,8 @@ tc <- tc%>%
 
 }
 
-
+#Summarizes WHO risk levels for E. coli in water, stratified by control/treatment assignment
+#idexx_data: Formatted IDEXX data including variables listed in the function
 risk_stats <- function(idexx_data){
   idexx_data%>%
     group_by(assignment, ec_risk)%>%
@@ -472,7 +320,14 @@ risk_stats <- function(idexx_data){
 }
 
 
-#Regression results functions ----------------------------------------------
+
+
+
+
+
+
+
+#Treatment Effect/Balance Regression functions ----------------------------------------------
 
 #ilc_glm
 #Runs generalized linear model for comparing control and treatment group outcomes using Poisson regression
@@ -488,7 +343,7 @@ ilc_glm <- function(data, var){
   #Storing N
   N <- length(model$y)
   
-  # Adjust for clustering at the village level
+  # Adjust SEs for clustering at the village level
   cluster_vcov <- vcovCL(model, cluster = data$village, type = "HC1")
   # Get the coefficients with clustered standard errors
   clustered_results <- coeftest(model, vcov. = cluster_vcov)
@@ -504,7 +359,6 @@ ilc_glm <- function(data, var){
   
   
   #exponentiate the estimates/std errors to get Prevalence Ratio
-  
   tidy_results$estimate <- exp(tidy_results$estimate)
   tidy_results$std_error <- exp(tidy_results$std_error)
   
@@ -634,11 +488,7 @@ ilc_model_table_only <- function(models = all_models){
       mutate(signif = case_when(p_value > 0.10 ~ " ",
                                 p_value <= 0.10 & p_value > 0.05 ~ "*",
                                 p_value <= 0.05 & p_value > 0.01 ~ "**",
-                                p_value <= 0.01 ~ "***"))#%>%
-      # mutate(Lower_CI = estimate - qt(0.975, N) * std_error)%>%
-      # mutate(Lower_CI = case_when(Lower_CI < 0 ~ 0,
-      #                             Lower_CI >= 0 ~ Lower_CI))%>% #Making lower CI = 0 when it's negative
-      # mutate(Upper_CI = estimate + qt(0.975, N) * std_error)
+                                p_value <= 0.01 ~ "***"))
     
     #Rounding numbers to 3 digits
     one_model[3:4] <- round(one_model[3:4], digits = 3)
@@ -746,94 +596,7 @@ ilc_model_lm_table_only <- function(models = all_models){
 
 
 
-#Compute_desc_stats function
-compute_desc_stats <- function(data, vars, treatment_col) {
-  library(dplyr)
-  
-  # Ensure the treatment column exists
-  if (!treatment_col %in% names(data)) {
-    stop("Treatment column not found in the dataset.")
-  }
-  
-  # Ensure the variables exist
-  missing_vars <- setdiff(vars, names(data))
-  if (length(missing_vars) > 0) {
-    stop("The following variables are missing in the dataset: ", paste(missing_vars, collapse = ", "))
-  }
-  
-  # Prepare data
-  data <- data %>%
-    mutate(across(all_of(vars), ~ if (is.character(.)) as.factor(.) else .))
-  
-  # Initialize an empty list to store results
-  stats_list <- list()
-  
-  # Loop through variables
-  for (var in vars) {
-    if (is.numeric(data[[var]])) {
-      # Compute mean and standard deviation for numeric variables
-      summary_stats <- data %>%
-        group_by(.data[[treatment_col]]) %>%
-        summarise(
-          N = sum(!is.na(.data[[var]])),
-          Mean = mean(.data[[var]], na.rm = TRUE),
-          SD = sd(.data[[var]], na.rm = TRUE),
-          .groups = "drop"
-        ) %>%
-        mutate(Variable = var)
-      
-    } else if (is.factor(data[[var]])) {
-      # Compute proportions for factor variables
-      summary_stats <- data %>%
-        group_by(.data[[treatment_col]], .data[[var]]) %>%
-        summarise(Count = n(), .groups = "drop") %>%
-        group_by(.data[[treatment_col]]) %>%
-        mutate(
-          Proportion = Count / sum(Count),
-          N = sum(Count)
-          ) %>%
-        ungroup() %>%
-        rename(Category = .data[[var]]) %>%
-        mutate(Variable = var)
-    } else {
-      next  # Skip unsupported types
-    }
-    
-    # Add to the results list
-    stats_list[[var]] <- summary_stats
-  }
-  
-  # Combine all results into a single dataframe
-  result <- bind_rows(stats_list, .id = "Variable")
-  
-  return(result)
-}
-
-# Example usage
-# data <- data.frame(
-#   treatment = c("control", "treatment", "control", "treatment"),
-#   age = c(25, 30, 35, 40),
-#   gender = c("male", "female", "female", "male"),
-#   stringsAsFactors = FALSE
-# )
-# 
-# descriptive_stats <- compute_descriptive_stats(
-#   data = data,
-#   var_names = c("age", "gender"),
-#   treatment_col = "treatment"
-# )
-# 
-# print(descriptive_stats)
-
-
-
-
-
-
-
-
 #Present desc stats as a flextable
-
 present_desc_stats_flextable <- function(desc_stats, treatment_col) {
   
   # Pivot the data to have treatment groups as columns
@@ -892,8 +655,9 @@ present_desc_stats_kable <- function(desc_stats, treatment_col) {
 
 #Running regression models while controlling for baseline measurements of outcomes
 
-#ilc_glm
-#Runs generalized linear model for comparing control and treatment group outcomes using Poisson regression
+#ilc_glm_bl
+#Runs generalized linear model for comparing control and treatment group outcomes using Poisson regression. 
+#Adds in baseline measurement of the variable as a covariate to control for baseline imbalance 
 #data: overall dataset to pull from
 #var: vector containing binary outcome variable names in each dataset to model
 ilc_glm_bl <- function(data, var, bl_var){

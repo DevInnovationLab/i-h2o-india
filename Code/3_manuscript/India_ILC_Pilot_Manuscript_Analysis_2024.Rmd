@@ -193,16 +193,53 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 
 ```{r saving datasets}
 
-#  cen <- cen%>%
-#    mutate(hhhead_gender = ifelse(hhhead_gender == "Female", 1, 0))%>%
-#    mutate(read_write_1 = ifelse(read_write_1 == "Yes", 1, 0))
-# 
-# # Only used when needed to output
-# 
-#  write_csv(cen,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_census.csv"))
-#  write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
-#  write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
-#  write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+
+#Baseline Census
+
+#Selecting key variables for analysis only
+cen <- cen%>%
+  dplyr::select(unique_id, village, village_ID, block, BlockCode, panchayat_village, assignment,
+         hhhead_gender_binary, hhmember_count, read_write_binary, prim_source,
+         prim_source_jjm, prim_source_ctap,
+         prim_source_surface, prim_source_well, prim_source_borehole, prim_source_other, 
+         sec_source, jjm_drinking, 
+         water_treat_binary, electricity_binary, tv_binary, mobile_binary, 
+         fridge_binary, motorcycle_binary)
+
+
+#Baseline Survey
+
+bl <- bl%>%
+  dplyr::select(unique_id, village, village_ID, block, `Block code`, panchayat_village, assignment,
+                water_source_prim, water_sec_yn, treat_water_before, treat_time_category,
+                treat_time_5min, sample_ID_tap, sample_ID_stored,
+                fc_stored, fc_stored_binary, fc_tap, fc_tap_binary, tc_stored,
+                tc_stored_binary,tc_tap, tc_tap_binary)
+
+
+#Endline census
+el <- el%>%
+  dplyr::select(unique_id, village, village_ID, block, BlockCode, panchayat_village, assignment,
+                prim_source, time_spent_treat_5,
+                prim_source_jjm, sec_source, jjm_drinking, water_treat_binary,
+                time_spent_treat_5, tap_issues_taste
+                )
+
+
+#IDEXX
+#idexx_tab no changes needed
+
+#Weekly Monitoring
+#mon_summary no changes needed
+#mon_summary_weekly no changes needed
+
+
+  write_csv(cen,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_census.csv"))
+  write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
+  write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
+  write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+  write_csv(mon_summary,
+            paste0(user_path(), "3_final/manuscript_datasets/", "1_11_weekly_monitoring.csv"))
 
 
 ```
@@ -212,13 +249,9 @@ source(paste0(github_path(),"/3_manuscript/India ILC Pilot - Manuscript Data Cle
 
 # Baseline Desc Stats
 
-```{r New Baseline Desc Stats Code}
+```{r Baseline Desc Stats Code}
 
-cen <- cen%>%
-  mutate(hhhead_gender_binary = ifelse(hhhead_gender == "Female", 1, 0))%>%
-  mutate(read_write_binary = ifelse(read_write_1 == "Yes", 1, 0))
   
-
 
 # Define function to calculate standard error for proportions
 calculate_se <- function(p, n) {
@@ -334,7 +367,6 @@ idexx_bl_stored <- idexx%>%
 
 #Baseline followup survey desc stats
 binary_categorical_vars <- c("ec_pa_tap", "cf_pa_tap"
-                  #"cf_pa_binary1","cf_pa_binary2","ec_pa_binary1","ec_pa_binary2",#"water_treat_binary
                   )
 
 
@@ -3035,7 +3067,7 @@ desc_stats <- el%>%
 
 # Poisson Regression -- Treatment Effect -------------------------------------
 
-outcome_vars <- c("prim_source_jjm", "sec_source", #Issue after code cleaning updates
+outcome_vars <- c("prim_source_jjm", "sec_source",
                   "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat", "time_spent_treat_15", "time_spent_treat_5")
 
 el_model <- factormaker(el, outcome_vars) #Making variables numeric
