@@ -229,6 +229,14 @@ el <- el%>%
 #IDEXX
 #idexx_tab no changes needed
 
+# #All rounds survey data
+# all_rounds <- all_rounds%>%
+#   dplyr::select(c("unique_id", "village", "block", "panchayat_village", "data_round", "pooled_round",
+#                   "assignment", "fc_tap_binary", "fc_stored_binary",
+#                   "fc_tap_.2", "fc_stored_.2", "fc_tap_2ppm", "fc_stored_2ppm",
+#                   "tap_taste_binary"
+#                   ))
+
 #Weekly Monitoring
 #mon_summary no changes needed
 #mon_summary_weekly no changes needed
@@ -238,6 +246,9 @@ el <- el%>%
   write_csv(bl,paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
   write_csv(el,paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
   write_csv(idexx_tab, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+  write_csv(idexx_abr, paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_abr.csv"))
+  write_csv(all_rounds, paste0(user_path(), "3_final/manuscript_datasets/", "1_8_surveys_all_rounds.csv"))
+  
   write_csv(mon_summary,
             paste0(user_path(), "3_final/manuscript_datasets/", "1_11_weekly_monitoring.csv"))
 

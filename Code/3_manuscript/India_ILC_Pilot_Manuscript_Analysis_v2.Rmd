@@ -87,7 +87,10 @@ cen <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baselin
 bl <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_1_baseline_survey.csv"))
 el <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_8_endline_census.csv"))
 idexx_tab <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_all_rounds.csv"))
+idexx_abr <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_10_idexx_abr.csv"))
+all_rounds <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_8_surveys_all_rounds.csv"))
 mon_summary <- read_csv(paste0(user_path(), "3_final/manuscript_datasets/", "1_11_weekly_monitoring.csv"))
+
 
 
 
@@ -203,16 +206,18 @@ continuous_summary <- cen %>%
 
 #Separating stored vs tap water tests ------
 
-idexx_bl_tap <- idexx%>%
-  filter(sample_type == "Tap")%>%
+idexx_bl_tap <- idexx_tab%>%
+  filter(data_round == "BL")%>% #Filtering for baseline samples only
+  filter(sample_type == "Tap" )%>% #Filtering for tap samples only
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_tap = "cf_pa_binary")%>%
   rename(ec_pa_tap = "ec_pa_binary")%>%
   rename(cf_log_tap = "cf_log")%>%
   rename(ec_log_tap = "ec_log")
 
-idexx_bl_stored <- idexx%>%
-  filter(sample_type == "Stored")%>%
+idexx_bl_stored <- idexx_tab%>%
+  filter(data_round == "BL")%>% #Filtering for baseline samples only
+  filter(sample_type == "Stored")%>% #Filtering for stored samples only
   dplyr::select(sample_ID, assignment, village, block, panchayat_village, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
   rename(cf_pa_stored = "cf_pa_binary")%>%
   rename(ec_pa_stored = "ec_pa_binary")%>%
@@ -334,31 +339,18 @@ See Stata code
 
 # Microbiological contamination ------------------------------------------------
 
-#Separating out follow-up rounds
+#Separating out follow-up rounds and baseline round
 idexx_fu <- idexx_tab%>%
   filter(data_round != "BL")
+
+idexx <- idexx_tab%>%
+  filter(data_round == "BL")
+  
 
 #Separating stored vs tap water tests ------
 idexx_ids <- idexx_tab%>%
   dplyr::select(assignment, village, block, panchayat_village, data_round, sample_ID, bag_ID_tap, bag_ID_stored)
 
-idexx_tab_tap <- idexx_tab%>%
-  filter(sample_type == "Tap")%>%
-  #filter(pooled_round == "FU")%>%
-  dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
-  rename(cf_pa_tap = "cf_pa_binary")%>%
-  rename(ec_pa_tap = "ec_pa_binary")%>%
-  rename(cf_log_tap = "cf_log")%>%
-  rename(ec_log_tap = "ec_log")
-
-idexx_tab_stored <- idexx_tab%>%
-  filter(sample_type == "Stored")%>%
-  #filter(pooled_round == "FU")%>%
-  dplyr::select(sample_ID, assignment, village, block, panchayat_village, data_round, pooled_round, cf_pa_binary, ec_pa_binary, cf_log, ec_log)%>%
-  rename(cf_pa_stored = "cf_pa_binary")%>%
-  rename(ec_pa_stored = "ec_pa_binary")%>%
-  rename(cf_log_stored = "cf_log")%>%
-  rename(ec_log_stored = "ec_log")
 
 
 #Creating desc stats for stored and tap samples ------------------------------------------------
