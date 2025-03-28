@@ -1,0 +1,223 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+packages <- 
+  c(
+    "fixest",
+    "broom",
+    "tidyverse",
+    "modelsummary",
+    "vtable"
+  )
+
+pacman::p_load(packages, character.only = TRUE)
+
+# Data -------------------------------------------------------------------------
+
+contamination <-
+  c(
+   "Presence of Total Coliform at Taps"= "cf_pa_tap",
+   "Presence of E. coli at Taps"= "ec_pa_tap",
+   "Presence of Antibiotic Resistant E. coli at Taps" = "ec_abr_pa_tap",
+   "Presence of Total Coliform in Stored Water"= "cf_pa_stored",
+   "Presence of E. coli in Stored Water"= "ec_pa_stored",
+   "Presence of Antibiotic Resistant E. coli in Stored Water" = "ec_abr_pa_stored"
+  )
+
+behavior <-
+  c(
+   "Taps as Primary Source" = "prim_source_jjm",
+   "Use a Secondary Source" = "sec_source",
+   "Drink Tap Water" = "jjm_drinking",
+   "Treat Water" = "water_treat_binary",
+   "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+   "Time Spent Treating Water is >5 Minutes" = "time_spent_treat_5"
+  )
+
+
+survey <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  ) %>%
+  mutate(
+    water_treat_binary_bl = 1,
+    tap_taste_binary_bl = 1
+  )
+
+fu_village <-
+  survey %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(contamination %>% unname),
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+survey <-
+  read_rds(
+    file.path(
+      user_path(),
+      "all_survey_rounds.rds"
+    )
+  ) 
+
+census <-
+  read_rds(
+    file.path(
+      user_path(),
+      "census.rds"
+    )
+  ) 
+
+census_village <-
+  census %>%
+  group_by(village, data_round, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(behavior %>% unname),
+      ~ sum(., na.rm = TRUE)
+    ),
+    N = n()
+  ) %>%
+  mutate(data_round = str_to_lower(data_round)) %>%
+  pivot_wider(
+    id_cols = c(village, block, panchayat_village, stratum, assignment),
+    values_from = c(all_of(behavior %>% unname), N),
+    names_from = "data_round"
+  )
+```
+
+# Descriptive statistics
+
+```{r}
+census %>%
+  filter(data_round == "BL") %>%
+  select(
+    -c(
+      block,
+      stratum, 
+      panchayat_village,
+      block_code,
+      data_round,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "Baseline demographics and behavior"
+  )
+``` 
+
+```{r}
+survey %>%
+  filter(data_round == "BL") %>%
+  sumtable(
+    c(
+      "cf_pa_tap", "cf_log_tap", "ec_pa_tap", "ec_log_tap",
+      "cf_pa_stored", "cf_log_stored", "ec_pa_stored", "ec_log_stored"
+    ),
+    group = "assignment",
+    title = "Baseline contamination"
+  )
+``` 
+
+```{r}
+survey %>%
+  filter(data_round != "BL") %>%
+  sumtable(
+    c(
+      "cf_pa_tap", "ec_pa_tap", "ec_abr_pa_tap",
+      "cf_pa_stored", "ec_pa_stored", "ec_abr_pa_stored"
+    ),
+    group = "assignment",
+    title = "Follow-up contamination"
+  )
+``` 
+
+
+# Regression models
+
+## Contamination
+
+```{r}
+contamination_models <-
+  contamination %>%
+  map(
+    ~ feglm(
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")) %>% as.formula,
+          data = fu_village,
+          family = poisson,
+          se = 'iid'
+    )
+  ) 
+
+contamination_models %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+```
+
+## Behavior
+
+```{r}
+behavior_models <-
+  behavior %>%
+  map(
+    ~ feglm(
+          paste(paste0(., "_el"), "~ assignment + offset(log(N_el)) +", paste0(., "_bl")) %>% as.formula,
+          data = census_village,
+          family = poisson,
+          se = 'iid'
+    )
+  ) 
+
+behavior_models %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+```
+
+## Forest plot
+```{r}
+c(
+  contamination_models,
+  behavior_models
+) %>%
+  map(
+    ~ tidy(
+      .,
+      exponentiate = TRUE,
+      conf.int = TRUE
+    ) %>%
+      filter(term == "assignmentTreatment")
+  ) %>% 
+  bind_rows(.id = "outcome")
+  
+```
+
