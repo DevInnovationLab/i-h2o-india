@@ -241,7 +241,7 @@ behavior_models %>%
 ```
 
 ## Forest plot
-```{r eval = F}
+```{r}
 all_coefs <-
   c(
     behavior_models,
@@ -276,7 +276,9 @@ all_coefs <-
   )
 
 all_coefs %>%
-  filter(outcome != "Presence of Antibiotic Resistant E. coli at Taps") %>%
+  filter(
+    !(outcome  %in% c("Presence of Antibiotic Resistant E. coli at Taps", "Reported Water Taste/Smell Issue")) 
+  ) %>%
   # Main plot
   ggplot(
     aes(
