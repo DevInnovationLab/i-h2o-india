@@ -353,7 +353,7 @@ abr$sample_ID <- as.character(abr$sample_ID)
 abr <- inner_join(abr, bl_idexx, by = "sample_ID")
 
 #checking duplicate IDs
-x <- idexx%>%
+x <- abr%>%
   count(sample_ID)%>% 
   filter(n > 1)
 #x_BL <- idexx%>%
@@ -1377,6 +1377,13 @@ abr_r6_comb <- abr_r6%>%
 idexx_comb <- rbind(idexx_comb, idexx_r1_comb, idexx_r2_comb, idexx_r3_comb, idexx_r4_comb, idexx_r5_comb, idexx_r6_comb)
 
 abr_comb <- rbind(abr_comb, abr_r3_comb, abr_r6_comb)
+
+#Checking duplicates
+abr_comb <- abr_comb%>%
+  filter(!(sample_ID == 10031 & cf_mpn == 0.00))%>%
+  filter(!(sample_ID == 20134 & cf_mpn == 0.00)) #This removes duplicate samples which were run on the same water samples
+#Duplicate tests were run on a subset of ABR test results. This should have been removed in an earlier data cleaning step, but removing here instead after checking raw data
+
 
 
 #Writing/updating final file

@@ -1639,7 +1639,8 @@ r6 <- r6%>%
 bl_tab <- bl%>%
   dplyr::select(assignment, unique_id, sample_ID_tap, sample_ID_stored, 
                 village, village_code, block, panchayat_village,
-                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time, water_treat_binary,
+                prim_source, prim_source_jjm, sec_source, jjm_drinking, stored_water_time,
+                water_treat_binary, treat_time_5min,
                 tap_trust_binary, tap_taste_binary, tap_future_binary, 
                 fc_tap_avg, fc_stored_avg, fc_tap_binary, fc_stored_binary,
                 tc_tap_avg, tc_stored_avg, tc_tap_binary, tc_stored_binary,
@@ -1659,6 +1660,9 @@ r1_tab <- r1%>%
                 fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 stored_bag_source, available_jjm)%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(data_round = "R1")
 
 r2_tab <- r2%>%
@@ -1671,6 +1675,9 @@ r2_tab <- r2%>%
                 fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm, 
                 stored_bag_source, available_jjm)%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(data_round = "R2")
 
 r3_tab <- r3%>%
@@ -1683,6 +1690,9 @@ r3_tab <- r3%>%
                 fc_tap_.2, fc_stored_.2, tc_tap_.2, tc_stored_.2,
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 stored_bag_source, available_jjm)%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(
          stored_water_time = NA
          )%>%
@@ -1698,6 +1708,9 @@ r4_tab <- r4%>%
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
                 )%>%
   mutate(data_round = "R4")%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(prim_source = NA,
          prim_source_jjm = NA,
          sec_source = NA,
@@ -1720,6 +1733,9 @@ r5_tab <- r5%>%
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
   )%>%
   mutate(data_round = "R5")%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(prim_source = NA,
          prim_source_jjm = NA,
          sec_source = NA,
@@ -1742,6 +1758,9 @@ r6_tab <- r6%>%
                 fc_tap_2ppm, fc_stored_2ppm, tc_tap_2ppm, tc_stored_2ppm,
   )%>%
   mutate(data_round = "R6")%>%
+  mutate(
+    treat_time_5min = NA
+  )%>%
   mutate(prim_source = NA,
          prim_source_jjm = NA,
          sec_source = NA,
@@ -1879,9 +1898,9 @@ el <- el%>%
 
 #Creating variable for complaints about taste and smell
 el <- el%>%
-  mutate(tap_issues_taste = ifelse(tap_issues_type_1 == 1, 2, 1))
+  mutate(tap_issues_taste = ifelse(tap_issues_type_1 == 1, 1, 0))
 el$tap_issues_taste <- el$tap_issues_taste%>%
-  replace_na(replace = 1)
+  tidyr::replace_na(replace = 0)
 
 
 #Time spent collecting drinking water
