@@ -210,12 +210,14 @@ census <-
         TRUE ~ NA_real_ # Ensures missing values remain as NA
       )
     ),
+    tap_issues_taste = tap_issues_taste - 1,
     data_round = factor(
       data_round,
       levels = c(1, 2),
       labels = c("BL", "EL")
     )
   ) %>%
+  select(-assignment) %>%
   left_join(assignment)
 
 write_rds(
