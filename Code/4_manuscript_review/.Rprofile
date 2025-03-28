@@ -25,7 +25,7 @@ user_path <- function() {
     path = file.path(Sys.getenv("BOX"), "i-h2o-india")
   }
   else if (user == "jerem"){
-    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/"
+    path = "C:/Users/jerem/Box/India Water project/2_Pilot/Data/3_final/manuscript_datasets"
   } 
   else {
     warning("No path found for current user (", user, ")")
