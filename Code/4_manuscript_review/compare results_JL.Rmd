@@ -21,17 +21,61 @@ pacman::p_load(packages, character.only = TRUE)
 ```
 
 
-```{r census desc stats}
+
+```{r loading data}
 
 
+#Baseline Census
 cen <- read_csv(file.path(user_path(), "1_1_baseline_census.csv"))
 
 
-cen %>%
+
+
+#Endline Census + Baseline Census Results
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
+
+#IDEXX
+analysis_idexx <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_idexx.rds"
+    )
+  )
+
+
+#Loading data
+analysis_abr <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_abr.rds"
+    )
+  )
+
+
+
+
+
+```
+
+
+```{r desc stats}
+
+
+#Endline and Baseline Census
+analysis %>%
   select(
     -c(
       block,
       panchayat_village,
+      stratum,
       ends_with("id")
     )
   ) %>%
@@ -40,6 +84,45 @@ cen %>%
     title  = "Baseline demographics and behavior"
   )
 
+
+#Endline and Baseline Census
+analysis_idexx %>%
+  select(
+    -c(
+      data_round,
+      pooled_round,
+      sample_id_stored,
+      sample_id_tap,
+      block,
+      panchayat_village,
+      stratum,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "IDEXX - Standard"
+  )
+
+
+#Endline and Baseline Census
+analysis_abr %>%
+  select(
+    -c(
+      data_round,
+      pooled_round,
+      sample_id_stored,
+      sample_id_tap,
+      block,
+      panchayat_village,
+      stratum,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "IDEXX - Antibiotic Resistance"
+  )
 
 
 
@@ -72,13 +155,6 @@ outcomes <-
   )
 
 
-analysis <-
-  read_rds(
-    file.path(
-      user_path(),
-      "analysis_data.rds"
-    )
-  )
 
 # fu_village <-
 #   analysis %>%
@@ -177,15 +253,7 @@ el_models
 
 
 
-analysis_idexx <-
-  read_rds(
-    file.path(
-      user_path(),
-      "analysis_idexx.rds"
-    )
-  )
-
-
+#Setting outcomes
 outcomes <-
   c(
     "Presence of Total Coliform at Taps"= "cf_pa_tap",
@@ -220,20 +288,10 @@ idexx_village%>%
 # Running regression models -----------------------------------------------------
 
 
-
-
-# Village level ----------------------------------------------------------------
+# Poisson Regression ----------------------------------------------------------------
 
 idexx_models <-
    outcomes %>%
-  # map(
-  #   ~ list(
-  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
-  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
-  #      # paste(., "~ assignment + offset(log(N))"),
-  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
-  #   ) %>%
-  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
        map(
         ~ feglm(
           paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
@@ -242,7 +300,6 @@ idexx_models <-
           se = 'iid'
         )
       )
-  #)
 
 
 idexx_models%>%
@@ -258,6 +315,115 @@ idexx_models%>%
   )
 
 
+#Linear Regression ----------------------------------------------------------
+
+#Setting outcomes
+outcomes <-
+  c(
+    "Log10 MPN Total Coliform at Taps"= "cf_log_tap",
+    "Log10 MPN E. coli at Taps"= "ec_log_tap",
+    "Log10 MPN Total Coliform in Stored Water"= "cf_log_stored",
+    "Log10 MPN E. coli in Stored Water"= "ec_log_stored"
+  )
+
+
+#Prepping village level data
+idexx_village <-
+  analysis_idexx %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      c(outcomes) %>% unname,
+      ~ mean(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+
+#Village-level
+# idexx_model_lm <-
+#    outcomes %>%
+#        map(
+#         ~ feols(
+#           paste(., "~ assignment  + offset(N) +", paste0(., "_bl"))%>%as.formula(),
+#           data = idexx_village,
+#           se = 'iid'
+#         )
+#       )
+# 
+# 
+# idexx_model_lm%>%
+#    modelsummary(
+#     exponentiate = FALSE,
+#     coef_rename = c("assignmentTreatment" = "Treatment"),
+#     coef_omit = "^(?!.*Treatment)",
+#     gof_omit = "IC|R2|RMSE",
+#     estimate  = "{estimate} [{conf.low}, {conf.high}]",
+#     statistic = NULL,
+#     shape = model ~ term + statistic,
+#     add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+#   )
+
+
+#Individual - baseline control
+idexx_model_lm <-
+   outcomes %>%
+       map(
+        ~ feols(
+          paste(., "~ assignment  +", paste0(., "_bl"), "| block + panchayat_village")%>%as.formula(),
+          data = analysis_idexx,
+          cluster = "village"
+        )
+      )
+
+idexx_model_lm%>%
+   modelsummary(
+    exponentiate = FALSE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+
+
+
+
+
+#Individual - original manuscript
+# idexx_models <-
+#    outcomes %>%
+#        map(
+#         ~ feols(
+#           as.formula(paste(., "~ assignment | block + panchayat_village")),
+#           data = analysis_idexx,
+#           cluster = "village"
+#         )
+#       )
+#        
+# 
+# 
+# 
+# idexx_models%>%
+#    modelsummary(
+#     exponentiate = FALSE,
+#     coef_rename = c("assignmentTreatment" = "Treatment"),
+#     coef_omit = "^(?!.*Treatment)",
+#     gof_omit = "IC|R2|RMSE",
+#     estimate  = "{estimate} [{conf.low}, {conf.high}]",
+#     statistic = NULL,
+#     shape = model ~ term + statistic,
+#     add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+#   )
+
+
+
 
 ```
 
@@ -266,16 +432,8 @@ idexx_models%>%
 ```{r ABR analysis}
 
 
-analysis_abr <-
-  read_rds(
-    file.path(
-      user_path(),
-      "analysis_abr.rds"
-    )
-  )
 
-
-
+#Setting outcomes
 outcomes <-
   c(
     "Presence of Antibiotic Resistant E. coli at Taps"= "ec_pa_abr_tap",
@@ -313,14 +471,6 @@ abr_village%>%
 
 abr_models <-
    outcomes %>%
-  # map(
-  #   ~ list(
-  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
-  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
-  #      # paste(., "~ assignment + offset(log(N))"),
-  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
-  #   ) %>%
-  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
        map(
         ~ feglm(
           paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
@@ -329,7 +479,6 @@ abr_models <-
           se = 'iid'
         )
       )
-  #)
 
 
 
@@ -414,9 +563,9 @@ p_forestplot <-
   geom_vline(xintercept = 1, linetype = "dashed", color = "black"
   ) +
   scale_x_continuous(
-    limits = c(0.1, 5),
+    limits = c(0.12, 7),
     trans = 'log10',
-    breaks = c(0.00, 0.25, 0.5, 1.00, 1.25)
+    breaks = c(0.00, 0.25, 0.5, 0.75, 1.00, 1.25)
   ) +
   scale_color_manual(
     values = c(
@@ -431,7 +580,7 @@ p_forestplot <-
   # Theme
   theme_classic() +
   theme(
-    legend.position = "top",
+    legend.position = "right",
     legend.title = element_blank(),
     axis.text.y = element_text(size = 10), 
     axis.title.y = element_text(size = 13),
@@ -440,8 +589,8 @@ p_forestplot <-
   ) +
   # Annotations
   geom_text(aes(label = estimate_label, x = max(conf.high) + 0.7), hjust = 0, size = 3) +
-  geom_text(aes(label = p_char, x = max(conf.high) + 2.5),hjust = 0,size = 3) +
-  geom_text(aes(label = "20", x = max(conf.high) + 3.5
+  geom_text(aes(label = p_char, x = max(conf.high) + 3),hjust = 0,size = 3) +
+  geom_text(aes(label = "20", x = max(conf.high) + 5
     ), hjust = 0, size = 3)
 
 
@@ -455,7 +604,7 @@ for (y in y_positions) {
 p_forestplot
 
 
-ggsave(filename = "forestplot_v2.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
+ggsave(filename = "forestplot_v3.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 13, height = 6, units = "in")
 
 
 ```

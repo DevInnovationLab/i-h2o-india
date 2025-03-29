@@ -75,7 +75,7 @@ idexx_clean <-
   ) %>%
   clean_names
 
-#
+#Antibiotic Resistant Testing
 idexx_abr_clean <-
   idexx_abr %>%
   dplyr::select(
@@ -202,7 +202,31 @@ all_data <-
 
 
 
-bl <- #Only selecting needed variables from this dataset
+bl_treat_time <- #Only selecting needed variables from this dataset
+  all_data %>%
+  filter(data_round == "BL") %>%
+  select(
+    unique_id,
+    village,
+    treat_time_5min
+  ) %>%
+  rename_with(
+    ~ paste0(.x, "_bl"),
+    c(
+      treat_time_5min
+    )
+  ) %>%
+  group_by(village) %>%
+  summarise(
+    across(
+      -unique_id,
+      ~ sum(., na.rm = TRUE)
+    )
+  )
+
+
+#Baseline IDEXX
+idexx_bl <- #Only selecting needed variables from this dataset
   all_data %>%
   filter(data_round == "BL") %>%
   select(
@@ -212,7 +236,10 @@ bl <- #Only selecting needed variables from this dataset
     ec_pa_tap,
     cf_pa_stored,
     ec_pa_stored,
-    treat_time_5min
+    ec_log_tap,
+    ec_log_stored,
+    cf_log_tap,
+    cf_log_stored
   ) %>%
   rename_with(
     ~ paste0(.x, "_bl"),
@@ -221,14 +248,17 @@ bl <- #Only selecting needed variables from this dataset
       ec_pa_tap,
       cf_pa_stored,
       ec_pa_stored,
-      treat_time_5min
+      ec_log_tap,
+      ec_log_stored,
+      cf_log_tap,
+      cf_log_stored
     )
   ) %>%
   group_by(village) %>%
   summarise(
     across(
       -unique_id,
-      ~ sum(., na.rm = TRUE)
+      ~ mean(., na.rm = TRUE)
     )
   )
 
@@ -254,7 +284,7 @@ idexx_abr_bl <- #Only selecting needed variables from this dataset
   summarise(
     across(
       -unique_id,
-      ~ sum(., na.rm = TRUE)
+      ~ mean(., na.rm = TRUE)
     )
   )
 
@@ -288,9 +318,10 @@ cen_data <- #Only selecting needed variables from this dataset
   )
 
 
+
 analysis <-
   el_clean %>%
-  left_join(bl)%>%
+  left_join(bl_treat_time)%>%
   left_join(cen_data)
 
 analysis_idexx <- idexx_clean%>%
@@ -302,7 +333,7 @@ analysis_idexx <- idexx_clean%>%
     ),
     stratum = fct_cross(panchayat_village, block)
   )%>%
-  left_join(bl)
+  left_join(idexx_bl)
 
 analysis_abr <- idexx_abr_clean%>%
   filter(data_round != "BL")%>%
