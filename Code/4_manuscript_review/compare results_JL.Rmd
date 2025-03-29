@@ -1,0 +1,466 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+```{r}
+
+packages <- 
+  c(
+    "fixest",
+    "broom",
+    "tidyverse",
+    "modelsummary",
+    "vtable",
+    "skimr"
+  )
+
+pacman::p_load(packages, character.only = TRUE)
+
+```
+
+
+```{r census desc stats}
+
+
+cen <- read_csv(file.path(user_path(), "1_1_baseline_census.csv"))
+
+
+cen %>%
+  select(
+    -c(
+      block,
+      panchayat_village,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "Baseline demographics and behavior"
+  )
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+# Data -------------------------------------------------------------------------
+
+outcomes <-
+  c(
+    # "Presence of Total Coliform at Taps"= "cf_pa_tap",
+    # "Presence of E. coli at Taps"= "ec_pa_tap",
+    # "Presence of Total Coliform in Stored Water"= "cf_pa_stored",
+    # "Presence of E. coli in Stored Water"= "ec_pa_stored",
+    "Taps as Primary Source" = "prim_source_jjm",
+    "Use a Secondary Source" = "sec_source",
+    "Drink Tap Water" = "jjm_drinking",
+    "Treat Water" = "water_treat_binary",
+    "Treat Water > 5 min" = "time_spent_treat_5",
+    "Reported Water Taste/Smell Issue" = "tap_issues_taste"
+    
+  )
+
+
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
+
+# fu_village <-
+#   analysis %>%
+#   group_by(village, block, panchayat_village, stratum, assignment) %>%
+#   summarise(
+#     across(
+#       c(outcomes) %>% unname,
+#       ~ sum(., na.rm = TRUE)
+#     ),
+#     across(
+#       ends_with("_bl"),
+#       ~ unique(.)
+#     ),
+#     N = n()
+#   )
+
+analysis <- analysis%>%
+  mutate(
+    tap_issues_taste_bl = 1
+  )%>%
+  rename(time_spent_treat_5_bl = treat_time_5min_bl)
+  
+
+el_village <-
+  analysis %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      c(outcomes) %>% unname,
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )%>%
+  mutate(
+    tap_issues_taste_bl = 1
+  )
+
+#SKimming data
+el_village%>%
+  ungroup()%>%
+  skim()
+
+# Running regression models -----------------------------------------------------
+
+
+
+# Village level ----------------------------------------------------------------
+
+el_models <-
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
+        ~ feglm(
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
+          data = el_village,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  #)
+
+
+
+el_models%>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+
+el_models
+
+
+
+
+```
+
+
+```{r IDEXX analysis}
+
+
+
+analysis_idexx <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_idexx.rds"
+    )
+  )
+
+
+outcomes <-
+  c(
+    "Presence of Total Coliform at Taps"= "cf_pa_tap",
+    "Presence of E. coli at Taps"= "ec_pa_tap",
+    "Presence of Total Coliform in Stored Water"= "cf_pa_stored",
+    "Presence of E. coli in Stored Water"= "ec_pa_stored"
+    
+  )
+
+
+#Prepping village level data
+idexx_village <-
+  analysis_idexx %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      c(outcomes) %>% unname,
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+#SKimming data
+idexx_village%>%
+  ungroup()%>%
+  skim()
+
+# Running regression models -----------------------------------------------------
+
+
+
+
+# Village level ----------------------------------------------------------------
+
+idexx_models <-
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
+        ~ feglm(
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
+          data = idexx_village,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  #)
+
+
+idexx_models%>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+
+
+
+```
+
+
+
+```{r ABR analysis}
+
+
+analysis_abr <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_abr.rds"
+    )
+  )
+
+
+
+outcomes <-
+  c(
+    "Presence of Antibiotic Resistant E. coli at Taps"= "ec_pa_abr_tap",
+    "Presence of Antibiotic Resistant E. coli in Stored Water"= "ec_pa_abr_stored"
+    
+  )
+
+
+#Prepping village level data
+abr_village <-
+  analysis_abr %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      c(outcomes) %>% unname,
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+
+#SKimming data
+abr_village%>%
+  ungroup()%>%
+  skim()
+
+# Running regression models -----------------------------------------------------
+
+
+# Village level ----------------------------------------------------------------
+
+abr_models <-
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
+        ~ feglm(
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
+          data = abr_village,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  #)
+
+
+
+abr_models%>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+
+
+
+```
+
+
+
+
+```{r forestplot}
+
+
+
+all_coefs <-
+  c(
+    el_models,
+    idexx_models,
+    abr_models
+  ) %>%
+  map(
+    ~ tidy(
+      .,
+      conf.int = TRUE
+    ) %>%
+      filter(term == "assignmentTreatment")
+  ) %>% 
+  bind_rows(.id = "outcome") %>%
+  mutate(p_char = ifelse(p.value < 0.001, "< 0.001",
+    as.character(round(p.value, 3))
+  )
+  )%>%
+  mutate(
+    across(
+      where(is.numeric),
+      ~ round(exp(.), 3)
+    ),
+    variable_type = 
+      if_else(
+        str_detect(outcome, "Presence"),
+        "Water Quality Outcome",
+        "Behavioral Outcome"
+    ),
+    order = row_number(),
+    outcome =
+      factor(
+        order,
+        labels = outcome,
+        ordered = TRUE
+      )
+  )
+
+#Creating PR (95% CI) label to be shown on plot
+all_coefs <- all_coefs%>%
+  mutate(estimate_label = paste0(round(estimate, 2), " (", round(conf.low, 2), ", ", round(conf.high, 2), ")"))
+
+p_forestplot <- 
+  all_coefs %>%
+  filter(
+    !(outcome  %in% c("Presence of Antibiotic Resistant E. coli at Taps", "Reported Water Taste/Smell Issue")) 
+  ) %>%
+  # Main plot
+  ggplot(
+    aes(x = estimate, y = outcome, xmin = conf.low, xmax = conf.high)
+  ) +
+  geom_point(aes(color = variable_type), size = 2
+  ) +  
+  geom_errorbarh(aes(color = variable_type), height = 0.2) + 
+  # Dashed line at x = 1 (null Risk Ratio)
+  geom_vline(xintercept = 1, linetype = "dashed", color = "black"
+  ) +
+  scale_x_continuous(
+    limits = c(0.1, 5),
+    trans = 'log10',
+    breaks = c(0.00, 0.25, 0.5, 1.00, 1.25)
+  ) +
+  scale_color_manual(
+    values = c(
+      "Water Quality Outcome" = "#00008B", 
+      "Behavioral Outcome" = "#EEA944"
+    )
+  ) +
+  labs(
+    x = "Prevalence Ratio", 
+    y = "Outcome"
+  ) + 
+  # Theme
+  theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.title = element_blank(),
+    axis.text.y = element_text(size = 10), 
+    axis.title.y = element_text(size = 13),
+    axis.title.x = element_text(size = 13),
+    axis.ticks.y = element_blank()
+  ) +
+  # Annotations
+  geom_text(aes(label = estimate_label, x = max(conf.high) + 0.7), hjust = 0, size = 3) +
+  geom_text(aes(label = p_char, x = max(conf.high) + 2.5),hjust = 0,size = 3) +
+  geom_text(aes(label = "20", x = max(conf.high) + 3.5
+    ), hjust = 0, size = 3)
+
+
+# Add horizontal lines between levels of outcomes to create separation
+y_levels <- levels(factor(all_coefs$outcome))
+y_positions <- seq_along(y_levels) - 0.5
+for (y in y_positions) {
+  p_forestplot <- p_forestplot + geom_hline(yintercept = y, color = "darkgrey", linetype = "solid", linewidth = 0.5)
+}
+
+p_forestplot
+
+
+ggsave(filename = "forestplot_v2.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 11, height = 6, units = "in")
+
+
+```
+
+
+
+
+
