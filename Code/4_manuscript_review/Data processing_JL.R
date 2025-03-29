@@ -102,65 +102,65 @@ idexx_abr_clean <-
 
 
 # Combine all data =============================================================
-
-all_data <- 
-  all_rounds_clean %>%
-  left_join(idexx_clean) %>%
-  mutate(
-    across(
-      c(panchayat_village, block),
-      ~ as_factor(.)
-    ),
-    across(
-      c(jjm_drinking),
-      ~ (. == "Yes") %>% as.numeric
-    ),
-    stratum = fct_cross(panchayat_village, block)
-  )
-
-fu <-
-  all_data %>%
-  filter(data_round != "BL") 
-
-bl <- 
-  all_data %>%
-  filter(data_round == "BL") %>%
-  select(
-    unique_id,
-    village,
-    cf_pa_tap,
-    ec_pa_tap,
-    cf_pa_stored,
-    ec_pa_stored,
-    prim_source_jjm,
-    sec_source,
-    jjm_drinking,
-    treat_time_5min
-  ) %>%
-  rename_with(
-    ~ paste0(.x, "_bl"),
-    c(
-      cf_pa_tap,
-      ec_pa_tap,
-      cf_pa_stored,
-      ec_pa_stored,
-      prim_source_jjm,
-      sec_source,
-      jjm_drinking, 
-      treat_time_5min
-    )
-  ) %>%
-  group_by(village) %>%
-  summarise(
-    across(
-      -unique_id,
-      ~ mean(., na.rm = TRUE)
-    )
-  )
-
-analysis <-
-  fu %>%
-  left_join(bl)
+# 
+# all_data <-
+#   all_rounds_clean %>%
+#   left_join(idexx_clean) %>%
+#   mutate(
+#     across(
+#       c(panchayat_village, block),
+#       ~ as_factor(.)
+#     ),
+#     across(
+#       c(jjm_drinking),
+#       ~ (. == "Yes") %>% as.numeric
+#     ),
+#     stratum = fct_cross(panchayat_village, block)
+#   )
+# 
+# fu <-
+#   all_data %>%
+#   filter(data_round != "BL")
+# 
+# bl <-
+#   all_data %>%
+#   filter(data_round == "BL") %>%
+#   select(
+#     unique_id,
+#     village,
+#     cf_pa_tap,
+#     ec_pa_tap,
+#     cf_pa_stored,
+#     ec_pa_stored,
+#     prim_source_jjm,
+#     sec_source,
+#     jjm_drinking,
+#     treat_time_5min
+#   ) %>%
+#   rename_with(
+#     ~ paste0(.x, "_bl"),
+#     c(
+#       cf_pa_tap,
+#       ec_pa_tap,
+#       cf_pa_stored,
+#       ec_pa_stored,
+#       prim_source_jjm,
+#       sec_source,
+#       jjm_drinking,
+#       treat_time_5min
+#     )
+#   ) %>%
+#   group_by(village) %>%
+#   summarise(
+#     across(
+#       -unique_id,
+#       ~ mean(., na.rm = TRUE)
+#     )
+#   )
+# 
+#  analysis <-
+#    fu %>%
+#    left_join(bl)
 
 
 #JL: Repeating for endline census data with 880 observations ===========================
@@ -180,15 +180,10 @@ el_clean <-
 all_data <- 
   all_rounds_clean %>%
   left_join(idexx_clean)%>%
-  left_join(idexx_abr_clean)%>%
   mutate(
     across(
       c(panchayat_village, block),
       ~ as_factor(.)
-    ),
-    across(
-      c(jjm_drinking),
-      ~ (. == "Yes") %>% as.numeric
     ),
     stratum = fct_cross(panchayat_village, block)
   )
@@ -205,8 +200,6 @@ bl <- #Only selecting needed variables from this dataset
     ec_pa_tap,
     cf_pa_stored,
     ec_pa_stored,
-    ec_pa_abr_tap,
-    ec_pa_abr_stored,
     treat_time_5min
   ) %>%
   rename_with(
@@ -216,8 +209,6 @@ bl <- #Only selecting needed variables from this dataset
       ec_pa_tap,
       cf_pa_stored,
       ec_pa_stored,
-      ec_pa_abr_tap,
-      ec_pa_abr_stored,
       treat_time_5min
     )
   ) %>%
@@ -225,9 +216,37 @@ bl <- #Only selecting needed variables from this dataset
   summarise(
     across(
       -unique_id,
-      ~ mean(., na.rm = TRUE)
+      ~ sum(., na.rm = TRUE)
     )
   )
+
+
+#IDEXX ABR
+idexx_abr_bl <- #Only selecting needed variables from this dataset
+  idexx_abr_clean%>%
+  filter(data_round == "BL") %>%
+  select(
+    unique_id,
+    village,
+    ec_pa_abr_tap,
+    ec_pa_abr_stored
+  ) %>%
+  rename_with(
+    ~ paste0(.x, "_bl"),
+    c(
+      ec_pa_abr_tap,
+      ec_pa_abr_stored
+    )
+  ) %>%
+  group_by(village) %>%
+  summarise(
+    across(
+      -unique_id,
+      ~ sum(., na.rm = TRUE)
+    )
+  )
+
+
 
 cen_data <- #Only selecting needed variables from this dataset
   cen%>%
@@ -252,7 +271,7 @@ cen_data <- #Only selecting needed variables from this dataset
   summarise(
     across(
       -unique_id,
-      ~ mean(., na.rm = TRUE)
+      ~ sum(., na.rm = TRUE)
     )
   )
 
@@ -274,7 +293,7 @@ analysis_idexx <- idexx_clean%>%
   left_join(bl)
 
 analysis_abr <- idexx_abr_clean%>%
-  filter(pooled_round == "FU")%>%
+  filter(data_round != "BL")%>%
   mutate(
     across(
       c(panchayat_village, block),
@@ -282,15 +301,84 @@ analysis_abr <- idexx_abr_clean%>%
     ),
     stratum = fct_cross(panchayat_village, block)
   )%>%
-  left_join(bl)
+  left_join(idexx_abr_bl)
 
 
 #Writing analysis data =========================================================
 
-# write_rds(
-#   analysis,
-#   file.path(
-#     user_path(),
-#     "analysis_data.rds"
+write_rds(
+  analysis,
+  file.path(
+    user_path(),
+    "analysis_data.rds"
+  )
+)
+
+
+write_rds(
+  analysis_idexx,
+  file.path(
+    user_path(),
+    "analysis_idexx.rds"
+  )
+)
+
+write_rds(
+  analysis_abr,
+  file.path(
+    user_path(),
+    "analysis_abr.rds"
+  )
+)
+
+
+
+
+
+
+
+
+#Loading Luiza's data ==========================================================
+
+# survey <-
+#   read_rds(
+#     file.path(
+#       user_path(),
+#       "analysis_data.rds"
+#     )
+#   ) %>%
+#   mutate(
+#     water_treat_binary_bl = 1,
+#     tap_taste_binary_bl = 1
 #   )
-# )
+# 
+# fu_village <-
+#   survey %>%
+#   group_by(village, block, panchayat_village, stratum, assignment) %>%
+#   summarise(
+#     across(
+#       all_of(contamination %>% unname),
+#       ~ sum(., na.rm = TRUE)
+#     ),
+#     across(
+#       ends_with("_bl"),
+#       ~ unique(.)
+#     ),
+#     N = n()
+#   )
+
+# survey <-
+#   read_rds(
+#     file.path(
+#       user_path(),
+#       "all_survey_rounds.rds"
+#     )
+#   ) 
+# 
+# census <-
+#   read_rds(
+#     file.path(
+#       user_path(),
+#       "census.rds"
+#     )
+#   ) 

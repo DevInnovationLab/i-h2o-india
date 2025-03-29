@@ -3,16 +3,56 @@
 knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
 ```
 
+
 ```{r}
+
 packages <- 
   c(
     "fixest",
     "broom",
     "tidyverse",
-    "modelsummary"
+    "modelsummary",
+    "vtable",
+    "skimr"
   )
 
 pacman::p_load(packages, character.only = TRUE)
+
+```
+
+
+```{r census desc stats}
+
+
+cen <- read_csv(file.path(user_path(), "1_1_baseline_census.csv"))
+
+
+cen %>%
+  select(
+    -c(
+      block,
+      panchayat_village,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "Baseline demographics and behavior"
+  )
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+
 
 # Data -------------------------------------------------------------------------
 
@@ -32,17 +72,13 @@ outcomes <-
   )
 
 
-# analysis <-
-#   read_rds(
-#     file.path(
-#       user_path(),
-#       "analysis_data.rds"
-#     )
-#   ) %>%
-#   mutate(
-#     water_treat_binary_bl = 1,
-#     tap_taste_binary_bl = 1
-#   )
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
 
 # fu_village <-
 #   analysis %>%
@@ -82,110 +118,71 @@ el_village <-
   )%>%
   mutate(
     tap_issues_taste_bl = 1
-  )%>%
-  rename(time_spent_treat_5_bl = treat_time_5min_bl)
+  )
+
+#SKimming data
+el_village%>%
+  ungroup()%>%
+  skim()
 
 # Running regression models -----------------------------------------------------
 
-# Individual level -------------------------------------------------------------
 
-# ind <-
-#   outcomes%>%
-#   map(
-#     ~ list(
-#         paste(., "~ assignment | block + panchayat_village"),
-#         paste(., "~ assignment | stratum"),
-#         paste(., "~ assignment"),
-#         paste(., "~ assignment +", paste0(., "_bl")) 
-#     ) %>%
-#       map(~ as.formula(.)) %>%
-#       map(
-#         ~ feglm(
-#           .,
-#           data = analysis,
-#           family = poisson,
-#           cluster = ~ village
-#         )
-#       )
-#   )
-# 
 
 # Village level ----------------------------------------------------------------
 
 vil <-
-  outcomes %>%
-  map(
-    ~ list(
-       # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
-       # paste(., "~ assignment + offset(log(N)) | stratum"),
-       # paste(., "~ assignment + offset(log(N))"),
-      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
-    ) %>%
-      map(~ as.formula(.)) %>%
-      map(
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
         ~ feglm(
-          .,
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
           data = el_village,
           family = poisson,
           se = 'iid'
         )
       )
-  )
+  #)
 
-# Table ------------------------------------------------------------------------
-add_rows <-
-  tribble(
-    ~name, ~m1, ~m2, ~m3, ~m4, ~m5, ~m6, ~m7, ~m8,
-    "Control: baseline level", "", "", "", "X", "", "", "", "X"
-  )
-```
 
-# Variables with baseline values available
 
-- Columns 1 to 4 are from regression at the individual-round level. Columns 5-8 are at the village level.
-- Column 1 is the current manuscript specification
-- Column 8 is our suggested specification 
-
-```{r}
-map2(
-  ind %>% head(7), 
-  vil %>% head(7),
-  ~ c(.x, .y)
-) %>%
+vil %>%
    modelsummary(
-      coef_rename = c("assignmentTreatment" = "Treatment"),
-      coef_omit = "^(?!.*Treatment)",
-      shape = "rcollapse",
-      gof_omit = "IC|R2|RMSE",
-      add_rows = add_rows
-    )
-```
-
-# Variables with no baseline observation
-
-- Columns 1 to 3 are from regression at the individual-round level. Columns 4-6 are at the village level.
-- Column 1 is the current manuscript specification
-- Column 6 is our suggested specification 
-
-```{r}
-map2(
-  ind %>% tail(2) %>% map(. %>% head(3)), 
-  vil %>% tail(2) %>% map(. %>% head(3)),
-  ~ c(.x, .y)
-) %>%
-  modelsummary(
+    exponentiate = TRUE,
     coef_rename = c("assignmentTreatment" = "Treatment"),
     coef_omit = "^(?!.*Treatment)",
-    shape = "rcollapse",
-    gof_omit = "IC|R2|RMSE"
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
   )
 
+
+
+
 ```
-
-
 
 
 ```{r IDEXX analysis}
+
+
+
+analysis_idexx <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_idexx.rds"
+    )
+  )
+
 
 outcomes <-
   c(
@@ -213,61 +210,50 @@ idexx_village <-
     N = n()
   )
 
+#SKimming data
+idexx_village%>%
+  ungroup()%>%
+  skim()
 
 # Running regression models -----------------------------------------------------
 
-# Individual level -------------------------------------------------------------
 
-# ind <-
-#   outcomes%>%
-#   map(
-#     ~ list(
-#         paste(., "~ assignment | block + panchayat_village"),
-#         paste(., "~ assignment | stratum"),
-#         paste(., "~ assignment"),
-#         paste(., "~ assignment +", paste0(., "_bl")) 
-#     ) %>%
-#       map(~ as.formula(.)) %>%
-#       map(
-#         ~ feglm(
-#           .,
-#           data = analysis_idexx,
-#           family = poisson,
-#           cluster = ~ village
-#         )
-#       )
-#   )
 
 
 # Village level ----------------------------------------------------------------
 
 vil <-
-  outcomes %>%
-  map(
-    ~ list(
-       # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
-       # paste(., "~ assignment + offset(log(N)) | stratum"),
-       # paste(., "~ assignment + offset(log(N))"),
-      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
-    ) %>%
-      map(~ as.formula(.)) %>%
-      map(
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
         ~ feglm(
-          .,
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
           data = idexx_village,
           family = poisson,
           se = 'iid'
         )
       )
+  #)
+
+
+vil %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
   )
-
-# Table ------------------------------------------------------------------------
-# add_rows <-
-#   tribble(
-#     ~name, ~m1, ~m2, ~m3, ~m4, ~m5, ~m6, ~m7, ~m8,
-#     "Control: baseline level", "", "", "", "X", "", "", "", "X"
-#   )
-
 
 
 
@@ -277,10 +263,21 @@ vil <-
 
 ```{r ABR analysis}
 
+
+analysis_abr <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_abr.rds"
+    )
+  )
+
+
+
 outcomes <-
   c(
-    "Presence of E. coli at Taps"= "ec_pa_abr_tap",
-    "Presence of E. coli in Stored Water"= "ec_pa_abr_stored"
+    "Presence of ABR E. coli at Taps"= "ec_pa_abr_tap",
+    "Presence of ABR E. coli in Stored Water"= "ec_pa_abr_stored"
     
   )
 
@@ -302,58 +299,48 @@ abr_village <-
   )
 
 
+#SKimming data
+abr_village%>%
+  ungroup()%>%
+  skim()
+
 # Running regression models -----------------------------------------------------
-
-# Individual level -------------------------------------------------------------
-
-ind <-
-  outcomes%>%
-  map(
-    ~ list(
-        paste(., "~ assignment | block + panchayat_village"),
-        paste(., "~ assignment | stratum"),
-        paste(., "~ assignment"),
-        paste(., "~ assignment +", paste0(., "_bl")) 
-    ) %>%
-      map(~ as.formula(.)) %>%
-      map(
-        ~ feglm(
-          .,
-          data = analysis_abr,
-          family = poisson,
-          cluster = ~ village
-        )
-      )
-  )
 
 
 # Village level ----------------------------------------------------------------
 
 vil <-
-  outcomes %>%
-  map(
-    ~ list(
-       paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
-       paste(., "~ assignment + offset(log(N)) | stratum"),
-       paste(., "~ assignment + offset(log(N))"),
-      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
-    ) %>%
-      map(~ as.formula(.)) %>%
-      map(
+   outcomes %>%
+  # map(
+  #   ~ list(
+  #      # paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+  #      # paste(., "~ assignment + offset(log(N)) | stratum"),
+  #      # paste(., "~ assignment + offset(log(N))"),
+  #     paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+  #   ) %>%
+  #     map(~ as.formula(paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")))) %>%
+       map(
         ~ feglm(
-          .,
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))%>%as.formula(),
           data = abr_village,
           family = poisson,
           se = 'iid'
         )
       )
-  )
+  #)
 
-# Table ------------------------------------------------------------------------
-add_rows <-
-  tribble(
-    ~name, ~m1, ~m2, ~m3, ~m4, ~m5, ~m6, ~m7, ~m8,
-    "Control: baseline level", "", "", "", "X", "", "", "", "X"
+
+
+vil %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
   )
 
 
