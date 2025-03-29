@@ -1,0 +1,305 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+packages <- 
+  c(
+    "fixest",
+    "broom",
+    "tidyverse",
+    "modelsummary",
+    "vtable",
+    "janitor"
+  )
+
+pacman::p_load(packages, character.only = TRUE)
+```
+
+```{r}
+contamination <-
+  c(
+   "Presence of Total Coliform at Taps"= "cf_pa_tap",
+   "Presence of E. coli at Taps"= "ec_pa_tap",
+   #"Presence of Antibiotic Resistant E. coli at Taps" = "ec_abr_pa_tap",
+   "Presence of Total Coliform in Stored Water"= "cf_pa_stored",
+   "Presence of E. coli in Stored Water"= "ec_pa_stored",
+   "Presence of Antibiotic Resistant E. coli in Stored Water" = "ec_abr_pa_stored"
+  )
+
+behavior <-
+  c(
+   "Taps as Primary Source" = "prim_source_jjm",
+   "Use a Secondary Source" = "sec_source",
+   "Drink Tap Water" = "jjm_drinking",
+   "Treat Water" = "water_treat_binary",
+   "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+   "Time Spent Treating Water is >5 Minutes" = "time_spent_treat_5"
+  )
+```
+
+```{r}
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
+
+analysis_village_round <-
+  analysis %>%
+  group_by(village, data_round, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(c(contamination %>% unname, paste0(contamination %>% unname, "_bl"))),
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+analysis_village <-
+  analysis %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(c(contamination %>% unname, paste0(contamination %>% unname, "_bl"))),
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+```
+
+```{r}
+census <-
+  read_rds(
+    file.path(
+      user_path(),
+      "census.rds"
+    )
+  ) %>%
+  # Keep only balanced panel
+  group_by(unique_id) %>%
+  filter(n() == 2) %>%
+  pivot_wider(
+    id_cols = c(unique_id, village, block, panchayat_village, stratum, assignment),
+    values_from = c(all_of(behavior %>% unname)),
+    names_from = "data_round"
+  ) %>%
+  clean_names %>%
+  rename_with(
+    ~ str_remove_all(., "_el")
+  ) %>%
+  mutate(
+    tap_issues_taste_bl = 1,
+    time_spent_treat_5_bl = 1
+  )
+
+census_village <-
+  census %>%
+  # Add counts by village
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(contains(behavior %>% unname)),
+      ~ sum(., na.rm = TRUE)
+    ),
+    N = n()
+  ) 
+```
+
+# Contamination
+
+## Individual level
+
+```{r}
+ind <-
+  contamination %>%
+  map(
+    ~ list(
+        paste(., "~ assignment | block + panchayat_village"),
+        paste(., "~ assignment | stratum"),
+        paste(., "~ assignment"),
+        paste(., "~ assignment +", paste0(., "_bl")),
+        paste(., "~ assignment +", paste0(., "_bl"), "| data_round")
+    ) %>%
+      map(~ as.formula(.)) %>%
+      map(
+        ~ feglm(
+          .,
+          data = analysis,
+          family = poisson,
+          cluster = ~ village
+        )
+      )
+  )
+
+add_rows <-
+  tribble(
+    ~name, ~m1, ~m2, ~m3, ~m4, ~m5,
+    "Control: baseline level", "", "", "", "X", "X",
+  )
+
+ind %>%
+   modelsummary(
+     exponentiate = TRUE,
+      coef_rename = c("assignmentTreatment" = "Treatment"),
+      coef_omit = "^(?!.*Treatment)",
+      shape = "rcollapse",
+      gof_omit = "IC|R2|RMSE",
+      add_rows = add_rows
+    )
+```
+
+## Village level
+
+The data in columns 1-5 is at village-round level, while the data in columns 6-10 combines all follow up observations at village level.
+
+```{r}
+vil_round <-
+  contamination %>%
+  map(
+    ~ list(
+      paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+      paste(., "~ assignment + offset(log(N)) | stratum"),
+      paste(., "~ assignment + offset(log(N))"),
+      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")),
+      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"), "| data_round")
+    ) %>%
+      map(~ as.formula(.)) %>%
+      map(
+        ~ feglm(
+          .,
+          data = analysis_village_round,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  )
+
+vil <-
+  contamination %>%
+  map(
+    ~ list(
+      paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+      paste(., "~ assignment + offset(log(N)) | stratum"),
+      paste(., "~ assignment + offset(log(N))"),
+      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+    ) %>%
+      map(~ as.formula(.)) %>%
+      map(
+        ~ feglm(
+          .,
+          data = analysis_village,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  )
+
+# Table ------------------------------------------------------------------------
+add_rows <-
+  tribble(
+    ~name, ~m1, ~m2, ~m3, ~m4, ~m5, ~m6, ~m7, ~m8, ~m9,
+    "Control: baseline level", "", "", "", "X", "X", "", "", "", "X"
+  )
+```
+
+
+```{r}
+map2(
+  vil_round, 
+  vil,
+  ~ c(.x, .y)
+) %>%
+   modelsummary(
+     exponentiate = TRUE,
+      coef_rename = c("assignmentTreatment" = "Treatment"),
+      coef_omit = "^(?!.*Treatment)",
+      shape = "rcollapse",
+      gof_omit = "IC|R2|RMSE",
+      add_rows = add_rows
+    )
+```
+
+# Behavior
+
+Columns 1-4 are at the individual level, columns 5-8 are at the village level.
+
+```{r}
+ind <-
+  behavior %>%
+  map(
+    ~ list(
+        paste(., "~ assignment | block + panchayat_village"),
+        paste(., "~ assignment | stratum"),
+        paste(., "~ assignment"),
+        paste(., "~ assignment +", paste0(., "_bl"))
+    ) %>%
+      map(~ as.formula(.)) %>%
+      map(
+        ~ feglm(
+          .,
+          data = census,
+          family = poisson,
+          cluster = ~ village
+        )
+      )
+  )
+
+
+# Village level ----------------------------------------------------------------
+
+vil <-
+  behavior %>%
+  map(
+    ~ list(
+      paste(., "~ assignment + offset(log(N)) | block + panchayat_village"),
+      paste(., "~ assignment + offset(log(N)) | stratum"),
+      paste(., "~ assignment + offset(log(N))"),
+      paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl"))
+    ) %>%
+      map(~ as.formula(.)) %>%
+      map(
+        ~ feglm(
+          .,
+          data = census_village,
+          family = poisson,
+          se = 'iid'
+        )
+      )
+  )
+
+# Table ------------------------------------------------------------------------
+add_rows <-
+  tribble(
+    ~name, ~m1, ~m2, ~m3, ~m4, ~m5, ~m6, ~m7, ~m8,
+    "Control: baseline level", "", "", "", "X", "", "", "", "X"
+  )
+```
+
+```{r}
+map2(
+  ind, 
+  vil,
+  ~ c(.x, .y)
+) %>%
+  modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    shape = "rcollapse",
+    gof_omit = "IC|R2|RMSE",
+      add_rows = add_rows
+  )
+
+```
