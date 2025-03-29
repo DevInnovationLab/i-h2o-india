@@ -20,6 +20,18 @@ idexx_abr   <- read_csv(file.path(user_path(), "1_10_idexx_abr.csv"))
 mon_summary <- read_csv(file.path(user_path(), "1_11_weekly_monitoring.csv"))
 all_rounds  <- read_csv(file.path(user_path(), "1_8_surveys_all_rounds.csv"))
 
+
+
+# Fixing Tandipur and Bhujbal observations in different treatment assignments
+
+cen <- cen%>%
+  mutate(assignment = ifelse(village == "Bhujbal", "Control", 
+                             ifelse(village == "Tandipur", "Treatment",
+                                    assignment)
+                             )
+         )
+
+
 # All survey rounds ============================================================
 
 all_rounds_clean <- 
