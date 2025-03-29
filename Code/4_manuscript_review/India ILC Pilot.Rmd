@@ -43,20 +43,24 @@ survey <-
   read_rds(
     file.path(
       user_path(),
-      "analysis_data.rds"
+      "all_survey_rounds.rds"
     )
-  ) %>%
-  mutate(
-    water_treat_binary_bl = 1,
-    tap_taste_binary_bl = 1
   )
 
-fu_village <-
-  survey %>%
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
+
+analysis_village <-
+  analysis %>%
   group_by(village, block, panchayat_village, stratum, assignment) %>%
   summarise(
     across(
-      all_of(contamination %>% unname),
+      all_of(c(contamination %>% unname, paste0(contamination %>% unname, "_bl"))),
       ~ sum(., na.rm = TRUE)
     ),
     across(
@@ -66,13 +70,7 @@ fu_village <-
     N = n()
   )
 
-survey <-
-  read_rds(
-    file.path(
-      user_path(),
-      "all_survey_rounds.rds"
-    )
-  ) 
+
 
 census <-
   read_rds(
@@ -113,7 +111,7 @@ census_village %>%
 ```
 
 ```{r}
-fu_village %>%
+analysis_village %>%
   ungroup %>%
   skim
 ```
@@ -194,7 +192,7 @@ contamination_models <-
   map(
     ~ feglm(
           paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")) %>% as.formula,
-          data = fu_village,
+          data = analysis_village,
           family = poisson,
           se = 'iid'
     )

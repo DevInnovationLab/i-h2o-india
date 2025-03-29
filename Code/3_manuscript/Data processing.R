@@ -13,8 +13,7 @@ pacman::p_load(packages, character.only = TRUE)
 # See Process Doc for details on cleaning code and clean datasets:
 #https://docs.google.com/document/d/1Hpv5HF5ICO5FSVdQnPtDECCYORn2qy5S7C_KIx0pDuM/edit
 
-cen         <- read_csv(file.path(user_path(), "1_1_baseline_census.csv")) %>% clean_names
-bl          <- read_csv(file.path(user_path(), "1_1_baseline_survey.csv")) %>% clean_names
+bl          <- read_csv(file.path(user_path(), "1_1_baseline_census.csv")) %>% clean_names
 el          <- read_csv(file.path(user_path(), "1_8_endline_census.csv")) %>% clean_names
 idexx_tab   <- read_csv(file.path(user_path(), "1_10_idexx_all_rounds.csv")) %>% clean_names
 idexx_abr   <- read_csv(file.path(user_path(), "1_10_idexx_abr.csv")) %>% clean_names
@@ -127,12 +126,12 @@ survey_idexx <-
   )
 
 # Follow up data only
-fu <-
+survey_fu <-
   survey_idexx %>%
   filter(data_round != "BL") 
 
 # Baseline data only
-bl <- 
+survey_bl <- 
   survey_idexx %>%
   filter(data_round == "BL") %>%
   select(
@@ -159,8 +158,8 @@ bl <-
 
 # Baseline in columns
 analysis <-
-  fu %>%
-  left_join(bl)
+  survey_fu %>%
+  left_join(survey_bl)
 
 write_rds(
   analysis,
@@ -187,7 +186,7 @@ assignment <-
 
 census <-
   bind_rows(
-    cen, el,
+    bl, el,
     .id = "data_round"
   ) %>%
   mutate(
