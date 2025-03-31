@@ -508,8 +508,9 @@ abr_models%>%
 all_coefs <-
   c(
     el_models,
-    idexx_models,
-    abr_models
+    abr_models,
+    idexx_models
+    
   ) %>%
   map(
     ~ tidy(
@@ -542,6 +543,28 @@ all_coefs <-
         ordered = TRUE
       )
   )
+
+# 
+
+
+#Reordering
+all_coefs$outcome <- factor(all_coefs$outcome, levels =
+                                            c(
+             "Treat Water > 5 min",
+             "Reported Water Taste/Smell Issue",
+             "Treat Water",
+             "Drink Tap Water",
+              "Use a Secondary Source",
+             "Taps as Primary Source",
+             "Presence of Antibiotic Resistant E. coli in Stored Water",
+              "Presence of Antibiotic Resistant E. coli at Taps",
+             "Presence of E. coli in Stored Water",
+             "Presence of Total Coliform in Stored Water",
+             "Presence of E. coli at Taps",
+             "Presence of Total Coliform at Taps"
+             ))
+
+
 
 #Creating PR (95% CI) label to be shown on plot
 all_coefs <- all_coefs%>%
