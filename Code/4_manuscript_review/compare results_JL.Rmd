@@ -372,55 +372,41 @@ idexx_village <-
 #Individual - baseline control
 idexx_model_lm <-
    outcomes %>%
+  map(
+    ~ list(
+     paste(., "~ assignment  +", paste0(., "_bl"), "| block + panchayat_village"),
+     paste(., "~ assignment | block + panchayat_village"),
+     paste(., "~ assignment  +", paste0(., "_bl"))
+     #paste(., "~ assignment  + offset(N) +", paste0(., "_bl")) #Village-level, not included
+     )%>%
+      map(~ as.formula(.)) %>%
        map(
         ~ feols(
-          paste(., "~ assignment  +", paste0(., "_bl"), "| block + panchayat_village")%>%as.formula(),
+          fml = .,
           data = analysis_idexx,
-          cluster = "village"
+          cluster = ~ village
         )
       )
-
-idexx_model_lm%>%
-   modelsummary(
-    exponentiate = FALSE,
-    coef_rename = c("assignmentTreatment" = "Treatment"),
-    coef_omit = "^(?!.*Treatment)",
-    gof_omit = "IC|R2|RMSE",
-    estimate  = "{estimate} [{conf.low}, {conf.high}]",
-    statistic = NULL,
-    shape = model ~ term + statistic,
-    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
   )
 
 
+add_rows <-
+  tribble(
+    ~name, ~m1, ~m2, ~m3,
+    "Control: baseline level", "X", "", "X"
+  )
 
+idexx_model_lm%>%
+   modelsummary(
+     exponentiate = FALSE,
+      coef_rename = c("assignmentTreatment" = "Treatment"),
+      coef_omit = "^(?!.*Treatment)",
+      shape = "rcollapse",
+      gof_omit = "IC|R2|RMSE",
+      #add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round),
+      add_rows = add_rows
+    )
 
-
-#Individual - original manuscript
-# idexx_models <-
-#    outcomes %>%
-#        map(
-#         ~ feols(
-#           as.formula(paste(., "~ assignment | block + panchayat_village")),
-#           data = analysis_idexx,
-#           cluster = "village"
-#         )
-#       )
-#        
-# 
-# 
-# 
-# idexx_models%>%
-#    modelsummary(
-#     exponentiate = FALSE,
-#     coef_rename = c("assignmentTreatment" = "Treatment"),
-#     coef_omit = "^(?!.*Treatment)",
-#     gof_omit = "IC|R2|RMSE",
-#     estimate  = "{estimate} [{conf.low}, {conf.high}]",
-#     statistic = NULL,
-#     shape = model ~ term + statistic,
-#     add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
-#   )
 
 
 
