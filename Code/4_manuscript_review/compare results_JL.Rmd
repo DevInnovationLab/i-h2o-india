@@ -374,8 +374,8 @@ idexx_model_lm <-
    outcomes %>%
   map(
     ~ list(
-     paste(., "~ assignment  +", paste0(., "_bl"), "| block + panchayat_village"),
-     paste(., "~ assignment | block + panchayat_village"),
+     # paste(., "~ assignment  +", paste0(., "_bl"), "| block + panchayat_village"),
+     # paste(., "~ assignment | block + panchayat_village"),
      paste(., "~ assignment  +", paste0(., "_bl"))
      #paste(., "~ assignment  + offset(N) +", paste0(., "_bl")) #Village-level, not included
      )%>%
@@ -390,25 +390,44 @@ idexx_model_lm <-
   )
 
 
-add_rows <-
-  tribble(
-    ~name, ~m1, ~m2, ~m3,
-    "Control: baseline level", "X", "", "X"
-  )
+# add_rows <-
+#   tribble(
+#     ~name, ~m1, ~m2, ~m3,
+#     "Control: baseline level", "X", "", "X"
+#   )
+# 
+# idexx_model_lm%>%
+#    modelsummary(
+#      exponentiate = FALSE,
+#       coef_rename = c("assignmentTreatment" = "Treatment"),
+#       coef_omit = "^(?!.*Treatment)",
+#       shape = "rcollapse",
+#       gof_omit = "IC|R2|RMSE",
+#       #add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round),
+#       add_rows = add_rows
+#     )
+
+idexx_model_lm <-
+   outcomes %>%
+       map(
+        ~ feols(
+          paste(., "~ assignment +", paste0(., "_bl"))%>%as.formula(),
+         data = analysis_idexx,
+         cluster = ~ village
+        )
+      )
 
 idexx_model_lm%>%
    modelsummary(
-     exponentiate = FALSE,
-      coef_rename = c("assignmentTreatment" = "Treatment"),
-      coef_omit = "^(?!.*Treatment)",
-      shape = "rcollapse",
-      gof_omit = "IC|R2|RMSE",
-      #add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round),
-      add_rows = add_rows
-    )
-
-
-
+    exponentiate = FALSE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = "p.value",
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
 
 
 ```
