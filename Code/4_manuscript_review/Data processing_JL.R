@@ -110,7 +110,9 @@ el_clean <-
 
 
 #Processing baseline data ------------------------------------------------------
-
+all_rounds_clean <- 
+  all_rounds %>%
+  clean_names
 
 all_data <- 
   all_rounds_clean %>%
@@ -124,19 +126,29 @@ all_data <-
   )
 
 
-
-bl_treat_time <- #Only selecting needed variables from this dataset
-  all_data %>%
-  filter(data_round == "BL") %>%
+bl_variables <- #Only selecting needed variables from this dataset
+  bl%>%
   select(
     unique_id,
     village,
-    treat_time_5min
+    treat_time_5min,
+    collect_resp_women,
+    collect_resp_men,
+    collect_resp_both,
+    treat_resp_women,
+    treat_resp_men,
+    treat_resp_both
   ) %>%
   rename_with(
     ~ paste0(.x, "_bl"),
     c(
-      treat_time_5min
+      treat_time_5min,
+      collect_resp_women,
+      collect_resp_men,
+      collect_resp_both,
+      treat_resp_women,
+      treat_resp_men,
+      treat_resp_both
     )
   ) %>%
   group_by(village) %>%
@@ -245,7 +257,7 @@ cen_data <- #Only selecting needed variables from this dataset
 
 analysis <-
   el_clean %>%
-  left_join(bl_treat_time)%>%
+  left_join(bl_variables)%>%
   left_join(cen_data)%>%
   mutate(
     tap_issues_taste_bl = 1

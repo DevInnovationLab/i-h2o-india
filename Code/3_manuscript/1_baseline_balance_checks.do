@@ -6,6 +6,7 @@ import delimited "C:\Users\jerem\Box\India Water project\2_Pilot\Data\3_final\ma
 // Convert assignment from string to numeric
 encode assignment, generate(assignment_num)
 
+
 // Label the assignment variable correctly
 label define assign_lbl 1 "Control" 2 "Treatment"
 label values assignment_num assign_lbl
@@ -88,6 +89,16 @@ encode assignment, generate(assignment_num)
 label define assign_lbl 1 "Control" 2 "Treatment"
 label values assignment_num assign_lbl
 
+// Convert binary string variable to numeric (byte type)
+gen byte treat_resp_women_num = .
+replace treat_resp_women_num = 1 if treat_resp_women == "1"
+replace treat_resp_women_num = 0 if treat_resp_women == "0"
+
+// Apply labels
+label define treat_lbl 1 "1" 0 "0"
+label values treat_resp_women_num treat_lbl
+
+
 // Convert string variables (if necessary) to numeric
 foreach var in tap_taste_binary treat_time_5min {
     destring `var', replace ignore("NA")
@@ -98,7 +109,7 @@ gen block_panchayat_fe = blockcode * 10 + panchayat_village
 
 // Generate the balance table
 iebaltab ///
-    tap_taste_binary treat_time_5min, ///
+    tap_taste_binary treat_time_5min collect_resp_women treat_resp_women_num, ///
     groupvar(assignment_num) ///
     ///fixedeffect(block_panchayat_fe) /// Uses combined fixed effect
     vce(cluster village_id) /// Cluster at village level
@@ -106,13 +117,13 @@ iebaltab ///
     groupcodes /// Include only if 'assignment' has value labels
     rowvarlabels /// Ensure balance variables have labels
     grouplabels(1 "Control" @ 2 "Treatment") /// Use numeric values with labels
-    rowlabels("tap_taste_binary Taste Satisfaction @ treat_time_5min Treatment Time") ///
+    rowlabels("tap_taste_binary Taste Satisfaction @ treat_time_5min Treatment Time @ collect_resp_women Collect Responsibility Women @ treat_resp_women_num Treatment Responsibility Women") ///
     savexlsx ("C:\Users\jerem\Box\India Water project\2_Pilot\Data\3_final\manuscript_datasets\balance_table_survey.xlsx")
 
 // Generate Standard Errors balance table
 // Generate the balance table
 iebaltab ///
-    tap_taste_binary treat_time_5min, ///
+    tap_taste_binary treat_time_5min collect_resp_women treat_resp_women_num, ///
     groupvar(assignment_num) ///
     ///fixedeffect(block_panchayat_fe) /// Uses combined fixed effect
     vce(cluster village_id) /// Cluster at village level
@@ -121,7 +132,7 @@ iebaltab ///
     groupcodes /// Include only if 'assignment' has value labels
     rowvarlabels /// Ensure balance variables have labels
     grouplabels(1 "Control" @ 2 "Treatment") /// Use numeric values with labels
-    rowlabels("tap_taste_binary Taste Satisfaction @ treat_time_5min Treatment Time") ///
+    rowlabels("tap_taste_binary Taste Satisfaction @ treat_time_5min Treatment Time @ collect_resp_women Collect Responsibility Women @ treat_resp_women_num Treatment Responsibility Women") ///
     savexlsx ("C:\Users\jerem\Box\India Water project\2_Pilot\Data\3_final\manuscript_datasets\balance_table_survey_SEs.xlsx")
 
 

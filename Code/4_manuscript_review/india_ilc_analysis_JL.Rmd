@@ -80,6 +80,22 @@ cen %>%
     title  = "Baseline demographics and behavior"
   )
 
+#Baseline Survey
+bl %>%
+  select(assignment,
+         treat_time_5min,
+         collect_resp_women,
+         collect_resp_men,
+         collect_resp_both,
+         treat_resp_women,
+         treat_resp_men,
+         treat_resp_both
+    )%>%
+  sumtable(
+    group = "assignment",
+    title  = "Baseline survey demographics and behavior"
+  )
+
 
 #Endline Census
 analysis %>%

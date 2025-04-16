@@ -565,6 +565,61 @@ bl <- bl%>%
   ))
 
 
+#Updating water collection/treatment gender burden variables
+bl <- bl%>%
+  mutate(collect_resp = case_when(collect_resp == "1" ~ "Women",
+                                  collect_resp == "1 2" ~ "Women and Men",
+                                  collect_resp == "1 3" ~ "Women",
+                                  collect_resp == "2" ~ "Men",
+  ))
+
+bl <- bl%>%
+  mutate(treat_resp = case_when(treat_resp == "1" ~ "Women",
+                                treat_resp == "3" ~ "Women",
+                                treat_resp == "1 2" ~ "Women and Men",
+                                treat_resp == "1 3" ~ "Women",
+                                treat_resp == "1 5" ~ "Women",
+                                treat_resp == "2" ~ "Men",
+  ))
+
+#making binary variables for summary table
+bl <- bl%>%
+  mutate(collect_resp_women = case_when(collect_resp == "Women" ~ 1,
+                                        collect_resp == "Women and Men" ~ 0,
+                                        collect_resp == "Men" ~ 0
+  ))
+
+bl <- bl%>%
+  mutate(collect_resp_men = case_when(collect_resp == "Women" ~ 0,
+                                        collect_resp == "Women and Men" ~ 0,
+                                        collect_resp == "Men" ~ 1
+  ))
+
+bl <- bl%>%
+  mutate(collect_resp_both = case_when(collect_resp == "Women" ~ 0,
+                                      collect_resp == "Women and Men" ~ 1,
+                                      collect_resp == "Men" ~ 0
+  ))
+
+#making binary variables for summary table
+bl <- bl%>%
+  mutate(treat_resp_women = case_when(treat_resp == "Women" ~ 1,
+                                        treat_resp == "Women and Men" ~ 0,
+                                        treat_resp == "Men" ~ 0
+  ))
+
+bl <- bl%>%
+  mutate(treat_resp_men = case_when(treat_resp == "Women" ~ 0,
+                                      treat_resp == "Women and Men" ~ 0,
+                                      treat_resp == "Men" ~ 1
+  ))
+
+bl <- bl%>%
+  mutate(treat_resp_both = case_when(treat_resp == "Women" ~ 0,
+                                       treat_resp == "Women and Men" ~ 1,
+                                       treat_resp == "Men" ~ 0
+  ))
+
 
 
 #Updating BL IDs to be characters instead of numeric types

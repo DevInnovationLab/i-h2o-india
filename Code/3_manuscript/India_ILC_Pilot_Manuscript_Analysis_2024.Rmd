@@ -211,7 +211,8 @@ cen <- cen%>%
 
 bl <- bl%>%
   dplyr::select(unique_id, village, village_ID, block, `Block code`, panchayat_village, assignment,
-                water_source_prim, water_sec_yn, treat_water_before, treat_time_category,
+                water_source_prim, water_sec_yn, treat_water_before, treat_time_category, collect_resp, treat_resp,
+                collect_resp_women, collect_resp_both, collect_resp_men, treat_resp_women, treat_resp_men, treat_resp_both,
                 treat_time_5min, sample_ID_tap, sample_ID_stored, tap_taste_binary,
                 fc_stored, fc_stored_binary, fc_tap, fc_tap_binary, tc_stored,
                 tc_stored_binary,tc_tap, tc_tap_binary)
