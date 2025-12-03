@@ -49,7 +49,7 @@ github_path <- function() {
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code"
   } 
   
   else if (user == "luizaandrade") {
