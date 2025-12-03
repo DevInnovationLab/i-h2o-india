@@ -50,6 +50,7 @@
 !/**/*.Rmd
 !/**/*.md
 !/**/*.Rproj
+!/**/*.Rprofile
 !/**/renv/settings.dcf
 !renv.lock
 !/**/*.sh

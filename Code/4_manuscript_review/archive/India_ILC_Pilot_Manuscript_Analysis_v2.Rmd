@@ -18,7 +18,8 @@ packages <- c("rsurveycto", "expss", "labelled", "httr", "lubridate", "quantitra
               "sjmisc", "knitr", "kableExtra", "readxl", "experiment", "stargazer",
               "haven", "googlesheets4", "ggsignif", "patchwork", "table1", "gtsummary",
               "gt", "webshot2", "clubSandwich", "sandwich", "lmtest", "broom",
-              "tidyverse", "sf", "gridExtra", "crosstable", "viridis", "flextable")
+              "tidyverse", "sf", "gridExtra", "crosstable", "viridis", "flextable", 
+              "fixest", "modelsummary")
 
 #Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
@@ -1056,7 +1057,7 @@ idexx_fu_stored <- idexx_fu%>%
 #Running Poisson Regression on Tap Samples ----
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 
-idexx_model <- idexx_fu_tap #Converting to numeric type
+idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
 
 #Running all models
 #Poisson regression
@@ -1079,7 +1080,7 @@ idexx_poisson_tap <- idexx_poisson_tap%>%
 #Running Poisson Regression on Stored Samples ----
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 
-idexx_model <- idexx_fu_stored #Converting to numeric type
+idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
 
 #Running all models
 #Poisson regression
@@ -1238,7 +1239,7 @@ idexx_abr_stored <- idexx_abr_fu%>%
 
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 
-idexx_model <- idexx_abr_tap
+idexx_model <- factormaker(idexx_abr_tap, outcome_vars) #Converting to numeric type
 
 #Running all models
 #Poisson regression
@@ -1262,7 +1263,7 @@ idexx_poisson_tap <- idexx_poisson_tap%>%
 
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 
-idexx_model <- idexx_abr_stored
+idexx_model <- factormaker(idexx_abr_stored, outcome_vars) #Converting to numeric type
 
 #Running all models
 #Poisson regression
@@ -1303,7 +1304,7 @@ rm(idexx_poisson_stored, idexx_poisson_tap) #Removing preliminary dataframes
 outcome_vars <- c("prim_source_jjm", "sec_source",
                   "jjm_drinking", "water_treat_binary", "tap_issues_taste", "time_spent_treat_5")
 
-el_model <- el
+el_model <- factormaker(el, outcome_vars) #Making variables numeric
 
 
 #Poisson Regression
@@ -1424,7 +1425,7 @@ p_forestplot <- ggplot(el_models_forestplot, aes(x = mean, y = model_name)) +
   geom_errorbarh(aes(xmin = Lower_CI, xmax = Upper_CI,  color = variable_type), height = 0.2) + 
   geom_vline(xintercept = 1, linetype = "dashed", color = "black") +# Dashed line at x = 1 (null Risk Ratio)
   scale_y_discrete(labels = function(y) str_wrap(y, width = 35)) +
-  scale_x_continuous(limits = c(0.0, 1.90), breaks = c(0, 0.25, 0.5, 0.75, 1.00, 1.2))+
+  scale_x_continuous(limits = c(0.5, 1.90), breaks = c(0.50, 0.75, 1.00, 1.2))+
   scale_color_manual(values = c("Water Quality Outcome" = "#00008B", "Behavioral Outcome" = "#EEA944")) +
   labs(
     x = "Prevalence Ratio", 
@@ -1678,12 +1679,6 @@ bl_vars <- c("bl_prim_source_jjm", "bl_sec_source", "bl_jjm_drinking", "bl_water
               "bl_treat_time_5min")
 
 
-
-el_model <- factormaker(el_model, outcome_vars) #Making variables numeric
-el_model <- factormaker(el_model, bl_vars) #Making variables numeric
-
-
-
 #Poisson Regression
 all_models <- mapply(
                      function(var, bl_var) {
@@ -1702,29 +1697,6 @@ ilc_model_table(all_models)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Treatment Effect w/ Baseline Measurement Controls - IDEXX ----------------------------------------
 
 
@@ -1734,9 +1706,6 @@ ilc_model_table(all_models)
 outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 bl_vars <- c("bl_cf_pa_tap", "bl_ec_pa_tap")
 
-
-idexx_model <- factormaker(idexx_fu_tap, outcome_vars) #Converting to numeric type
-idexx_model <- factormaker(idexx_fu_tap, bl_vars)
 
 #Running all models
 #Poisson regression
@@ -1763,9 +1732,6 @@ outcome_vars <- c("cf_pa_binary","ec_pa_binary") #Selecting outcome variables
 bl_vars <- c("bl_cf_pa_stored", "bl_ec_pa_stored")
 
 
-idexx_model <- factormaker(idexx_fu_stored, outcome_vars) #Converting to numeric type
-idexx_model <- factormaker(idexx_fu_stored, bl_vars)
-
 #Running all models
 #Poisson regression
 all_models <- mapply(
@@ -1789,38 +1755,14 @@ idexx_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Treatment effect w/ baseline measurement controls -- Antibiotic Resistance
 
-
-  
 
 #Running Poisson Regression on Tap Samples ----
 
 outcome_vars <- c("ec_pa_binary") #Selecting outcome variables
 bl_vars <- c("bl_ec_abr_tap")
 
-
-idexx_model <- factormaker(idexx_abr_tap, outcome_vars) #Converting to numeric type
-idexx_model <- factormaker(idexx_model, bl_vars)
 
 #Running all models
 #Poisson regression
@@ -1847,10 +1789,6 @@ idexx_poisson_tap <- idexx_poisson_tap%>%
 outcome_vars <- c("ec_pa_binary") #Selecting outcome variables
 bl_vars <- c("bl_ec_abr_stored")
 
-
-idexx_model <- factormaker(idexx_abr_stored, outcome_vars) #Converting to numeric type
-idexx_model <- factormaker(idexx_model, bl_vars)
-
 #Running all models
 #Poisson regression
 all_models <- mapply(
@@ -1871,23 +1809,6 @@ idexx_poisson_stored <- idexx_poisson_stored%>%
 
 
 idexx_abr_poisson <- rbind(idexx_poisson_tap, idexx_poisson_stored)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

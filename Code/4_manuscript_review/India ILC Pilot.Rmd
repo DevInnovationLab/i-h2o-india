@@ -1,0 +1,353 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+packages <- 
+  c(
+    "fixest",
+    "broom",
+    "tidyverse",
+    "modelsummary",
+    "vtable",
+    "skimr"
+  )
+
+pacman::p_load(packages, character.only = TRUE)
+
+# Data -------------------------------------------------------------------------
+
+contamination <-
+  c(
+   "Presence of Total Coliform at Taps"= "cf_pa_tap",
+   "Presence of E. coli at Taps"= "ec_pa_tap",
+   "Presence of Antibiotic Resistant E. coli at Taps" = "ec_abr_pa_tap",
+   "Presence of Total Coliform in Stored Water"= "cf_pa_stored",
+   "Presence of E. coli in Stored Water"= "ec_pa_stored",
+   "Presence of Antibiotic Resistant E. coli in Stored Water" = "ec_abr_pa_stored"
+  )
+
+behavior <-
+  c(
+   "Taps as Primary Source" = "prim_source_jjm",
+   "Use a Secondary Source" = "sec_source",
+   "Drink Tap Water" = "jjm_drinking",
+   "Treat Water" = "water_treat_binary",
+   "Reported Water Taste/Smell Issue" = "tap_issues_taste",
+   "Time Spent Treating Water is >5 Minutes" = "time_spent_treat_5"
+  )
+
+
+survey <-
+  read_rds(
+    file.path(
+      user_path(),
+      "all_survey_rounds.rds"
+    )
+  )
+
+analysis <-
+  read_rds(
+    file.path(
+      user_path(),
+      "analysis_data.rds"
+    )
+  )
+
+analysis_village <-
+  analysis %>%
+  group_by(village, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(c(contamination %>% unname, paste0(contamination %>% unname, "_bl"))),
+      ~ sum(., na.rm = TRUE)
+    ),
+    across(
+      ends_with("_bl"),
+      ~ unique(.)
+    ),
+    N = n()
+  )
+
+
+
+census <-
+  read_rds(
+    file.path(
+      user_path(),
+      "census.rds"
+    )
+  ) 
+
+census_village <-
+  census %>%
+  # Keep only balanced panel
+  group_by(unique_id) %>%
+  filter(n() == 2) %>%
+  # Add counts by village
+  group_by(village, data_round, block, panchayat_village, stratum, assignment) %>%
+  summarise(
+    across(
+      all_of(behavior %>% unname),
+      ~ sum(., na.rm = TRUE)
+    ),
+    N = n()
+  ) %>%
+  mutate(data_round = str_to_lower(data_round)) %>%
+  pivot_wider(
+    id_cols = c(village, block, panchayat_village, stratum, assignment),
+    values_from = c(all_of(behavior %>% unname), N),
+    names_from = "data_round"
+  )
+```
+
+# Descriptive statistics  
+
+```{r}
+census_village %>%
+  ungroup %>%
+  skim
+```
+
+```{r}
+analysis_village %>%
+  ungroup %>%
+  skim
+```
+
+```{r}
+census %>%
+  filter(data_round == "BL") %>%
+  select(
+    -c(
+      block,
+      stratum, 
+      panchayat_village,
+      block_code,
+      data_round,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "Baseline demographics and behavior"
+  )
+``` 
+
+```{r}
+census %>%
+  filter(data_round != "BL") %>%
+  select(
+    -c(
+      block,
+      stratum, 
+      panchayat_village,
+      block_code,
+      data_round,
+      ends_with("id")
+    )
+  ) %>%
+  sumtable(
+    group = "assignment",
+    title  = "Endling demographics and behavior"
+  )
+``` 
+
+```{r}
+survey %>%
+  filter(data_round == "BL") %>%
+  sumtable(
+    c(
+      "cf_pa_tap", "cf_log_tap", "ec_pa_tap", "ec_log_tap",
+      "cf_pa_stored", "cf_log_stored", "ec_pa_stored", "ec_log_stored"
+    ),
+    group = "assignment",
+    title = "Baseline contamination"
+  )
+``` 
+
+```{r}
+survey %>%
+  filter(data_round != "BL") %>%
+  sumtable(
+    c(
+      "cf_pa_tap", "ec_pa_tap", "ec_abr_pa_tap",
+      "cf_pa_stored", "ec_pa_stored", "ec_abr_pa_stored"
+    ),
+    group = "assignment",
+    title = "Follow-up contamination"
+  )
+``` 
+
+
+
+# Regression models
+
+## Contamination
+
+```{r}
+contamination_models <-
+  contamination %>%
+  map(
+    ~ feglm(
+          paste(., "~ assignment + offset(log(N)) +", paste0(., "_bl")) %>% as.formula,
+          data = analysis_village,
+          family = poisson,
+          se = 'iid'
+    )
+  ) 
+
+contamination_models %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+```
+
+## Behavior
+
+```{r}
+behavior_models <-
+  behavior %>%
+  map(
+    ~ feglm(
+          paste(paste0(., "_el"), "~ assignment + offset(log(N_el)) +", paste0(., "_bl")) %>% as.formula,
+          data = census_village,
+          family = poisson,
+          se = 'iid'
+    )
+  ) 
+
+behavior_models %>%
+   modelsummary(
+    exponentiate = TRUE,
+    coef_rename = c("assignmentTreatment" = "Treatment"),
+    coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = NULL,
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist %>% round)
+  )
+```
+
+## Forest plot
+```{r}
+all_coefs <-
+  c(
+    behavior_models,
+    contamination_models
+  ) %>%
+  map(
+    ~ tidy(
+      .,
+      conf.int = TRUE
+    ) %>%
+      filter(term == "assignmentTreatment")
+  ) %>% 
+  bind_rows(.id = "outcome") %>%
+  mutate(
+    across(
+      where(is.numeric),
+      ~ exp(.)
+    ),
+    variable_type = 
+      if_else(
+        str_detect(outcome, "Presence"),
+        "Water Quality Outcome",
+        "Behavioral Outcome"
+    ),
+    order = row_number(),
+    outcome =
+      factor(
+        order,
+        labels = outcome,
+        ordered = TRUE
+      )
+  )
+
+all_coefs %>%
+  filter(
+    !(outcome  %in% c("Presence of Antibiotic Resistant E. coli at Taps", "Reported Water Taste/Smell Issue")) 
+  ) %>%
+  # Main plot
+  ggplot(
+    aes(
+      x = estimate, 
+      y = outcome,
+      xmin = conf.low,
+      xmax = conf.high
+    )
+  ) +
+  geom_point(
+    aes(color = variable_type),
+    size = 2
+  ) +  
+  geom_errorbarh(
+    aes(color = variable_type),
+    height = 0.2
+  ) + 
+  # Dashed line at x = 1 (null Risk Ratio)
+  geom_vline(
+    xintercept = 1, 
+    linetype = "dashed", 
+    color = "black"
+  ) +
+  scale_x_continuous(
+    trans = 'log10',
+    breaks = c(0, 0.25, 0.5, 1.00)
+  ) +
+  scale_color_manual(
+    values = c(
+      "Water Quality Outcome" = "#00008B", 
+      "Behavioral Outcome" = "#EEA944"
+    )
+  ) +
+  labs(
+    x = "Prevalence Ratio", 
+    y = "Outcome"
+  ) + 
+  # Theme
+  theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.title = element_blank(),
+    axis.text.y = element_text(size = 10), 
+    axis.title.y = element_text(size = 13),
+    axis.title.x = element_text(size = 13),
+    axis.ticks.y = element_blank()
+  ) +
+  # Annotations
+  geom_text(
+    aes(
+      label = estimate, 
+      x = max(conf.high) + 0.25
+    ),
+    hjust = 0,
+    size = 3
+  ) +
+  geom_text(
+    aes(
+      label = p.value, 
+      x = max(conf.high) + 0.50
+    ),
+    hjust = 0,
+    size = 3
+  ) +
+  geom_text(
+    aes(
+      label = "20", 
+      x = max(conf.high) + 0.65
+    ), 
+    hjust = 0, 
+    size = 3
+  )
+```
+
