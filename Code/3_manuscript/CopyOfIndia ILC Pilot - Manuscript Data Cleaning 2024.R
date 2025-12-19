@@ -2077,59 +2077,22 @@ gv_refill <- gv_refill%>%
 
 #Selecting for chlorine data
 mon <- mon%>%
-  dplyr::select(test_date, village_name, village_code, nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc,
-                nearest_tap_tc, farthest_tap_tc, nearest_stored_tc, farthest_stored_tc)
-
-#Removing missing data before summary
-mon <- mon%>%
-  filter(village_name != "")%>%
-  filter(is.na(nearest_tap_fc) == FALSE)%>%
-  filter(is.na(nearest_tap_tc) == FALSE)%>%
-  filter(is.na(nearest_stored_fc) == FALSE)%>%
-  filter(is.na(nearest_stored_tc) == FALSE)%>%
-  filter(is.na(farthest_tap_fc) == FALSE)%>%
-  filter(is.na(farthest_tap_tc) == FALSE)%>%
-  filter(is.na(farthest_stored_fc) == FALSE)%>%
-  filter(is.na(farthest_stored_tc) == FALSE)
-  
-  
-
-#Saving wide dataset version
-write_csv(mon,
-          paste0(user_path(), "3_final/manuscript_datasets/", "1_11_weekly_monitoring_WIDE.csv"))
-
-mon <- mon%>%
+  dplyr::select(test_date, village_name, nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc)%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
-               cols = c(nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc,
-                        nearest_tap_tc, farthest_tap_tc, nearest_stored_tc, farthest_stored_tc))
-#creating new variables to represent test type and location
-mon <- mon%>%
-  mutate(test_sample = case_when(str_detect(chlorine_test, "tap") ~ "Tap",
-                                 str_detect(chlorine_test, "stored") ~ "Stored"
-  ))%>%
-  mutate(free_or_total = case_when(str_detect(chlorine_test, "fc") ~ "Free",
-                                   str_detect(chlorine_test, "tc") ~ "Total"
-                                   ))%>%
-  mutate(test_tap = case_when(str_detect(chlorine_test, "farthest") ~ "Far",
-                              str_detect(chlorine_test, "nearest") ~ "Near"
-  ))
+               cols = c(nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc))
 
-#Removing missing data before summary
-mon <- mon%>%
-  filter(is.na(chlorine_concentration) == FALSE)%>%
-  filter(village_name != "")
 
-#Summarizing
+
+
+
 mon_summary <- mon%>%
-  group_by(test_date, chlorine_test, village_name)%>% #Previously, village_name was not included
-  summarise("chlorine_concentration" = mean(chlorine_concentration)#,
-            #"village" = village_name
-            ) #Was I averaging across all villages because I didn't group by them?
-
+  group_by(test_date, chlorine_test)%>%
+  summarise("chlorine_concentration" = mean(chlorine_concentration),
+            "village" = village_name)
 
 #Filtering for dates after April 5th for readability
 mon <- mon%>%
-  #filter(test_date > "2024-04-05")%>%
+  filter(test_date > "2024-04-05")%>%
   filter(village_name != "Karnapadu")%>% #and removing karnapadu
   filter(is.na(chlorine_concentration) == FALSE)
 
@@ -2137,44 +2100,23 @@ mon <- mon%>%
 #Recoding chlorine concentration sample types
 mon$chlorine_test <- factor(mon$chlorine_test)
 mon$chlorine_test <- fct_recode(mon$chlorine_test,
-                                "Nearest Tap Free" = "nearest_tap_fc",
-                                "Nearest Stored Free" = "nearest_stored_fc",
-                                "Farthest Tap Free" = "farthest_tap_fc",
-                                "Farthest Stored Free" = "farthest_stored_fc",
-                                "Nearest Tap Total" = "nearest_tap_tc",
-                                "Nearest Stored Total" = "nearest_stored_tc",
-                                "Farthest Tap Total" = "farthest_tap_tc",
-                                "Farthest Stored Total" = "farthest_stored_tc")
+                                "Nearest Tap" = "nearest_tap_fc",
+                                "Nearest Stored" = "nearest_stored_fc",
+                                "Farthest Tap" = "farthest_tap_fc",
+                                "Farthest Stored" = "farthest_stored_fc")
 
 
 #Recoding chlorine concentration sample types
-#creating new variables to represent test type and location
-mon_summary <- mon_summary%>%
-  mutate(test_sample = case_when(str_detect(chlorine_test, "tap") ~ "Tap",
-                                 str_detect(chlorine_test, "stored") ~ "Stored"
-  ))%>%
-  mutate(free_or_total = case_when(str_detect(chlorine_test, "fc") ~ "Free",
-                                   str_detect(chlorine_test, "tc") ~ "Total"
-  ))%>%
-  mutate(test_tap = case_when(str_detect(chlorine_test, "farthest") ~ "Far",
-                              str_detect(chlorine_test, "nearest") ~ "Near"
-  ))
-
 mon_summary$chlorine_test <- factor(mon_summary$chlorine_test)
 mon_summary$chlorine_test <- fct_recode(mon_summary$chlorine_test,
-                                        "Nearest Tap Free" = "nearest_tap_fc",
-                                        "Nearest Stored Free" = "nearest_stored_fc",
-                                        "Farthest Tap Free" = "farthest_tap_fc",
-                                        "Farthest Stored Free" = "farthest_stored_fc",
-                                        "Nearest Tap Total" = "nearest_tap_tc",
-                                        "Nearest Stored Total" = "nearest_stored_tc",
-                                        "Farthest Tap Total" = "farthest_tap_tc",
-                                        "Farthest Stored Total" = "farthest_stored_tc")
+                                        "Nearest Tap" = "nearest_tap_fc",
+                                        "Nearest Stored" = "nearest_stored_fc",
+                                        "Farthest Tap" = "farthest_tap_fc",
+                                        "Farthest Stored" = "farthest_stored_fc")
 
 #Selecting data after February 13, the last date of modification
 mon_summary <- mon_summary%>%
-  mutate(village = village_name)%>%
-  filter(test_date > "2024-02-01")%>%
+  filter(test_date > "2024-02-13")%>%
   filter(village != "Karnapadu")%>% #and removing karnapadu
   filter(is.na(chlorine_concentration) == FALSE)
 
@@ -2187,7 +2129,7 @@ mon_summary <- mon_summary%>%
 #Summarizing data on a weekly basis for taps only
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
-  filter(chlorine_test == "Nearest Tap Free" | chlorine_test == "Farthest Tap Free")%>% #Filtering only for tap water here
+  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>% #Filtering only for tap water here
   #mutate(test_week = floor_date(test_date, unit = "week"))%>%
   mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
                                 unit = "day"))#Selecting weeks on a bi-weekly basis
@@ -2203,8 +2145,7 @@ mon_summary_weekly <- mon_summary_weekly%>%
             lower_ci_pa = (sum(cl_pa == 1) / n()) * 100 -
               (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())), #Can I use a 95% CI on presence/absence data?
             upper_ci_pa = (sum(cl_pa == 1) / n()) * 100 +
-              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())),
-            sample_size = n()
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n()))
             )%>%
   # Correcting negative lower CI values to be 0 instead
   mutate(lower_ci_pa = case_when(lower_ci_pa < 0 ~ 0,
@@ -2226,5 +2167,4 @@ mon_summary_percent_2 <- mon_summary%>%
   summarise(
     "Number of Samples" = n(),
     "% Positive for Free Chlorine" = round((sum(cl_pa == 1) / n()) * 100, 1))
-
 

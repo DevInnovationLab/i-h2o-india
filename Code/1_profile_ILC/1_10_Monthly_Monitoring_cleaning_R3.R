@@ -570,6 +570,10 @@ View(idexx)
 idexx <- idexx%>%
   mutate(blank = ifelse(sample_ID == 0, 1, 0))
 
+#Looking at lab blanks, field blanks
+idexx_blanks <- idexx%>%
+  filter(blank == 1)
+
 #Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
   filter(blank != 1)#%>%

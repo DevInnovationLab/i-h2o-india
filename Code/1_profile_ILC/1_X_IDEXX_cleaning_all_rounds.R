@@ -332,6 +332,12 @@ idexx <- idexx%>%
 #  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
 #  mutate(duplicate = replace_na(duplicate, 0))
 
+#Checking blanks
+#Dropping lab blanks, field blanks, and duplicates
+idexx_blanks <- idexx%>%
+  filter(sample_ID == "Lab Blank" |
+         sample_ID == "Field Blank")%>%
+  filter(duplicate < 1)
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx <- idexx%>%
@@ -612,6 +618,10 @@ idexx_r1 <- idexx_r1%>%
 #  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
 #  mutate(duplicate = replace_na(duplicate, 0))
 
+#Checking lab blanks, field blanks
+idexx_r1_blanks <- idexx_r1%>%
+  filter(sample_ID == "Lab Blank" |
+         sample_ID == "Field Blank")
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r1 <- idexx_r1%>%
@@ -876,7 +886,10 @@ idexx_r2 <- idexx_r2%>%
   replace_na(field_blank, value = 0)
 
 
-
+#Looking at lab blanks, field blanks
+idexx_r2_blanks <- idexx_r2%>%
+  filter(lab_blank == 1 |
+         field_blank == 1)
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r2 <- idexx_r2%>%
@@ -1121,6 +1134,10 @@ idexx_r3 <- idexx_r3%>%
   replace_na(solar_water, value = 0)
 
 
+#Looking at lab blanks, field blanks
+idexx_r3 <- idexx_r3%>%
+  filter(lab_blank == 1 |
+         field_blank == 1)
 
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r3 <- idexx_r3%>%

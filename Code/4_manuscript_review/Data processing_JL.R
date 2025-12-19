@@ -16,7 +16,7 @@ bl          <- read_csv(file.path(user_path(), "1_1_baseline_survey.csv"))
 el          <- read_csv(file.path(user_path(), "1_8_endline_census.csv"))
 idexx_tab   <- read_csv(file.path(user_path(), "1_10_idexx_all_rounds.csv")) %>% clean_names
 idexx_abr   <- read_csv(file.path(user_path(), "1_10_idexx_abr.csv"))
-mon_summary <- read_csv(file.path(user_path(), "1_11_weekly_monitoring.csv"))
+mon         <- read_csv(file.path(user_path(), "1_11_weekly_monitoring_WIDE.csv"))
 all_rounds  <- read_csv(file.path(user_path(), "1_8_surveys_all_rounds.csv"))
 
 
@@ -108,8 +108,7 @@ el_clean <-
     stratum = fct_cross(panchayat_village, block)
   )
 
-
-#Processing baseline data ------------------------------------------------------
+# All household data collection rounds (not baseline or endline censuses)
 all_rounds_clean <- 
   all_rounds %>%
   clean_names
@@ -125,6 +124,24 @@ all_data <-
     stratum = fct_cross(panchayat_village, block)
   )
 
+#Creating new variables to represent chlorination thresholds
+all_data <- all_data%>%
+  mutate(fc_tap_pa_2 = case_when(fc_tap_avg >= 0.2 & fc_tap_avg < 0.6 ~
+                                   ">= 0.2 mg/L, < 0.6 mg/L",
+                                 fc_tap_avg >= 0.6 & fc_tap_avg < 1.0 ~
+                                   ">= 0.6 mg/L, < 1.0 mg/L",
+                                 fc_tap_avg >= 1.0 & fc_tap_avg <= 2.2 ~
+                                   ">= 1.0 mg/L, < 2.2 mg/L",
+                                 fc_tap_avg < 0.2 ~ "< 0.2 mg/L"))
+all_data$fc_tap_pa_2 <- factor(all_data$fc_tap_pa_2)%>%
+  fct_recode("< 0.2 mg/L" = "< 0.2 mg/L",
+             ">= 0.2 mg/L, < 0.6 mg/L" = ">= 0.2 mg/L, < 0.6 mg/L",
+             ">= 0.6 mg/L, < 1.0 mg/L" = ">= 0.6 mg/L, < 1.0 mg/L",
+             ">= 1.0 mg/L, < 2.2 mg/L"= ">= 1.0 mg/L, < 2.2 mg/L"
+  )
+
+
+#Processing baseline data ------------------------------------------------------
 
 bl_variables <- #Only selecting needed variables from this dataset
   bl%>%
@@ -288,6 +305,42 @@ analysis_abr <- idexx_abr_clean%>%
   left_join(idexx_abr_bl)
 
 
+
+
+#Chlorine Monitoring Data ------------------------------------------------------
+
+
+#Filtering for data after intervention delivery was completed in February 2024
+mon <- mon%>%
+  filter(test_date >= ymd("2024-02-01"))
+
+
+#Creating long dataset where each row represents a chlorine test
+mon_long <- mon%>%
+  pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
+               cols = c(nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc,
+                        nearest_tap_tc, farthest_tap_tc, nearest_stored_tc, farthest_stored_tc))
+#creating new variables to represent test type and location
+mon_long <- mon_long%>%
+  mutate(test_sample = case_when(str_detect(chlorine_test, "tap") ~ "Tap",
+                                 str_detect(chlorine_test, "stored") ~ "Stored"
+  ))%>%
+  mutate(free_or_total = case_when(str_detect(chlorine_test, "fc") ~ "Free",
+                                   str_detect(chlorine_test, "tc") ~ "Total"
+  ))%>%
+  mutate(test_tap = case_when(str_detect(chlorine_test, "farthest") ~ "Far",
+                              str_detect(chlorine_test, "nearest") ~ "Near"
+  ))
+
+#Summarizing data on a weekly basis for taps only
+#Creating presence/absence variable
+mon_long <- mon_long%>%
+  mutate(cl_pa = case_when(chlorine_concentration >= 0.1 ~ 1,
+                           chlorine_concentration < 0.1 ~ 0,
+  ))
+
+
+
 #Writing analysis data =========================================================
 
 write_rds(
@@ -311,5 +364,29 @@ write_rds(
   file.path(
     user_path(),
     "analysis_abr.rds"
+  )
+)
+
+write_rds(
+  all_data,
+  file.path(
+    user_path(),
+    "rounds.rds"
+  )
+)
+
+write_rds(
+  mon,
+  file.path(
+    user_path(),
+    "chlorine_monitoring.rds"
+  )
+)
+
+write_rds(
+  mon_long,
+  file.path(
+    user_path(),
+    "chlorine_monitoring_long.rds"
   )
 )

@@ -49,7 +49,7 @@ github_path <- function() {
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code"
   } 
   else {
     warning("No path found for current user (", user, ")")
@@ -578,7 +578,7 @@ ggsave(filename = "manuscript_cl_ecoli_comparison.pdf", path = (paste0(github_pa
 #Summarizing data on a weekly basis for taps only
 # Create a week variable
 mon_summary_weekly <- mon_summary %>%
-  filter(chlorine_test == "Nearest Tap" | chlorine_test == "Farthest Tap")%>% #Filtering only for tap water here
+  filter(chlorine_test == "Nearest Tap Free" | chlorine_test == "Farthest Tap Free")%>% #Filtering only for tap water here
   #mutate(test_week = floor_date(test_date, unit = "week"))%>%
   mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
                                 unit = "day"))#Selecting weeks on a bi-weekly basis
