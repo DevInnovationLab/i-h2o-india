@@ -2121,9 +2121,11 @@ mon <- mon%>%
 
 #Summarizing
 mon_summary <- mon%>%
-  group_by(test_date, chlorine_test, village_name)%>% #Previously, village_name was not included
-  summarise("chlorine_concentration" = mean(chlorine_concentration)#,
-            #"village" = village_name
+  group_by(test_date, chlorine_test#, 
+           #village_name
+           )%>% #Previously, village_name was not included
+  summarise("chlorine_concentration" = mean(chlorine_concentration),
+            "village" = village_name
             ) #Was I averaging across all villages because I didn't group by them?
 
 
@@ -2173,8 +2175,7 @@ mon_summary$chlorine_test <- fct_recode(mon_summary$chlorine_test,
 
 #Selecting data after February 13, the last date of modification
 mon_summary <- mon_summary%>%
-  mutate(village = village_name)%>%
-  filter(test_date > "2024-02-01")%>%
+  filter(test_date > "2024-02-13")%>%
   filter(village != "Karnapadu")%>% #and removing karnapadu
   filter(is.na(chlorine_concentration) == FALSE)
 

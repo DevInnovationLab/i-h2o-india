@@ -7,27 +7,27 @@
 #------------------------ Load the libraries ----------------------------------------
 
 #Package installations
-install.packages("RSQLite")
-install.packages("haven")
-install.packages("expss")
-install.packages("stargazer")
-install.packages("Hmisc")
-install.packages("labelled")
-install.packages("data.table")
-install.packages("haven")
-install.packages("remotes")
-#Attempt using devtools package
-install.packages("devtools")
-install.packages("geosphere")
-#Starpolishr pacakge isn't available on CRAN and has to be installed from github using rmeotes pacakage 
-install.packages("remotes")
-remotes::install_github("ChandlerLutz/starpolishr")
-install.packages("ggrepel")
-install.packages("reshape2")
-#To convert dates proeprly 
-install.packages("lubridate")
-#install.packages("remotes")
-remotes::install_github("jknappe/quantitray") #Quantitray package installation
+# install.packages("RSQLite")
+# install.packages("haven")
+# install.packages("expss")
+# install.packages("stargazer")
+# install.packages("Hmisc")
+# install.packages("labelled")
+# install.packages("data.table")
+# install.packages("haven")
+# install.packages("remotes")
+# #Attempt using devtools package
+# install.packages("devtools")
+# install.packages("geosphere")
+# #Starpolishr pacakge isn't available on CRAN and has to be installed from github using rmeotes pacakage 
+# install.packages("remotes")
+# remotes::install_github("ChandlerLutz/starpolishr")
+# install.packages("ggrepel")
+# install.packages("reshape2")
+# #To convert dates proeprly 
+# install.packages("lubridate")
+# #install.packages("remotes")
+# remotes::install_github("jknappe/quantitray") #Quantitray package installation
 
 # load the libraries
 library(haven)
@@ -46,7 +46,7 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
-library(starpolishr)
+#library(starpolishr)
 library(geosphere)
 library(leaflet)
 library(ggrepel)
@@ -108,7 +108,7 @@ github_path <- function() {
     github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code"
   } 
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
@@ -570,68 +570,6 @@ View(idexx)
 idexx <- idexx%>%
   mutate(blank = ifelse(sample_ID == 0, 1, 0))
 
-#Looking at lab blanks, field blanks
-idexx_blanks <- idexx%>%
-  filter(blank == 1)
-
-#Dropping lab blanks, field blanks, and duplicates
-idexx <- idexx%>%
-  filter(blank != 1)#%>%
-#filter(duplicate != 1) #No duplicates, not running
-
-
-#Checking IDs which do not match between survey data and lab data
-idexx_ids <- idexx$sample_ID
-ms_sample_ids <- ms_idexx$sample_ID
-idexx_id_check <- idexx%>%
-  filter(!(sample_ID %in% ms_sample_ids))
-
-print(idexx_id_check)
-
-merged_data <- idexx %>%
-  left_join(ms_idexx_v, by = c("sample_ID"))
-
-# Checking for mismatches
-mismatch_check <- merged_data %>%
-  filter(is.na(unique_id)) # This will filter out rows where unique_id is missing after the join
-
-print(mismatch_check)
-
-View(merged_data)
-
-
-#combining idexx results to survey results
-ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
-idexx$sample_ID <- as.character(idexx$sample_ID)
-
-View(ms_idexx)
-View(idexx)
-
-idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
-
-
-
-
-#creating new variable to tell the sample type
-idexx$sample_type <- idexx$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "stored_sample_id",
-             "Tap" = "tap_sample_id")
-
-#Renaming bag ID variables
-idexx <- idexx%>%
-  rename("bag_ID_tap" = tap_bag_id)%>%
-  rename("bag_ID_stored" = stored_bag_id)
-
-#need to relabel idexx variables
-
-
-#Renaming assignment names
-idexx$assignment <- factor(idexx$assignment)
-idexx$assignment <- fct_recode(idexx$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
-
 # #Renaming Panchayat village variable
 # idexx <- idexx%>%
 #   mutate(panchayat_village = `Panchat village`)
@@ -700,6 +638,72 @@ idexx <- idexx%>%
                              (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
+
+
+#Looking at lab blanks, field blanks
+idexx_r6_blanks <- idexx%>%
+  filter(blank == 1)
+
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx <- idexx%>%
+  filter(blank != 1)#%>%
+#filter(duplicate != 1) #No duplicates, not running
+
+
+
+#Checking IDs which do not match between survey data and lab data
+idexx_ids <- idexx$sample_ID
+ms_sample_ids <- ms_idexx$sample_ID
+idexx_id_check <- idexx%>%
+  filter(!(sample_ID %in% ms_sample_ids))
+
+print(idexx_id_check)
+
+merged_data <- idexx %>%
+  left_join(ms_idexx_v, by = c("sample_ID"))
+
+# Checking for mismatches
+mismatch_check <- merged_data %>%
+  filter(is.na(unique_id)) # This will filter out rows where unique_id is missing after the join
+
+print(mismatch_check)
+
+View(merged_data)
+
+
+#combining idexx results to survey results
+ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
+idexx$sample_ID <- as.character(idexx$sample_ID)
+
+View(ms_idexx)
+View(idexx)
+
+idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
+
+
+
+
+#creating new variable to tell the sample type
+idexx$sample_type <- idexx$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "stored_sample_id",
+             "Tap" = "tap_sample_id")
+
+#Renaming bag ID variables
+idexx <- idexx%>%
+  rename("bag_ID_tap" = tap_bag_id)%>%
+  rename("bag_ID_stored" = stored_bag_id)
+
+#need to relabel idexx variables
+
+
+#Renaming assignment names
+idexx$assignment <- factor(idexx$assignment)
+idexx$assignment <- fct_recode(idexx$assignment,
+                               "Control" = "C", 
+                               "Treatment" = "T")
+
 
 
 

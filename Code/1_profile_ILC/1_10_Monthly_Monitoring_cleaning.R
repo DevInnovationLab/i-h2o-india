@@ -50,7 +50,7 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
-library(starpolishr)
+#library(starpolishr)
 library(geosphere)
 library(leaflet)
 library(ggrepel)
@@ -106,7 +106,7 @@ github_path <- function() {
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code"
   } 
   else if (user == "Archi Gupta") {
     github = "C:/Users/Archi Gupta/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
@@ -558,58 +558,6 @@ idexx <- idexx%>%
 idexx <- idexx%>%
   mutate(blank = ifelse(sample_ID == 0, 1, 0))
 
-#Looking at lab blanks, field blanks
-idexx_blanks <- idexx%>%
-  filter(blank == 1)
-
-#Dropping lab blanks, field blanks, and duplicates
-idexx <- idexx%>%
-  filter(blank != 1)#%>%
-  #filter(duplicate != 1) #No duplicates, not running
-
-
-#Checking IDs which do not match between survey data and lab data
-idexx_ids <- idexx$sample_ID
-ms_sample_ids <- ms_idexx$sample_ID
-idexx_id_check <- idexx%>%
-  filter(!(sample_ID %in% ms_sample_ids))
-
-#Cleaning incorrect sample and bag IDs
-#Sample ID 20351 was duplicated. Bag ID 90722 corresponds to ID 20354.
-ms_idexx <- ms_idexx%>%
-  mutate(sample_ID = ifelse(stored_bag_id == 90722 & sample_ID == 20351, 20354, sample_ID))
-
-
-
-#combining idexx results to survey results
-ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
-idexx$sample_ID <- as.character(idexx$sample_ID)
-idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
-
-
-
-
-
-
-#creating new variable to tell the sample type
-idexx$sample_type <- idexx$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "stored_sample_id",
-             "Tap" = "tap_sample_id")
-
-#Renaming bag ID variables
-idexx <- idexx%>%
-  rename("bag_ID_tap" = tap_bag_id)%>%
-  rename("bag_ID_stored" = stored_bag_id)
-
-#need to relabel idexx variables
-
-
-#Renaming assignment names
-idexx$assignment <- factor(idexx$assignment)
-idexx$assignment <- fct_recode(idexx$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
 
 # #Renaming Panchayat village variable
 # idexx <- idexx%>%
@@ -687,7 +635,56 @@ idexx <- idexx%>%
                              ec_mpn > 100 ~ "High Risk"))
 
 
+#Looking at lab blanks, field blanks
+idexx_r4_blanks <- idexx%>%
+  filter(blank == 1)
 
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx <- idexx%>%
+  filter(blank != 1)#%>%
+#filter(duplicate != 1) #No duplicates, not running
+
+
+#Checking IDs which do not match between survey data and lab data
+idexx_ids <- idexx$sample_ID
+ms_sample_ids <- ms_idexx$sample_ID
+idexx_id_check <- idexx%>%
+  filter(!(sample_ID %in% ms_sample_ids))
+
+#Cleaning incorrect sample and bag IDs
+#Sample ID 20351 was duplicated. Bag ID 90722 corresponds to ID 20354.
+ms_idexx <- ms_idexx%>%
+  mutate(sample_ID = ifelse(stored_bag_id == 90722 & sample_ID == 20351, 20354, sample_ID))
+
+
+
+#combining idexx results to survey results
+ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
+idexx$sample_ID <- as.character(idexx$sample_ID)
+idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
+
+
+
+#creating new variable to tell the sample type
+idexx$sample_type <- idexx$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "stored_sample_id",
+             "Tap" = "tap_sample_id")
+
+#Renaming bag ID variables
+idexx <- idexx%>%
+  rename("bag_ID_tap" = tap_bag_id)%>%
+  rename("bag_ID_stored" = stored_bag_id)
+
+#need to relabel idexx variables
+
+
+#Renaming assignment names
+idexx$assignment <- factor(idexx$assignment)
+idexx$assignment <- fct_recode(idexx$assignment,
+                               "Control" = "C", 
+                               "Treatment" = "T")
 
 
 

@@ -86,7 +86,7 @@ github_path <- function() {
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code/1_profile_ILC"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code/1_profile_ILC"
   } 
   else if (user == "uchicago") {
     github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
@@ -332,18 +332,8 @@ idexx <- idexx%>%
 #  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
 #  mutate(duplicate = replace_na(duplicate, 0))
 
-#Checking blanks
-#Dropping lab blanks, field blanks, and duplicates
-idexx_blanks <- idexx%>%
-  filter(sample_ID == "Lab Blank" |
-         sample_ID == "Field Blank")%>%
-  filter(duplicate < 1)
 
-#Dropping lab blanks, field blanks, and duplicates
-idexx <- idexx%>%
-  filter(sample_ID != "Lab Blank",
-         sample_ID != "Field Blank")%>%
-  filter(duplicate < 1)
+
 
 #Checking IDs which do not match between survey data and lab data
 idexx_ids <- idexx$sample_ID
@@ -351,54 +341,6 @@ bl_sample_ids <- bl_idexx$sample_ID
 idexx_id_check <- idexx%>%
   filter(!(sample_ID %in% bl_sample_ids))
 
-
-#combining idexx results to survey results
-bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
-idexx <- inner_join(idexx, bl_idexx, by = "sample_ID")
-abr$sample_ID <- as.character(abr$sample_ID)
-abr <- inner_join(abr, bl_idexx, by = "sample_ID")
-
-#checking duplicate IDs
-x <- abr%>%
-  count(sample_ID)%>% 
-  filter(n > 1)
-#x_BL <- idexx%>%
- # filter(sample_ID %in% x$sample_ID)
-
-#10237 is a duplicate that was incorrectly recorded during R1. 
-#Remove Bag ID 90274 from the baseline data
-#Need to check why this ID was listed in the BL followup survey data
-idexx <- idexx%>%
-  filter(bag_ID != 90274)
-
-#creating new variable to tell the sample type
-idexx$sample_type <- idexx$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "sample_ID_stored",
-             "Tap" = "sample_ID_tap")
-abr$sample_type <- abr$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "sample_ID_stored",
-             "Tap" = "sample_ID_tap")
-
-
-#Renaming assignment names
-idexx$assignment <- factor(idexx$assignment)
-idexx$assignment <- fct_recode(idexx$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
-
-abr$assignment <- factor(abr$assignment)
-abr$assignment <- fct_recode(abr$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
-
-#Renaming Panchayat village variable
-idexx <- idexx%>%
-  mutate(panchayat_village = `Panchat village`)
-
-abr <- abr%>%
-  mutate(panchayat_village = `Panchat village`)
 
 #Calculating MPN for each IDEXX test
 idexx <- idexx%>%
@@ -503,6 +445,71 @@ abr <- abr%>%
                               cf_mpn > 0 ~ cf_mpn))%>%
   mutate(ec_log = log(ec_mpn_2, base = 10))%>%
   mutate(cf_log = log(cf_mpn_2, base = 10))
+
+
+#Checking blanks
+#Dropping lab blanks, field blanks, and duplicates
+idexx_blanks <- idexx%>%
+  filter(sample_ID == "Lab Blank" |
+           sample_ID == "Field Blank")%>%
+  filter(duplicate < 1)
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx <- idexx%>%
+  filter(sample_ID != "Lab Blank",
+         sample_ID != "Field Blank")%>%
+  filter(duplicate < 1)
+
+
+
+#combining idexx results to survey results
+bl_idexx$sample_ID <- as.character(bl_idexx$sample_ID)
+idexx <- inner_join(idexx, bl_idexx, by = "sample_ID")
+abr$sample_ID <- as.character(abr$sample_ID)
+abr <- inner_join(abr, bl_idexx, by = "sample_ID")
+
+#checking duplicate IDs
+x <- abr%>%
+  count(sample_ID)%>% 
+  filter(n > 1)
+#x_BL <- idexx%>%
+# filter(sample_ID %in% x$sample_ID)
+
+#10237 is a duplicate that was incorrectly recorded during R1. 
+#Remove Bag ID 90274 from the baseline data
+#Need to check why this ID was listed in the BL followup survey data
+idexx <- idexx%>%
+  filter(bag_ID != 90274)
+
+#creating new variable to tell the sample type
+idexx$sample_type <- idexx$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "sample_ID_stored",
+             "Tap" = "sample_ID_tap")
+abr$sample_type <- abr$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "sample_ID_stored",
+             "Tap" = "sample_ID_tap")
+
+
+#Renaming assignment names
+idexx$assignment <- factor(idexx$assignment)
+idexx$assignment <- fct_recode(idexx$assignment,
+                               "Control" = "C", 
+                               "Treatment" = "T")
+
+abr$assignment <- factor(abr$assignment)
+abr$assignment <- fct_recode(abr$assignment,
+                             "Control" = "C", 
+                             "Treatment" = "T")
+
+#Renaming Panchayat village variable
+idexx <- idexx%>%
+  mutate(panchayat_village = `Panchat village`)
+
+abr <- abr%>%
+  mutate(panchayat_village = `Panchat village`)
+
 
 #Code for writing/updating final file
 #Writing files to lab_data and final folders
@@ -869,63 +876,6 @@ idexx_r2 <- idexx_r2%>%
 #  mutate(duplicate = replace_na(duplicate, 0))  # Replace NAs with 0
 
 
-#Noting lab blank and field blanks 
-idexx_r2 <- idexx_r2%>%
-  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
-                               end_comments == "Lab blank" |
-                               end_comments == "This is LAB BLANK results" |
-                               end_comments == "Tray count reviewed by PRASHANT KUMAR PANDA and This is LAB BLANK")
-                            & sample_ID == 0, 1, 0))%>%
-  replace_na(lab_blank, value = 0)
-
-idexx_r2 <- idexx_r2%>%
-  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
-                                 end_comments == "Field blank" |
-                                 end_comments == "This is FIELD BLANK")
-                              & sample_ID == 0, 1, 0))%>%
-  replace_na(field_blank, value = 0)
-
-
-#Looking at lab blanks, field blanks
-idexx_r2_blanks <- idexx_r2%>%
-  filter(lab_blank == 1 |
-         field_blank == 1)
-
-#Dropping lab blanks, field blanks, and duplicates
-idexx_r2 <- idexx_r2%>%
- filter(lab_blank != 1,
-       field_blank != 1)%>%
-filter(duplicate < 1)
-
-#Checking IDs which do not match between survey data and lab data
-#idexx_ids <- idexx_r2$sample_ID
-#r2_sample_ids <- r2_for_idexx$sample_ID
-#idexx_id_check <- idexx_r2%>%
-# filter(!(sample_ID %in% r2_sample_ids))
-
-
-#combining idexx results to survey results
-r2_for_idexx$sample_ID <- as.numeric(r2_for_idexx$sample_ID)
-idexx_r2 <- left_join(idexx_r2, r2_for_idexx, by = "sample_ID")
-
-#Fixing variable names after the join
-idexx_r2 <- idexx_r2%>%
-  rename(village_ID = "village.x")%>%
-  rename(village = "village.y")%>%
-  #rename(assignment = "assignment.y")%>%
-  dplyr::select(-c("village_ID.x", "village_ID.y"))
-
-#Renaming panchayat variable
-idexx_r2 <- idexx_r2%>%
-  mutate(panchayat_village = `Panchat village`)
-
-
-#creating new variable to tell the sample type
-idexx_r2 <- idexx_r2%>%
-  mutate(sample_type = ifelse((sample_ID < 11000 & sample_ID > 9000), "Tap", 
-                              ifelse((sample_ID > 19000 & sample_ID < 21000), "Stored", "Blank")))
-
-
 #Other way using survey data
 #idexx_r2$sample_type <- idexx_r2$sample_type%>%
 #factor()%>%
@@ -992,6 +942,66 @@ idexx_r2 <- idexx_r2%>%
                              (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
+
+
+#Noting lab blank and field blanks 
+idexx_r2 <- idexx_r2%>%
+  mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
+                               end_comments == "Lab blank" |
+                               end_comments == "This is LAB BLANK results" |
+                               end_comments == "Tray count reviewed by PRASHANT KUMAR PANDA and This is LAB BLANK")
+                            & sample_ID == 0, 1, 0))%>%
+  replace_na(lab_blank, value = 0)
+
+idexx_r2 <- idexx_r2%>%
+  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+                                 end_comments == "Field blank" |
+                                 end_comments == "This is FIELD BLANK")
+                              & sample_ID == 0, 1, 0))%>%
+  replace_na(field_blank, value = 0)
+
+
+#Looking at lab blanks, field blanks
+idexx_r2_blanks <- idexx_r2%>%
+  filter(lab_blank == 1 |
+           field_blank == 1)
+
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx_r2 <- idexx_r2%>%
+  filter(lab_blank != 1,
+         field_blank != 1)%>%
+  filter(duplicate < 1)
+
+#Checking IDs which do not match between survey data and lab data
+#idexx_ids <- idexx_r2$sample_ID
+#r2_sample_ids <- r2_for_idexx$sample_ID
+#idexx_id_check <- idexx_r2%>%
+# filter(!(sample_ID %in% r2_sample_ids))
+
+
+#combining idexx results to survey results
+r2_for_idexx$sample_ID <- as.numeric(r2_for_idexx$sample_ID)
+idexx_r2 <- left_join(idexx_r2, r2_for_idexx, by = "sample_ID")
+
+#Fixing variable names after the join
+idexx_r2 <- idexx_r2%>%
+  rename(village_ID = "village.x")%>%
+  rename(village = "village.y")%>%
+  #rename(assignment = "assignment.y")%>%
+  dplyr::select(-c("village_ID.x", "village_ID.y"))
+
+#Renaming panchayat variable
+idexx_r2 <- idexx_r2%>%
+  mutate(panchayat_village = `Panchat village`)
+
+
+#creating new variable to tell the sample type
+idexx_r2 <- idexx_r2%>%
+  mutate(sample_type = ifelse((sample_ID < 11000 & sample_ID > 9000), "Tap", 
+                              ifelse((sample_ID > 19000 & sample_ID < 21000), "Stored", "Blank")))
+
+
 
 
 #Writing/updating final csv file
@@ -1134,68 +1144,7 @@ idexx_r3 <- idexx_r3%>%
   replace_na(solar_water, value = 0)
 
 
-#Looking at lab blanks, field blanks
-idexx_r3 <- idexx_r3%>%
-  filter(lab_blank == 1 |
-         field_blank == 1)
 
-#Dropping lab blanks, field blanks, and duplicates
-idexx_r3 <- idexx_r3%>%
-  filter(lab_blank != 1,
-         field_blank != 1)
-
-
-#Dropping lab blanks, field blanks, and duplicates
-#idexx_r3 <- idexx_r3%>%
-# filter(sample_ID != "Lab Blank",
-#       sample_ID != "Field Blank")%>%
-#filter(duplicate < 1)
-
-#Checking IDs which do not match between survey data and lab data
-#idexx_ids <- idexx_r3$sample_ID
-#r3_sample_ids <- r3_for_idexx$sample_ID
-#idexx_id_check <- idexx_r3%>%
-# filter(!(sample_ID %in% r3_sample_ids))%>%
-#filter(sample_ID != 0)
-#x <- r3%>%
-# filter(village_ID == idexx_id_check$village)
-#Checking which villages have missing IDEXX data
-#xx <- unique(idexx_r3$village_name.x)
-#village_check <- r3_for_idexx%>%
-#filter(!(village_name %in% xx))%>%
-#filter(sample_ID != 0)
-
-#Updating sample ID for 10141
-
-
-#combining idexx results to survey results
-r3_for_idexx$sample_ID <- as.numeric(r3_for_idexx$sample_ID)
-idexx_r3 <- left_join(idexx_r3, r3_for_idexx, by = "sample_ID")
-
-
-#Fixing variable names after the join
-idexx_r3 <- idexx_r3%>%
-  rename(village_ID = "village.x")%>%
-  rename(village = "village.y")%>%
-  rename(assignment = "assignment.y")%>%
-  dplyr::select(-c("village_ID.x", "village_ID.y", "village_name.x", "village_name.y", "assignment.x"))
-
-#Renaming panchayat variable
-idexx_r3 <- idexx_r3%>%
-  mutate(panchayat_village = `Panchat village`)
-
-
-
-#Other way using survey data
-#idexx_r3$sample_type <- idexx_r3$sample_type%>%
-#factor()%>%
-#fct_recode("Stored" = "sample_ID_stored",
-#"Tap" = "sample_ID_tap")
-
-#abr$sample_type <- abr$sample_type%>%
-# factor()%>%
-#fct_recode("Stored" = "sample_ID_stored",
-#          "Tap" = "sample_ID_tap")
 
 #Calculating MPN for each IDEXX test
 idexx_r3 <- idexx_r3%>%
@@ -1262,6 +1211,72 @@ abr_r3 <- idexx_r3%>%
 #Dropping ABR samples
 idexx_r3 <- idexx_r3%>%
   filter(abr == 0)
+
+#Looking at lab blanks, field blanks
+idexx_r3_blanks <- idexx_r3%>%
+  filter(lab_blank == 1 |
+           field_blank == 1)
+
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx_r3 <- idexx_r3%>%
+  filter(lab_blank != 1,
+         field_blank != 1)
+
+
+#Dropping lab blanks, field blanks, and duplicates
+#idexx_r3 <- idexx_r3%>%
+# filter(sample_ID != "Lab Blank",
+#       sample_ID != "Field Blank")%>%
+#filter(duplicate < 1)
+
+#Checking IDs which do not match between survey data and lab data
+#idexx_ids <- idexx_r3$sample_ID
+#r3_sample_ids <- r3_for_idexx$sample_ID
+#idexx_id_check <- idexx_r3%>%
+# filter(!(sample_ID %in% r3_sample_ids))%>%
+#filter(sample_ID != 0)
+#x <- r3%>%
+# filter(village_ID == idexx_id_check$village)
+#Checking which villages have missing IDEXX data
+#xx <- unique(idexx_r3$village_name.x)
+#village_check <- r3_for_idexx%>%
+#filter(!(village_name %in% xx))%>%
+#filter(sample_ID != 0)
+
+#Updating sample ID for 10141
+
+
+#combining idexx results to survey results
+r3_for_idexx$sample_ID <- as.numeric(r3_for_idexx$sample_ID)
+idexx_r3 <- left_join(idexx_r3, r3_for_idexx, by = "sample_ID")
+
+
+#Fixing variable names after the join
+idexx_r3 <- idexx_r3%>%
+  rename(village_ID = "village.x")%>%
+  rename(village = "village.y")%>%
+  rename(assignment = "assignment.y")%>%
+  dplyr::select(-c("village_ID.x", "village_ID.y", "village_name.x", "village_name.y", "assignment.x"))
+
+#Renaming panchayat variable
+idexx_r3 <- idexx_r3%>%
+  mutate(panchayat_village = `Panchat village`)
+
+
+
+#Other way using survey data
+#idexx_r3$sample_type <- idexx_r3$sample_type%>%
+#factor()%>%
+#fct_recode("Stored" = "sample_ID_stored",
+#"Tap" = "sample_ID_tap")
+
+#abr$sample_type <- abr$sample_type%>%
+# factor()%>%
+#fct_recode("Stored" = "sample_ID_stored",
+#          "Tap" = "sample_ID_tap")
+
+
 
 #Writing/updating final file
 write_csv(idexx_r3,paste0(user_path(),"/5_lab data/idexx/cleaned/R3_idexx_master_cleaned.csv"))

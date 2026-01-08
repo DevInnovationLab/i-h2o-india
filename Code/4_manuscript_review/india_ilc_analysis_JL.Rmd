@@ -13,7 +13,8 @@ packages <-
     "tidyverse",
     "modelsummary",
     "vtable",
-    "skimr"
+    "skimr",
+    "patchwork"
   )
 
 pacman::p_load(packages, character.only = TRUE)
@@ -78,6 +79,14 @@ mon <-
     )
   )
 
+mon_long <-
+  read_rds(
+    file.path(
+      user_path(),
+      "chlorine_monitoring_long.rds"
+    )
+  )
+
 
 
 ```
@@ -103,20 +112,20 @@ cen %>%
   )
 
 #Baseline Survey
-bl %>%
-  select(assignment,
-         treat_time_5min,
-         collect_resp_women,
-         collect_resp_men,
-         collect_resp_both,
-         treat_resp_women,
-         treat_resp_men,
-         treat_resp_both
-    )%>%
-  sumtable(
-    group = "assignment",
-    title  = "Baseline survey demographics and behavior"
-  )
+# bl %>%
+#   select(assignment,
+#          treat_time_5min,
+#          collect_resp_women,
+#          collect_resp_men,
+#          collect_resp_both,
+#          treat_resp_women,
+#          treat_resp_men,
+#          treat_resp_both
+#     )%>%
+#   sumtable(
+#     group = "assignment",
+#     title  = "Baseline survey demographics and behavior"
+#   )
 
 
 #Endline Census
@@ -696,10 +705,9 @@ for (y in y_positions) {
 
 
 
-
-
-
 # Manuscript Revision 3 - 12/16/2025
+
+
 
 Updating with additional results below to be stored in the SI.
 
@@ -724,9 +732,9 @@ rounds <- rounds%>%
 p_cl_vs_ec_tap <- rounds%>%
   ggplot() +
   geom_point(aes(x = fc_tap_avg, y = ec_log_tap, colour = assignment)) +
-  geom_hline(aes(yintercept = -0.01), lty = 2, color = "#FF474C")+ #Placing detection threshold
+  geom_hline(aes(yintercept = -0.01), lty = 2, color = "#3c3c3c")+ #Placing detection threshold
   geom_text(aes(x = 1.7, y = 0, label = "Detection Threshold (>0 MPN/100 mL)"),
-             nudge_y = 0.1, color = "#FF474C", size = 3)+
+             nudge_y = 0.1, color = "#3c3c3c", size = 3)+
   scale_y_continuous(
                      limits = c(-0.5, 4),
                      expand = c(0,0)
@@ -751,9 +759,9 @@ ggsave(filename = "manuscript_chlorine_dose-response_tap_v1.pdf", path = (paste0
 p_cl_vs_ec_stored <- rounds%>%
   ggplot() +
   geom_point(aes(x = fc_stored_avg, y = ec_log_stored, colour = assignment)) +
-  geom_hline(aes(yintercept = -0.01), lty = 2, color = "#FF474C")+ #Placing detection threshold
+  geom_hline(aes(yintercept = -0.01), lty = 2, color = "#3c3c3c")+ #Placing detection threshold
   geom_text(aes(x = 1.7, y = 0, label = "Detection Threshold (>0 MPN/100 mL)"),
-             nudge_y = 0.1, color = "#FF474C", size = 3)+
+             nudge_y = 0.1, color = "#3c3c3c", size = 3)+
   scale_y_continuous(
                      limits = c(-0.5, 4),
                      expand = c(0,0)
@@ -912,6 +920,47 @@ rounds_models_stored%>%
     add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist() %>% round())
   )
 
+#Linear regression ---- 
+
+#Setting outcomes
+outcomes <-
+  c(
+    #"Log10 MPN Total Coliform at Taps"= "cf_log_tap",
+    #"Log10 MPN E. coli at Taps"= "ec_log_tap"#,
+     "Log10 MPN Total Coliform in Stored Water"= "cf_log_stored",
+     "Log10 MPN E. coli in Stored Water"= "ec_log_stored"
+  )
+
+#Individual
+rounds_model_lm <-
+  outcomes %>%
+       map(
+        ~ feols(
+          paste(., "~ fc_stored_scaled")%>%as.formula(),
+          data = rounds_sub,
+          cluster = ~ village,
+          se = 'cluster'
+        )
+      )
+  
+
+rounds_model_lm%>%
+   modelsummary(
+    exponentiate = FALSE,
+    # coef_rename = c("assignmentTreatment" = "Treatment"),
+    # coef_omit = "^(?!.*Treatment)",
+    gof_omit = "IC|R2|RMSE",
+    estimate  = "{estimate} [{conf.low}, {conf.high}]",
+    statistic = "p.value",
+    shape = model ~ term + statistic,
+    add_columns = data.frame("N"= map(., ~.x$nobs) %>% unlist() %>% round())
+  )
+
+
+
+
+
+
 
 
 
@@ -1036,15 +1085,12 @@ ggsave(filename = "forestplot_dose-response_v2.pdf", path = (paste0(github_path(
 
 # Creating time series figure of average free chlorine concentrations over the study period.
 
-#Create a 2-week variable
+# Group by week and calculate the average concentration
 mon_summary <- mon_long%>%
   filter(test_sample == "Tap")%>% #Filtering only for tap water
-  mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
-          unit = "day"))%>% #Selecting weeks on a bi-weekly basis
-  filter(test_week > ymd("2024-02-01")) #Filtering for intervention launch
-
-# Group by week and calculate the average concentration
-mon_summary <- mon_summary%>%
+  filter(test_week > ymd("2024-02-01"))%>% #Filtering for intervention launch
+  filter(village_name != "Karnapadu")%>% #Removing Karnapadu
+  #filter(cl_pa == 1)%>% #filtering for positive samples only - Alternative plot for showing average concentrations over time among positive chlorine samples
   group_by(test_week, free_or_total)%>%
   summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
             se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
@@ -1065,14 +1111,13 @@ mon_summary <- mon_summary%>%
   mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
 
 
-
 #Creating time series for presence/absence
 p_time_series_1 <- mon_summary%>%
   filter(free_or_total == "Free")%>%
   ggplot() + 
    geom_errorbar(aes(x = test_week, ymin = lower_ci_pa, ymax = upper_ci_pa),
                  width = 2) + #Does not include robust standard errors for village clustering
-  geom_point(aes(x = test_week, y = cl_presence), size = 3)+
+  geom_point(aes(x = test_week, y = cl_presence, color = free_or_total), size = 3)+
   geom_path(aes(x = test_week, y = cl_presence)) + #Geom path makes the plot cluttered
   geom_vline(aes(xintercept = ymd("2024-02-01")), lty = 2, color = "#FF474C")+ #Placing intervention start date
     geom_vline(aes(xintercept = ymd("2024-07-01")), lty = 2, color = "darkblue")+ #Placing monsoon start date
@@ -1089,7 +1134,7 @@ p_time_series_1 <- mon_summary%>%
   scale_fill_brewer(palette = "Pastel1")+
   labs(x = "Date", 
        y = '% of tap samples positive for chlorine (>0.1 mg/L)',
-       color = "Assignment",
+       #color = "Assignment",
        title = "",
        caption = ""
        #title = expression(paste(italic("E. coli"), " r3 - Presence in Tap and Stored Drinking Water in Odisha (N = 166)"))
@@ -1100,6 +1145,12 @@ p_time_series_1 <- mon_summary%>%
 
 
 p_time_series_1
+
+
+# ggsave(filename = "time_series_chlorine_rev3.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 1.5, units = "in", scale = 2)
+
+
+
 
 
 #Creating time series for average concentrations
@@ -1121,13 +1172,16 @@ p_time_series_2 <- mon_summary%>%
                                 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
                      expand = c(0,0)
                      )+
-  scale_x_date(limits = c(ymd("2024-01-29"), ymd("2024-10-10")),
+  # scale_x_date(limits = c(ymd("2024-01-29"), ymd("2024-10-10")),
+  #       date_breaks = "1 month",
+  #       date_labels = "%b")+
+  scale_x_date(limits = c(ymd("2023-10-03"), ymd("2024-10-15")),
         date_breaks = "1 month",
         date_labels = "%b")+
   scale_fill_brewer(palette = "Pastel1")+
   labs(x = "Date", 
        y = 'Average Free Chlorine Concentration (mg/L)',
-       color = "Assignment",
+       #color = "Assignment",
        title = "",
        caption = ""
        )+
@@ -1139,6 +1193,68 @@ p_time_series_2 <- mon_summary%>%
 p_time_series_2
 
 ggsave(filename = "time_series_avg_conc_v1.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 1.3)
+
+#Making patchwork figure
+p_time_series <- p_time_series_1 / p_time_series_2
+p_time_series
+
+ggsave(filename = "manuscript_time_series_chlorine_rev3.pdf", path = (paste0(github_path(), "/3_manuscript/figures")), dpi = 1080, width = 6, height = 3, units = "in", scale = 2)
+
+
+#Summarizing based on sample type
+mon_summary <- mon_long%>%
+  filter(test_week > ymd("2024-02-01"))%>% #Filtering for intervention start
+  filter(village_name != "Karnapadu")%>%
+  group_by(#test_week,
+    test_sample,
+    free_or_total)%>%
+  summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
+            se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
+            sd_concentration = sd(chlorine_concentration, na.rm = TRUE),
+            lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
+            upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration,
+            cl_presence = round((sum(cl_pa == 1) / n()) * 100, 1),
+            lower_ci_pa = (sum(cl_pa == 1) / n()) * 100 -
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())), #Can I use a 95% CI on presence/absence data?
+            upper_ci_pa = (sum(cl_pa == 1) / n()) * 100 +
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())),
+            sample_size = n()
+            )%>%
+  # Correcting negative lower CI values to be 0 instead
+  mutate(lower_ci_pa = case_when(lower_ci_pa < 0 ~ 0,
+                                     lower_ci_pa >= 0 ~ lower_ci_pa))%>%
+  mutate(upper_ci_pa = case_when(upper_ci_pa > 100 ~ 100,
+                                     upper_ci_pa <= 100 ~ upper_ci_pa))%>%
+  mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
+  
+  
+#Summarizing based on tablet doser type overall
+mon_summary <- mon_long%>%
+  filter(test_week > ymd("2024-02-01"))%>% #Filtering for intervention start
+  #filter(village_name != "Karnapadu")%>%
+  group_by(#test_week,
+    doser_type,
+    test_sample,
+    free_or_total)%>%
+  summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
+            se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
+            sd_concentration = sd(chlorine_concentration, na.rm = TRUE),
+            lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
+            upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration,
+            cl_presence = round((sum(cl_pa == 1) / n()) * 100, 1),
+            lower_ci_pa = (sum(cl_pa == 1) / n()) * 100 -
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())), #Can I use a 95% CI on presence/absence data?
+            upper_ci_pa = (sum(cl_pa == 1) / n()) * 100 +
+              (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())),
+            sample_size = n()
+            )%>%
+  # Correcting negative lower CI values to be 0 instead
+  mutate(lower_ci_pa = case_when(lower_ci_pa < 0 ~ 0,
+                                     lower_ci_pa >= 0 ~ lower_ci_pa))%>%
+  mutate(upper_ci_pa = case_when(upper_ci_pa > 100 ~ 100,
+                                     upper_ci_pa <= 100 ~ upper_ci_pa))%>%
+  mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
+
 
 
 
@@ -1234,14 +1350,15 @@ mon_long%>%
             sd_conc = sd(chlorine_concentration))
 
 #Estimating mean difference between paired free and total chlorine measurements
-mon%>%
+
+x <- mon%>%
   filter(nearest_tap_tc >= 0.1 | farthest_tap_tc >= 0.1)%>%
   mutate(diff_taps_near = abs(nearest_tap_tc - nearest_tap_fc))%>%
   mutate(diff_taps_far = abs(farthest_tap_tc - farthest_tap_fc))%>%
   summarise(diff_tap_near_mean = mean(diff_taps_near),
             diff_tap_far_mean = mean(diff_taps_far)
             )%>%
-  mean()
+  summarise(avg_overall = mean(diff_tap_near_mean, diff_tap_far_mean))
 mon%>%
   filter(nearest_stored_tc >= 0.1 | farthest_stored_tc >= 0.1)%>%
   mutate(diff_stored_near = abs(nearest_stored_tc - nearest_stored_fc))%>%
@@ -1249,8 +1366,22 @@ mon%>%
   summarise(diff_stored_near_mean = mean(diff_stored_near),
             diff_stored_far_mean = mean(diff_stored_far)
             )%>%
-  mean()  
+  summarise(avg_overall = mean(diff_stored_near_mean, diff_stored_far_mean))
+mon%>%
+  filter(nearest_tap_tc >= 0.1 | farthest_tap_tc >= 0.1 |
+    nearest_stored_tc >= 0.1 | farthest_stored_tc >= 0.1)%>%
+  mutate(diff_stored_near = abs(nearest_stored_tc - nearest_stored_fc))%>%
+  mutate(diff_stored_far = abs(farthest_stored_tc - farthest_stored_fc))%>%
+  mutate(diff_taps_near = abs(nearest_tap_tc - nearest_tap_fc))%>%
+  mutate(diff_taps_far = abs(farthest_tap_tc - farthest_tap_fc))%>%
+  summarise(diff_tap_near_mean = mean(diff_taps_near),
+            diff_tap_far_mean = mean(diff_taps_far),
+    diff_stored_near_mean = mean(diff_stored_near),
+    diff_stored_far_mean = mean(diff_stored_far)
+            )%>%
+  summarise(avg_overall = mean(diff_tap_near_mean, diff_tap_far_mean, diff_stored_far_mean, diff_stored_near_mean))
 
+  
 
 
 

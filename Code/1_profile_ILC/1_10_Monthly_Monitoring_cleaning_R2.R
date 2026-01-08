@@ -50,7 +50,7 @@ library(tidyverse)
 library(Hmisc)
 library(ggplot2)
 library(labelled)
-library(starpolishr)
+#library(starpolishr)
 library(geosphere)
 library(leaflet)
 library(ggrepel)
@@ -109,7 +109,7 @@ github_path <- function() {
     github = "/Users/akitokamei/Library/CloudStorage/Dropbox/Mac/Documents/GitHub/i-h2o-india/Code/2_Pilot/0_pilot logistics/"
   } 
   else if (user == "jerem") {
-    github = "C:/Users/jerem/Documents/i-h2o-india/Code"
+    github = "C:/Users/jerem/Documents/Github/i-h2o-india/Code"
   } 
   else if (user=="uchicago"){
     github = "/Users/uchicago/Documents/GitHub/i-h2o-india/Code/1_profile_ILC/"
@@ -586,13 +586,11 @@ View(idexx)
 idexx <- idexx%>%
   mutate(blank = ifelse(sample_ID == 0, 1, 0))
 
-#Looking at lab blanks, field blanks
-idexx_blanks <- idexx%>%
-  filter(blank == 1)
+
 
 #Dropping lab blanks, field blanks, and duplicates
-idexx <- idexx%>%
-  filter(blank != 1)#%>%
+# idexx <- idexx%>%
+#   filter(blank != 1)#%>%
 #filter(duplicate != 1) #No duplicates, not running
 
 
@@ -616,37 +614,9 @@ print(mismatch_check)
 View(merged_data)
 
 
-#combining idexx results to survey results
-ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
-idexx$sample_ID <- as.character(idexx$sample_ID)
-
-View(ms_idexx)
-View(idexx)
-
-idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
-
-
-
-
-#creating new variable to tell the sample type
-idexx$sample_type <- idexx$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "stored_sample_id",
-             "Tap" = "tap_sample_id")
-
-#Renaming bag ID variables
-idexx <- idexx%>%
-  rename("bag_ID_tap" = tap_bag_id)%>%
-  rename("bag_ID_stored" = stored_bag_id)
 
 #need to relabel idexx variables
 
-
-#Renaming assignment names
-idexx$assignment <- factor(idexx$assignment)
-idexx$assignment <- fct_recode(idexx$assignment,
-                               "Control" = "C", 
-                               "Treatment" = "T")
 
 # #Renaming Panchayat village variable
 # idexx <- idexx%>%
@@ -719,6 +689,44 @@ idexx <- idexx%>%
 
 
 
+#combining idexx results to survey results
+ms_idexx$sample_ID <- as.character(ms_idexx$sample_ID)
+idexx$sample_ID <- as.character(idexx$sample_ID)
+
+View(ms_idexx)
+View(idexx)
+
+
+
+#Joining to survey data
+idexx <- inner_join(idexx, ms_idexx, by = "sample_ID")
+
+#Looking at lab blanks, field blanks
+idexx_r5_blanks <- idexx%>%
+  filter(blank == 1)
+
+#Dropping lab blanks, field blanks, and duplicates
+ idexx <- idexx%>%
+   filter(blank != 1)#%>%
+#filter(duplicate != 1) #No duplicates, not running
+
+#creating new variable to tell the sample type
+idexx$sample_type <- idexx$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "stored_sample_id",
+             "Tap" = "tap_sample_id")
+
+#Renaming bag ID variables
+idexx <- idexx%>%
+  rename("bag_ID_tap" = tap_bag_id)%>%
+  rename("bag_ID_stored" = stored_bag_id)
+
+
+#Renaming assignment names
+idexx$assignment <- factor(idexx$assignment)
+idexx$assignment <- fct_recode(idexx$assignment,
+                               "Control" = "C", 
+                               "Treatment" = "T")
 
 
 

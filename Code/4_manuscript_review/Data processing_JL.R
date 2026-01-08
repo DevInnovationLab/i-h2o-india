@@ -315,7 +315,21 @@ mon <- mon%>%
   filter(test_date >= ymd("2024-02-01"))
 
 
-#Creating long dataset where each row represents a chlorine test
+#Adding doser type
+mon <- mon%>%
+  mutate(doser_type = case_when(village_code == "AS" ~ "CTI-8",
+                                village_code == "BA" ~ "CTI-8",
+                                village_code == "BI" ~ "CTI-8",
+                                village_code == "BN" ~ "PurAll",
+                                village_code == "GO" ~ "CTI-8",
+                                village_code == "KA" ~ "PurAll",
+                                village_code == "MU" ~ "CTI-8",
+                                village_code == "NAI" ~ "PurAll",
+                                village_code == "NAT" ~ "PurAll",
+                                village_code == "TA" ~ "CTI-8"
+  ))
+
+#Creating long data set where each row represents a chlorine test
 mon_long <- mon%>%
   pivot_longer(names_to = "chlorine_test", values_to = "chlorine_concentration",
                cols = c(nearest_tap_fc, farthest_tap_fc, nearest_stored_fc, farthest_stored_fc,
@@ -332,12 +346,79 @@ mon_long <- mon_long%>%
                               str_detect(chlorine_test, "nearest") ~ "Near"
   ))
 
+
+
+
+#Recoding chlorine concentration sample types
+mon_long$chlorine_test <- factor(mon_long$chlorine_test)
+mon_long$chlorine_test <- fct_recode(mon_long$chlorine_test,
+                                "Nearest Tap Free" = "nearest_tap_fc",
+                                "Nearest Stored Free" = "nearest_stored_fc",
+                                "Farthest Tap Free" = "farthest_tap_fc",
+                                "Farthest Stored Free" = "farthest_stored_fc",
+                                "Nearest Tap Total" = "nearest_tap_tc",
+                                "Nearest Stored Total" = "nearest_stored_tc",
+                                "Farthest Tap Total" = "farthest_tap_tc",
+                                "Farthest Stored Total" = "farthest_stored_tc")
+
 #Summarizing data on a weekly basis for taps only
 #Creating presence/absence variable
 mon_long <- mon_long%>%
   mutate(cl_pa = case_when(chlorine_concentration >= 0.1 ~ 1,
                            chlorine_concentration < 0.1 ~ 0,
   ))
+
+# Create a test week variable
+mon_long <- mon_long%>%
+mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
+                              unit = "day"))%>% #Selecting weeks on a bi-weekly basis
+  mutate(test_month = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 31),
+                                unit = "day"))
+
+#Diagnosing chlorine monitoring data problems:
+
+#Summarizing
+# mon_summary <- mon_long%>%
+#   group_by(test_date, chlorine_test, 
+#            village_name
+#   )%>% #Previously, village_name was not included
+#   summarise("chlorine_concentration" = mean(chlorine_concentration),
+#             "village" = village_name
+#   ) #Was I averaging across all villages because I didn't group by them?
+#I don't think these are needed, use mon_long directly
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+#Summarizing data on a weekly basis for taps only
+# Create a week variable
+# mon_long_weekly <- mon_long%>%
+#   filter(chlorine_test == "Nearest Tap Free" | chlorine_test == "Farthest Tap Free")%>% #Filtering only for tap water here
+#   #mutate(test_week = floor_date(test_date, unit = "week"))%>%
+#   mutate(test_week = floor_date(test_date - days(as.numeric(test_date - ymd("2024-01-01")) %% 14),
+#                                 unit = "day"))#Selecting weeks on a bi-weekly basis
+# 
+# # Group by week and calculate the average concentration
+# mon_long_weekly <- mon_long_weekly%>%
+#   group_by(test_week)%>% #To add back in nearest vs farthest tap, add in "chlorine_test" variable here
+#   summarise(avg_concentration = mean(chlorine_concentration, na.rm = TRUE),
+#             se_concentration = sd(chlorine_concentration, na.rm = TRUE) / sqrt(n()),
+#             lower_ci = avg_concentration - qt(0.975, df = n() - 1) * se_concentration,
+#             upper_ci = avg_concentration + qt(0.975, df = n() - 1) * se_concentration,
+#             cl_presence = round((sum(cl_pa == 1) / n()) * 100, 1),
+#             lower_ci_pa = (sum(cl_pa == 1) / n()) * 100 -
+#               (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())), #Can I use a 95% CI on presence/absence data?
+#             upper_ci_pa = (sum(cl_pa == 1) / n()) * 100 +
+#               (qt(0.975, n() - 1) * sd(cl_pa*100)/sqrt(n())),
+#             sample_size = n()
+#   )%>%
+#   # Correcting negative lower CI values to be 0 instead
+#   mutate(lower_ci_pa = case_when(lower_ci_pa < 0 ~ 0,
+#                                  lower_ci_pa >= 0 ~ lower_ci_pa))%>%
+#   mutate(upper_ci_pa = case_when(upper_ci_pa > 100 ~ 100,
+#                                  upper_ci_pa <= 100 ~ upper_ci_pa))%>%
+#   mutate(lower_ci = ifelse(lower_ci < 0, 0, lower_ci))
 
 
 
