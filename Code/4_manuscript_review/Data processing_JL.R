@@ -60,6 +60,9 @@ idexx_clean <-
   ) %>%
   clean_names
 
+analysis_idexx_bl <- idexx_clean%>%
+  filter(data_round == "BL")
+
 #Antibiotic Resistant Testing
 idexx_abr_clean <-
   idexx_abr %>%
