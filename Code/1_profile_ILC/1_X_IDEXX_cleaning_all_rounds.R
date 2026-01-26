@@ -625,74 +625,6 @@ idexx_r1 <- idexx_r1%>%
 #  mutate(duplicate = ifelse(comments == "DUPLICATE", 1, 0)) %>%
 #  mutate(duplicate = replace_na(duplicate, 0))
 
-#Checking lab blanks, field blanks
-idexx_r1_blanks <- idexx_r1%>%
-  filter(sample_ID == "Lab Blank" |
-         sample_ID == "Field Blank")
-
-#Dropping lab blanks, field blanks, and duplicates
-idexx_r1 <- idexx_r1%>%
-  filter(sample_ID != "Lab Blank",
-         sample_ID != "Field Blank")%>%
-  filter(duplicate < 1)
-
-#Noting borehole water sample and dropping it
-idexx_r1 <- idexx_r1%>%
-  mutate(solar_water = ifelse((sample_ID == 20258), 1, 0))%>% #Sample ID for stored water from private borewell
-  replace_na(solar_water, value = 0)%>%
-  filter(solar_water == 0)
-
-#Alternatoive line of code for the above
-#idexx_r1 <- idexx_r1 %>%
-#  mutate(solar_water = ifelse(sample_ID == 20258, 1, 0)) %>%  #Sample ID for stored water from private borewell
-#  mutate(solar_water = replace_na(solar_water, 0)) %>%
-#  filter(solar_water == 0)  
-
-
-#Checking IDs which do not match between survey data and lab data
-#this is where baseline samples are dropped from the idx dataset
-idexx_ids <- idexx_r1$sample_ID
-r1_sample_ids <- r1_for_idexx$sample_ID
-idexx_id_check <- idexx_r1%>%
-  filter(!(sample_ID %in% r1_sample_ids))
-
-
-#General cleaning checks
-#Counting duplicate ids in R1 data
-#idexx_id_check <- r1_for_idexx%>%
- # count(sample_ID)%>% 
-  #filter(n > 1) #238 instances of NA
-#idexx_id_check <- idexx_r1%>%
- # count(sample_ID)%>% 
-  #filter(n > 1) #6 cases of duplicate IDs -- I have since removed them, see Github Issues
-
-#Filtering out duplicate IDs to understand why they exist
-#idexx_check <- idexx_r1%>%
- # filter(sample_ID %in% idexx_id_check$sample_ID)
-
-#Checked the handwritten data
-#Cases with duplicate IDs were corrected in the raw data and listed on Github issues
-
-
-
-
-#combining idexx results to survey results
-r1_for_idexx$sample_ID <- as.character(r1_for_idexx$sample_ID)
-idexx_r1 <- inner_join(idexx_r1, r1_for_idexx, by = "sample_ID")
-#abr$sample_ID <- as.character(abr$sample_ID)
-#abr <- inner_join(abr, bl_idexx, by = "sample_ID")
-
-
-#creating new variable to tell the sample type
-idexx_r1$sample_type <- idexx_r1$sample_type%>%
-  factor()%>%
-  fct_recode("Stored" = "sample_ID_stored",
-             "Tap" = "sample_ID_tap")
-
-#Renaming panchayat variable
-idexx_r1 <- idexx_r1%>%
-  mutate(panchayat_village = `Panchat village`)
-
 
 #Calculating MPN for each IDEXX test
 idexx_r1 <- idexx_r1%>%
@@ -750,6 +682,82 @@ idexx_r1 <- idexx_r1%>%
                              (ec_mpn >= 1 & ec_mpn <= 10) ~ "Low Risk",
                              (ec_mpn > 10 & ec_mpn <= 100) ~ "Intermediate Risk",
                              ec_mpn > 100 ~ "High Risk"))
+
+
+#Checking lab blanks, field blanks
+idexx_r1_blanks <- idexx_r1%>%
+  filter(sample_ID == "Lab Blank" |
+           sample_ID == "Field Blank")
+
+idexx_r1_blanks <- idexx_r1_blanks%>%
+  mutate(lab_blank = ifelse(sample_ID == "Lab Blank", 1, 0),
+         field_blank = ifelse(sample_ID == "Field Blank", 1, 0))
+
+
+#Dropping lab blanks, field blanks, and duplicates
+idexx_r1 <- idexx_r1%>%
+  filter(sample_ID != "Lab Blank",
+         sample_ID != "Field Blank")%>%
+  filter(duplicate < 1)
+
+#Noting borehole water sample and dropping it
+idexx_r1 <- idexx_r1%>%
+  mutate(solar_water = ifelse((sample_ID == 20258), 1, 0))%>% #Sample ID for stored water from private borewell
+  replace_na(solar_water, value = 0)%>%
+  filter(solar_water == 0)
+
+#Alternatoive line of code for the above
+#idexx_r1 <- idexx_r1 %>%
+#  mutate(solar_water = ifelse(sample_ID == 20258, 1, 0)) %>%  #Sample ID for stored water from private borewell
+#  mutate(solar_water = replace_na(solar_water, 0)) %>%
+#  filter(solar_water == 0)  
+
+
+#Checking IDs which do not match between survey data and lab data
+#this is where baseline samples are dropped from the idx dataset
+idexx_ids <- idexx_r1$sample_ID
+r1_sample_ids <- r1_for_idexx$sample_ID
+idexx_id_check <- idexx_r1%>%
+  filter(!(sample_ID %in% r1_sample_ids))
+
+
+#General cleaning checks
+#Counting duplicate ids in R1 data
+#idexx_id_check <- r1_for_idexx%>%
+# count(sample_ID)%>% 
+#filter(n > 1) #238 instances of NA
+#idexx_id_check <- idexx_r1%>%
+# count(sample_ID)%>% 
+#filter(n > 1) #6 cases of duplicate IDs -- I have since removed them, see Github Issues
+
+#Filtering out duplicate IDs to understand why they exist
+#idexx_check <- idexx_r1%>%
+# filter(sample_ID %in% idexx_id_check$sample_ID)
+
+#Checked the handwritten data
+#Cases with duplicate IDs were corrected in the raw data and listed on Github issues
+
+
+
+
+#combining idexx results to survey results
+r1_for_idexx$sample_ID <- as.character(r1_for_idexx$sample_ID)
+idexx_r1 <- inner_join(idexx_r1, r1_for_idexx, by = "sample_ID")
+#abr$sample_ID <- as.character(abr$sample_ID)
+#abr <- inner_join(abr, bl_idexx, by = "sample_ID")
+
+
+#creating new variable to tell the sample type
+idexx_r1$sample_type <- idexx_r1$sample_type%>%
+  factor()%>%
+  fct_recode("Stored" = "sample_ID_stored",
+             "Tap" = "sample_ID_tap")
+
+#Renaming panchayat variable
+idexx_r1 <- idexx_r1%>%
+  mutate(panchayat_village = `Panchat village`)
+
+
 
 
 #Writing/updating final csv file
@@ -1123,7 +1131,16 @@ idexx_r3 <- idexx_r3%>%
   mutate(lab_blank = ifelse((end_comments == "Lab Blank" | 
                                end_comments == "Lab blank" |
                                end_comments == "This is LAB BLANK results" |
-                               sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
+                               end_comments == "LAB BLANK" |
+                               KEY == "uuid:03b28606-8518-4c61-840d-79872aa62315" |
+                               KEY == "uuid:03b28606-8518-4c61-840d-79872aa62315" |
+                               KEY == "uuid:5d3ccbe5-ad69-4a7d-b2dc-993ce9b8eaca" |
+                               KEY == "uuid:72ad50a9-6200-42f1-a149-be391aebe070" |
+                               KEY == "uuid:0df6b9e5-07f6-4bca-a438-a46e972dc4d7" |
+                               KEY == "uuid:624cc0da-3fde-4bbd-bbdb-1530d25047cf" |
+                               KEY == "uuid:45337147-51fa-4c59-b08b-0fced385df10"
+                               #sample_type == "Blank"
+                             ) #This line doesn't differentiate between field blank and lab blank
                             & sample_ID == 0, 1, 0))%>%
   replace_na(lab_blank, value = 0)
 
@@ -1131,8 +1148,9 @@ idexx_r3 <- idexx_r3%>%
 idexx_r3 <- idexx_r3%>%
   mutate(field_blank = ifelse((end_comments == "Field Blank" | 
                                  end_comments == "Field blank" |
-                                 end_comments == "This is FIELD BLANK" |
-                                 sample_type == "Blank") #This line doesn't differentiate between field blank and lab blank
+                                 end_comments == "This is FIELD BLANK" #|
+                                 #sample_type == "Blank"
+                               ) #This line doesn't differentiate between field blank and lab blank
                               & sample_ID == 0, 1, 0))%>%
   replace_na(field_blank, value = 0)
 
@@ -1221,7 +1239,8 @@ idexx_r3_blanks <- idexx_r3%>%
 #Dropping lab blanks, field blanks, and duplicates
 idexx_r3 <- idexx_r3%>%
   filter(lab_blank != 1,
-         field_blank != 1)
+         field_blank != 1,
+         solar_water != 1)
 
 
 #Dropping lab blanks, field blanks, and duplicates
@@ -1427,7 +1446,69 @@ write_csv(abr_comb,paste0(user_path(),"/3_final/POOLED_idexx_ABR_master_cleaned.
 
 
 
+#Binding blanks datasets
 
+#Changing sample IDs to 0
+idexx_r1_blanks <- idexx_r1_blanks%>%
+  mutate(sample_ID = 0)%>%
+  mutate(reviewed_by = 0)
 
+#Setting data round
+idexx_BL_blanks <- idexx_r1_blanks%>%
+  filter(ymd(date) < ymd("2024-01-01"))%>%
+  mutate(data_round = "BL")
 
+idexx_r1_blanks <- idexx_r1_blanks%>%
+  filter(ymd(date) > ymd("2024-01-01"))%>%
+  mutate(data_round = "R1")
+
+idexx_r2_blanks <- idexx_r2_blanks%>%
+  mutate(data_round = "R2")
+
+idexx_r3_blanks <- idexx_r3_blanks%>%
+  mutate(data_round = "R3")
+
+idexx_r4_blanks <- idexx_r4_blanks%>%
+  mutate(data_round = "R4")%>%
+  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+                                 end_comments == "Field blank" |
+                                 end_comments == "This is FIELD BLANK" #|
+                               #sample_type == "Blank"
+  ) #This line doesn't differentiate between field blank and lab blank
+  , 1, 0))%>%
+  replace_na(field_blank, value = 0)%>%
+  mutate(lab_blank = ifelse(field_blank == 1, 0, 1))
+
+idexx_r5_blanks <- idexx_r5_blanks%>%
+  mutate(data_round = "R5")%>%
+  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+                                 end_comments == "Field blank" |
+                                 end_comments == "This is FIELD BLANK" #|
+                               #sample_type == "Blank"
+  ) #This line doesn't differentiate between field blank and lab blank
+  & sample_ID == 0, 1, 0))%>%
+  mutate(lab_blank = ifelse(field_blank == 1, 0, 1))
+
+idexx_r6_blanks <- idexx_r6_blanks%>%
+  mutate(data_round = "R6")%>%
+  mutate(field_blank = ifelse((end_comments == "Field Blank" | 
+                                 end_comments == "Field blank" |
+                                 end_comments == "This is FIELD BLANK" #|
+                               #sample_type == "Blank"
+  ) #This line doesn't differentiate between field blank and lab blank
+  & sample_ID == 0, 1, 0))%>%
+  mutate(lab_blank = ifelse(field_blank == 1, 0, 1))
+  
+  
+#Combining all datasets
+df_list <- list(idexx_BL_blanks, idexx_r1_blanks, idexx_r2_blanks, idexx_r3_blanks, idexx_r4_blanks, idexx_r5_blanks, idexx_r6_blanks)
+
+library(purrr)
+x <- df_list%>%
+  map(~ select(.x,
+               data_round, lab_blank, field_blank,
+               cf_mpn, cf_pa, ec_mpn, ec_pa)) %>%
+  bind_rows()
+
+write_csv(x,paste0(user_path(),"/5_lab data/idexx/cleaned/idexx_BLANKS_cleaned.csv"))
 
