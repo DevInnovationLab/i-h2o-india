@@ -360,8 +360,8 @@ display: none;
 
     <script>
 
-      function styleCell_py8gihjrnklhl5hwusbm(i, j, css_id) {
-          var table = document.getElementById("tinytable_py8gihjrnklhl5hwusbm");
+      function styleCell_njavw7il88fn8pz514xy(i, j, css_id) {
+          var table = document.getElementById("tinytable_njavw7il88fn8pz514xy");
           var cell = table.rows[i]?.cells[j];  // Safe navigation to avoid errors
           if (cell) {
               console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
@@ -370,8 +370,8 @@ display: none;
               console.warn(`Cell at (${i}, ${j}) not found.`);
           }
       }
-      function insertSpanRow_0ggqzxz3mgp93se1m022(i, colspan, content) {
-        var table = document.getElementById('tinytable_py8gihjrnklhl5hwusbm');
+      function insertSpanRow_wu6za6mqkbzcnmzjix8l(i, colspan, content) {
+        var table = document.getElementById('tinytable_njavw7il88fn8pz514xy');
         var newRow = table.insertRow(i);
         var newCell = newRow.insertCell(0);
         newCell.setAttribute("colspan", colspan);
@@ -379,8 +379,8 @@ display: none;
         // this may be unsafe, but innerText does not interpret <br>
         newCell.innerHTML = content;
       }
-      function spanCell_py8gihjrnklhl5hwusbm(i, j, rowspan, colspan) {
-        var table = document.getElementById("tinytable_py8gihjrnklhl5hwusbm");
+      function spanCell_njavw7il88fn8pz514xy(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_njavw7il88fn8pz514xy");
         const targetRow = table.rows[i];
         const targetCell = targetRow.cells[j];
         for (let r = 0; r < rowspan; r++) {
@@ -407,29 +407,29 @@ display: none;
         targetCell.colSpan = colspan;
       }
       // tinytable span after
-window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022(13, 6, 'Presence of Antibiotic Resistant E. coli in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022(10, 6, 'Presence of E. coli in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022(7, 6, 'Presence of Total Coliform in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022(4, 6, 'Presence of E. coli at Taps') });
-window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022(1, 6, 'Presence of Total Coliform at Taps') });
+window.addEventListener('load', function () { insertSpanRow_wu6za6mqkbzcnmzjix8l(13, 6, 'Presence of Antibiotic Resistant E. coli in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_wu6za6mqkbzcnmzjix8l(10, 6, 'Presence of E. coli in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_wu6za6mqkbzcnmzjix8l(7, 6, 'Presence of Total Coliform in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_wu6za6mqkbzcnmzjix8l(4, 6, 'Presence of E. coli at Taps') });
+window.addEventListener('load', function () { insertSpanRow_wu6za6mqkbzcnmzjix8l(1, 6, 'Presence of Total Coliform at Taps') });
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: 0, j: 1 }, { i: 0, j: 4 }, { i: 0, j: 5 }, { i: 0, j: 2 }, { i: 0, j: 3 },  ], css_id: 'tinytable_css_zqikjdmz2puknzwmjzpq',}, 
-          { positions: [ { i: 15, j: 4 }, { i: 15, j: 3 }, { i: 15, j: 5 }, { i: 15, j: 1 }, { i: 15, j: 2 },  ], css_id: 'tinytable_css_lyxnn4g0niflrg9fzcmx',}, 
-          { positions: [ { i: 26, j: 3 }, { i: 26, j: 4 }, { i: 26, j: 1 }, { i: 26, j: 2 }, { i: 26, j: 5 },  ], css_id: 'tinytable_css_l5nz94jczlkq74f1rw48',}, 
-          { positions: [ { i: 4, j: 1 }, { i: 5, j: 1 }, { i: 3, j: 1 }, { i: 8, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 7, j: 1 }, { i: 12, j: 1 }, { i: 13, j: 1 }, { i: 10, j: 1 }, { i: 11, j: 1 }, { i: 16, j: 1 }, { i: 17, j: 1 }, { i: 18, j: 1 }, { i: 2, j: 1 }, { i: 20, j: 1 }, { i: 21, j: 1 }, { i: 22, j: 1 }, { i: 19, j: 1 }, { i: 24, j: 1 }, { i: 25, j: 1 }, { i: 12, j: 3 }, { i: 23, j: 1 }, { i: 1, j: 3 }, { i: 2, j: 2 }, { i: 3, j: 2 }, { i: 4, j: 2 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 7, j: 2 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 10, j: 2 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 1 }, { i: 1, j: 4 }, { i: 16, j: 2 }, { i: 17, j: 2 }, { i: 18, j: 2 }, { i: 19, j: 2 }, { i: 20, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 12, j: 4 }, { i: 14, j: 1 }, { i: 14, j: 4 }, { i: 2, j: 3 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 9, j: 3 }, { i: 10, j: 3 }, { i: 11, j: 3 }, { i: 25, j: 4 }, { i: 13, j: 3 }, { i: 1, j: 2 }, { i: 1, j: 5 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 18, j: 3 }, { i: 19, j: 3 }, { i: 20, j: 3 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 12, j: 5 }, { i: 14, j: 2 }, { i: 14, j: 5 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 10, j: 4 }, { i: 11, j: 4 }, { i: 25, j: 5 }, { i: 13, j: 4 }, { i: 14, j: 3 }, { i: 19, j: 4 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 18, j: 4 }, { i: 23, j: 4 }, { i: 20, j: 4 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 13, j: 5 }, { i: 24, j: 4 }, { i: 11, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 2, j: 5 }, { i: 7, j: 5 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 6, j: 5 }, { i: 24, j: 5 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 10, j: 5 }, { i: 19, j: 5 }, { i: 20, j: 5 }, { i: 21, j: 5 }, { i: 18, j: 5 }, { i: 23, j: 5 }, { i: 22, j: 5 },  ], css_id: 'tinytable_css_ia891ywx1aowxs60pc7z',}, 
-          { positions: [ { i: 26, j: 0 },  ], css_id: 'tinytable_css_9ojp38eq59qwzgth4foy',}, 
-          { positions: [ { i: 15, j: 0 },  ], css_id: 'tinytable_css_6f8n1tsfnkdm8ii4lks4',}, 
-          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_2bdkmh01gr5txgrm7wpw',}, 
-          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 8, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 19, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 18, j: 0 }, { i: 23, j: 0 }, { i: 20, j: 0 }, { i: 21, j: 0 }, { i: 22, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 },  ], css_id: 'tinytable_css_1hbvnrg3p28tapl8923n',}, 
-          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_1bjs41zdmtoyuccm7k30',}, 
+          { positions: [ { i: 26, j: 3 }, { i: 26, j: 4 }, { i: 26, j: 1 }, { i: 26, j: 2 }, { i: 26, j: 5 },  ], css_id: 'tinytable_css_xsab503pwdxy16v2q5id',}, 
+          { positions: [ { i: 15, j: 0 },  ], css_id: 'tinytable_css_tp1i4d59uc9buntbo1c8',}, 
+          { positions: [ { i: 15, j: 4 }, { i: 15, j: 3 }, { i: 15, j: 5 }, { i: 15, j: 1 }, { i: 15, j: 2 },  ], css_id: 'tinytable_css_s3cpnhk4hy8dv1r4bgo5',}, 
+          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_ooy7delg2lr8t5wfsbb7',}, 
+          { positions: [ { i: 0, j: 1 }, { i: 0, j: 4 }, { i: 0, j: 5 }, { i: 0, j: 2 }, { i: 0, j: 3 },  ], css_id: 'tinytable_css_mf2azoxaof5tx3x80dvl',}, 
+          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_f2rqiqp84mg7dk5jg7cp',}, 
+          { positions: [ { i: 26, j: 0 },  ], css_id: 'tinytable_css_6h7ysapbcp89e47a68f4',}, 
+          { positions: [ { i: 4, j: 1 }, { i: 5, j: 1 }, { i: 3, j: 1 }, { i: 8, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 7, j: 1 }, { i: 12, j: 1 }, { i: 13, j: 1 }, { i: 10, j: 1 }, { i: 11, j: 1 }, { i: 16, j: 1 }, { i: 17, j: 1 }, { i: 18, j: 1 }, { i: 2, j: 1 }, { i: 20, j: 1 }, { i: 21, j: 1 }, { i: 22, j: 1 }, { i: 19, j: 1 }, { i: 24, j: 1 }, { i: 25, j: 1 }, { i: 12, j: 3 }, { i: 23, j: 1 }, { i: 1, j: 3 }, { i: 2, j: 2 }, { i: 3, j: 2 }, { i: 4, j: 2 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 7, j: 2 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 10, j: 2 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 1 }, { i: 1, j: 4 }, { i: 16, j: 2 }, { i: 17, j: 2 }, { i: 18, j: 2 }, { i: 19, j: 2 }, { i: 20, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 12, j: 4 }, { i: 14, j: 1 }, { i: 14, j: 4 }, { i: 2, j: 3 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 9, j: 3 }, { i: 10, j: 3 }, { i: 11, j: 3 }, { i: 25, j: 4 }, { i: 13, j: 3 }, { i: 1, j: 2 }, { i: 1, j: 5 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 18, j: 3 }, { i: 19, j: 3 }, { i: 20, j: 3 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 12, j: 5 }, { i: 14, j: 2 }, { i: 14, j: 5 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 10, j: 4 }, { i: 11, j: 4 }, { i: 25, j: 5 }, { i: 13, j: 4 }, { i: 14, j: 3 }, { i: 19, j: 4 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 18, j: 4 }, { i: 23, j: 4 }, { i: 20, j: 4 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 13, j: 5 }, { i: 24, j: 4 }, { i: 11, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 2, j: 5 }, { i: 7, j: 5 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 6, j: 5 }, { i: 24, j: 5 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 10, j: 5 }, { i: 19, j: 5 }, { i: 20, j: 5 }, { i: 21, j: 5 }, { i: 18, j: 5 }, { i: 23, j: 5 }, { i: 22, j: 5 },  ], css_id: 'tinytable_css_2t4ly8o465zya5bslkqy',}, 
+          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 8, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 19, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 18, j: 0 }, { i: 23, j: 0 }, { i: 20, j: 0 }, { i: 21, j: 0 }, { i: 22, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 },  ], css_id: 'tinytable_css_24evvf83idw72cgj1mem',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  styleCell_py8gihjrnklhl5hwusbm(cell.i, cell.j, group.css_id);
+                  styleCell_njavw7il88fn8pz514xy(cell.i, cell.j, group.css_id);
               });
           });
       });
@@ -437,18 +437,18 @@ window.addEventListener('load', function () { insertSpanRow_0ggqzxz3mgp93se1m022
 
     <style>
 
-.table td.tinytable_css_zqikjdmz2puknzwmjzpq, .table th.tinytable_css_zqikjdmz2puknzwmjzpq { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_lyxnn4g0niflrg9fzcmx, .table th.tinytable_css_lyxnn4g0niflrg9fzcmx { text-align: center; border-bottom: solid black 0.05em; }
-.table td.tinytable_css_l5nz94jczlkq74f1rw48, .table th.tinytable_css_l5nz94jczlkq74f1rw48 { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
-.table td.tinytable_css_ia891ywx1aowxs60pc7z, .table th.tinytable_css_ia891ywx1aowxs60pc7z { text-align: center; }
-.table td.tinytable_css_9ojp38eq59qwzgth4foy, .table th.tinytable_css_9ojp38eq59qwzgth4foy { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
-.table td.tinytable_css_6f8n1tsfnkdm8ii4lks4, .table th.tinytable_css_6f8n1tsfnkdm8ii4lks4 { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
-.table td.tinytable_css_2bdkmh01gr5txgrm7wpw, .table th.tinytable_css_2bdkmh01gr5txgrm7wpw { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_1hbvnrg3p28tapl8923n, .table th.tinytable_css_1hbvnrg3p28tapl8923n { text-align: left; padding-left: 1em; }
-.table td.tinytable_css_1bjs41zdmtoyuccm7k30, .table th.tinytable_css_1bjs41zdmtoyuccm7k30 { text-align: left; }
+.table td.tinytable_css_xsab503pwdxy16v2q5id, .table th.tinytable_css_xsab503pwdxy16v2q5id { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_tp1i4d59uc9buntbo1c8, .table th.tinytable_css_tp1i4d59uc9buntbo1c8 { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
+.table td.tinytable_css_s3cpnhk4hy8dv1r4bgo5, .table th.tinytable_css_s3cpnhk4hy8dv1r4bgo5 { text-align: center; border-bottom: solid black 0.05em; }
+.table td.tinytable_css_ooy7delg2lr8t5wfsbb7, .table th.tinytable_css_ooy7delg2lr8t5wfsbb7 { text-align: left; }
+.table td.tinytable_css_mf2azoxaof5tx3x80dvl, .table th.tinytable_css_mf2azoxaof5tx3x80dvl { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_f2rqiqp84mg7dk5jg7cp, .table th.tinytable_css_f2rqiqp84mg7dk5jg7cp { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_6h7ysapbcp89e47a68f4, .table th.tinytable_css_6h7ysapbcp89e47a68f4 { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_2t4ly8o465zya5bslkqy, .table th.tinytable_css_2t4ly8o465zya5bslkqy { text-align: center; }
+.table td.tinytable_css_24evvf83idw72cgj1mem, .table th.tinytable_css_24evvf83idw72cgj1mem { text-align: left; padding-left: 1em; }
 </style>
     <div class="container">
-      <table class="table table-borderless" id="tinytable_py8gihjrnklhl5hwusbm" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table table-borderless" id="tinytable_njavw7il88fn8pz514xy" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
         <thead>
         
               <tr>
@@ -643,8 +643,8 @@ columns 6-10 combines all follow up observations at village level.</p>
 
     <script>
 
-      function styleCell_1kajyoxj701p6rqjitkc(i, j, css_id) {
-          var table = document.getElementById("tinytable_1kajyoxj701p6rqjitkc");
+      function styleCell_4abunj9gxv65x1p3m4ex(i, j, css_id) {
+          var table = document.getElementById("tinytable_4abunj9gxv65x1p3m4ex");
           var cell = table.rows[i]?.cells[j];  // Safe navigation to avoid errors
           if (cell) {
               console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
@@ -653,8 +653,8 @@ columns 6-10 combines all follow up observations at village level.</p>
               console.warn(`Cell at (${i}, ${j}) not found.`);
           }
       }
-      function insertSpanRow_s1tqczrhi0s950keaz69(i, colspan, content) {
-        var table = document.getElementById('tinytable_1kajyoxj701p6rqjitkc');
+      function insertSpanRow_hbs1eflqtu3oir2dnodc(i, colspan, content) {
+        var table = document.getElementById('tinytable_4abunj9gxv65x1p3m4ex');
         var newRow = table.insertRow(i);
         var newCell = newRow.insertCell(0);
         newCell.setAttribute("colspan", colspan);
@@ -662,8 +662,8 @@ columns 6-10 combines all follow up observations at village level.</p>
         // this may be unsafe, but innerText does not interpret <br>
         newCell.innerHTML = content;
       }
-      function spanCell_1kajyoxj701p6rqjitkc(i, j, rowspan, colspan) {
-        var table = document.getElementById("tinytable_1kajyoxj701p6rqjitkc");
+      function spanCell_4abunj9gxv65x1p3m4ex(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_4abunj9gxv65x1p3m4ex");
         const targetRow = table.rows[i];
         const targetCell = targetRow.cells[j];
         for (let r = 0; r < rowspan; r++) {
@@ -690,29 +690,29 @@ columns 6-10 combines all follow up observations at village level.</p>
         targetCell.colSpan = colspan;
       }
       // tinytable span after
-window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69(13, 10, 'Presence of Antibiotic Resistant E. coli in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69(10, 10, 'Presence of E. coli in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69(7, 10, 'Presence of Total Coliform in Stored Water') });
-window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69(4, 10, 'Presence of E. coli at Taps') });
-window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69(1, 10, 'Presence of Total Coliform at Taps') });
+window.addEventListener('load', function () { insertSpanRow_hbs1eflqtu3oir2dnodc(13, 10, 'Presence of Antibiotic Resistant E. coli in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_hbs1eflqtu3oir2dnodc(10, 10, 'Presence of E. coli in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_hbs1eflqtu3oir2dnodc(7, 10, 'Presence of Total Coliform in Stored Water') });
+window.addEventListener('load', function () { insertSpanRow_hbs1eflqtu3oir2dnodc(4, 10, 'Presence of E. coli at Taps') });
+window.addEventListener('load', function () { insertSpanRow_hbs1eflqtu3oir2dnodc(1, 10, 'Presence of Total Coliform at Taps') });
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: 26, j: 8 }, { i: 26, j: 5 }, { i: 26, j: 4 }, { i: 26, j: 7 }, { i: 26, j: 2 }, { i: 26, j: 1 }, { i: 26, j: 3 }, { i: 26, j: 6 }, { i: 26, j: 9 },  ], css_id: 'tinytable_css_xkuuyyuto4hpsn7jfkuz',}, 
-          { positions: [ { i: 5, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 4, j: 1 }, { i: 13, j: 1 }, { i: 10, j: 1 }, { i: 7, j: 1 }, { i: 8, j: 1 }, { i: 17, j: 1 }, { i: 18, j: 1 }, { i: 11, j: 1 }, { i: 12, j: 1 }, { i: 21, j: 1 }, { i: 22, j: 1 }, { i: 19, j: 1 }, { i: 20, j: 1 }, { i: 25, j: 1 }, { i: 12, j: 3 }, { i: 23, j: 1 }, { i: 24, j: 1 }, { i: 3, j: 1 }, { i: 3, j: 2 }, { i: 4, j: 2 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 7, j: 2 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 10, j: 2 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 1 }, { i: 2, j: 1 }, { i: 16, j: 2 }, { i: 17, j: 2 }, { i: 18, j: 2 }, { i: 19, j: 2 }, { i: 20, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 12, j: 4 }, { i: 14, j: 1 }, { i: 1, j: 3 }, { i: 16, j: 1 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 9, j: 3 }, { i: 10, j: 3 }, { i: 11, j: 3 }, { i: 25, j: 4 }, { i: 13, j: 3 }, { i: 1, j: 2 }, { i: 2, j: 2 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 18, j: 3 }, { i: 19, j: 3 }, { i: 20, j: 3 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 12, j: 5 }, { i: 14, j: 2 }, { i: 1, j: 4 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 10, j: 4 }, { i: 11, j: 4 }, { i: 25, j: 5 }, { i: 13, j: 4 }, { i: 14, j: 4 }, { i: 2, j: 3 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 18, j: 4 }, { i: 19, j: 4 }, { i: 20, j: 4 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 23, j: 4 }, { i: 24, j: 4 }, { i: 11, j: 6 }, { i: 12, j: 6 }, { i: 14, j: 3 }, { i: 1, j: 5 }, { i: 2, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 6, j: 5 }, { i: 7, j: 5 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 10, j: 5 }, { i: 11, j: 5 }, { i: 25, j: 6 }, { i: 13, j: 5 }, { i: 14, j: 5 }, { i: 1, j: 7 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 18, j: 5 }, { i: 19, j: 5 }, { i: 20, j: 5 }, { i: 21, j: 5 }, { i: 22, j: 5 }, { i: 23, j: 5 }, { i: 24, j: 5 }, { i: 11, j: 7 }, { i: 12, j: 7 }, { i: 13, j: 7 }, { i: 1, j: 6 }, { i: 2, j: 6 }, { i: 3, j: 6 }, { i: 4, j: 6 }, { i: 5, j: 6 }, { i: 6, j: 6 }, { i: 7, j: 6 }, { i: 8, j: 6 }, { i: 9, j: 6 }, { i: 10, j: 6 }, { i: 24, j: 7 }, { i: 25, j: 7 }, { i: 13, j: 6 }, { i: 14, j: 6 }, { i: 1, j: 8 }, { i: 16, j: 6 }, { i: 17, j: 6 }, { i: 18, j: 6 }, { i: 19, j: 6 }, { i: 20, j: 6 }, { i: 21, j: 6 }, { i: 22, j: 6 }, { i: 23, j: 6 }, { i: 24, j: 6 }, { i: 11, j: 8 }, { i: 12, j: 8 }, { i: 13, j: 8 }, { i: 14, j: 8 }, { i: 2, j: 7 }, { i: 3, j: 7 }, { i: 4, j: 7 }, { i: 5, j: 7 }, { i: 6, j: 7 }, { i: 7, j: 7 }, { i: 8, j: 7 }, { i: 9, j: 7 }, { i: 10, j: 7 }, { i: 24, j: 8 }, { i: 25, j: 8 }, { i: 12, j: 9 }, { i: 14, j: 7 }, { i: 1, j: 9 }, { i: 16, j: 7 }, { i: 17, j: 7 }, { i: 18, j: 7 }, { i: 19, j: 7 }, { i: 20, j: 7 }, { i: 21, j: 7 }, { i: 22, j: 7 }, { i: 23, j: 7 }, { i: 10, j: 9 }, { i: 11, j: 9 }, { i: 25, j: 9 }, { i: 13, j: 9 }, { i: 14, j: 9 }, { i: 2, j: 8 }, { i: 3, j: 8 }, { i: 4, j: 8 }, { i: 5, j: 8 }, { i: 6, j: 8 }, { i: 7, j: 8 }, { i: 8, j: 8 }, { i: 9, j: 8 }, { i: 10, j: 8 }, { i: 24, j: 9 }, { i: 16, j: 8 }, { i: 17, j: 8 }, { i: 18, j: 8 }, { i: 19, j: 8 }, { i: 20, j: 8 }, { i: 21, j: 8 }, { i: 22, j: 8 }, { i: 23, j: 8 }, { i: 23, j: 9 }, { i: 2, j: 9 }, { i: 3, j: 9 }, { i: 4, j: 9 }, { i: 5, j: 9 }, { i: 6, j: 9 }, { i: 7, j: 9 }, { i: 8, j: 9 }, { i: 9, j: 9 }, { i: 18, j: 9 }, { i: 19, j: 9 }, { i: 16, j: 9 }, { i: 17, j: 9 }, { i: 22, j: 9 }, { i: 20, j: 9 }, { i: 21, j: 9 },  ], css_id: 'tinytable_css_ly7i8lup4vw4l27gel1f',}, 
-          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_lsz61f37kbgw9ggcs4oe',}, 
-          { positions: [ { i: 15, j: 5 }, { i: 15, j: 2 }, { i: 15, j: 9 }, { i: 15, j: 8 }, { i: 15, j: 1 }, { i: 15, j: 6 }, { i: 15, j: 4 }, { i: 15, j: 7 }, { i: 15, j: 3 },  ], css_id: 'tinytable_css_bf5teffm86hni9q4rawu',}, 
-          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_7k45mme48ns9837s1isv',}, 
-          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 8, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 19, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 18, j: 0 }, { i: 23, j: 0 }, { i: 20, j: 0 }, { i: 21, j: 0 }, { i: 22, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 },  ], css_id: 'tinytable_css_6qzvbs8noekg5ezo0mtm',}, 
-          { positions: [ { i: 26, j: 0 },  ], css_id: 'tinytable_css_5zloy238sixcq3085by5',}, 
-          { positions: [ { i: 0, j: 1 }, { i: 0, j: 4 }, { i: 0, j: 7 }, { i: 0, j: 9 }, { i: 0, j: 8 }, { i: 0, j: 3 }, { i: 0, j: 6 }, { i: 0, j: 5 }, { i: 0, j: 2 },  ], css_id: 'tinytable_css_4k2cfs6j8remijldgegg',}, 
-          { positions: [ { i: 15, j: 0 },  ], css_id: 'tinytable_css_27j8n16vwbt6gn8ytsi6',}, 
+          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 8, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 19, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 18, j: 0 }, { i: 23, j: 0 }, { i: 20, j: 0 }, { i: 21, j: 0 }, { i: 22, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 },  ], css_id: 'tinytable_css_s94whnvta4r39ne4v8vd',}, 
+          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_pelknxzffq168b4aochy',}, 
+          { positions: [ { i: 0, j: 1 }, { i: 0, j: 4 }, { i: 0, j: 7 }, { i: 0, j: 9 }, { i: 0, j: 8 }, { i: 0, j: 3 }, { i: 0, j: 6 }, { i: 0, j: 5 }, { i: 0, j: 2 },  ], css_id: 'tinytable_css_oxsz6ziebu73uvtt11qj',}, 
+          { positions: [ { i: 26, j: 8 }, { i: 26, j: 5 }, { i: 26, j: 4 }, { i: 26, j: 7 }, { i: 26, j: 2 }, { i: 26, j: 1 }, { i: 26, j: 3 }, { i: 26, j: 6 }, { i: 26, j: 9 },  ], css_id: 'tinytable_css_k1oyip7lqi7jimdyzvlc',}, 
+          { positions: [ { i: 5, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 4, j: 1 }, { i: 13, j: 1 }, { i: 10, j: 1 }, { i: 7, j: 1 }, { i: 8, j: 1 }, { i: 17, j: 1 }, { i: 18, j: 1 }, { i: 11, j: 1 }, { i: 12, j: 1 }, { i: 21, j: 1 }, { i: 22, j: 1 }, { i: 19, j: 1 }, { i: 20, j: 1 }, { i: 25, j: 1 }, { i: 12, j: 3 }, { i: 23, j: 1 }, { i: 24, j: 1 }, { i: 3, j: 1 }, { i: 3, j: 2 }, { i: 4, j: 2 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 7, j: 2 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 10, j: 2 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 1 }, { i: 2, j: 1 }, { i: 16, j: 2 }, { i: 17, j: 2 }, { i: 18, j: 2 }, { i: 19, j: 2 }, { i: 20, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 12, j: 4 }, { i: 14, j: 1 }, { i: 1, j: 3 }, { i: 16, j: 1 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 9, j: 3 }, { i: 10, j: 3 }, { i: 11, j: 3 }, { i: 25, j: 4 }, { i: 13, j: 3 }, { i: 1, j: 2 }, { i: 2, j: 2 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 18, j: 3 }, { i: 19, j: 3 }, { i: 20, j: 3 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 12, j: 5 }, { i: 14, j: 2 }, { i: 1, j: 4 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 10, j: 4 }, { i: 11, j: 4 }, { i: 25, j: 5 }, { i: 13, j: 4 }, { i: 14, j: 4 }, { i: 2, j: 3 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 18, j: 4 }, { i: 19, j: 4 }, { i: 20, j: 4 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 23, j: 4 }, { i: 24, j: 4 }, { i: 11, j: 6 }, { i: 12, j: 6 }, { i: 14, j: 3 }, { i: 1, j: 5 }, { i: 2, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 6, j: 5 }, { i: 7, j: 5 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 10, j: 5 }, { i: 11, j: 5 }, { i: 25, j: 6 }, { i: 13, j: 5 }, { i: 14, j: 5 }, { i: 1, j: 7 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 18, j: 5 }, { i: 19, j: 5 }, { i: 20, j: 5 }, { i: 21, j: 5 }, { i: 22, j: 5 }, { i: 23, j: 5 }, { i: 24, j: 5 }, { i: 11, j: 7 }, { i: 12, j: 7 }, { i: 13, j: 7 }, { i: 1, j: 6 }, { i: 2, j: 6 }, { i: 3, j: 6 }, { i: 4, j: 6 }, { i: 5, j: 6 }, { i: 6, j: 6 }, { i: 7, j: 6 }, { i: 8, j: 6 }, { i: 9, j: 6 }, { i: 10, j: 6 }, { i: 24, j: 7 }, { i: 25, j: 7 }, { i: 13, j: 6 }, { i: 14, j: 6 }, { i: 1, j: 8 }, { i: 16, j: 6 }, { i: 17, j: 6 }, { i: 18, j: 6 }, { i: 19, j: 6 }, { i: 20, j: 6 }, { i: 21, j: 6 }, { i: 22, j: 6 }, { i: 23, j: 6 }, { i: 24, j: 6 }, { i: 11, j: 8 }, { i: 12, j: 8 }, { i: 13, j: 8 }, { i: 14, j: 8 }, { i: 2, j: 7 }, { i: 3, j: 7 }, { i: 4, j: 7 }, { i: 5, j: 7 }, { i: 6, j: 7 }, { i: 7, j: 7 }, { i: 8, j: 7 }, { i: 9, j: 7 }, { i: 10, j: 7 }, { i: 24, j: 8 }, { i: 25, j: 8 }, { i: 12, j: 9 }, { i: 14, j: 7 }, { i: 1, j: 9 }, { i: 16, j: 7 }, { i: 17, j: 7 }, { i: 18, j: 7 }, { i: 19, j: 7 }, { i: 20, j: 7 }, { i: 21, j: 7 }, { i: 22, j: 7 }, { i: 23, j: 7 }, { i: 10, j: 9 }, { i: 11, j: 9 }, { i: 25, j: 9 }, { i: 13, j: 9 }, { i: 14, j: 9 }, { i: 2, j: 8 }, { i: 3, j: 8 }, { i: 4, j: 8 }, { i: 5, j: 8 }, { i: 6, j: 8 }, { i: 7, j: 8 }, { i: 8, j: 8 }, { i: 9, j: 8 }, { i: 10, j: 8 }, { i: 24, j: 9 }, { i: 16, j: 8 }, { i: 17, j: 8 }, { i: 18, j: 8 }, { i: 19, j: 8 }, { i: 20, j: 8 }, { i: 21, j: 8 }, { i: 22, j: 8 }, { i: 23, j: 8 }, { i: 23, j: 9 }, { i: 2, j: 9 }, { i: 3, j: 9 }, { i: 4, j: 9 }, { i: 5, j: 9 }, { i: 6, j: 9 }, { i: 7, j: 9 }, { i: 8, j: 9 }, { i: 9, j: 9 }, { i: 18, j: 9 }, { i: 19, j: 9 }, { i: 16, j: 9 }, { i: 17, j: 9 }, { i: 22, j: 9 }, { i: 20, j: 9 }, { i: 21, j: 9 },  ], css_id: 'tinytable_css_hcj2vj33izr2h13ve4ic',}, 
+          { positions: [ { i: 15, j: 0 },  ], css_id: 'tinytable_css_gaqgawhzvzqpdck27ast',}, 
+          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_dka6g115r4c8iqqwvixy',}, 
+          { positions: [ { i: 26, j: 0 },  ], css_id: 'tinytable_css_aqw0vxtgnt3lzx3ix1zx',}, 
+          { positions: [ { i: 15, j: 5 }, { i: 15, j: 2 }, { i: 15, j: 9 }, { i: 15, j: 8 }, { i: 15, j: 1 }, { i: 15, j: 6 }, { i: 15, j: 4 }, { i: 15, j: 7 }, { i: 15, j: 3 },  ], css_id: 'tinytable_css_1mrgwcjbif33icni31ta',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  styleCell_1kajyoxj701p6rqjitkc(cell.i, cell.j, group.css_id);
+                  styleCell_4abunj9gxv65x1p3m4ex(cell.i, cell.j, group.css_id);
               });
           });
       });
@@ -720,18 +720,18 @@ window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69
 
     <style>
 
-.table td.tinytable_css_xkuuyyuto4hpsn7jfkuz, .table th.tinytable_css_xkuuyyuto4hpsn7jfkuz { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
-.table td.tinytable_css_ly7i8lup4vw4l27gel1f, .table th.tinytable_css_ly7i8lup4vw4l27gel1f { text-align: center; }
-.table td.tinytable_css_lsz61f37kbgw9ggcs4oe, .table th.tinytable_css_lsz61f37kbgw9ggcs4oe { text-align: left; }
-.table td.tinytable_css_bf5teffm86hni9q4rawu, .table th.tinytable_css_bf5teffm86hni9q4rawu { text-align: center; border-bottom: solid black 0.05em; }
-.table td.tinytable_css_7k45mme48ns9837s1isv, .table th.tinytable_css_7k45mme48ns9837s1isv { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_6qzvbs8noekg5ezo0mtm, .table th.tinytable_css_6qzvbs8noekg5ezo0mtm { text-align: left; padding-left: 1em; }
-.table td.tinytable_css_5zloy238sixcq3085by5, .table th.tinytable_css_5zloy238sixcq3085by5 { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
-.table td.tinytable_css_4k2cfs6j8remijldgegg, .table th.tinytable_css_4k2cfs6j8remijldgegg { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_27j8n16vwbt6gn8ytsi6, .table th.tinytable_css_27j8n16vwbt6gn8ytsi6 { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
+.table td.tinytable_css_s94whnvta4r39ne4v8vd, .table th.tinytable_css_s94whnvta4r39ne4v8vd { text-align: left; padding-left: 1em; }
+.table td.tinytable_css_pelknxzffq168b4aochy, .table th.tinytable_css_pelknxzffq168b4aochy { text-align: left; }
+.table td.tinytable_css_oxsz6ziebu73uvtt11qj, .table th.tinytable_css_oxsz6ziebu73uvtt11qj { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_k1oyip7lqi7jimdyzvlc, .table th.tinytable_css_k1oyip7lqi7jimdyzvlc { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_hcj2vj33izr2h13ve4ic, .table th.tinytable_css_hcj2vj33izr2h13ve4ic { text-align: center; }
+.table td.tinytable_css_gaqgawhzvzqpdck27ast, .table th.tinytable_css_gaqgawhzvzqpdck27ast { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
+.table td.tinytable_css_dka6g115r4c8iqqwvixy, .table th.tinytable_css_dka6g115r4c8iqqwvixy { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_aqw0vxtgnt3lzx3ix1zx, .table th.tinytable_css_aqw0vxtgnt3lzx3ix1zx { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_1mrgwcjbif33icni31ta, .table th.tinytable_css_1mrgwcjbif33icni31ta { text-align: center; border-bottom: solid black 0.05em; }
 </style>
     <div class="container">
-      <table class="table table-borderless" id="tinytable_1kajyoxj701p6rqjitkc" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table table-borderless" id="tinytable_4abunj9gxv65x1p3m4ex" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
         <thead>
         
               <tr>
@@ -751,255 +751,255 @@ window.addEventListener('load', function () { insertSpanRow_s1tqczrhi0s950keaz69
         <tbody>
                 <tr>
                   <td>Treatment              </td>
-                  <td>0.535  </td>
-                  <td>0.529  </td>
-                  <td>0.521  </td>
-                  <td>0.521  </td>
-                  <td>0.521  </td>
-                  <td>0.535  </td>
-                  <td>0.529  </td>
-                  <td>0.521  </td>
-                  <td>0.521  </td>
+                  <td>0.535      </td>
+                  <td>0.529      </td>
+                  <td>0.521      </td>
+                  <td>0.521      </td>
+                  <td>0.521      </td>
+                  <td>0.535      </td>
+                  <td>0.529      </td>
+                  <td>0.521      </td>
+                  <td>0.521      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
-                  <td>(0.066)</td>
-                  <td>(0.073)</td>
-                  <td>(0.058)</td>
-                  <td>(0.058)</td>
-                  <td>(0.060)</td>
-                  <td>(0.081)</td>
-                  <td>(0.102)</td>
-                  <td>(0.060)</td>
-                  <td>(0.060)</td>
+                  <td>(0.054)    </td>
+                  <td>(0.061)    </td>
+                  <td>(0.058)    </td>
+                  <td>(0.058)    </td>
+                  <td>(0.060)    </td>
+                  <td>(0.066)    </td>
+                  <td>(0.084)    </td>
+                  <td>(0.060)    </td>
+                  <td>(0.060)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
-                  <td>0.278  </td>
-                  <td>0.277  </td>
-                  <td>0.242  </td>
-                  <td>0.306  </td>
-                  <td>0.306  </td>
-                  <td>0.278  </td>
-                  <td>0.277  </td>
-                  <td>0.242  </td>
-                  <td>0.306  </td>
+                  <td>0.278      </td>
+                  <td>0.277      </td>
+                  <td>0.242      </td>
+                  <td>0.306      </td>
+                  <td>0.306      </td>
+                  <td>0.278      </td>
+                  <td>0.277      </td>
+                  <td>0.242      </td>
+                  <td>0.306      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
-                  <td>(0.056)</td>
-                  <td>(0.059)</td>
-                  <td>(0.043)</td>
-                  <td>(0.060)</td>
-                  <td>(0.061)</td>
-                  <td>(0.068)</td>
-                  <td>(0.081)</td>
-                  <td>(0.044)</td>
-                  <td>(0.063)</td>
+                  <td>(0.066)    </td>
+                  <td>(0.068)    </td>
+                  <td>(0.072)    </td>
+                  <td>(0.092)    </td>
+                  <td>(0.094)    </td>
+                  <td>(0.080)    </td>
+                  <td>(0.095)    </td>
+                  <td>(0.074)    </td>
+                  <td>(0.097)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
-                  <td>0.873  </td>
-                  <td>0.850  </td>
-                  <td>0.861  </td>
-                  <td>0.861  </td>
-                  <td>0.861  </td>
-                  <td>0.873  </td>
-                  <td>0.850  </td>
-                  <td>0.861  </td>
-                  <td>0.861  </td>
+                  <td>0.873      </td>
+                  <td>0.850      </td>
+                  <td>0.861      </td>
+                  <td>0.861      </td>
+                  <td>0.861      </td>
+                  <td>0.873      </td>
+                  <td>0.850      </td>
+                  <td>0.861      </td>
+                  <td>0.861      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
-                  <td>(0.094)</td>
-                  <td>(0.103)</td>
-                  <td>(0.082)</td>
-                  <td>(0.082)</td>
-                  <td>(0.084)</td>
-                  <td>(0.114)</td>
-                  <td>(0.143)</td>
-                  <td>(0.084)</td>
-                  <td>(0.084)</td>
+                  <td>(0.027)    </td>
+                  <td>(0.025)    </td>
+                  <td>(0.028)    </td>
+                  <td>(0.028)    </td>
+                  <td>(0.028)    </td>
+                  <td>(0.033)    </td>
+                  <td>(0.035)    </td>
+                  <td>(0.028)    </td>
+                  <td>(0.028)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
-                  <td>0.549  </td>
-                  <td>0.572  </td>
-                  <td>0.525  </td>
-                  <td>0.526  </td>
-                  <td>0.526  </td>
-                  <td>0.549  </td>
-                  <td>0.572  </td>
-                  <td>0.525  </td>
-                  <td>0.526  </td>
+                  <td>0.549      </td>
+                  <td>0.572      </td>
+                  <td>0.525      </td>
+                  <td>0.526      </td>
+                  <td>0.526      </td>
+                  <td>0.549      </td>
+                  <td>0.572      </td>
+                  <td>0.525      </td>
+                  <td>0.526      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
-                  <td>(0.076)</td>
-                  <td>(0.086)</td>
-                  <td>(0.064)</td>
-                  <td>(0.065)</td>
-                  <td>(0.067)</td>
-                  <td>(0.092)</td>
-                  <td>(0.120)</td>
-                  <td>(0.065)</td>
-                  <td>(0.068)</td>
+                  <td>(0.062)    </td>
+                  <td>(0.065)    </td>
+                  <td>(0.065)    </td>
+                  <td>(0.066)    </td>
+                  <td>(0.067)    </td>
+                  <td>(0.076)    </td>
+                  <td>(0.090)    </td>
+                  <td>(0.066)    </td>
+                  <td>(0.069)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
-                  <td>20     </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
-                  <td>0.440  </td>
-                  <td>0.333  </td>
-                  <td>0.375  </td>
-                  <td>0.372  </td>
-                  <td>0.372  </td>
-                  <td>0.440  </td>
-                  <td>0.333  </td>
-                  <td>0.375  </td>
-                  <td>0.372  </td>
+                  <td>0.440      </td>
+                  <td>0.333      </td>
+                  <td>0.375      </td>
+                  <td>0.372      </td>
+                  <td>0.372      </td>
+                  <td>0.440      </td>
+                  <td>0.333      </td>
+                  <td>0.375      </td>
+                  <td>0.372      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
-                  <td>(0.229)</td>
-                  <td>(0.187)</td>
-                  <td>(0.180)</td>
-                  <td>(0.184)</td>
-                  <td>(0.190)</td>
-                  <td>(0.273)</td>
-                  <td>(0.247)</td>
-                  <td>(0.184)</td>
-                  <td>(0.193)</td>
+                  <td>(0.225)    </td>
+                  <td>(0.184)    </td>
+                  <td>(0.196)    </td>
+                  <td>(0.186)    </td>
+                  <td>(0.192)    </td>
+                  <td>(0.268)    </td>
+                  <td>(0.243)    </td>
+                  <td>(0.201)    </td>
+                  <td>(0.195)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
-                  <td>114    </td>
-                  <td>108    </td>
-                  <td>120    </td>
-                  <td>120    </td>
-                  <td>40     </td>
-                  <td>19     </td>
-                  <td>18     </td>
-                  <td>20     </td>
-                  <td>20     </td>
+                  <td>114        </td>
+                  <td>108        </td>
+                  <td>120        </td>
+                  <td>120        </td>
+                  <td>40         </td>
+                  <td>19         </td>
+                  <td>18         </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Std.Errors             </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
-                  <td>IID    </td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
+                  <td>by: village</td>
                 </tr>
                 <tr>
                   <td>FE: stratum            </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>FE: panchayat_village  </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>FE: block              </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>FE: data_round         </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>Control: baseline level</td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
-                  <td>X      </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>       </td>
-                  <td>X      </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
+                  <td>X          </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>           </td>
+                  <td>X          </td>
                 </tr>
         </tbody>
       </table>
@@ -1015,8 +1015,8 @@ village level.</p>
 
     <script>
 
-      function styleCell_7ood5xaqpesx8ad3jko5(i, j, css_id) {
-          var table = document.getElementById("tinytable_7ood5xaqpesx8ad3jko5");
+      function styleCell_wb2fwogzhmnwtpy76l9r(i, j, css_id) {
+          var table = document.getElementById("tinytable_wb2fwogzhmnwtpy76l9r");
           var cell = table.rows[i]?.cells[j];  // Safe navigation to avoid errors
           if (cell) {
               console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
@@ -1025,8 +1025,8 @@ village level.</p>
               console.warn(`Cell at (${i}, ${j}) not found.`);
           }
       }
-      function insertSpanRow_1593zh4fsvm8k4nwq4eg(i, colspan, content) {
-        var table = document.getElementById('tinytable_7ood5xaqpesx8ad3jko5');
+      function insertSpanRow_2su91guopzbnr1aogfto(i, colspan, content) {
+        var table = document.getElementById('tinytable_wb2fwogzhmnwtpy76l9r');
         var newRow = table.insertRow(i);
         var newCell = newRow.insertCell(0);
         newCell.setAttribute("colspan", colspan);
@@ -1034,8 +1034,8 @@ village level.</p>
         // this may be unsafe, but innerText does not interpret <br>
         newCell.innerHTML = content;
       }
-      function spanCell_7ood5xaqpesx8ad3jko5(i, j, rowspan, colspan) {
-        var table = document.getElementById("tinytable_7ood5xaqpesx8ad3jko5");
+      function spanCell_wb2fwogzhmnwtpy76l9r(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_wb2fwogzhmnwtpy76l9r");
         const targetRow = table.rows[i];
         const targetCell = targetRow.cells[j];
         for (let r = 0; r < rowspan; r++) {
@@ -1062,30 +1062,30 @@ village level.</p>
         targetCell.colSpan = colspan;
       }
       // tinytable span after
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(16, 9, 'Time Spent Treating Water is >5 Minutes') });
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(13, 9, 'Reported Water Taste/Smell Issue') });
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(10, 9, 'Treat Water') });
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(7, 9, 'Drink Tap Water') });
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(4, 9, 'Use a Secondary Source') });
-window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg(1, 9, 'Taps as Primary Source') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(16, 9, 'Time Spent Treating Water is >5 Minutes') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(13, 9, 'Reported Water Taste/Smell Issue') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(10, 9, 'Treat Water') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(7, 9, 'Drink Tap Water') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(4, 9, 'Use a Secondary Source') });
+window.addEventListener('load', function () { insertSpanRow_2su91guopzbnr1aogfto(1, 9, 'Taps as Primary Source') });
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 21, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_x9l2od75bp3ph3ra1nzp',}, 
-          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_v99lsz14t4umtjldbmzq',}, 
-          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 15, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 22, j: 0 }, { i: 19, j: 0 }, { i: 20, j: 0 }, { i: 8, j: 0 }, { i: 26, j: 0 }, { i: 23, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 }, { i: 27, j: 0 }, { i: 28, j: 0 },  ], css_id: 'tinytable_css_qpouv9alm9tvqjud7vtt',}, 
-          { positions: [ { i: 29, j: 0 },  ], css_id: 'tinytable_css_qhebhqjr5th5i0q2r6m3',}, 
-          { positions: [ { i: 0, j: 1 }, { i: 0, j: 5 }, { i: 0, j: 4 }, { i: 0, j: 3 }, { i: 0, j: 2 }, { i: 0, j: 6 }, { i: 0, j: 8 }, { i: 0, j: 7 },  ], css_id: 'tinytable_css_qge9m2uakpgtzwa8icji',}, 
-          { positions: [ { i: 18, j: 6 }, { i: 18, j: 8 }, { i: 18, j: 7 }, { i: 18, j: 5 }, { i: 18, j: 4 }, { i: 18, j: 2 }, { i: 18, j: 1 }, { i: 18, j: 3 },  ], css_id: 'tinytable_css_pdue2f8tyvpkr90irloz',}, 
-          { positions: [ { i: 18, j: 0 },  ], css_id: 'tinytable_css_ovlzys0tzrgo5z4qar8x',}, 
-          { positions: [ { i: 2, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 3, j: 1 }, { i: 12, j: 1 }, { i: 13, j: 1 }, { i: 1, j: 1 }, { i: 15, j: 1 }, { i: 16, j: 1 }, { i: 4, j: 1 }, { i: 5, j: 1 }, { i: 19, j: 1 }, { i: 7, j: 1 }, { i: 8, j: 1 }, { i: 22, j: 1 }, { i: 23, j: 1 }, { i: 11, j: 1 }, { i: 25, j: 1 }, { i: 26, j: 1 }, { i: 14, j: 1 }, { i: 28, j: 1 }, { i: 9, j: 3 }, { i: 17, j: 1 }, { i: 28, j: 2 }, { i: 2, j: 2 }, { i: 3, j: 2 }, { i: 21, j: 1 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 24, j: 1 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 27, j: 1 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 2 }, { i: 15, j: 2 }, { i: 16, j: 2 }, { i: 4, j: 2 }, { i: 28, j: 3 }, { i: 19, j: 2 }, { i: 7, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 26, j: 2 }, { i: 14, j: 2 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 17, j: 2 }, { i: 1, j: 3 }, { i: 2, j: 3 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 19, j: 4 }, { i: 27, j: 2 }, { i: 11, j: 3 }, { i: 12, j: 3 }, { i: 13, j: 3 }, { i: 14, j: 3 }, { i: 15, j: 3 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 28, j: 4 }, { i: 19, j: 3 }, { i: 10, j: 2 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 26, j: 3 }, { i: 27, j: 3 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 10, j: 1 }, { i: 1, j: 4 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 28, j: 6 }, { i: 19, j: 5 }, { i: 20, j: 1 }, { i: 11, j: 4 }, { i: 12, j: 4 }, { i: 13, j: 4 }, { i: 14, j: 4 }, { i: 15, j: 4 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 28, j: 5 }, { i: 9, j: 7 }, { i: 10, j: 3 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 23, j: 4 }, { i: 24, j: 4 }, { i: 25, j: 4 }, { i: 26, j: 4 }, { i: 27, j: 4 }, { i: 8, j: 6 }, { i: 9, j: 6 }, { i: 20, j: 3 }, { i: 1, j: 5 }, { i: 2, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 6, j: 5 }, { i: 7, j: 5 }, { i: 28, j: 7 }, { i: 19, j: 6 }, { i: 20, j: 2 }, { i: 11, j: 5 }, { i: 12, j: 5 }, { i: 13, j: 5 }, { i: 14, j: 5 }, { i: 15, j: 5 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 8, j: 8 }, { i: 9, j: 8 }, { i: 10, j: 4 }, { i: 21, j: 5 }, { i: 22, j: 5 }, { i: 23, j: 5 }, { i: 24, j: 5 }, { i: 25, j: 5 }, { i: 26, j: 5 }, { i: 27, j: 5 }, { i: 8, j: 7 }, { i: 19, j: 8 }, { i: 20, j: 4 }, { i: 1, j: 6 }, { i: 2, j: 6 }, { i: 3, j: 6 }, { i: 4, j: 6 }, { i: 5, j: 6 }, { i: 6, j: 6 }, { i: 7, j: 6 }, { i: 28, j: 8 }, { i: 19, j: 7 }, { i: 10, j: 6 }, { i: 11, j: 6 }, { i: 12, j: 6 }, { i: 13, j: 6 }, { i: 14, j: 6 }, { i: 15, j: 6 }, { i: 16, j: 6 }, { i: 17, j: 6 }, { i: 1, j: 7 }, { i: 2, j: 7 }, { i: 10, j: 5 }, { i: 21, j: 6 }, { i: 22, j: 6 }, { i: 23, j: 6 }, { i: 24, j: 6 }, { i: 25, j: 6 }, { i: 26, j: 6 }, { i: 27, j: 6 }, { i: 11, j: 7 }, { i: 12, j: 7 }, { i: 20, j: 5 }, { i: 14, j: 7 }, { i: 15, j: 7 }, { i: 3, j: 7 }, { i: 4, j: 7 }, { i: 5, j: 7 }, { i: 6, j: 7 }, { i: 7, j: 7 }, { i: 21, j: 7 }, { i: 22, j: 7 }, { i: 10, j: 7 }, { i: 24, j: 7 }, { i: 25, j: 7 }, { i: 13, j: 7 }, { i: 27, j: 7 }, { i: 11, j: 8 }, { i: 16, j: 7 }, { i: 17, j: 7 }, { i: 1, j: 8 }, { i: 2, j: 8 }, { i: 20, j: 7 }, { i: 4, j: 8 }, { i: 5, j: 8 }, { i: 23, j: 7 }, { i: 7, j: 8 }, { i: 21, j: 8 }, { i: 26, j: 7 }, { i: 10, j: 8 }, { i: 24, j: 8 }, { i: 12, j: 8 }, { i: 20, j: 6 }, { i: 14, j: 8 }, { i: 15, j: 8 }, { i: 3, j: 8 }, { i: 17, j: 8 }, { i: 22, j: 8 }, { i: 6, j: 8 }, { i: 20, j: 8 }, { i: 25, j: 8 }, { i: 13, j: 8 }, { i: 23, j: 8 }, { i: 16, j: 8 }, { i: 27, j: 8 }, { i: 26, j: 8 },  ], css_id: 'tinytable_css_kvwc360axol9it5wcljx',}, 
-          { positions: [ { i: 29, j: 2 }, { i: 29, j: 1 }, { i: 29, j: 3 }, { i: 29, j: 7 }, { i: 29, j: 6 }, { i: 29, j: 5 }, { i: 29, j: 4 }, { i: 29, j: 8 },  ], css_id: 'tinytable_css_f2j7ezhxwb3l3r5cqsnk',}, 
+          { positions: [ { i: 29, j: 0 },  ], css_id: 'tinytable_css_x6vyillh5gm49ntryz9e',}, 
+          { positions: [ { i: 2, j: 1 }, { i: 9, j: 1 }, { i: 6, j: 1 }, { i: 3, j: 1 }, { i: 12, j: 1 }, { i: 13, j: 1 }, { i: 1, j: 1 }, { i: 15, j: 1 }, { i: 16, j: 1 }, { i: 4, j: 1 }, { i: 5, j: 1 }, { i: 19, j: 1 }, { i: 7, j: 1 }, { i: 8, j: 1 }, { i: 22, j: 1 }, { i: 23, j: 1 }, { i: 11, j: 1 }, { i: 25, j: 1 }, { i: 26, j: 1 }, { i: 14, j: 1 }, { i: 28, j: 1 }, { i: 9, j: 3 }, { i: 17, j: 1 }, { i: 28, j: 2 }, { i: 2, j: 2 }, { i: 3, j: 2 }, { i: 21, j: 1 }, { i: 5, j: 2 }, { i: 6, j: 2 }, { i: 24, j: 1 }, { i: 8, j: 2 }, { i: 9, j: 2 }, { i: 27, j: 1 }, { i: 11, j: 2 }, { i: 12, j: 2 }, { i: 13, j: 2 }, { i: 1, j: 2 }, { i: 15, j: 2 }, { i: 16, j: 2 }, { i: 4, j: 2 }, { i: 28, j: 3 }, { i: 19, j: 2 }, { i: 7, j: 2 }, { i: 21, j: 2 }, { i: 22, j: 2 }, { i: 23, j: 2 }, { i: 24, j: 2 }, { i: 25, j: 2 }, { i: 26, j: 2 }, { i: 14, j: 2 }, { i: 8, j: 4 }, { i: 9, j: 4 }, { i: 17, j: 2 }, { i: 1, j: 3 }, { i: 2, j: 3 }, { i: 3, j: 3 }, { i: 4, j: 3 }, { i: 5, j: 3 }, { i: 6, j: 3 }, { i: 7, j: 3 }, { i: 8, j: 3 }, { i: 19, j: 4 }, { i: 27, j: 2 }, { i: 11, j: 3 }, { i: 12, j: 3 }, { i: 13, j: 3 }, { i: 14, j: 3 }, { i: 15, j: 3 }, { i: 16, j: 3 }, { i: 17, j: 3 }, { i: 28, j: 4 }, { i: 19, j: 3 }, { i: 10, j: 2 }, { i: 21, j: 3 }, { i: 22, j: 3 }, { i: 23, j: 3 }, { i: 24, j: 3 }, { i: 25, j: 3 }, { i: 26, j: 3 }, { i: 27, j: 3 }, { i: 8, j: 5 }, { i: 9, j: 5 }, { i: 10, j: 1 }, { i: 1, j: 4 }, { i: 2, j: 4 }, { i: 3, j: 4 }, { i: 4, j: 4 }, { i: 5, j: 4 }, { i: 6, j: 4 }, { i: 7, j: 4 }, { i: 28, j: 6 }, { i: 19, j: 5 }, { i: 20, j: 1 }, { i: 11, j: 4 }, { i: 12, j: 4 }, { i: 13, j: 4 }, { i: 14, j: 4 }, { i: 15, j: 4 }, { i: 16, j: 4 }, { i: 17, j: 4 }, { i: 28, j: 5 }, { i: 9, j: 7 }, { i: 10, j: 3 }, { i: 21, j: 4 }, { i: 22, j: 4 }, { i: 23, j: 4 }, { i: 24, j: 4 }, { i: 25, j: 4 }, { i: 26, j: 4 }, { i: 27, j: 4 }, { i: 8, j: 6 }, { i: 9, j: 6 }, { i: 20, j: 3 }, { i: 1, j: 5 }, { i: 2, j: 5 }, { i: 3, j: 5 }, { i: 4, j: 5 }, { i: 5, j: 5 }, { i: 6, j: 5 }, { i: 7, j: 5 }, { i: 28, j: 7 }, { i: 19, j: 6 }, { i: 20, j: 2 }, { i: 11, j: 5 }, { i: 12, j: 5 }, { i: 13, j: 5 }, { i: 14, j: 5 }, { i: 15, j: 5 }, { i: 16, j: 5 }, { i: 17, j: 5 }, { i: 8, j: 8 }, { i: 9, j: 8 }, { i: 10, j: 4 }, { i: 21, j: 5 }, { i: 22, j: 5 }, { i: 23, j: 5 }, { i: 24, j: 5 }, { i: 25, j: 5 }, { i: 26, j: 5 }, { i: 27, j: 5 }, { i: 8, j: 7 }, { i: 19, j: 8 }, { i: 20, j: 4 }, { i: 1, j: 6 }, { i: 2, j: 6 }, { i: 3, j: 6 }, { i: 4, j: 6 }, { i: 5, j: 6 }, { i: 6, j: 6 }, { i: 7, j: 6 }, { i: 28, j: 8 }, { i: 19, j: 7 }, { i: 10, j: 6 }, { i: 11, j: 6 }, { i: 12, j: 6 }, { i: 13, j: 6 }, { i: 14, j: 6 }, { i: 15, j: 6 }, { i: 16, j: 6 }, { i: 17, j: 6 }, { i: 1, j: 7 }, { i: 2, j: 7 }, { i: 10, j: 5 }, { i: 21, j: 6 }, { i: 22, j: 6 }, { i: 23, j: 6 }, { i: 24, j: 6 }, { i: 25, j: 6 }, { i: 26, j: 6 }, { i: 27, j: 6 }, { i: 11, j: 7 }, { i: 12, j: 7 }, { i: 20, j: 5 }, { i: 14, j: 7 }, { i: 15, j: 7 }, { i: 3, j: 7 }, { i: 4, j: 7 }, { i: 5, j: 7 }, { i: 6, j: 7 }, { i: 7, j: 7 }, { i: 21, j: 7 }, { i: 22, j: 7 }, { i: 10, j: 7 }, { i: 24, j: 7 }, { i: 25, j: 7 }, { i: 13, j: 7 }, { i: 27, j: 7 }, { i: 11, j: 8 }, { i: 16, j: 7 }, { i: 17, j: 7 }, { i: 1, j: 8 }, { i: 2, j: 8 }, { i: 20, j: 7 }, { i: 4, j: 8 }, { i: 5, j: 8 }, { i: 23, j: 7 }, { i: 7, j: 8 }, { i: 21, j: 8 }, { i: 26, j: 7 }, { i: 10, j: 8 }, { i: 24, j: 8 }, { i: 12, j: 8 }, { i: 20, j: 6 }, { i: 14, j: 8 }, { i: 15, j: 8 }, { i: 3, j: 8 }, { i: 17, j: 8 }, { i: 22, j: 8 }, { i: 6, j: 8 }, { i: 20, j: 8 }, { i: 25, j: 8 }, { i: 13, j: 8 }, { i: 23, j: 8 }, { i: 16, j: 8 }, { i: 27, j: 8 }, { i: 26, j: 8 },  ], css_id: 'tinytable_css_wwmvelo2on30pz8oja73',}, 
+          { positions: [ { i: 29, j: 2 }, { i: 29, j: 1 }, { i: 29, j: 3 }, { i: 29, j: 7 }, { i: 29, j: 6 }, { i: 29, j: 5 }, { i: 29, j: 4 }, { i: 29, j: 8 },  ], css_id: 'tinytable_css_wr7io4orifswvzzd1b8o',}, 
+          { positions: [ { i: 0, j: 1 }, { i: 0, j: 5 }, { i: 0, j: 4 }, { i: 0, j: 3 }, { i: 0, j: 2 }, { i: 0, j: 6 }, { i: 0, j: 8 }, { i: 0, j: 7 },  ], css_id: 'tinytable_css_nb5rjng9g49k5a4osva6',}, 
+          { positions: [ { i: 1, j: 0 }, { i: 17, j: 0 }, { i: 5, j: 0 }, { i: 21, j: 0 }, { i: 9, j: 0 }, { i: 13, j: 0 },  ], css_id: 'tinytable_css_juz2nhn0vh9jkwdy5xye',}, 
+          { positions: [ { i: 18, j: 6 }, { i: 18, j: 8 }, { i: 18, j: 7 }, { i: 18, j: 5 }, { i: 18, j: 4 }, { i: 18, j: 2 }, { i: 18, j: 1 }, { i: 18, j: 3 },  ], css_id: 'tinytable_css_hhjabi42iarozanfiqgg',}, 
+          { positions: [ { i: 2, j: 0 }, { i: 3, j: 0 }, { i: 6, j: 0 }, { i: 7, j: 0 }, { i: 10, j: 0 }, { i: 11, j: 0 }, { i: 12, j: 0 }, { i: 14, j: 0 }, { i: 15, j: 0 }, { i: 16, j: 0 }, { i: 4, j: 0 }, { i: 22, j: 0 }, { i: 19, j: 0 }, { i: 20, j: 0 }, { i: 8, j: 0 }, { i: 26, j: 0 }, { i: 23, j: 0 }, { i: 24, j: 0 }, { i: 25, j: 0 }, { i: 27, j: 0 }, { i: 28, j: 0 },  ], css_id: 'tinytable_css_gje9yxpilssbarfzhmmq',}, 
+          { positions: [ { i: 0, j: 0 },  ], css_id: 'tinytable_css_8855a9av7br2lj495b89',}, 
+          { positions: [ { i: 18, j: 0 },  ], css_id: 'tinytable_css_58s2pmhmmrov0k9dxb46',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  styleCell_7ood5xaqpesx8ad3jko5(cell.i, cell.j, group.css_id);
+                  styleCell_wb2fwogzhmnwtpy76l9r(cell.i, cell.j, group.css_id);
               });
           });
       });
@@ -1093,18 +1093,18 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
 
     <style>
 
-.table td.tinytable_css_x9l2od75bp3ph3ra1nzp, .table th.tinytable_css_x9l2od75bp3ph3ra1nzp { text-align: left; }
-.table td.tinytable_css_v99lsz14t4umtjldbmzq, .table th.tinytable_css_v99lsz14t4umtjldbmzq { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_qpouv9alm9tvqjud7vtt, .table th.tinytable_css_qpouv9alm9tvqjud7vtt { text-align: left; padding-left: 1em; }
-.table td.tinytable_css_qhebhqjr5th5i0q2r6m3, .table th.tinytable_css_qhebhqjr5th5i0q2r6m3 { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
-.table td.tinytable_css_qge9m2uakpgtzwa8icji, .table th.tinytable_css_qge9m2uakpgtzwa8icji { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
-.table td.tinytable_css_pdue2f8tyvpkr90irloz, .table th.tinytable_css_pdue2f8tyvpkr90irloz { text-align: center; border-bottom: solid black 0.05em; }
-.table td.tinytable_css_ovlzys0tzrgo5z4qar8x, .table th.tinytable_css_ovlzys0tzrgo5z4qar8x { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
-.table td.tinytable_css_kvwc360axol9it5wcljx, .table th.tinytable_css_kvwc360axol9it5wcljx { text-align: center; }
-.table td.tinytable_css_f2j7ezhxwb3l3r5cqsnk, .table th.tinytable_css_f2j7ezhxwb3l3r5cqsnk { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_x6vyillh5gm49ntryz9e, .table th.tinytable_css_x6vyillh5gm49ntryz9e { text-align: left; padding-left: 1em; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_wwmvelo2on30pz8oja73, .table th.tinytable_css_wwmvelo2on30pz8oja73 { text-align: center; }
+.table td.tinytable_css_wr7io4orifswvzzd1b8o, .table th.tinytable_css_wr7io4orifswvzzd1b8o { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+.table td.tinytable_css_nb5rjng9g49k5a4osva6, .table th.tinytable_css_nb5rjng9g49k5a4osva6 { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_juz2nhn0vh9jkwdy5xye, .table th.tinytable_css_juz2nhn0vh9jkwdy5xye { text-align: left; }
+.table td.tinytable_css_hhjabi42iarozanfiqgg, .table th.tinytable_css_hhjabi42iarozanfiqgg { text-align: center; border-bottom: solid black 0.05em; }
+.table td.tinytable_css_gje9yxpilssbarfzhmmq, .table th.tinytable_css_gje9yxpilssbarfzhmmq { text-align: left; padding-left: 1em; }
+.table td.tinytable_css_8855a9av7br2lj495b89, .table th.tinytable_css_8855a9av7br2lj495b89 { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+.table td.tinytable_css_58s2pmhmmrov0k9dxb46, .table th.tinytable_css_58s2pmhmmrov0k9dxb46 { text-align: left; border-bottom: solid black 0.05em; padding-left: 1em; }
 </style>
     <div class="container">
-      <table class="table table-borderless" id="tinytable_7ood5xaqpesx8ad3jko5" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table table-borderless" id="tinytable_wb2fwogzhmnwtpy76l9r" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
         <thead>
         
               <tr>
@@ -1127,10 +1127,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>0.952        </td>
                   <td>1.027      </td>
                   <td>0.981      </td>
-                  <td>0.993   </td>
-                  <td>0.952         </td>
-                  <td>1.026   </td>
-                  <td>1.027   </td>
+                  <td>0.993      </td>
+                  <td>0.952          </td>
+                  <td>1.026      </td>
+                  <td>1.027      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1138,10 +1138,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(0.114)      </td>
                   <td>(0.130)    </td>
                   <td>(0.061)    </td>
-                  <td>(0.106) </td>
-                  <td>(0.125)       </td>
-                  <td>(0.082) </td>
-                  <td>(0.085) </td>
+                  <td>(0.154)    </td>
+                  <td>(0.164)        </td>
+                  <td>(0.135)    </td>
+                  <td>(0.137)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1149,10 +1149,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>880          </td>
                   <td>880        </td>
                   <td>878        </td>
-                  <td>20      </td>
-                  <td>20            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>20         </td>
+                  <td>20             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
@@ -1160,10 +1160,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>1.243        </td>
                   <td>0.991      </td>
                   <td>0.927      </td>
-                  <td>1.097   </td>
-                  <td>1.243         </td>
-                  <td>0.990   </td>
-                  <td>0.933   </td>
+                  <td>1.097      </td>
+                  <td>1.243          </td>
+                  <td>0.990      </td>
+                  <td>0.933      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1171,10 +1171,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(0.343)      </td>
                   <td>(0.291)    </td>
                   <td>(0.221)    </td>
-                  <td>(0.164) </td>
-                  <td>(0.236)       </td>
-                  <td>(0.114) </td>
-                  <td>(0.111) </td>
+                  <td>(0.299)    </td>
+                  <td>(0.496)        </td>
+                  <td>(0.298)    </td>
+                  <td>(0.183)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1182,10 +1182,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>880          </td>
                   <td>880        </td>
                   <td>877        </td>
-                  <td>20      </td>
-                  <td>20            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>20         </td>
+                  <td>20             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
@@ -1193,10 +1193,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>1.016        </td>
                   <td>1.066      </td>
                   <td>1.023      </td>
-                  <td>1.062   </td>
-                  <td>1.016         </td>
-                  <td>1.066   </td>
-                  <td>1.055   </td>
+                  <td>1.062      </td>
+                  <td>1.016          </td>
+                  <td>1.066      </td>
+                  <td>1.055      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1204,10 +1204,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(0.068)      </td>
                   <td>(0.099)    </td>
                   <td>(0.060)    </td>
-                  <td>(0.109) </td>
-                  <td>(0.128)       </td>
-                  <td>(0.082) </td>
-                  <td>(0.084) </td>
+                  <td>(0.116)    </td>
+                  <td>(0.098)        </td>
+                  <td>(0.103)    </td>
+                  <td>(0.098)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1215,10 +1215,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>880          </td>
                   <td>880        </td>
                   <td>869        </td>
-                  <td>20      </td>
-                  <td>20            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>20         </td>
+                  <td>20             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
@@ -1226,10 +1226,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>0.834        </td>
                   <td>0.873      </td>
                   <td>0.867      </td>
-                  <td>0.849   </td>
-                  <td>0.834         </td>
-                  <td>0.873   </td>
-                  <td>0.871   </td>
+                  <td>0.849      </td>
+                  <td>0.834          </td>
+                  <td>0.873      </td>
+                  <td>0.871      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1237,10 +1237,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(0.030)      </td>
                   <td>(0.036)    </td>
                   <td>(0.032)    </td>
-                  <td>(0.095) </td>
-                  <td>(0.115)       </td>
-                  <td>(0.072) </td>
-                  <td>(0.075) </td>
+                  <td>(0.039)    </td>
+                  <td>(0.044)        </td>
+                  <td>(0.037)    </td>
+                  <td>(0.038)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1248,10 +1248,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>880          </td>
                   <td>880        </td>
                   <td>878        </td>
-                  <td>20      </td>
-                  <td>20            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>20         </td>
+                  <td>20             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
@@ -1259,10 +1259,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>63671986.273 </td>
                   <td>46.914     </td>
                   <td>46.914     </td>
-                  <td>37.344  </td>
-                  <td>6309421984.504</td>
-                  <td>46.897  </td>
-                  <td>44.456  </td>
+                  <td>37.344     </td>
+                  <td>6309421984.504 </td>
+                  <td>46.897     </td>
+                  <td>44.456     </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1270,10 +1270,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(5536753.701)</td>
                   <td>(50.254)   </td>
                   <td>(50.254)   </td>
-                  <td>(46.451)</td>
-                  <td>(7.78e+13)    </td>
-                  <td>(48.775)</td>
-                  <td>(47.696)</td>
+                  <td>(46.507)   </td>
+                  <td>(792999138.719)</td>
+                  <td>(51.576)   </td>
+                  <td>(50.741)   </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1281,10 +1281,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>715          </td>
                   <td>880        </td>
                   <td>880        </td>
-                  <td>19      </td>
-                  <td>17            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>19         </td>
+                  <td>17             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Treatment              </td>
@@ -1292,10 +1292,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>0.801        </td>
                   <td>0.851      </td>
                   <td>0.851      </td>
-                  <td>0.799   </td>
-                  <td>0.801         </td>
-                  <td>0.850   </td>
-                  <td>0.838   </td>
+                  <td>0.799      </td>
+                  <td>0.801          </td>
+                  <td>0.850      </td>
+                  <td>0.838      </td>
                 </tr>
                 <tr>
                   <td>                       </td>
@@ -1303,10 +1303,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>(0.050)      </td>
                   <td>(0.073)    </td>
                   <td>(0.073)    </td>
-                  <td>(0.101) </td>
-                  <td>(0.126)       </td>
-                  <td>(0.080) </td>
-                  <td>(0.083) </td>
+                  <td>(0.058)    </td>
+                  <td>(0.073)        </td>
+                  <td>(0.076)    </td>
+                  <td>(0.081)    </td>
                 </tr>
                 <tr>
                   <td>Num.Obs.               </td>
@@ -1314,10 +1314,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>880          </td>
                   <td>880        </td>
                   <td>880        </td>
-                  <td>20      </td>
-                  <td>20            </td>
-                  <td>20      </td>
-                  <td>20      </td>
+                  <td>20         </td>
+                  <td>20             </td>
+                  <td>20         </td>
+                  <td>20         </td>
                 </tr>
                 <tr>
                   <td>Std.Errors             </td>
@@ -1325,10 +1325,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>by: village  </td>
                   <td>by: village</td>
                   <td>by: village</td>
-                  <td>IID     </td>
-                  <td>IID           </td>
-                  <td>IID     </td>
-                  <td>IID     </td>
+                  <td>by: village</td>
+                  <td>by: village    </td>
+                  <td>by: village</td>
+                  <td>by: village</td>
                 </tr>
                 <tr>
                   <td>FE: stratum            </td>
@@ -1336,10 +1336,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>X            </td>
                   <td>           </td>
                   <td>           </td>
-                  <td>        </td>
-                  <td>X             </td>
-                  <td>        </td>
-                  <td>        </td>
+                  <td>           </td>
+                  <td>X              </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>FE: panchayat_village  </td>
@@ -1347,10 +1347,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>             </td>
                   <td>           </td>
                   <td>           </td>
-                  <td>X       </td>
-                  <td>              </td>
-                  <td>        </td>
-                  <td>        </td>
+                  <td>X          </td>
+                  <td>               </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>FE: block              </td>
@@ -1358,10 +1358,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>             </td>
                   <td>           </td>
                   <td>           </td>
-                  <td>X       </td>
-                  <td>              </td>
-                  <td>        </td>
-                  <td>        </td>
+                  <td>X          </td>
+                  <td>               </td>
+                  <td>           </td>
+                  <td>           </td>
                 </tr>
                 <tr>
                   <td>Control: baseline level</td>
@@ -1369,10 +1369,10 @@ window.addEventListener('load', function () { insertSpanRow_1593zh4fsvm8k4nwq4eg
                   <td>             </td>
                   <td>           </td>
                   <td>X          </td>
-                  <td>        </td>
-                  <td>              </td>
-                  <td>        </td>
-                  <td>X       </td>
+                  <td>           </td>
+                  <td>               </td>
+                  <td>           </td>
+                  <td>X          </td>
                 </tr>
         </tbody>
       </table>

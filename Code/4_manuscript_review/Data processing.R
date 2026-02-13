@@ -16,7 +16,7 @@ cen         <- read_csv(file.path(user_path(), "1_1_baseline_census.csv"))
 bl          <- read_csv(file.path(user_path(), "1_1_baseline_survey.csv"))
 el          <- read_csv(file.path(user_path(), "1_8_endline_census.csv"))
 idexx_tab   <- read_csv(file.path(user_path(), "1_10_idexx_all_rounds.csv")) %>% clean_names
-idexx_abr   <- read_csv(file.path(user_path(), "1_10_idexx_abr.csv"))
+idexx_abr   <- read_csv(file.path(user_path(), "1_10_idexx_abr.csv")) %>% clean_names
 mon_summary <- read_csv(file.path(user_path(), "1_11_weekly_monitoring.csv"))
 all_rounds  <- read_csv(file.path(user_path(), "1_8_surveys_all_rounds.csv"))
 
@@ -27,24 +27,35 @@ all_rounds_clean <-
   clean_names
 
 # Water testing ================================================================
+
+
 # Separating stored vs tap water tests 
 idexx_clean <-
-  idexx_tab %>%
+  bind_rows(
+    idexx_tab, 
+    idexx_abr %>% filter(!(sample_id %in% c(10031, 20134))),
+    .id = "idexx"
+  ) %>%
+  mutate(
+    idexx = if_else(idexx == 1, "", "_abr")
+  ) %>%
   dplyr::select(
     unique_id,
     data_round,
     pooled_round,
+    idexx,
     sample_type,
     sample_id,
-    assignment,
     village,
     block,
     panchayat_village,
+    assignment,
     cf_pa_binary,
     ec_pa_binary,
     cf_log,
     ec_log
   ) %>%
+  unique %>%
   rename(
     cf_pa = cf_pa_binary,
     ec_pa = ec_pa_binary
@@ -60,7 +71,24 @@ idexx_clean <-
     names_sep = "_",
     names_from = sample_type
   ) %>%
+  pivot_wider(
+    values_from = starts_with(
+      c(
+        "sample_id",
+        "cf_pa",
+        "ec_pa",
+        "cf_log",
+        "ec_log"
+      )
+    ),
+    names_from = idexx
+  ) %>%
   clean_names
+
+write_rds(
+  idexx_clean,
+  file.path(user_path(), "idexx_clean.rds")
+)
 
 
 # Combine all data =============================================================

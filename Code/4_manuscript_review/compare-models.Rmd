@@ -181,7 +181,7 @@ vil_round <-
           .,
           data = analysis_village_round,
           family = poisson,
-          se = 'iid'
+          cluster = ~ village
         )
       )
   )
@@ -201,7 +201,7 @@ vil <-
           .,
           data = analysis_village,
           family = poisson,
-          se = 'iid'
+          cluster = ~ village
         )
       )
   )
@@ -274,7 +274,7 @@ vil <-
           .,
           data = census_village,
           family = poisson,
-          se = 'iid'
+          cluster = ~ village
         )
       )
   )
